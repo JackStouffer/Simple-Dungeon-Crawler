@@ -31,7 +31,7 @@ but has more in common gameplay-wise with modern RPGs.
   * spells for magic builds, techniques for knight and rouge builds
   * found in the world to encourage exploration
   * points of power or shrines for magic, tomes for combat techniques
-  * Your stats determine
+  * Your stats determine their effectiveness and their resource cost
 * After all this is implemented, would need to rebalance the entire game
 
 ### Technical Systems
