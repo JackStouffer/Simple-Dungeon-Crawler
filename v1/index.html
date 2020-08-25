@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Simple Roguelike v1</title>
+  </head>
+  <body>
+    <script src="/js/rot.min.js"></script>
+    <script>
+        var WIDTH = 60;
+        var HEIGHT = 25;
+
+        var Player = function(x, y) {
+            this._x = x;
+            this._y = y;
+            this._draw();
+            this.keyMap = keyMap = {
+                38: 0, 87: 0,
+                33: 1, 69: 1,
+                39: 2, 68: 2,
+                34: 3, 67: 3,
+                40: 4, 83: 4,
+                35: 5, 90: 5,
+                37: 6, 65: 6,
+                36: 7, 81: 7
+            };
+        }
+
+        var displayMessage = function(text) {
+              var messageNode = document.createElement("p");
+              messageNode.innerText = text;
+              document.body.appendChild(messageNode);
+            
+            setTimeout(function() {
+                document.body.removeChild(messageNode);
+            }, 10000);
+        };
+
+        Player.prototype._draw = function() {
+            Game.display.draw(this._x, this._y, "@", "#ff0");
+        }
+
+        Player.prototype.act = function() {
+            Game.engine.lock();
+            /* wait for user input; do stuff when user hits a key */
+            window.addEventListener("keydown", this);
+        }
+         
+        Player.prototype.handleEvent = function(e) {
+            var code = e.keyCode;
+            console.log(code);
+            
+            if (code == 13 || code == 32) {
+                this._checkBox();
+                return;
+            }
+            
+            /* one of numpad directions? */
+            if (!(code in this.keyMap)) { return; }
+
+            /* is there a free space? */
+            var dir = ROT.DIRS[8][this.keyMap[code]];
+            var newX = this._x + dir[0];
+            var newY = this._y + dir[1];
+            var newKey = newX + "," + newY;
+            if (!(newKey in Game.map) || Game.map[newKey] === "#") { 
+                return;
+            }
+
+            Game.display.draw(
+                this._x,
+                this._y,
+                Game.map[this._x+","+this._y]
+            );
+            this._x = newX;
+            this._y = newY;
+            this._draw();
+            window.removeEventListener("keydown", this);
+            Game.engine.unlock();
+        }
+
+        Player.prototype._checkBox = function() {
+            var key = this._x + "," + this._y;
+            if (Game.map[key] != "*") {
+                displayMessage("There is no box here!");
+            } else if (key == Game.ananas) {
+                displayMessage("Hooray! You found an ananas and won this game.");
+                Game.engine.lock();
+                window.removeEventListener("keydown", this);
+            } else {
+                displayMessage("This box is empty :-(");
+            }
+        }
+
+        Player.prototype.getX = function() { return this._x; }
+         
+        Player.prototype.getY = function() { return this._y; }
+
+        var Pedro = function(x, y) {
+            this._x = x;
+            this._y = y;
+            this._draw();
+        }
+         
+        Pedro.prototype._draw = function() {
+            Game.display.draw(this._x, this._y, "P", "red");
+        }
+
+        Pedro.prototype.act = function() {
+            var x = Game.player.getX();
+            var y = Game.player.getY();
+            var passableCallback = function(x, y) {
+                return (x+","+y in Game.map && Game.map[x+","+y] !== '#');
+            }
+            var astar = new ROT.Path.AStar(x, y, passableCallback, {topology: 4});
+         
+            var path = [];
+            var pathCallback = function(x, y) {
+                path.push([x, y]);
+            }
+            astar.compute(this._x, this._y, pathCallback);
+            
+            path.shift(); /* remove Pedro's position */
+            if (path.length == 1) {
+                Game.engine.lock();
+                displayMessage("Game over - you were captured by Pedro!");
+            } else {
+                x = path[0][0];
+                y = path[0][1];
+                Game.display.draw(
+                    this._x, this._y,
+                    Game.map[this._x+","+this._y]
+                );
+                this._x = x;
+                this._y = y;
+                this._draw();
+            }
+        }
+
+        var Game = {
+            display: null,
+            player: null,
+            engine: null,
+            ananas: null,
+            map: {},
+         
+            init: function() {
+                this.display = new ROT.Display({
+                    width: WIDTH,
+                    height: HEIGHT
+                });
+                document.body.appendChild(this.display.getContainer());
+                
+                this._generateMap();
+
+                var scheduler = new ROT.Scheduler.Simple();
+                  scheduler.add(this.player, true);
+                scheduler.add(this.pedro, true);
+                
+                  this.engine = new ROT.Engine(scheduler);
+                  this.engine.start();  
+            },
+            
+            _generateMap: function() {
+                var digger = new ROT.Map.Digger(WIDTH, HEIGHT);
+                var freeCells = [];
+
+                var digCallback = function(x, y, value) {
+                    var key = x+","+y;
+                    if (value) {
+                        this.map[key] = "#";
+                    } else {
+                        this.map[key] = ".";
+                        freeCells.push(key);
+                    }
+                }
+                digger.create(digCallback.bind(this));
+                this._generateBoxes(freeCells);
+
+                this._drawWholeMap();
+                this.display.drawText(0,  HEIGHT -1, "Level One");
+                this.player = this._createBeing(Player, freeCells);
+                this.pedro = this._createBeing(Pedro, freeCells);
+            },
+
+            _drawWholeMap: function() {
+                for (var key in this.map) {
+                    var parts = key.split(",");
+                    var x = parseInt(parts[0]);
+                    var y = parseInt(parts[1]);
+                    var val = this.map[key];
+                    var color;
+                    switch (val)
+                    {
+                        case "#":
+                            color = "#505050";
+                            break;
+                        default:
+                            color = "#fff";
+                            break;
+                    }
+                    this.display.draw(x, y, val, color);
+                }
+            },
+            
+            _generateBoxes: function(freeCells) {
+                for (var i=0;i<10;i++) {
+                    var index = Math.floor(ROT.RNG.getUniform() * freeCells.length);
+                    var key = freeCells.splice(index, 1)[0];
+                    this.map[key] = "*";
+                    // save the box as the one with the key
+                    if (!i) { this.ananas = key; }
+                }
+            },
+            
+            _createBeing: function(what, freeCells) {
+                var index = Math.floor(ROT.RNG.getUniform() * freeCells.length);
+                var key = freeCells.splice(index, 1)[0];
+                var parts = key.split(",");
+                var x = parseInt(parts[0]);
+                var y = parseInt(parts[1]);
+                return new what(x, y);
+            },
+        }
+
+        Game.init();
+    </script>
+  </body>
+</html>

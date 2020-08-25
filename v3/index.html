@@ -1,0 +1,917 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Simple Roguelike v3</title>
+  </head>
+  <body>
+        <div id="canvas"></div>
+        <div id="help">
+        <h2>How To Play</h2>
+        <ul>
+          <li>Click on something to look at it</li>
+          <li>Use number pad keys for movement</li>
+          <li>Or, use <code>WASD</code> for cardinal movement and <code>QEZC</code> for diagonal movement</li>
+          <li>Use <code>i</code> to open your inventory</li>
+        </ul>
+        <h3>Attacking</h3>
+        <p>Walk into enemies</p>
+        </div>
+        <script src="/js/rot.min.js"></script>
+        <script>
+            'use strict';
+
+            const WIDTH = 70;
+            const HEIGHT = 40;
+            const WORLD_WIDTH = WIDTH;
+            const WORLD_HEIGHT = HEIGHT - 5;
+
+            const COLOR_INVISIBLE_WALL = "black";
+            const COLOR_DARK_WALL = "rgb(0, 0, 100)";
+            const COLOR_LIGHT_WALL = "#352620";
+            const COLOR_INVISIBLE_GROUND = "black";
+            const COLOR_DARK_GROUND = "rgb(50, 50, 150)";
+            const COLOR_LIGHT_GROUND = "white";
+            const COLOR_PLAYER = "blue";
+
+            const LEVEL_UP_BASE = 50;
+            const LEVEL_UP_FACTOR = 150;
+
+            let keyCommandMap;
+
+            let canvas = null;
+
+            let randomIntFromInterval = function (min, max) {
+                return Math.floor(Math.random() * (max - min + 1) + min);
+            };
+
+            let createHealthPotion = function(hp) {
+                var heal = function(target) {
+                    if (target.fighter.hp >= target.fighter.maxHp) {
+                        Game.displayMessage('You are already at full health.');
+                        return;
+                    }
+                    target.fighter.heal(hp);
+                };
+                return new Item("Health Potion of +" + hp, heal);
+            };
+
+            let generateCaveMap = function() {
+                // create an array of arrays filled with 0's
+                let map = Array(WORLD_HEIGHT).fill([]).map(
+                    x => Array(WORLD_WIDTH).fill(new Tile("#", true, true))
+                );
+
+                let cellular = new ROT.Map.Cellular(WORLD_WIDTH, WORLD_HEIGHT - 5, { connected: true });
+                cellular.randomize(0.5);
+
+                let generations = Math.max(1, Math.floor(ROT.RNG.getNormal(4, 2)));
+                for (var i=0; i<generations; i++) {
+                    cellular.create();
+                }
+
+                let digCallback = function(x, y, value) {
+                    if (!value) {
+                        map[y][x] = new Tile("#", true, true);
+                    } else {
+                        map[y][x] = new Tile(".", false, false);
+                    }
+                }
+                cellular.create(digCallback.bind(this));
+                
+                let actors = [];
+                let objects = [];
+                
+                for (var i = 0; i < 5; i++) {
+                    actors.push(createBeing(
+                        BasicEnemy,
+                        "G",
+                        "green",
+                        COLOR_LIGHT_GROUND,
+                        "Goblin",
+                        2,
+                        true,
+                        map,
+                        objects,
+                        actors,
+                        new Fighter(30, 30, 3, 1, 50, die),
+                        new BasicMonsterAI(7)
+                    ));
+                }
+
+                generateChests(map, objects, actors);
+                addStairs(map, objects, actors);
+
+                cellular.connect(digCallback.bind(this), 1);
+                return {map: map, actors: actors, objects: objects};
+            };
+
+            let generateDungeonMap = function() {
+                // create an array of arrays filled with 0's
+                let map = Array(WORLD_HEIGHT).fill([]).map(
+                    x => Array(WORLD_WIDTH).fill(new Tile("#", true, true))
+                );
+
+                let dungeon = new ROT.Map.Uniform(
+                    WORLD_WIDTH,
+                    WORLD_HEIGHT - 5,
+                    {
+                        roomDugPercentage: .4,
+                        roomWidth: [5, 10],
+                        roomHeight: [5, 10]
+                    }
+                );
+
+                let digCallback = function(x, y, value) {
+                    if (value) {
+                        map[y][x] = new Tile("#", true, true);
+                    } else {
+                        map[y][x] = new Tile(".", false, false);
+                    }
+                }
+                dungeon.create(digCallback.bind(this));
+
+                let actors = [];
+                let objects = [];
+                for (let i = 0; i < 5; i++) {
+                    actors.push(createBeing(
+                        BasicEnemy,
+                        "G",
+                        "green",
+                        COLOR_LIGHT_GROUND,
+                        "Goblin",
+                        2,
+                        true,
+                        map,
+                        objects,
+                        actors,
+                        new Fighter(30, 30, 3, 1, 50, die),
+                        new BasicMonsterAI(7)
+                    ));
+                }
+
+                let rooms = dungeon.getRooms();
+                generateDungeonChests(rooms, objects, actors);
+                addDungeonStairs(rooms, objects, actors);
+
+                return {map: map, actors: actors, objects: objects};
+            };
+
+            let createBeing = function(what, char, fgcolor, bgcolor, name, level, blocks, map, objects, actors, fighter=null, ai=null) {
+                let {x, y} = findEmptySpace(map, objects, actors);
+                return new what(
+                    x, y, char, fgcolor, bgcolor, name, level, blocks, fighter, ai
+                );
+            };
+
+            let generateChests = function(map, objects, actors) {
+                var num = Number.parseInt(ROT.RNG.getWeightedValue({
+                    "2": 7,
+                    "3": 3
+                }));
+                for (var i = 0;i < num; i++) {
+                    // find a free space
+                    let {x, y} = findEmptySpace(map, objects, actors);
+                    let c = new Chest(x, y, "*", "white", "brown", "Chest", true);
+                    c.item = createHealthPotion(20);
+                    objects.push(c);
+                }
+            };
+
+            let generateDungeonChests = function(rooms, objects, actors) {
+                var num = Number.parseInt(ROT.RNG.getWeightedValue({
+                    "2": 5,
+                    "3": 3
+                }));
+                for (var i = 0; i < num; i++) {
+                    let room = rooms[Math.floor(ROT.RNG.getUniform() * rooms.length)];
+                    let x = randomIntFromInterval(room.getLeft(), room.getRight());
+                    let y = randomIntFromInterval(room.getBottom(), room.getTop());
+
+                    let c = new Chest(x, y, "*", "white", "brown", "Chest", true);
+                    c.item = createHealthPotion(20);
+                    objects.push(c);
+                }
+            };
+
+            let addStairs = function(map, objects, actors) {
+                let {x, y} = findEmptySpace(map, objects, actors);
+                let c = new Stairs(x, y, ">", "white", "black", "Stairs", true);
+                objects.push(c);
+            };
+
+            let addDungeonStairs = function(rooms, objects, actors) {
+                let room = rooms[Math.floor(ROT.RNG.getUniform() * rooms.length)];
+                let x = randomIntFromInterval(room.getLeft(), room.getRight());
+                let y = randomIntFromInterval(room.getBottom(), room.getTop());
+                let c = new Stairs(x, y, ">", "white", "black", "Stairs", true);
+                objects.push(c);
+            };
+
+            let findEmptySpace = function(map, objects, actors) {
+                var x = 0, y = 0;
+                while (isBlocked(map, objects, actors, x, y)) {
+                    x = Math.floor(ROT.RNG.getUniform() * WORLD_WIDTH);
+                    y = Math.floor(ROT.RNG.getUniform() * WORLD_HEIGHT);
+                }
+                return {x: x, y: y};
+            };
+
+            let getActorOrObjectAtLocation = function(map, objects, actors, x, y) {
+                //now check for any blocking objects
+                for (var i = 0; i < objects.length; i++) {
+                    var object = objects[i];
+                    if (object.x == x && object.y == y) {
+                        return object;
+                    }
+                }
+
+                for (var i = 0; i < actors.length; i++) {
+                    var actor = actors[i];
+                    if (actor.x == x && actor.y == y) {
+                        return actor;
+                    }
+                }
+            }
+
+            /**
+                Returns null if the space is open, true or the blocking object
+                if blocked
+            */
+            let isBlocked = function(map, objects, actors, x, y) {
+                if (x < 0 || y < 0 || x >= WORLD_WIDTH || y >= WORLD_HEIGHT || map[y][x].blocks) {
+                    return true;
+                }
+
+                let target = getActorOrObjectAtLocation(map, objects, actors, x, y);
+                if (target && target.blocks) {
+                    return target;
+                }
+
+                return null;
+            };
+
+            /**
+                Returns true if space blocks sight, false otherwise
+            */
+            let isSightBlocked = function(map, x, y) {
+                if (x < 0 || y < 0 || x >= WORLD_WIDTH || y >= WORLD_HEIGHT || map[y][x].blocksSight) {
+                    return true;
+                }
+                return false;
+            };
+
+            let drawTile = function(display, tile, x, y) {
+                let fgcolor, bgcolor;
+
+                if (tile.val === "#") {
+                    if (!tile.explored) {
+                        fgcolor = COLOR_INVISIBLE_WALL;
+                        bgcolor = COLOR_INVISIBLE_WALL;
+                    } else if (tile.explored && tile.visibile) {
+                        fgcolor = COLOR_LIGHT_WALL;
+                        bgcolor = COLOR_LIGHT_WALL;
+                    } else if (tile.explored && !tile.visibile) {
+                        fgcolor = COLOR_DARK_WALL;
+                        bgcolor = COLOR_DARK_WALL;
+                    }
+                } else if (tile.val === ".") {
+                    if (!tile.explored) {
+                        fgcolor = COLOR_INVISIBLE_GROUND;
+                        bgcolor = COLOR_INVISIBLE_GROUND;
+                    } else if (tile.explored && tile.visibile) {
+                        fgcolor = COLOR_LIGHT_GROUND;
+                        bgcolor = COLOR_LIGHT_GROUND;
+                    } else if (tile.explored && !tile.visibile) {
+                        fgcolor = COLOR_DARK_GROUND;
+                        bgcolor = COLOR_DARK_GROUND;
+                    }
+                }
+
+                display.draw(x, y, tile.val, fgcolor, bgcolor);
+            };
+
+            let drawObject = function(display, map, obj) {
+                if (map[obj.y][obj.x].visibile) {
+                    display.draw(obj.x, obj.y, obj.char, obj.fgcolor, obj.bgcolor);
+                }
+            };
+
+            let drawMap = function(display, map) {
+                for (var y = 0; y < map.length; y++) {
+                    for (var x = 0; x < map[y].length; x++) {
+                        drawTile(display, map[y][x], x, y);
+                    }
+                }
+            };
+
+            let resetVisibility = function(map) {
+                for (var y = 0; y < map.length; y++) {
+                    for (var x = 0; x < map[y].length; x++) {
+                        map[y][x].visibile = false;
+                    }
+                }
+            };
+
+            let drawUI = function(display, height, player) {
+                for (var i = 0; i < WIDTH; i++) {
+                    display.draw(i, HEIGHT - 4, "#", "blue", "blue");
+                }
+
+                display.drawText(0,  HEIGHT - 4, "%c{white}%b{blue}Height: " + height * 1000 + "ft");
+                display.drawText(17,  HEIGHT - 4, "%c{white}%b{blue}HP: " + player.fighter.hp + "/" + player.fighter.maxHp);
+                display.drawText(30,  HEIGHT - 4, "%c{white}%b{blue}STR: " + player.fighter.strength);
+                display.drawText(38,  HEIGHT - 4, "%c{white}%b{blue}DEF: " + player.fighter.defense);
+                display.drawText(46,  HEIGHT - 4, "%c{white}%b{blue}LVL: " + player.level);
+                display.drawText(54,  HEIGHT - 4, "%c{white}%b{blue}EXP: " + player.experience + "/" + (LEVEL_UP_BASE + player.level * LEVEL_UP_FACTOR));
+            };
+
+            let showSelectionMenu = function(header, options, width) {
+                if (options.length > 26) {
+                    console.error("too many options");
+                    return;
+                }
+
+                let aCode = "a".charCodeAt(0);
+
+                // add one for header
+                let height = options.length + 4;
+                
+                // draw background
+                for (let w = 0; w < width; w++) {
+                    for (let h = 0; h < height; h++) {
+                        if (w === 0 || h === 0 || w === width - 1 || h === height - 1) {
+                            Game.display.draw(w, h, "1", "grey", "grey");
+                        } else {
+                            Game.display.draw(w, h, "1", "black", "black");
+                        }
+                    }
+                }
+
+                Game.display.drawText(2, 1, "%c{white}%b{black}" + header);
+                for (let i = 0; i < options.length; i++) {
+                     Game.display.drawText(
+                         2, i + 3,
+                        "%c{white}%b{black}" + String.fromCharCode(i + aCode) + ": " + options[i]
+                     );
+                }
+            };
+
+            let showKeyBindingMenu = function() {
+                // add one for header
+                const height = 16;
+                const width = WIDTH;
+
+                // draw background
+                for (let w = 0; w < width; w++) {
+                    for (let h = 0; h < height; h++) {
+                        if (w === 0 || h === 0 || w === width - 1 || h === height - 1) {
+                            Game.display.draw(w, h, "1", "grey", "grey");
+                        } else {
+                            Game.display.draw(w, h, "1", "black", "black");
+                        }
+                    }
+                }
+
+                Game.display.drawText(2, 1, "%c{white}%b{black} Keyboard Bindings");
+                Game.display.drawText(2, 3, "%c{white}%b{black} Click on an option to change it");
+
+                let commands = Object.keys(keyCommandMap);
+                for (let i = 0; i < commands.length; i++) {
+                    let key = commands[i];
+                    Game.display.drawText(
+                        2, i + 5,
+                        "%c{white}%b{black} " + keyCommandMap[key][0] + ": " + key
+                    );
+                }
+            };
+
+            let die = function(target) {
+                Game.displayMessage(target.name + " has been killed");
+                target.char = '%';
+                target.fgcolor = "green";
+                target.bgcolor = "darkred";
+                target.blocks = false;
+                target.fighter = null;
+                target.ai = null;
+                target.name = 'remains of ' + target.name;
+            };
+
+            let mouseLook = function(e) {
+                let pos = Game.display.eventToPosition(e);
+                let target = getActorOrObjectAtLocation(Game.map, Game.game_objects, Game.actors, pos[0], pos[1]);
+                if (target && target.name && target.ai && target.ai.state) {
+                    if (target.ai.state === "wander") {
+                        Game.displayMessage("A " + target.name + ", it hasn't seen you.");
+                    } else {
+                        Game.displayMessage("A " + target.name);
+                    }
+                } else if (target && target.name) {
+                    Game.displayMessage(target.name);
+                }
+            };
+
+            /**
+                returns true when moved, false otherwise
+             */
+            let moveCommand = function(actor, direction, topology) {
+                return function() {
+                    /* is there a free space? */
+                    const dir = ROT.DIRS[topology][direction];
+                    const newX = actor.x + dir[0];
+                    const newY = actor.y + dir[1];
+                    const target = isBlocked(Game.map, Game.game_objects, Game.actors, newX, newY);
+
+                    if (target === true) {
+                        return false;
+                    }
+
+                    if (target && target.fighter) {
+                        actor.fighter.attack(target);
+                        return true;
+                    }
+                    
+                    if (target && target.interact) {
+                        target.interact();
+                        return true;
+                    }
+
+                    actor.x = newX;
+                    actor.y = newY;
+                    return true;
+                };
+            };
+
+            let openInventoryCommand = function(actor) {
+                return function() {
+                    showSelectionMenu("Player Inventory", actor.inventory.map(i => i.name), WIDTH);
+                    actor.ai.state = "inventory";
+                    return false;
+                }
+            };
+
+            let openKeyBindingCommand = function(actor) {
+                return function() {
+                    showKeyBindingMenu();
+                    actor.ai.state = "keybinding";
+                    return false;
+                }
+            };
+
+            /**
+             * Base class representing all actors and objects in the game
+             */
+            class GameObject {
+                constructor(x, y, char, fgcolor, bgcolor, name, blocks=false, fighter=null, ai=null) {
+                    this.x = x;
+                    this.y = y;
+                    this.char = char;
+                    this.fgcolor = fgcolor;
+                    this.bgcolor = bgcolor;
+                    this.name = name;
+                    this.blocks = blocks;
+                    
+                    if (fighter) {
+                        this.fighter = fighter;
+                        fighter.owner = this;
+                    }
+
+                    if (ai) {
+                        this.ai = ai;
+                        ai.owner = this;
+                    }
+                }
+                
+                act() {
+                    if (this.ai) {
+                        this.ai.act();
+                    }
+                }
+            }
+
+            class Tile {
+                constructor(val, blocks, blocksSight, visable = false, explored = false) {
+                    this.val = val;
+                    this.blocks = blocks;
+                    this.blocksSight = blocksSight;
+                    this.visable = visable;
+                    this.explored = explored;
+                }
+            }
+
+            /**
+             * Component which controls the combat information and interaction
+             * between different fighters
+             */
+            class Fighter {
+                constructor(hp, maxHp, strength, defense, experience, deathCallback=null) {
+                    this.hp = hp;
+                    this.maxHp = maxHp;
+                    this.strength = strength;
+                    this.defense = defense;
+                    this.deathCallback = deathCallback;
+                    this.owner = null;
+                    this.experience = experience;
+                }
+                
+                takeDamage(damage) {
+                    if (damage > 0) {
+                           this.hp -= damage;
+                    }
+                    if (this.hp <= 0) {
+                        if (this.owner != Game.player) {
+                            Game.player.experience += this.experience;
+                        }
+                        if (this.deathCallback !== null) {
+                            this.deathCallback(this.owner);
+                        }
+                    }
+                }
+                
+                attack(target) {
+                    var damage = Math.round(Math.log(this.owner.level) * 4) + Math.max(0, this.strength - target.fighter.defense);
+
+                    if (damage > 0) {
+                        Game.displayMessage(this.owner.name + " attacks " + target.name + " for " + damage + " damage.");
+                        target.fighter.takeDamage(damage);
+                    } else {
+                        Game.displayMessage(this.owner.name + " attacks " + target.name + ", but it's too weak!");
+                    }
+                }
+                
+                heal(amount) {
+                    this.hp += amount;
+                    if (this.hp > self.maxHp) {
+                        this.hp = self.maxHp;
+                    }
+                }
+            }
+
+            class BasicEnemy extends GameObject {
+                constructor(x, y, char, fgcolor, bgcolor, name, level, blocks=false, fighter=null, ai=null) {
+                    super(x, y, char, fgcolor, bgcolor, name, blocks, fighter, ai);
+                    this.level = level;
+                    this.inventory = [];
+                }
+            }
+
+            /**
+             * Basic monster behavior with two states, chase and wander
+             *
+             * Definable sight range
+             * 
+             * Attacks the target when it's within one tile from it
+             */
+            class BasicMonsterAI {
+                constructor(sightRange) {
+                    this.owner = null;
+                    this.state = "wander";
+                    this.sightRange = sightRange;
+                }
+
+                act() {
+                    let passableCallback = function(x, y) {
+                        // own space is passable
+                        if (this.owner.x === x && this.owner.y === y) {
+                            return true;
+                        }
+                        return isBlocked(Game.map, Game.game_objects, Game.actors, x, y) === null;
+                    };
+
+                    let passableSightCallback = function(x, y) {
+                        // own space is passable
+                        if (this.owner.x === x && this.owner.y === y) {
+                            return true;
+                        }
+                        return isSightBlocked(Game.map, x, y) === false;
+                    };
+                    
+                    let visibilityCallback = function(x, y, r, visibility) {
+                        if (x === Game.player.x && y === Game.player.y && visibility > 0) {
+                            Game.displayMessage(this.owner.name + " saw you");
+                            this.state = "chase";
+                        }
+                    };
+                
+                    // wander in random directions
+                    if (this.state === "wander") {
+                        // compute the FOV to see if the player is sighted
+                        var fov = new ROT.FOV.PreciseShadowcasting(passableSightCallback.bind(this));
+                        fov.compute(this.owner.x, this.owner.y, this.sightRange, visibilityCallback.bind(this));
+                    
+                        const dir = ROT.DIRS[4][ROT.RNG.getItem([0, 1, 2, 3])];
+                        const newX = this.owner.x + dir[0];
+                        const newY = this.owner.y + dir[1];
+                        const target = isBlocked(Game.map, Game.game_objects, Game.actors, newX, newY);
+                        
+                        if (target !== null) {
+                            return;
+                        }
+                        
+                        this.owner.x = newX;
+                        this.owner.y = newY;
+                    // chase the player with A*
+                    } else if (this.state === "chase") {
+                        let x = Game.player.x;
+                        let y = Game.player.y;
+                        let astar = new ROT.Path.AStar(
+                            x,
+                            y,
+                            passableCallback.bind(this),
+                            {topology: 4}
+                        );
+
+                        let path = [];
+                        let pathCallback = function(x, y) {
+                            path.push([x, y]);
+                        }
+                        astar.compute(this.owner.x, this.owner.y, pathCallback);
+
+                        path.shift(); /* remove Pedro's position */
+                        if (path.length == 1) {
+                            this.owner.fighter.attack(Game.player);
+                        } else {
+                            if (path.length === 0) {
+                                return;
+                            }
+
+                            x = path[0][0];
+                            y = path[0][1];
+                            this.owner.x = x;
+                            this.owner.y = y;
+                        }
+                    }
+                }
+            }
+
+            class Player extends GameObject {
+                inventory = [];
+                level = 1;
+                experience = 0;
+            }
+
+            /**
+             * Controls the player character through user input
+             * 
+             * While it would probably make sense to move input handling code
+             * to the Game object since it modifies game state, but putting
+             * in an AI component made the code cleaner
+             */
+            class PlayerControlAI {
+                constructor() {
+                    this.owner = null;
+                    this.state = "normal";
+                }
+
+                act() {
+                    Game.engine.lock();
+                    /* wait for user input; do stuff when user hits a key */
+                    window.addEventListener("keydown", this);
+                }
+
+                handleEvent(e) {
+                    e.preventDefault();
+                    
+                    if (this.owner.fighter === null || this.owner.fighter.hp <= 0) { return; }
+
+                    let key = e.key;
+
+                    if (this.state === "normal") {
+                        /* one of numpad directions? */
+                        if (!(key in keyCommandMap)) {
+                            return;
+                        }
+
+                        let acted = keyCommandMap[key][1]();
+
+                        if (!acted) {
+                            return;
+                        }
+                    } else if (this.state === "inventory") {
+                        let aCode = "a".charCodeAt(0);
+                        let zCode = "z".charCodeAt(0);
+                        let keyCode = key.charCodeAt(0);
+
+                        if (keyCode < aCode && keyCode > zCode) {
+                            return;
+                        }
+
+                        if (key === "Escape") {
+                            Game.manager.act();
+                            this.state = "normal";
+                            return;
+                        }
+
+                        let index = keyCode - aCode;
+
+                        if (index >= this.owner.inventory.length) {
+                            return;
+                        }
+
+                        let item = this.owner.inventory[index];
+                        item.use(this.owner);
+                        this.owner.inventory.splice(index, 1);
+
+                        Game.displayMessage("Used " + item.name);
+                        this.state = "normal";
+                    } else if (this.state === "keybinding") {
+
+                    }
+
+                    Game.engine.unlock();
+                }
+            }
+
+            class Item {
+                constructor(name, useCallback = null) {
+                    this.name = name;
+                    this.useCallback = useCallback;
+                }
+
+                use(target) {
+                    if (this.useCallback === null) {
+                        Game.diplayMessage("Can't use " + this.name);
+                        return;
+                    }
+                    this.useCallback(target);
+                }
+            }
+
+            class Chest extends GameObject {
+                item = null;
+                
+                interact() {
+                    if (this.item) {
+                        Game.displayMessage("Found a " + this.item.name);
+                        Game.player.inventory.push(this.item);
+                        this.item = null;
+                        this.bgcolor = "purple";
+                    } else {
+                        Game.displayMessage("The chest is empty");
+                    }
+                }
+            }
+
+            class Stairs extends GameObject {
+                interact() {
+                    Game.nextLevel();
+                }
+            }
+
+            /**
+             * Class inside the scheduler which handles the normal functions of
+             * the game loop which aren't related to initiating the behavior of
+             * actors or objects
+             */
+            class Manager {
+                act() {
+                    Game.engine.lock();
+
+                    resetVisibility(Game.map);
+
+                    let passableSightCallback = function(x, y) {
+                        // own space is passable
+                        if (Game.player.x === x && Game.player.y === y) {
+                            return true;
+                        }
+                        return isSightBlocked(Game.map, x, y) === false;
+                    };
+
+                    var playerFOV = new ROT.FOV.PreciseShadowcasting(passableSightCallback);
+
+                    playerFOV.compute(Game.player.x, Game.player.y, 20, function(x, y, r, visibility) {
+                        if (x < 0 || y < 0 || x >= WORLD_WIDTH || y >= WORLD_HEIGHT) {
+                            return;
+                        }
+                        Game.map[y][x].visibile = true;
+                        Game.map[y][x].explored = true;
+                    });
+                
+                    drawMap(Game.display, Game.map);
+                    for (var i = 0; i < Game.game_objects.length; i++) {
+                        drawObject(Game.display, Game.map, Game.game_objects[i]);
+                    }
+                    for (var i = 0; i < Game.actors.length; i++) {
+                        drawObject(Game.display, Game.map, Game.actors[i]);
+                    }
+                    drawObject(Game.display, Game.map, Game.player);
+
+                    if (Game.player.fighter === null) {
+                        Game.displayMessage("You have lost");
+                        return;
+                    }
+
+                    const levelUpEXP = LEVEL_UP_BASE + (Game.player.level * LEVEL_UP_FACTOR);
+                    if (Game.player.experience >= levelUpEXP) {
+                        Game.player.level += 1;
+                        Game.player.experience = 0;
+                        Game.player.fighter.hp = Game.player.fighter.maxHp;
+                        Game.displayMessage('You reached level ' + Game.player.level + '!');
+                    }
+                    
+                    drawUI(Game.display, Game.currentLevel, Game.player);
+                    Game.engine.unlock();
+                }
+            }
+
+            /**
+             * god object
+             */
+            let Game = {
+                display: null,
+                player: null,
+                engine: null,
+                drawer: null,
+                game_objects: [],
+                actors: [],
+                map: [],
+                currentLogLines: [],
+                currentLevel: -1,
+             
+                init: function() {
+                    this.display = new ROT.Display({
+                        width: WIDTH,
+                        height: HEIGHT,
+                        fontSize: 13
+                    });
+                    canvas = this.display.getContainer();
+                    document.getElementById("canvas").appendChild(canvas);
+                    
+                    // set up look handler
+                    canvas.addEventListener("mousedown", mouseLook);
+
+                    this.player = new Player(
+                        0, 0,
+                        "@", COLOR_PLAYER, COLOR_LIGHT_GROUND,
+                        "The Player",
+                        true,
+                        new Fighter(100, 100, 5, 3, 0, die),
+                        new PlayerControlAI()
+                    );
+
+                    keyCommandMap = {
+                        "w": ["Move Up", moveCommand(this.player, 0, 8)],
+                        "e": ["Move Up Right", moveCommand(this.player, 1, 8)],
+                        "d": ["Move Right", moveCommand(this.player, 2, 8)],
+                        "c": ["Move Down Right", moveCommand(this.player, 3, 8)],
+                        "s": ["Move Down", moveCommand(this.player, 4, 8)],
+                        "z": ["Move Down Left", moveCommand(this.player, 5, 8)],
+                        "a": ["Move Left", moveCommand(this.player, 6, 8)],
+                        "q": ["Move Up Left", moveCommand(this.player, 7, 8)],
+                        "i": ["Inventory", openInventoryCommand(this.player)],
+                        "Escape": ["Key Bindings", openKeyBindingCommand(this.player)]
+                    };
+
+                    this.nextLevel();
+                },
+                
+                displayMessage: function(text) {
+                    for (var i = 0; i < WIDTH; i++) {
+                        this.display.draw(i, HEIGHT - 3, "#", "black", "black");
+                        this.display.draw(i, HEIGHT - 2, "#", "black", "black");
+                        this.display.draw(i, HEIGHT - 1, "#", "black", "black");
+                    }
+                    
+                    if (this.currentLogLines.length === 3) {
+                        this.currentLogLines.splice(0, 1);
+                    }
+                    this.currentLogLines.push(text);
+                    for (var d = 0; d < this.currentLogLines.length; d++) {
+                        this.display.drawText(0,  HEIGHT - 3 + d, "%c{white}" + this.currentLogLines[d]);
+                    }
+                },
+
+                nextLevel: function () {
+                    this.currentLevel++;
+
+                    let generationFunc;
+                    if (this.currentLevel > 2) {
+                        generationFunc = generateCaveMap;
+                    } else {
+                        generationFunc = generateDungeonMap;
+                    }
+
+                    let {map, actors, objects} = generationFunc();
+                    this.map = map;
+                    this.actors = actors;
+                    this.game_objects = objects;
+
+                    let {x, y} = findEmptySpace(this.map, this.game_objects, this.actors);
+                    this.player.x = x;
+                    this.player.y = y;
+
+                    let scheduler = new ROT.Scheduler.Simple();
+                    this.manager = new Manager();
+                    scheduler.add(this.manager, true);
+                    scheduler.add(this.player, true);
+                    for (var i = 0; i < this.actors.length; i++) {
+                        scheduler.add(this.actors[i], true);
+                    }
+                    this.engine = new ROT.Engine(scheduler);
+                    this.engine.start();
+                }
+            }
+
+            Game.init();
+        </script>
+  </body>
+</html>
