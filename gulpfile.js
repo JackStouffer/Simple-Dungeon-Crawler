@@ -1,8 +1,8 @@
 const gulp = require('gulp');
 const concat = require('gulp-concat');
 const rename = require('gulp-rename');
-const uglify = require('gulp-uglify');
 const minify = require('gulp-minify');
+const webserver = require('gulp-webserver');
 
 const sourcemaps = require('gulp-sourcemaps');
 
@@ -29,6 +29,7 @@ const sourceFiles = [
 
 gulp.task('gameFiles', async function() {
     return gulp.src(sourceFiles)
+        // .pipe(webserver())
         .pipe(sourcemaps.init())
         .pipe(concat('game.js'))
         .pipe(gulp.dest('dist'))
@@ -38,7 +39,14 @@ gulp.task('gameFiles', async function() {
 });
 
 gulp.task('watch', function() {
-  gulp.watch(sourceFiles, gulp.series(['gameFiles']));
+    gulp.watch(sourceFiles, gulp.series(['gameFiles']));
 });
 
-gulp.task('default', gulp.series('gameFiles', 'watch'));
+gulp.task('webserver', function() {
+    gulp.src('.')
+        .pipe(webserver({
+            livereload: true
+        }));
+});
+
+gulp.task('default', gulp.series('gameFiles', gulp.parallel('watch', 'webserver')));

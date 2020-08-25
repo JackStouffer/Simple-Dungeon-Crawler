@@ -5,6 +5,20 @@ Play for free at: https://jackstouffer.com/games/Simple-Dungeon-Crawler/index.ht
 A JavaScript browser game with unicode console graphics. Reminiscent of old rouge-likes
 but has more in common gameplay-wise with modern RPGs.
 
+## Building
+
+To install dependencies
+
+```
+npm install
+```
+
+To build and run
+
+```
+gulp
+```
+
 ## Implemented Features
 
 * Multiple levels loaded and connected from Tiled maps
