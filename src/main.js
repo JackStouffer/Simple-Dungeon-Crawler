@@ -1,52 +1,5 @@
 'use strict';
 
-// Ideas
-//
-// Find some way to incorporate the speed scheduler while also having the manager draw
-// everything once per turn cycle
-// 
-// Remove the ability to farm trash mobs by having persistent world state when moving
-// between levels
-//
-// Status effects: sleep, bleed (work like dark souls, not damage over time), fatigued,
-// rage (increased strength but lose control), attack up/down, defense up/down,
-// speed up/down, freeze
-// 
-// Sight range effected by world lighting. So same logic which appiles to the PC
-// seeing lights in the distance when the line of sight is clear would apply.
-// Would need to separate the player's "lantern" from the logic around lighting
-// and make it a sight range.
-//
-// Shrines/other object that gives permanent stat buffs
-//
-// Remove log from game ui and make scrollable text log as element on the page
-//
-// Tutorials that spawn in the log with special color/background when something
-// happens. Have global flags that mark if a tutorial has already happened
-//
-// Passive by default, high level enemies that are difficult to defeat but give
-// good drops
-//
-// Enemies that only run away after seeing the player and then disappear after
-// so many turns running away. Give great drops.
-//
-// Thieves that go around stealing items from chests. Have to catch them before
-// moving to next level to get the items back.
-//
-// Shop every few floors. Turns hostile if attacked, very hard enemy but drops good loot
-//
-// Player lantern is infinite but can be put away so they can sneak
-// by enemies who don't have night vision, cost of reduced visibility
-//
-// Doors in dungeon maps to break line of sight, possibly spawn keys
-// for locked ones to encourage exploration
-//
-// locked chests, good loot, opened by found keys or lock picks
-//
-// Monster infighting, would have to implement teams/factions
-// 
-// Phone interface
-
 const randomIntFromInterval = function (min, max) {
     return Math.floor(Math.random() * (max - min + 1) + min);
 };
