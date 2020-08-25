@@ -1,5 +1,7 @@
 # Simple Dungeon Crawler
 
+Play for free at: https://jackstouffer.com/games/Simple-Dungeon-Crawler/index.html
+
 A JavaScript browser game with unicode console graphics. Reminiscent of old rouge-likes
 but has more in common gameplay-wise with modern RPGs.
 
