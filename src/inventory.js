@@ -4,12 +4,12 @@
 const clone = a => JSON.parse(JSON.stringify(a));
 
 class BasicInventory {
-    // A class implementation without private data members?
-    // Can JS do anything right?
-    _inventory = {};
-
     constructor() {
         this.owner = null;
+
+        // A class implementation without private data members?
+        // Can JS do anything right?
+        this._inventory = {};
     }
 
     setOwner(owner) {
