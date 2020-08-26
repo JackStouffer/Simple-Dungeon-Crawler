@@ -1,29 +1,33 @@
-'use strict';
+"use strict";
 
-const WIDTH = 70;
-const HEIGHT = 45;
-const UI_HEIGHT = 6;
-const WORLD_WIDTH = WIDTH;
-const WORLD_HEIGHT = HEIGHT - UI_HEIGHT - 1;
+import { castHeal, castConfuse, castClairvoyance, castDamageSpell, castWildDamageSpell } from "./items";
+import { createBurnEffect } from "./effects";
 
-const COLOR_INVISIBLE_WALL = "black";
-const COLOR_DARK_WALL = "rgb(20, 20, 20)";
-const COLOR_LIGHT_WALL = "#352620";
-const COLOR_INVISIBLE_GROUND = "black";
-const COLOR_DARK_GROUND = "rgb(50, 50, 50)";
-const COLOR_LIGHT_GROUND = "white";
-const COLOR_AMBIENT_LIGHT = "rgb(50, 50, 50)";
+export const WIDTH = 70;
+export const HEIGHT = 45;
+export const UI_HEIGHT = 6;
+export const WORLD_WIDTH = WIDTH;
+export const WORLD_HEIGHT = HEIGHT - UI_HEIGHT - 1;
 
-const MAP_FILLED_SPACE = "#";
-const MAP_EMPTY_SPACE = ".";
+export const COLOR_INVISIBLE_WALL = "black";
+export const COLOR_DARK_WALL = "rgb(20, 20, 20)";
+export const COLOR_LIGHT_WALL = "#352620";
+export const COLOR_INVISIBLE_GROUND = "black";
+export const COLOR_DARK_GROUND = "rgb(50, 50, 50)";
+export const COLOR_LIGHT_GROUND = "white";
+export const COLOR_AMBIENT_LIGHT = "rgb(50, 50, 50)";
+console.log("COLOR_AMBIENT_LIGHT", COLOR_AMBIENT_LIGHT);
 
-const LEVEL_UP_BASE = 50;
-const LEVEL_UP_FACTOR = 150;
+export const MAP_FILLED_SPACE = "#";
+export const MAP_EMPTY_SPACE = ".";
+
+export const LEVEL_UP_BASE = 50;
+export const LEVEL_UP_FACTOR = 150;
 
 /**
  * Damage type enum
  */
-const DamageType = {
+export const DamageType = {
     physical: 1,
     fire: 2,
     lightning: 3,
@@ -35,7 +39,7 @@ Object.freeze(DamageType);
 /**
  * Damage affinity damage multiplier
  */
-const Affinity = {
+export const Affinity = {
     weak: 0.5,
     normal: 1,
     strong: 2,
@@ -43,7 +47,7 @@ const Affinity = {
 };
 Object.freeze(Affinity);
 
-const tileData = {
+export const TileData = {
     900: {
         name: "empty ground",
         char: "",
@@ -111,9 +115,9 @@ const tileData = {
         reflectivity: 0.18
     }
 };
-Object.freeze(tileData);
+Object.freeze(TileData);
 
-const objectData = {
+export const ObjectData = {
     "door": {
         name: "Door",
         graphics: "basic_graphics",
@@ -303,7 +307,7 @@ const objectData = {
             [DamageType.nature]: Affinity.normal
         },
         inventoryPool: [
-            ['health_potion_weak', 0.25]
+            ["health_potion_weak", 0.25]
         ],
         onDeath: "default"
     },
@@ -335,8 +339,8 @@ const objectData = {
             [DamageType.nature]: Affinity.normal
         },
         inventoryPool: [
-            ['health_potion_weak', 0.25],
-            ['health_potion', 0.1]
+            ["health_potion_weak", 0.25],
+            ["health_potion", 0.1]
         ],
         onDeath: "default"
     },
@@ -371,9 +375,9 @@ const objectData = {
         onDeath: "default"
     },
 };
-Object.freeze(objectData);
+Object.freeze(ObjectData);
 
-const itemData = {
+export const ItemData = {
     "health_potion_weak": {
         displayName: "Weak Health Potion",
         value: 25,
@@ -494,9 +498,9 @@ const itemData = {
         useFunc: castClairvoyance
     }
 };
-Object.freeze(itemData);
+Object.freeze(ItemData);
 
-const spellData = {
+export const SpellData = {
     "lightning_bolt": {
         name: "Lightning Bolt",
         manaCost: 50,
@@ -504,4 +508,4 @@ const spellData = {
         useFunc: castDamageSpell
     }
 };
-
+Object.freeze(SpellData);

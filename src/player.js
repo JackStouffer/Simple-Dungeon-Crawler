@@ -1,14 +1,21 @@
-'use strict';
+"use strict";
+
+import { DIRS } from "rot-js";
+
+import globals from "./globals";
+import { WIDTH, SpellData, ItemData } from "./data";
+import { isBlocked } from "./map";
+import { showSelectionMenu, showKeyBindingMenu } from "./ui";
 
 /**
     returns true when moved, false otherwise
  */
 const moveCommand = function(actor, direction, topology) {
     return function() {
-        const dir = ROT.DIRS[topology][direction];
+        const dir = DIRS[topology][direction];
         const newX = actor.x + dir[0];
         const newY = actor.y + dir[1];
-        const target = isBlocked(Game.map, Game.gameObjects, newX, newY);
+        const target = isBlocked(globals.Game.map, globals.Game.gameObjects, newX, newY);
 
         if (target === true) {
             return false;
@@ -34,7 +41,7 @@ const moveCommand = function(actor, direction, topology) {
 
 const getItemCommand = function(actor) {
     return function() {
-        const items = Game.gameObjects.filter(item => {
+        const items = globals.Game.gameObjects.filter(item => {
             return item.type === "dropped_item" && item.x === actor.x && item.y === actor.y;
         });
 
@@ -43,7 +50,7 @@ const getItemCommand = function(actor) {
             return true;
         }
 
-        Game.displayMessage("There's no item to pick up");
+        globals.Game.displayMessage("There's no item to pick up");
         return false;
     };
 };
@@ -53,7 +60,7 @@ const openInventoryCommand = function(actor) {
         showSelectionMenu(
             "Player Inventory",
             actor.inventoryComponent.getNamesAndCounts(),
-            'inventory',
+            "inventory",
             WIDTH
         );
         actor.ai.state = "inventory";
@@ -65,8 +72,8 @@ const openSpellsCommand = function(actor) {
     return function() {
         showSelectionMenu(
             "Spells",
-            actor.fighter.getKnownSpells().map(e => spellData[e]),
-            'spells',
+            actor.fighter.getKnownSpells().map(e => SpellData[e]),
+            "spells",
             WIDTH
         );
         actor.ai.state = "spell_selection";
@@ -80,12 +87,6 @@ const openKeyBindingCommand = function(actor) {
         actor.ai.state = "keybinding";
         return false;
     };
-};
-
-const killPlayer = function(target) {
-    target.fighter = null;
-    target.ai = null;
-    target.inventoryComponent = null;
 };
 
 /**
@@ -121,7 +122,7 @@ class PlayerControlAI {
     }
 
     act() {
-        Game.engine.lock();
+        globals.Game.engine.lock();
         /* wait for user input; do stuff when user hits a key */
         window.addEventListener("keydown", this);
     }
@@ -155,7 +156,7 @@ class PlayerControlAI {
 
             if (key === "Escape") {
                 this.state = "normal";
-                Game.manager.act();
+                globals.Game.manager.act();
                 return;
             }
 
@@ -170,13 +171,13 @@ class PlayerControlAI {
                 return;
             }
 
-            const itemDetails = itemData[inventoryInputMap[keyCode]];
+            const itemDetails = ItemData[inventoryInputMap[keyCode]];
             const useCallback = used => {
                 this.owner.ai.state = "normal";
                 if (used) {
                     this.owner.inventoryComponent.useItem(inventoryInputMap[keyCode]);
-                    Game.displayMessage("Used " + itemDetails.displayName);
-                    Game.engine.unlock();
+                    globals.Game.displayMessage("Used " + itemDetails.displayName);
+                    globals.Game.engine.unlock();
                 }
             };
             itemDetails.useFunc(itemDetails, this.owner, useCallback.bind(this));
@@ -192,7 +193,7 @@ class PlayerControlAI {
 
             if (key === "Escape") {
                 this.state = "normal";
-                Game.manager.act();
+                globals.Game.manager.act();
                 return;
             }
 
@@ -207,10 +208,10 @@ class PlayerControlAI {
                 return;
             }
 
-            const details = spellData[spellInputMap[keyCode]];
+            const details = SpellData[spellInputMap[keyCode]];
 
             if (details.manaCost > this.owner.fighter.mana) {
-                Game.displayMessage(`Not enough mana to cast ${details.name}`);
+                globals.Game.displayMessage(`Not enough mana to cast ${details.name}`);
                 return;
             }
 
@@ -218,7 +219,7 @@ class PlayerControlAI {
                 this.owner.ai.state = "normal";
                 if (used) {
                     this.owner.fighter.useMana(details.manaCost);
-                    Game.engine.unlock();
+                    globals.Game.engine.unlock();
                 }
             };
             details.useFunc(details, this.owner, useCallback.bind(this));
@@ -227,6 +228,7 @@ class PlayerControlAI {
         }
 
         window.removeEventListener("keydown", this);
-        Game.engine.unlock();
+        globals.Game.engine.unlock();
     }
 }
+export { PlayerControlAI };

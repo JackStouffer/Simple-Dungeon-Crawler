@@ -1,4 +1,4 @@
-'use strict';
+"use strict";
 
 /**
  * Graphics component which simply draws the character with the fore
@@ -46,3 +46,4 @@ class DrawAfterSeen {
         }
     }
 }
+export { BasicGraphics, DrawAfterSeen };

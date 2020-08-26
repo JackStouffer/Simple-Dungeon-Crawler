@@ -1,24 +1,28 @@
-'use strict';
+"use strict";
 
-const randomIntFromInterval = function (min, max) {
-    return Math.floor(Math.random() * (max - min + 1) + min);
-};
+import { Display, Scheduler, Engine } from "rot-js";
 
-const mouseLook = function(e) {
-    const pos = Game.display.eventToPosition(e);
-    const target = getObjectsAtLocation(Game.gameObjects, pos[0], pos[1])[0];
+import globals from "./globals";
+import { createObject } from "./object";
+import { WIDTH, HEIGHT, UI_HEIGHT } from "./data";
+import { drawMap, getObjectsAtLocation, resetVisibility, loadTiledMap } from "./map";
+import { drawUI, clearScreen } from "./ui";
+
+export function mouseLook(e) {
+    const pos = globals.Game.display.eventToPosition(e);
+    const target = getObjectsAtLocation(globals.Game.gameObjects, pos[0], pos[1])[0];
     if (target && target.name && target.ai && target.ai.state) {
         if (target.ai.state === "wander") {
-            Game.displayMessage("A " + target.name + ", it hasn't seen you.");
+            globals.Game.displayMessage("A " + target.name + ", it hasn't seen you.");
         } else {
-            Game.displayMessage("A " + target.name);
+            globals.Game.displayMessage("A " + target.name);
         }
     } else if (target && target.name) {
-        Game.displayMessage(target.name);
+        globals.Game.displayMessage(target.name);
     } else if (!target) {
-        Game.displayMessage(Game.map[pos[1]][pos[0]].name);
+        globals.Game.displayMessage(globals.Game.map[pos[1]][pos[0]].name);
     }
-};
+}
 
 /**
  * Class inside the scheduler which handles the normal functions of
@@ -26,39 +30,39 @@ const mouseLook = function(e) {
  * actors or objects
  */
 class Manager {
-    act() {
-        Game.engine.lock();
-        Game.currentTurn++;
+    constructor(game) {
+        this.game = game;
+    }
 
-        if (Game.player.fighter === null) {
-            Game.loseCinematic();
+    act() {
+        this.game.engine.lock();
+        this.game.currentTurn++;
+
+        if (this.game.player.fighter === null) {
+            this.game.loseCinematic();
             return;
         }
 
-        resetVisibility(Game.map);
-        Game.drawAll();
-        Game.engine.unlock();
+        resetVisibility(this.game.map);
+        this.game.drawAll();
+        this.game.engine.unlock();
     }
 }
 
-/**
- * god object
- */
-let Game = {
-    canvas: null,
-    display: null,
-    player: null,
-    engine: null,
-    scheduler: null,
-    gameObjects: [],
-    map: [],
-    currentLogLines: [],
-    currentLevel: 0,
-    currentTurn: 0,
-    totalMessages: 0,
-
-    init: function() {
-        this.display = new ROT.Display({
+class SimpleDungeonCrawler {
+    constructor() {
+        this.canvas = null;
+        this.display = null;
+        this.player = null;
+        this.engine = null;
+        this.scheduler = null;
+        this.gameObjects = [];
+        this.map = [];
+        this.currentLogLines = [];
+        this.currentLevel = 0;
+        this.currentTurn = 0;
+        this.totalMessages = 0;
+        this.display = new Display({
             width: WIDTH,
             height: HEIGHT,
             fontSize: 13,
@@ -68,9 +72,9 @@ let Game = {
         document.getElementById("canvas").appendChild(this.canvas);
 
         this.openingCinematic();
-    },
+    }
 
-    reset: function () {
+    reset () {
         clearScreen(this.display);
         this.player.fighter = null;
         this.player.ai = null;
@@ -81,9 +85,9 @@ let Game = {
         this.gameObjects = [];
         this.currentLogLines = [];
         this.scheduler.clear();
-    },
+    }
 
-    openingCinematic: function() {
+    openingCinematic() {
         this.display.drawText(WIDTH - (WIDTH - 7), 12, "%c{white}Your country is being overrun by the forces of darkness");
         this.display.drawText(WIDTH - (WIDTH - 8), 15, "%c{white}Tales tell of a weapon of great power lost in the");
         this.display.drawText(WIDTH - (WIDTH - 4), 16, "%c{white}lands beyond the dwarf stronghold Durdwin, under the Red Hills.");
@@ -99,9 +103,9 @@ let Game = {
                 window.removeEventListener("keydown", _listener);
             }
         });
-    },
+    }
 
-    winCinematic: function() {
+    winCinematic() {
         this.reset();
 
         this.display.drawText(WIDTH - (WIDTH - 12), 12, "%c{white}You have reached the bottom and have retrieved");
@@ -115,9 +119,9 @@ let Game = {
                 window.removeEventListener("keydown", _listener);
             }
         });
-    },
+    }
 
-    loseCinematic: function() {
+    loseCinematic() {
         this.reset();
 
         this.display.drawText(WIDTH - (WIDTH - 5), 12, "%c{white}You have died, and the last hope of your people dies with you");
@@ -130,24 +134,24 @@ let Game = {
                 window.removeEventListener("keydown", _listener);
             }
         });
-    },
+    }
 
-    startGameplay: function() {
+    startGameplay() {
         // looking at objects on the map with the mouse
         this.hookMouseLook();
 
-        this.scheduler = new ROT.Scheduler.Simple();
-        this.manager = new Manager();
+        this.scheduler = new Scheduler.Simple();
+        this.manager = new Manager(this);
         this.player = createObject("player", 1, 1);
         this.loadLevel("level_1");
-    },
+    }
     
-    displayMessage: function(text) {
+    displayMessage(text) {
         this.totalMessages++;
 
         for (let i = 0; i < WIDTH; i++) {
             for (let j = 1; j < UI_HEIGHT; j++) {
-                this.display.draw(i, HEIGHT - j, MAP_FILLED_SPACE, "black", "black");
+                this.display.draw(i, HEIGHT - j, "", "black", "black");
             }
         }
 
@@ -158,12 +162,12 @@ let Game = {
         for (let d = 0; d < this.currentLogLines.length; d++) {
             this.display.drawText(0,  HEIGHT - 5 + d, "%c{white}" + this.currentLogLines[d]);
         }
-    },
+    }
 
     drawAll() {
         this.gameObjects
             .filter(o => o.lighting && typeof o.lighting.compute === "function")
-            .forEach(o => o.lighting.compute(Game.map));
+            .forEach(o => o.lighting.compute(this.map));
         this.player.lighting.compute(this.map);
 
         drawMap(this.display, this.map);
@@ -171,13 +175,13 @@ let Game = {
         // FIX ME: dead bodies draw over enemies on the same tile
         this.gameObjects
             .filter(o => o.graphics && typeof o.graphics.draw === "function")
-            .forEach(o => o.graphics.draw(Game.display, Game.map));
+            .forEach(o => o.graphics.draw(this.display, this.map));
 
         this.player.graphics.draw(this.display, this.map);
         drawUI(this.display, this.currentLevel, this.player);
-    },
+    }
 
-    loadLevel: function (name) {
+    loadLevel (name) {
         this.currentLevel++;
 
         if (this.currentLevel === 21) {
@@ -197,40 +201,37 @@ let Game = {
         this.scheduler.add(this.manager, true);
         this.scheduler.add(this.player, true);
         this.gameObjects.forEach(e => this.scheduler.add(e, true));
-        this.engine = new ROT.Engine(this.scheduler);
+        this.engine = new Engine(this.scheduler);
         this.engine.start();
-    },
+    }
 
-    hookMouseLook: function () {
+    hookMouseLook () {
         // break out the hook and unhook mouse look into their own functions
         // because other actions need to take over the mouse at some points
         // and we don't want anything other than the Game object interacting
         // with the canvas
         this.canvas.addEventListener("mousedown", mouseLook);
-    },
+    }
 
-    unhookMouseLook: function () {
+    unhookMouseLook () {
         this.canvas.removeEventListener("mousedown", mouseLook);
-    },
+    }
 
-    addObject: function (object) {
+    addObject (object) {
         this.gameObjects.push(object);
         this.scheduler.add(this.gameObjects[this.gameObjects.length - 1], true);
-    },
+    }
 
     /**
      * Remove an object from the world
      * @param  {GameObject} object The object to remove
      * @return {void}
      */
-    removeObject: function (object) {
+    removeObject (object) {
         // could use an object pool or a linked list to speed up this operation
         // but that seems overkill for this
         this.gameObjects.splice(this.gameObjects.indexOf(object), 1);
         this.scheduler.remove(object);
     }
 }
-
-window.onload = function() {
-    Game.init();
-}
+globals.Game = new SimpleDungeonCrawler();

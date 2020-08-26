@@ -1,4 +1,7 @@
-'use strict';
+"use strict";
+
+import globals from "./globals";
+import { ItemData, SpellData } from "./data";
 
 /**
  * Component gives all the items in the inventory of the GameObject
@@ -19,12 +22,12 @@ class GiveItemsInteractable {
             if (chestItems.length > 0) {
                 for (let i = 0; i < chestItems.length; i++) {
                     const item = chestItems[i];
-                    Game.displayMessage("Found a " + itemData[item.id].displayName);
+                    globals.Game.displayMessage("Found a " + ItemData[item.id].displayName);
                     user.inventoryComponent.addItem(item.id, item.count);
                     this.owner.inventoryComponent.useItem(item.id);
                 }
             } else {
-                Game.displayMessage("Empty");
+                globals.Game.displayMessage("Empty");
             }
         } else {
             console.error("Missing inventoryComponent on ", this.owner);
@@ -51,19 +54,19 @@ class GiveSpellInteractable {
 
     interact(user) {
         if (!this.spellId) {
-            throw new Error('No spell id given');
+            throw new Error("No spell id given");
         }
 
-        if (!(this.spellId in spellData)) {
+        if (!(this.spellId in SpellData)) {
             throw new Error(`${this.spellId} is not a valid spell`);
         }
 
         const res = user.fighter.addSpellById(this.spellId);
-        const data = spellData[this.spellId];
+        const data = SpellData[this.spellId];
         if (res) {
-            Game.displayMessage(`You learned a new spell: ${data.name}`);
+            globals.Game.displayMessage(`You learned a new spell: ${data.name}`);
         } else {
-            Game.displayMessage(`You already know ${data.name}`);
+            globals.Game.displayMessage(`You already know ${data.name}`);
         }
     }
 }
@@ -86,8 +89,8 @@ class DoorInteractable {
         this.owner = owner;
     }
 
-    interact(user) {
-        Game.removeObject(this.owner);
+    interact() {
+        globals.Game.removeObject(this.owner);
     }
 }
 
@@ -108,10 +111,11 @@ class LoadLevelInteractable {
         this.owner = owner;
     }
 
-    interact(user) {
+    interact() {
         if (!this.levelName) {
-            throw new Error('No level name has been set for load');
+            throw new Error("No level name has been set for load");
         }
-        Game.loadLevel(this.levelName);
+        globals.Game.loadLevel(this.levelName);
     }
 }
+export { GiveItemsInteractable, GiveSpellInteractable, DoorInteractable, LoadLevelInteractable };

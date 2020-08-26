@@ -1,7 +1,6 @@
-'use strict';
+"use strict";
 
-// because I'm not including lodash for one function
-const clone = a => JSON.parse(JSON.stringify(a));
+import { ItemData } from "./data";
 
 class BasicInventory {
     constructor() {
@@ -26,7 +25,7 @@ class BasicInventory {
 
     getNamesAndCounts() {
         const orderedKeys = Reflect.ownKeys(this._inventory);
-        return orderedKeys.map(e => { return { name: itemData[e].displayName, count: this._inventory[e] }; });
+        return orderedKeys.map(e => { return { name: ItemData[e].displayName, count: this._inventory[e] }; });
     }
 
     hasItem(id) {
@@ -60,3 +59,4 @@ class BasicInventory {
         }
     }
 }
+export { BasicInventory };

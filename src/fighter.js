@@ -1,4 +1,9 @@
-'use strict';
+"use strict";
+
+import { RNG } from "rot-js";
+
+import { LEVEL_UP_BASE, LEVEL_UP_FACTOR } from "./data";
+import globals from "./globals";
 
 /**
  * Component which controls the combat information and interaction
@@ -40,8 +45,8 @@ class BasicFighter {
             this.experience = 0;
             this.hp = this.maxHp;
             this.strength++;
-            if (this.owner === Game.player) {
-                Game.displayMessage('You reached level ' + this.level + '!');
+            if (this.owner === globals.Game.player) {
+                globals.Game.displayMessage("You reached level " + this.level + "!");
             }
         }
 
@@ -51,17 +56,18 @@ class BasicFighter {
                 effect.act();
 
                 if (effect.turns === 0) {
-                    Game.displayMessage(`${this.owner.name} recovered from its ${effect.name}`);
+                    globals.Game.displayMessage(`${this.owner.name} recovered from its ${effect.name}`);
                     this.statusEffects.splice(i, 1);
                 }
             }
         }
     }
 
-    takeDamage(attacker, damage, damageType) {
+    takeDamage(attacker, damage) {
         if (damage > 0) {
-           this.hp -= damage;
+            this.hp -= damage;
         }
+
         if (this.hp <= 0) {
             attacker.fighter.experience += this.experienceGiven;
 
@@ -77,21 +83,21 @@ class BasicFighter {
         let damage = Math.round(Math.max(1, this.strength - target.fighter.defense));
         let critical = false;
 
-        if (ROT.RNG.getUniform() <= this.criticalChance) {
+        if (RNG.getUniform() <= this.criticalChance) {
             damage = Math.ceil(damage * this.criticalDamageMultipler);
             critical = true;
         }
 
         if (damage > 0) {
             if (critical) {
-                Game.displayMessage("CRITICAL! " + this.owner.name + " attacks " + target.name + " for " + damage + " damage.");
+                globals.Game.displayMessage("CRITICAL! " + this.owner.name + " attacks " + target.name + " for " + damage + " damage.");
             } else {
-                Game.displayMessage(this.owner.name + " attacks " + target.name + " for " + damage + " damage.");
+                globals.Game.displayMessage(this.owner.name + " attacks " + target.name + " for " + damage + " damage.");
             }
             
             target.fighter.takeDamage(this.owner, damage);
         } else {
-            Game.displayMessage(this.owner.name + " attacks " + target.name + ", but it's too weak!");
+            globals.Game.displayMessage(this.owner.name + " attacks " + target.name + ", but it's too weak!");
         }
     }
 
@@ -126,3 +132,4 @@ class BasicFighter {
         return [...this.knownSpells];
     }
 }
+export { BasicFighter };

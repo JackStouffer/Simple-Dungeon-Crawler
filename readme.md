@@ -13,10 +13,10 @@ To install dependencies
 npm install
 ```
 
-To build and run
+To build
 
 ```
-gulp
+npm run build
 ```
 
 ## Implemented Features

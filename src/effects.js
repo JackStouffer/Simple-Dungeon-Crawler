@@ -1,4 +1,6 @@
-'use strict';
+"use strict";
+
+import globals from "./globals";
 
 class Effect {
     constructor(owner, name, turns, actCallback) {
@@ -13,6 +15,7 @@ class Effect {
         this.turns--;
     }
 }
+export { Effect };
 
 /**
  * Create an Effect of applying damage over time
@@ -21,18 +24,18 @@ class Effect {
  * @param  {Number} turns          The number of turns to last
  * @return {Effect}                The resulting effect object
  */
-const createBurnEffect = function(victim, damage, turns) {
-    const act = function (owner, name) {
+export function createBurnEffect(victim, damage, turns) {
+    const act = function (owner) {
         if (owner.fighter) {
             owner.fighter.takeDamage(null, damage);
         }
 
-        if (owner === Game.player) {
-            Game.displayMessage("You were hurt by the burn for " + damage + " damage");
+        if (owner === globals.Game.player) {
+            globals.Game.displayMessage("You were hurt by the burn for " + damage + " damage");
         } else {
-            Game.displayMessage(owner.name + " was hurt by the burn for " + damage + " damage");
+            globals.Game.displayMessage(owner.name + " was hurt by the burn for " + damage + " damage");
         }
     };
 
     return new Effect(victim, "Burn", turns, act);
-};
+}

@@ -1,4 +1,17 @@
-'use strict';
+"use strict";
+
+import { RNG } from "rot-js";
+
+import globals from "./globals";
+import { ObjectData } from "./data";
+import { BasicMonsterAI, PatrollingMonsterAI, ChestAI, DroppedItemAI } from "./ai";
+import { PlayerControlAI } from "./player";
+import { GiveItemsInteractable, GiveSpellInteractable, LoadLevelInteractable, DoorInteractable } from "./interactable";
+import { BasicInventory } from "./inventory";
+import { BasicGraphics, DrawAfterSeen } from "./graphics";
+import { ReflectivityLighting, PlayerLighting } from "./lighting";
+import { BasicFighter } from "./fighter";
+
 
 /**
  * Base class representing all objects in the game. Uses the
@@ -70,10 +83,10 @@ class GameObject {
  * @param  {String} id     The object id
  * @return {GameObject}    A GameObject with the components and params given in the data
  */
-const createObject = function (id, x=0, y=0) {
-    if (!(id in objectData)) { throw new Error(`${id} is not valid object id`); }
+export const createObject = function (id, x=0, y=0) {
+    if (!(id in ObjectData)) { throw new Error(`${id} is not valid object id`); }
 
-    const data = objectData[id];
+    const data = ObjectData[id];
     let object = new GameObject(
         id,
         x, y,
@@ -84,52 +97,52 @@ const createObject = function (id, x=0, y=0) {
 
     if (data.ai) {
         switch (data.ai) {
-            case "player_control_ai":
-                object.setAI(new PlayerControlAI());
-                break;
-            case "basic_monster_ai":
-                object.setAI(new BasicMonsterAI(data.sightRange));
-                break;
-            case "patrolling_monster_ai":
-                object.setAI(new PatrollingMonsterAI(data.sightRange));
-                break;
-            case "chest_ai":
-                object.setAI(new ChestAI(data.bgColor, data.emptyColor));
-                break;
-            case "dropped_item_ai":
-                object.setAI(new DroppedItemAI());
-                break;
-            default:
-                console.error(`Unhandled AI type ${data.ai}`);
-                break;
+        case "player_control_ai":
+            object.setAI(new PlayerControlAI());
+            break;
+        case "basic_monster_ai":
+            object.setAI(new BasicMonsterAI(data.sightRange));
+            break;
+        case "patrolling_monster_ai":
+            object.setAI(new PatrollingMonsterAI(data.sightRange));
+            break;
+        case "chest_ai":
+            object.setAI(new ChestAI(data.bgColor, data.emptyColor));
+            break;
+        case "dropped_item_ai":
+            object.setAI(new DroppedItemAI());
+            break;
+        default:
+            console.error(`Unhandled AI type ${data.ai}`);
+            break;
         }
     }
 
     if (data.graphics) {
         switch (data.graphics) {
-            case "basic_graphics":
-                object.setGraphics(new BasicGraphics(data.char, data.fgColor, data.bgColor));
-                break;
-            case "draw_after_seen":
-                object.setGraphics(new DrawAfterSeen(data.char, data.fgColor, data.bgColor));
-                break;
-            default:
-                console.error(`Unhandled Graphics type ${data.graphics}`);
-                break;
+        case "basic_graphics":
+            object.setGraphics(new BasicGraphics(data.char, data.fgColor, data.bgColor));
+            break;
+        case "draw_after_seen":
+            object.setGraphics(new DrawAfterSeen(data.char, data.fgColor, data.bgColor));
+            break;
+        default:
+            console.error(`Unhandled Graphics type ${data.graphics}`);
+            break;
         }
     }
 
     if (data.lighting) {
         switch (data.lighting) {
-            case "reflectivity":
-                object.setLighting(new ReflectivityLighting(data.lightingColor, data.lightingRange));
-                break;
-            case "player_lighting":
-                object.setLighting(new PlayerLighting(data.lightingColor, data.lightingRange));
-                break;
-            default:
-                console.error(`Unhandled Lighting type ${data.lighting}`);
-                break;
+        case "reflectivity":
+            object.setLighting(new ReflectivityLighting(data.lightingColor, data.lightingRange));
+            break;
+        case "player_lighting":
+            object.setLighting(new PlayerLighting(data.lightingColor, data.lightingRange));
+            break;
+        default:
+            console.error(`Unhandled Lighting type ${data.lighting}`);
+            break;
         }
     }
 
@@ -137,43 +150,43 @@ const createObject = function (id, x=0, y=0) {
         let callback;
 
         switch (data.onDeath) {
-            case "default":
-                callback = enemyDeathCallback;
-                break;
-            case "removeFromWorld":
-                callback = removeDeathCallback;
-                break
-            default:
-                console.error(`Unhandled onDeath type ${data.onDeath}`);
-                break;
+        case "default":
+            callback = enemyDeathCallback;
+            break;
+        case "removeFromWorld":
+            callback = removeDeathCallback;
+            break;
+        default:
+            console.error(`Unhandled onDeath type ${data.onDeath}`);
+            break;
         }
 
         switch (data.fighter) {
-            case "basic_fighter":
-                object.setFighter(new BasicFighter(
-                    data,
-                    callback
-                ));
-                break;
-            default:
-                console.error(`Unhandled Fighter type ${data.fighter}`);
-                break;
+        case "basic_fighter":
+            object.setFighter(new BasicFighter(
+                data,
+                callback
+            ));
+            break;
+        default:
+            console.error(`Unhandled Fighter type ${data.fighter}`);
+            break;
         }
     }
 
     if (data.inventory) {
         switch (data.inventory) {
-            case "basic_inventory":
-                object.setInventory(new BasicInventory());
-                break;
-            default:
-                console.error(`Unhandled Inventory type ${data.inventory}`);
-                break;
+        case "basic_inventory":
+            object.setInventory(new BasicInventory());
+            break;
+        default:
+            console.error(`Unhandled Inventory type ${data.inventory}`);
+            break;
         }
 
         if (data.inventoryPool) {
             for (var i = 0; i < data.inventoryPool.length; i++) {
-                if (ROT.RNG.getUniform() <= data.inventoryPool[i][1]) {
+                if (RNG.getUniform() <= data.inventoryPool[i][1]) {
                     object.inventoryComponent.addItem(data.inventoryPool[i][0]);
                 }
             }
@@ -182,21 +195,21 @@ const createObject = function (id, x=0, y=0) {
 
     if (data.interactable) {
         switch (data.interactable) {
-            case "give_items_interactable":
-                object.setInteractable(new GiveItemsInteractable());
-                break;
-            case "give_spell_interactable":
-                object.setInteractable(new GiveSpellInteractable());
-                break;
-            case "load_level_interactable":
-                object.setInteractable(new LoadLevelInteractable());
-                break;
-            case "door_interactable":
-                object.setInteractable(new DoorInteractable());
-                break;
-            default: 
-                console.error(`Unhandled Interactable type ${data.interactable}`);
-                break;
+        case "give_items_interactable":
+            object.setInteractable(new GiveItemsInteractable());
+            break;
+        case "give_spell_interactable":
+            object.setInteractable(new GiveSpellInteractable());
+            break;
+        case "load_level_interactable":
+            object.setInteractable(new LoadLevelInteractable());
+            break;
+        case "door_interactable":
+            object.setInteractable(new DoorInteractable());
+            break;
+        default: 
+            console.error(`Unhandled Interactable type ${data.interactable}`);
+            break;
         }
     }
 
@@ -212,20 +225,20 @@ const createObject = function (id, x=0, y=0) {
  * @return {void}
  */
 const enemyDeathCallback = function(target) {
-    Game.displayMessage(target.name + " has been killed");
-    target.graphics.char = '%';
+    globals.Game.displayMessage(target.name + " has been killed");
+    target.graphics.char = "%";
     target.graphics.fgColor = "green";
     target.graphics.bgColor = "darkred";
     target.blocks = false;
     target.fighter = null;
     target.ai = null;
     target.interactable = null;
-    target.name = 'Remains of a ' + target.name;
+    target.name = "Remains of a " + target.name;
 
     if (target.inventoryComponent.getIDsAndCounts().length > 0) {
         let item = createObject("dropped_item", target.x, target.y);
         item.inventoryComponent = target.inventoryComponent;
-        Game.addObject(item);
+        globals.Game.addObject(item);
     }
 
     target.inventoryComponent = null;
@@ -242,8 +255,8 @@ const removeDeathCallback = function(target) {
     if (target.inventoryComponent.getIDsAndCounts().length > 0) {
         let item = createObject("dropped_item", target.x, target.y);
         item.inventoryComponent = target.inventoryComponent;
-        Game.addObject(item);
+        globals.Game.addObject(item);
     }
 
-    Game.removeObject(target);
+    globals.Game.removeObject(target);
 };

@@ -1,4 +1,11 @@
-'use strict';
+"use strict";
+
+import { RNG } from "rot-js";
+
+import globals from "./globals";
+import { ConfusedAI } from "./ai";
+import { getObjectsAtLocation, getClosestVisibleFighter, setAllToExplored } from "./map";
+import { randomIntFromInterval } from "./util";
 
 /**
  * Unhook the mouse look functionality and then listen for a mouse
@@ -10,18 +17,18 @@
  * @return {void}
  */
 const mouseTarget = function (cb) {
-    Game.unhookMouseLook();
-    Game.drawAll();
+    globals.Game.unhookMouseLook();
+    globals.Game.drawAll();
 
-    Game.canvas.addEventListener("mousedown", function _listener(e) {
+    globals.Game.canvas.addEventListener("mousedown", function _listener(e) {
         if (e.button === 0) {
-            const pos = Game.display.eventToPosition(e);
+            const pos = globals.Game.display.eventToPosition(e);
 
-            Game.canvas.removeEventListener("mousedown", _listener);
-            Game.hookMouseLook();
+            globals.Game.canvas.removeEventListener("mousedown", _listener);
+            globals.Game.hookMouseLook();
 
             let target;
-            let objects = getObjectsAtLocation(Game.gameObjects, pos[0], pos[1]);
+            let objects = getObjectsAtLocation(globals.Game.gameObjects, pos[0], pos[1]);
 
             for (var i = 0; i < objects.length; i++) {
                 if (objects[i].fighter) {
@@ -39,33 +46,33 @@ const mouseTarget = function (cb) {
     });
 };
 
-const castHeal = function(item, user, ownerCallback) {
+export function castHeal(item, user, ownerCallback) {
     if (user.fighter.hp >= user.fighter.maxHp) {
-        if (user === Game.player) {
-            Game.displayMessage('You are already at full health.');
+        if (user === globals.Game.player) {
+            globals.Game.displayMessage("You are already at full health.");
         } else {
-            Game.displayMessage(user.name + ' tries and fails to take a health potion');
+            globals.Game.displayMessage(user.name + " tries and fails to take a health potion");
         }
         return ownerCallback(false);
     }
     user.fighter.heal(item.value);
     return ownerCallback(true);
-};
+}
 
-const castDamageSpell = function(item, user, ownerCallback) {
-    Game.displayMessage('Left click on an enemy to target it, click elsewhere to cancel');
+export function castDamageSpell(item, user, ownerCallback) {
+    globals.Game.displayMessage("Left click on an enemy to target it, click elsewhere to cancel");
     mouseTarget(function (target) {
         if (target === null) {
-            Game.displayMessage("Canceled casting");
+            globals.Game.displayMessage("Canceled casting");
             return ownerCallback(false);
         }
 
-        Game.displayMessage(`Spell hits ${target.name} for ${item.value} damage`);
+        globals.Game.displayMessage(`Spell hits ${target.name} for ${item.value} damage`);
         target.fighter.takeDamage(user, item.value, item.damageType);
 
         // Check for the fighter again because it could have died already
         if (target.fighter && item.statusEffectFunc) {
-            if (ROT.RNG.getUniform() <= target.fighter.ailmentSusceptibility) {
+            if (RNG.getUniform() <= target.fighter.ailmentSusceptibility) {
                 const effectDamage = Math.round(target.fighter.maxHp * 0.0625);
                 const turns = randomIntFromInterval(3, 6);
                 target.fighter.addStatusEffect(
@@ -76,24 +83,24 @@ const castDamageSpell = function(item, user, ownerCallback) {
 
         return ownerCallback(true);
     });
-};
+}
 
-const castWildDamageSpell = function(item, user, ownerCallback) {
-    const target = getClosestVisibleFighter(Game.map, Game.gameObjects, user, 8);
+export function castWildDamageSpell(item, user, ownerCallback) {
+    const target = getClosestVisibleFighter(globals.Game.map, globals.Game.gameObjects, user, 8);
 
     if (target === null) {
-        if (user === Game.player) {
-            Game.displayMessage('No target is close enough to use the scroll');
+        if (user === globals.Game.player) {
+            globals.Game.displayMessage("No target is close enough to use the scroll");
         }
         return ownerCallback(false);
     }
 
-    Game.displayMessage(`Spell hits ${target.name} for ${item.value} damage`);
+    globals.Game.displayMessage(`Spell hits ${target.name} for ${item.value} damage`);
     target.fighter.takeDamage(user, item.value, item.damageType);
 
     // Check for the fighter again because it could have died already
     if (target.fighter && item.statusEffectFunc) {
-        if (ROT.RNG.getUniform() <= target.fighter.ailmentSusceptibility) {
+        if (RNG.getUniform() <= target.fighter.ailmentSusceptibility) {
             const effectDamage = Math.round(target.fighter.maxHp * 0.0625);
             const turns = randomIntFromInterval(3, 6);
             target.fighter.addStatusEffect(
@@ -103,25 +110,25 @@ const castWildDamageSpell = function(item, user, ownerCallback) {
     }
 
     return ownerCallback(true);
-};
+}
 
-const castConfuse = function(item, user, ownerCallback) {
-    Game.displayMessage('Left click on an enemy to target it, click elsewhere to cancel');
+export function castConfuse(item, user, ownerCallback) {
+    globals.Game.displayMessage("Left click on an enemy to target it, click elsewhere to cancel");
     mouseTarget(function (target) {
         if (target === null) {
             return ownerCallback(false);
         }
 
-        Game.displayMessage(target.name + ' is now confused');
+        globals.Game.displayMessage(target.name + " is now confused");
         const oldAI = target.ai;
         target.ai = new ConfusedAI(oldAI, item.value);
         target.ai.owner = target;
         return ownerCallback(true);
     });
-};
+}
 
-const castClairvoyance = function(item, user, ownerCallback) {
-    Game.displayMessage('You have been granted Clairvoyance');
-    setAllToExplored(Game.map);
+export function castClairvoyance(item, user, ownerCallback) {
+    globals.Game.displayMessage("You have been granted Clairvoyance");
+    setAllToExplored(globals.Game.map);
     return ownerCallback(true);
-};
+}

@@ -1,4 +1,9 @@
-'use strict';
+"use strict";
+
+import { FOV, DIRS, RNG, Path } from "rot-js";
+
+import globals from "./globals";
+import { isBlocked, isSightBlocked, findEmptySpace } from "./map";
 
 /**
  * Creates a function which returns if an x and y coordinate
@@ -7,15 +12,15 @@
  * @param  {GameObject} owner The game object to be used with this function
  * @return {Function}         the callback
  */
-const createPassableCallback = function (owner) {
+export function createPassableCallback(owner) {
     return function(x, y) {
         // own space is passable
         if (owner.x === x && owner.y === y) {
             return true;
         }
-        return isBlocked(Game.map, Game.gameObjects, x, y) === null;
+        return isBlocked(globals.Game.map, globals.Game.gameObjects, x, y) === null;
     };
-};
+}
 
 /**
  * Creates a function which returns if an x and y coordinate
@@ -24,13 +29,13 @@ const createPassableCallback = function (owner) {
  * @param  {GameObject} owner The game object to be used with this function
  * @return {Function}         the callback
  */
-const createPassableSightCallback = function (owner) {
+export function createPassableSightCallback(owner) {
     return function(x, y) {
         // own space is passable
         if (owner.x === x && owner.y === y) {
             return true;
         }
-        return isSightBlocked(Game.map, Game.gameObjects, x, y) === false;
+        return isSightBlocked(globals.Game.map, globals.Game.gameObjects, x, y) === false;
     };
 }
 
@@ -44,12 +49,12 @@ const createPassableSightCallback = function (owner) {
  */
 const createVisibilityCallback = function (ai) {
     return function(x, y, r, visibility) {
-        if (x === Game.player.x && y === Game.player.y && visibility > 0) {
-            Game.displayMessage(ai.owner.name + " saw you");
+        if (x === globals.Game.player.x && y === globals.Game.player.y && visibility > 0) {
+            globals.Game.displayMessage(ai.owner.name + " saw you");
             ai.state = "chase";
         }
     };
-}
+};
 
 /**
  * Basic monster behavior with two states, chase and wander.
@@ -75,13 +80,13 @@ class BasicMonsterAI {
         // wander in random directions
         if (this.state === "wander") {
             // compute the FOV to see if the player is sighted
-            const fov = new ROT.FOV.PreciseShadowcasting(createPassableSightCallback(this.owner));
+            const fov = new FOV.PreciseShadowcasting(createPassableSightCallback(this.owner));
             fov.compute(this.owner.x, this.owner.y, this.sightRange, createVisibilityCallback(this));
 
-            const dir = ROT.DIRS[8][ROT.RNG.getItem([0, 1, 2, 3, 4, 5, 6, 7])];
+            const dir = DIRS[8][RNG.getItem([0, 1, 2, 3, 4, 5, 6, 7])];
             const newX = this.owner.x + dir[0];
             const newY = this.owner.y + dir[1];
-            const target = isBlocked(Game.map, Game.gameObjects, newX, newY);
+            const target = isBlocked(globals.Game.map, globals.Game.gameObjects, newX, newY);
 
             if (target !== null) {
                 return;
@@ -91,9 +96,9 @@ class BasicMonsterAI {
             this.owner.y = newY;
         // chase the player with A*
         } else if (this.state === "chase") {
-            let x = Game.player.x;
-            let y = Game.player.y;
-            let astar = new ROT.Path.AStar(
+            let x = globals.Game.player.x;
+            let y = globals.Game.player.y;
+            let astar = new Path.AStar(
                 x,
                 y,
                 createPassableCallback(this.owner),
@@ -103,13 +108,13 @@ class BasicMonsterAI {
             let path = [];
             let pathCallback = function(x, y) {
                 path.push([x, y]);
-            }
+            };
             astar.compute(this.owner.x, this.owner.y, pathCallback);
 
             // remove our own position
             path.shift();
             if (path.length == 1) {
-                this.owner.fighter.attack(Game.player);
+                this.owner.fighter.attack(globals.Game.player);
             } else {
                 if (path.length === 0) {
                     return;
@@ -149,14 +154,14 @@ class PatrollingMonsterAI {
         // choose a random spot open in the map and go there
         if (this.state === "patrol") {
             // compute the FOV to see if the player is sighted
-            const fov = new ROT.FOV.PreciseShadowcasting(createPassableSightCallback(this.owner));
+            const fov = new FOV.PreciseShadowcasting(createPassableSightCallback(this.owner));
             fov.compute(this.owner.x, this.owner.y, this.sightRange, createVisibilityCallback(this));
 
             if (this.patrolTarget === null) {
-                this.patrolTarget = findEmptySpace(Game.map, Game.gameObjects);
+                this.patrolTarget = findEmptySpace(globals.Game.map, globals.Game.gameObjects);
             }
 
-            const astar = new ROT.Path.AStar(
+            const astar = new Path.AStar(
                 this.patrolTarget.x,
                 this.patrolTarget.y,
                 createPassableCallback(this.owner),
@@ -166,7 +171,7 @@ class PatrollingMonsterAI {
             let path = [];
             const pathCallback = function(x, y) {
                 path.push([x, y]);
-            }
+            };
             astar.compute(this.owner.x, this.owner.y, pathCallback);
 
             path.shift();
@@ -180,9 +185,9 @@ class PatrollingMonsterAI {
             this.owner.y = path[0][1];
         // chase the player with A*
         } else if (this.state === "chase") {
-            const astar = new ROT.Path.AStar(
-                Game.player.x,
-                Game.player.y,
+            const astar = new Path.AStar(
+                globals.Game.player.x,
+                globals.Game.player.y,
                 createPassableSightCallback(this.owner),
                 { topology: 8 }
             );
@@ -190,13 +195,13 @@ class PatrollingMonsterAI {
             let path = [];
             let pathCallback = function(x, y) {
                 path.push([x, y]);
-            }
+            };
             astar.compute(this.owner.x, this.owner.y, pathCallback);
 
             // remove our own position
             path.shift();
             if (path.length == 1) {
-                this.owner.fighter.attack(Game.player);
+                this.owner.fighter.attack(globals.Game.player);
             } else {
                 if (path.length === 0) {
                     return;
@@ -224,10 +229,10 @@ class ConfusedAI {
 
     act() {
         if (this.turns > 0) {
-            const dir = ROT.DIRS[4][ROT.RNG.getItem([0, 1, 2, 3])];
+            const dir = DIRS[4][RNG.getItem([0, 1, 2, 3])];
             const newX = this.owner.x + dir[0];
             const newY = this.owner.y + dir[1];
-            const target = isBlocked(Game.map, Game.gameObjects, newX, newY);
+            const target = isBlocked(globals.Game.map, globals.Game.gameObjects, newX, newY);
             
             if (target !== null) {
                 return;
@@ -236,10 +241,10 @@ class ConfusedAI {
             this.owner.x = newX;
             this.owner.y = newY;
         } else {
-            if (this.owner === Game.player) {
-                Game.displayMessage("You are no longer confused");
+            if (this.owner === globals.Game.player) {
+                globals.Game.displayMessage("You are no longer confused");
             } else {
-                Game.displayMessage(this.owner.name + " is no longer confused");
+                globals.Game.displayMessage(this.owner.name + " is no longer confused");
             }
 
             this.owner.ai = this.oldAI;
@@ -293,10 +298,12 @@ class DroppedItemAI {
     act() {
         if (this.owner && this.owner.inventoryComponent) {
             if (this.owner.inventoryComponent.getIDsAndCounts().length === 0) {
-                Game.removeObject(this.owner);
+                globals.Game.removeObject(this.owner);
             }
         } else {
             console.error("Missing inventoryComponent for DroppedItemAI");
         }
     }
 }
+
+export { BasicMonsterAI, PatrollingMonsterAI, ConfusedAI, ChestAI, DroppedItemAI };

@@ -1,4 +1,24 @@
-'use strict';
+"use strict";
+
+import { RNG } from "rot-js";
+
+import {
+    WORLD_HEIGHT,
+    WORLD_WIDTH,
+    COLOR_AMBIENT_LIGHT,
+    COLOR_DARK_WALL,
+    COLOR_INVISIBLE_WALL,
+    COLOR_DARK_GROUND,
+    COLOR_INVISIBLE_GROUND,
+    TileData
+} from "./data";
+import { createObject } from "./object";
+
+import level_1 from "./maps/level_1";
+import level_2 from "./maps/level_2";
+import dev_room from "./maps/dev_room";
+
+const TileMaps = { level_1, level_2, dev_room };
 
 class Tile {
     constructor(name, char, fgColor, bgColor, fgColorExplored, bgColorExplored, blocks, blocksSight, visible = false, explored = false) {
@@ -21,8 +41,9 @@ class Tile {
     }
 }
 
-const loadTiledMap = function (level) {
+export function loadTiledMap(level) {
     const sourceData = TileMaps[level];
+    console.log(sourceData.width, "WORLD_WIDTH", WORLD_WIDTH, sourceData.height, WORLD_HEIGHT);
     const tileSize = sourceData.tileheight;
     let map = [], objects = [], playerLocation = null;
 
@@ -35,9 +56,9 @@ const loadTiledMap = function (level) {
     }
 
     const translated = sourceData.layers[0].data.map(tile => {
-        if (!(tile in tileData)) { throw new Error(`${tile} is not valid tile`); }
+        if (!(tile in TileData)) { throw new Error(`${tile} is not valid tile`); }
 
-        const data = tileData[tile];
+        const data = TileData[tile];
         return new Tile(
             data.name,
             data.char,
@@ -91,7 +112,7 @@ const loadTiledMap = function (level) {
                 );
 
                 if (inventory && obj.inventoryComponent) {
-                    inventory.split(',').forEach(i => obj.inventoryComponent.addItem(i));
+                    inventory.split(",").forEach(i => obj.inventoryComponent.addItem(i));
                 }
 
                 if (levelName && obj.interactable && obj.interactable.setLevel) {
@@ -118,66 +139,38 @@ const loadTiledMap = function (level) {
     });
 
     return { map, playerLocation, objects };
-};
-
-const addStairs = function(map, objects) {
-    const {x, y} = findEmptySpace(map, objects);
-    objects.push(createObject("stairs", x, y));
-};
-
-const addDungeonStairs = function(map, rooms, objects) {
-    const {x, y} = findEmptySpaceInRoom(map, rooms, objects);
-    objects.push(createObject("stairs", x, y));
-};
-
-const findEmptySpace = function(map, objects) {
-    let x = 0, y = 0;
-    while (isBlocked(map, objects, x, y)) {
-        x = Math.floor(ROT.RNG.getUniform() * WORLD_WIDTH);
-        y = Math.floor(ROT.RNG.getUniform() * WORLD_HEIGHT);
-    }
-    return { x, y };
-};
-
-/**
- * Find an empty space in the room array from a dungeon map
- * so that the object doesn't block a passageway.
- * @param  {Array} map      The map array
- * @param  {Array} rooms    The room array from the rng
- * @param  {Array} objects  The objects in the map
- * @return {Number}         The x and y coordinates
- */
-const findEmptySpaceInRoom = function(map, rooms, objects) {
-    let x = 0, y = 0;
-    while (isBlocked(map, objects, x, y)) {
-        const room = rooms[Math.floor(ROT.RNG.getUniform() * rooms.length)];
-        x = randomIntFromInterval(room.getLeft() + 1, room.getRight() - 1);
-        y = randomIntFromInterval(room.getBottom() - 1, room.getTop() + 1);
-    }
-    return { x, y };
-};
-
-const getObjectsAtLocation = function(objects, x, y) {
-    return objects.filter(object => object.x == x && object.y == y);
 }
+
+export function findEmptySpace(map, objects) {
+    let x = 0, y = 0;
+    while (exports.isBlocked(map, objects, x, y)) {
+        x = Math.floor(RNG.getUniform() * WORLD_WIDTH);
+        y = Math.floor(RNG.getUniform() * WORLD_HEIGHT);
+    }
+    return { x, y };
+}
+
+export const getObjectsAtLocation = function(objects, x, y) {
+    return objects.filter(object => object.x == x && object.y == y);
+};
 
 /**
     Returns null if the space is open, true or the blocking object
     if blocked
 */
-const isBlocked = function(map, objects, x, y) {
+export function isBlocked(map, objects, x, y) {
     if (x < 0 || y < 0 || x >= WORLD_WIDTH || y >= WORLD_HEIGHT || map[y][x].blocks) {
         return true;
     }
 
     const target = objects.filter(object => object.x == x && object.y == y && object.blocks === true)[0];
     return target ? target : null;
-};
+}
 
 /**
     Returns true if space blocks sight, false otherwise
 */
-const isSightBlocked = function(map, objects, x, y) {
+export function isSightBlocked(map, objects, x, y) {
     if (x < 0 || y < 0 || x >= WORLD_WIDTH || y >= WORLD_HEIGHT || map[y][x].blocksSight) {
         return true;
     }
@@ -190,7 +183,7 @@ const isSightBlocked = function(map, objects, x, y) {
     }
 
     return false;
-};
+}
 
 const drawTile = function(display, tile, x, y) {
     let fgColor, bgColor;
@@ -232,7 +225,7 @@ const drawTile = function(display, tile, x, y) {
 const distanceBetweenObjects = function (a, b) {
     const dx = b.x - a.x;
     const dy = b.y - a.y;
-    return Math.sqrt(dx ** 2 + dy ** 2)
+    return Math.sqrt(dx ** 2 + dy ** 2);
 };
 
 /**
@@ -245,7 +238,7 @@ const distanceBetweenObjects = function (a, b) {
  * @param  {Number}     maxDistance  The max allowed distance before giving up
  * @return {GameObject}              The closest actor
  */
-const getClosestVisibleFighter = function (map, actors, origin, maxDistance) {
+export function getClosestVisibleFighter(map, actors, origin, maxDistance) {
     let closestActor = null;
     let closestDistance = maxDistance + 1;
 
@@ -268,27 +261,27 @@ const getClosestVisibleFighter = function (map, actors, origin, maxDistance) {
  * @param  {Array} map  An array of arrays of Tiles
  * @return {void}
  */
-const resetVisibility = function(map) {
+export function resetVisibility(map) {
     for (let y = 0; y < map.length; y++) {
         for (let x = 0; x < map[y].length; x++) {
             map[y][x].visible = false;
             map[y][x].lightingColor = COLOR_AMBIENT_LIGHT;
         }
     }
-};
+}
 
 /**
  * Set all the Tile objects in a map to explored
  * @param  {Array} map  An array of arrays of Tiles
  * @return {void}
  */
-const setAllToExplored = function(map) {
+export function setAllToExplored(map) {
     for (let y = 0; y < map.length; y++) {
         for (let x = 0; x < map[y].length; x++) {
             map[y][x].explored = true;
         }
     }
-};
+}
 
 /**
  * Calls drawTile on an array of Tile arrays
@@ -296,10 +289,10 @@ const setAllToExplored = function(map) {
  * @param  {Array} map      An array of arrays of Tiles
  * @return {void}
  */
-const drawMap = function(display, map) {
+export function drawMap(display, map) {
     for (let y = 0; y < map.length; y++) {
         for (let x = 0; x < map[y].length; x++) {
             drawTile(display, map[y][x], x, y);
         }
     }
-};
+}

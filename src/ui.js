@@ -1,6 +1,17 @@
-'use strict';
+"use strict";
 
-const drawUI = function(display, level, player) {
+import globals from "./globals";
+import {
+    WIDTH,
+    HEIGHT,
+    UI_HEIGHT,
+    MAP_FILLED_SPACE,
+    MAP_EMPTY_SPACE,
+    LEVEL_UP_BASE,
+    LEVEL_UP_FACTOR
+} from "./data";
+
+export function drawUI(display, level, player) {
     for (let i = 0; i < WIDTH; i++) {
         display.draw(i, HEIGHT - UI_HEIGHT, MAP_FILLED_SPACE, "blue", "blue");
     }
@@ -11,9 +22,9 @@ const drawUI = function(display, level, player) {
     display.drawText(38,  HEIGHT - UI_HEIGHT, "%c{white}%b{blue}DEF: " + player.fighter.defense);
     display.drawText(46,  HEIGHT - UI_HEIGHT, "%c{white}%b{blue}LVL: " + player.fighter.level);
     display.drawText(54,  HEIGHT - UI_HEIGHT, "%c{white}%b{blue}EXP: " + player.fighter.experience + "/" + (LEVEL_UP_BASE + player.fighter.level * LEVEL_UP_FACTOR));
-};
+}
 
-const showSelectionMenu = function(header, items, type, width) {
+export function showSelectionMenu(header, items, type, width) {
     if (items.length > 26) {
         console.error("too many items");
         return;
@@ -28,34 +39,33 @@ const showSelectionMenu = function(header, items, type, width) {
     for (let w = 0; w < width; w++) {
         for (let h = 0; h < height; h++) {
             if (w === 0 || h === 0 || w === width - 1 || h === height - 1) {
-                Game.display.draw(w, h, "1", "grey", "grey");
+                globals.Game.display.draw(w, h, "1", "grey", "grey");
             } else {
-                Game.display.draw(w, h, "1", "black", "black");
+                globals.Game.display.draw(w, h, "1", "black", "black");
             }
         }
     }
 
-    Game.display.drawText(2, 1, "%c{white}%b{black}" + header);
+    globals.Game.display.drawText(2, 1, "%c{white}%b{black}" + header);
     for (let i = 0; i < items.length; i++) {
-         switch (type) {
-             case "inventory":
-                 Game.display.drawText(
-                     2, i + 3, `%c{white}%b{black} ${String.fromCharCode(i + aCode)}: ${items[i].name} (${items[i].count})`
-                 );
-                 break;
-             case "spells":
-                 Game.display.drawText(
-                     2, i + 3, `%c{white}%b{black} ${String.fromCharCode(i + aCode)}: ${items[i].name} dmg: ${items[i].value} cost: ${items[i].manaCost}`
-                 );
-                 break;
-             default:
-                 throw new Error(`Unknown menu type ${type}`);
-                 break;
-         }
+        switch (type) {
+        case "inventory":
+            globals.Game.display.drawText(
+                2, i + 3, `%c{white}%b{black} ${String.fromCharCode(i + aCode)}: ${items[i].name} (${items[i].count})`
+            );
+            break;
+        case "spells":
+            globals.Game.display.drawText(
+                2, i + 3, `%c{white}%b{black} ${String.fromCharCode(i + aCode)}: ${items[i].name} dmg: ${items[i].value} cost: ${items[i].manaCost}`
+            );
+            break;
+        default:
+            throw new Error(`Unknown menu type ${type}`);
+        }
     }
-};
+}
 
-const showKeyBindingMenu = function() {
+export function showKeyBindingMenu() {
     // add one for header
     const height = 16;
     const width = WIDTH;
@@ -64,30 +74,30 @@ const showKeyBindingMenu = function() {
     for (let w = 0; w < width; w++) {
         for (let h = 0; h < height; h++) {
             if (w === 0 || h === 0 || w === width - 1 || h === height - 1) {
-                Game.display.draw(w, h, "1", "grey", "grey");
+                globals.Game.display.draw(w, h, "1", "grey", "grey");
             } else {
-                Game.display.draw(w, h, "1", "black", "black");
+                globals.Game.display.draw(w, h, "1", "black", "black");
             }
         }
     }
 
-    Game.display.drawText(2, 1, "%c{white}%b{black} Keyboard Bindings");
-    Game.display.drawText(2, 3, "%c{white}%b{black} Click on an option to change it");
+    globals.Game.display.drawText(2, 1, "%c{white}%b{black} Keyboard Bindings");
+    globals.Game.display.drawText(2, 3, "%c{white}%b{black} Click on an option to change it");
 
-    let commands = Object.keys(keyCommandMap);
+    let commands = Object.keys(globals.Game.player.keyCommandMap);
     for (let i = 0; i < commands.length; i++) {
         let key = commands[i];
-        Game.display.drawText(
+        globals.Game.display.drawText(
             2, i + 5,
-            "%c{white}%b{black} " + keyCommandMap[key][0] + ": " + key
+            "%c{white}%b{black} " + globals.Game.player.keyCommandMap[key][0] + ": " + key
         );
     }
-};
+}
 
-const clearScreen = function (display) {
+export function clearScreen(display) {
     for (let y = 0; y < HEIGHT; y++) {
         for (let x = 0; x < WIDTH; x++) {
-            display.draw(x, y, MAP_EMPTY_SPACE, 'black', 'black');
+            display.draw(x, y, MAP_EMPTY_SPACE, "black", "black");
         }
     }
 }
