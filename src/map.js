@@ -43,9 +43,10 @@ class Tile {
 
 export function loadTiledMap(level) {
     const sourceData = TileMaps[level];
-    console.log(sourceData.width, "WORLD_WIDTH", WORLD_WIDTH, sourceData.height, WORLD_HEIGHT);
     const tileSize = sourceData.tileheight;
-    let map = [], objects = [], playerLocation = null;
+    const map = [];
+    const objects = [];
+    let playerLocation = null;
 
     if (sourceData.width !== WORLD_WIDTH && sourceData.height !== WORLD_HEIGHT) {
         throw new Error(`Loaded map ${name} doesn't match world width/height`);
@@ -76,10 +77,10 @@ export function loadTiledMap(level) {
     }
 
     sourceData.layers[1].objects.forEach(o => {
-        const findProperty = function (name) {
+        function findProperty(name) {
             if (!o.properties || !o.properties.length) { return null; }
 
-            let property = o.properties.filter(prop => {
+            const property = o.properties.filter(prop => {
                 return prop.name === name;
             });
 
@@ -88,10 +89,10 @@ export function loadTiledMap(level) {
             } else {
                 return property[0].value;
             }
-        };
+        }
 
-        let id = findProperty("id"),
-            obj,
+        let obj;
+        const id = findProperty("id"),
             inventory = findProperty("inventory"),
             levelName = findProperty("levelName"),
             spellId = findProperty("spellId");
@@ -125,8 +126,8 @@ export function loadTiledMap(level) {
                 objects.push(obj);
             }
         } else if (o.type === "Rectangle") {
-            let x = Math.floor(o.x / tileSize);
-            let y = Math.floor(o.y / tileSize);
+            const x = Math.floor(o.x / tileSize);
+            const y = Math.floor(o.y / tileSize);
             const width = Math.floor(o.width / tileSize) + x;
             const height = Math.floor(o.height / tileSize) + y;
 
@@ -150,9 +151,9 @@ export function findEmptySpace(map, objects) {
     return { x, y };
 }
 
-export const getObjectsAtLocation = function(objects, x, y) {
-    return objects.filter(object => object.x == x && object.y == y);
-};
+export function getObjectsAtLocation(objects, x, y) {
+    return objects.filter(object => object.x === x && object.y === y);
+}
 
 /**
     Returns null if the space is open, true or the blocking object
@@ -163,7 +164,7 @@ export function isBlocked(map, objects, x, y) {
         return true;
     }
 
-    const target = objects.filter(object => object.x == x && object.y == y && object.blocks === true)[0];
+    const target = objects.filter(object => object.x === x && object.y === y && object.blocks === true)[0];
     return target ? target : null;
 }
 
@@ -176,7 +177,7 @@ export function isSightBlocked(map, objects, x, y) {
     }
 
     const o = getObjectsAtLocation(objects, x, y);
-    for (var i = 0; i < o.length; i++) {
+    for (let i = 0; i < o.length; i++) {
         if (o[i].blocksSight) {
             return true;
         }
@@ -185,7 +186,7 @@ export function isSightBlocked(map, objects, x, y) {
     return false;
 }
 
-const drawTile = function(display, tile, x, y) {
+function drawTile(display, tile, x, y) {
     let fgColor, bgColor;
 
     if (tile.blocks) {
@@ -214,7 +215,7 @@ const drawTile = function(display, tile, x, y) {
 
 
     display.draw(x, y, tile.char, fgColor, bgColor);
-};
+}
 
 /**
  * Find the distance between two GameObjects
@@ -222,11 +223,11 @@ const drawTile = function(display, tile, x, y) {
  * @param  {GameObject} b An object
  * @return {Number}       The distance
  */
-const distanceBetweenObjects = function (a, b) {
+function distanceBetweenObjects(a, b) {
     const dx = b.x - a.x;
     const dy = b.y - a.y;
     return Math.sqrt(dx ** 2 + dy ** 2);
-};
+}
 
 /**
  * Find the closest other actor from an actor origin given the actor is

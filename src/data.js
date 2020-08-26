@@ -16,7 +16,6 @@ export const COLOR_INVISIBLE_GROUND = "black";
 export const COLOR_DARK_GROUND = "rgb(50, 50, 50)";
 export const COLOR_LIGHT_GROUND = "white";
 export const COLOR_AMBIENT_LIGHT = "rgb(50, 50, 50)";
-console.log("COLOR_AMBIENT_LIGHT", COLOR_AMBIENT_LIGHT);
 
 export const MAP_FILLED_SPACE = "#";
 export const MAP_EMPTY_SPACE = ".";
@@ -69,7 +68,7 @@ export const TileData = {
         blocks: true,
         blocksSight: true,
         reflectivity: 0.18
-    }, 
+    },
     1165: {
         name: "A tree",
         char: "\u1278",
@@ -328,7 +327,7 @@ export const ObjectData = {
         experienceGiven: 500,
         maxHp: 100,
         maxMana: 0,
-        strength: 7, 
+        strength: 7,
         defense: 4,
         sightRange: 7,
         damageAffinity: {

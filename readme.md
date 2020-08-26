@@ -26,7 +26,7 @@ npm run build
 * A very basic leveling system
 * Monsters with basic AI, like rats and goblins
 * Lighting and sight FOVs
-* Interactables like chests and boxes which give items
+* Intractable world items like chests, boxes, and doors
 * Some scenery like tables, lanterns, fires, chairs, and cabinets
 * A magic system with damage spells and two types of utility spells
 * Health potions

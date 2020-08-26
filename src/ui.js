@@ -84,9 +84,9 @@ export function showKeyBindingMenu() {
     globals.Game.display.drawText(2, 1, "%c{white}%b{black} Keyboard Bindings");
     globals.Game.display.drawText(2, 3, "%c{white}%b{black} Click on an option to change it");
 
-    let commands = Object.keys(globals.Game.player.keyCommandMap);
+    const commands = Object.keys(globals.Game.player.keyCommandMap);
     for (let i = 0; i < commands.length; i++) {
-        let key = commands[i];
+        const key = commands[i];
         globals.Game.display.drawText(
             2, i + 5,
             "%c{white}%b{black} " + globals.Game.player.keyCommandMap[key][0] + ": " + key

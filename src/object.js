@@ -83,11 +83,11 @@ class GameObject {
  * @param  {String} id     The object id
  * @return {GameObject}    A GameObject with the components and params given in the data
  */
-export const createObject = function (id, x=0, y=0) {
+export function createObject(id, x=0, y=0) {
     if (!(id in ObjectData)) { throw new Error(`${id} is not valid object id`); }
 
     const data = ObjectData[id];
-    let object = new GameObject(
+    const object = new GameObject(
         id,
         x, y,
         data.name,
@@ -185,7 +185,7 @@ export const createObject = function (id, x=0, y=0) {
         }
 
         if (data.inventoryPool) {
-            for (var i = 0; i < data.inventoryPool.length; i++) {
+            for (let i = 0; i < data.inventoryPool.length; i++) {
                 if (RNG.getUniform() <= data.inventoryPool[i][1]) {
                     object.inventoryComponent.addItem(data.inventoryPool[i][0]);
                 }
@@ -207,14 +207,14 @@ export const createObject = function (id, x=0, y=0) {
         case "door_interactable":
             object.setInteractable(new DoorInteractable());
             break;
-        default: 
+        default:
             console.error(`Unhandled Interactable type ${data.interactable}`);
             break;
         }
     }
 
     return object;
-};
+}
 
 /**
  * Removes the AI, fighter, and intractable off of an object. Changes graphics
@@ -224,7 +224,7 @@ export const createObject = function (id, x=0, y=0) {
  * @param  {GameObject} target    The GameObject that was killed
  * @return {void}
  */
-const enemyDeathCallback = function(target) {
+function enemyDeathCallback(target) {
     globals.Game.displayMessage(target.name + " has been killed");
     target.graphics.char = "%";
     target.graphics.fgColor = "green";
@@ -236,13 +236,13 @@ const enemyDeathCallback = function(target) {
     target.name = "Remains of a " + target.name;
 
     if (target.inventoryComponent.getIDsAndCounts().length > 0) {
-        let item = createObject("dropped_item", target.x, target.y);
+        const item = createObject("dropped_item", target.x, target.y);
         item.inventoryComponent = target.inventoryComponent;
         globals.Game.addObject(item);
     }
 
     target.inventoryComponent = null;
-};
+}
 
 /**
  * Removes self from world and scheduler. Also spawns a dropped item
@@ -251,12 +251,12 @@ const enemyDeathCallback = function(target) {
  * @param  {GameObject} target    The GameObject that was killed
  * @return {void}
  */
-const removeDeathCallback = function(target) {
+function removeDeathCallback(target) {
     if (target.inventoryComponent.getIDsAndCounts().length > 0) {
-        let item = createObject("dropped_item", target.x, target.y);
+        const item = createObject("dropped_item", target.x, target.y);
         item.inventoryComponent = target.inventoryComponent;
         globals.Game.addObject(item);
     }
 
     globals.Game.removeObject(target);
-};
+}

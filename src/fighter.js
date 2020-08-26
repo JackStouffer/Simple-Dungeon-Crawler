@@ -94,7 +94,7 @@ class BasicFighter {
             } else {
                 globals.Game.displayMessage(this.owner.name + " attacks " + target.name + " for " + damage + " damage.");
             }
-            
+
             target.fighter.takeDamage(this.owner, damage);
         } else {
             globals.Game.displayMessage(this.owner.name + " attacks " + target.name + ", but it's too weak!");

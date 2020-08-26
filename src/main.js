@@ -145,7 +145,7 @@ class SimpleDungeonCrawler {
         this.player = createObject("player", 1, 1);
         this.loadLevel("level_1");
     }
-    
+
     displayMessage(text) {
         this.totalMessages++;
 

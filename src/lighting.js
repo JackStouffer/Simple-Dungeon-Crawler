@@ -28,7 +28,7 @@ class ReflectivityLighting {
     }
 
     compute(map) {
-        const lightingCallback = function (x, y, color) {
+        function lightingCallback(x, y, color) {
             if (x < 0 || y < 0 || x >= WORLD_WIDTH || y >= WORLD_HEIGHT) {
                 return;
             }
@@ -38,7 +38,7 @@ class ReflectivityLighting {
                     color
                 )
             );
-        };
+        }
         const fov = new FOV.PreciseShadowcasting(
             createPassableSightCallback(this.owner)
         );

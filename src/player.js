@@ -10,7 +10,7 @@ import { showSelectionMenu, showKeyBindingMenu } from "./ui";
 /**
     returns true when moved, false otherwise
  */
-const moveCommand = function(actor, direction, topology) {
+function moveCommand(actor, direction, topology) {
     return function() {
         const dir = DIRS[topology][direction];
         const newX = actor.x + dir[0];
@@ -37,9 +37,9 @@ const moveCommand = function(actor, direction, topology) {
         actor.y = newY;
         return true;
     };
-};
+}
 
-const getItemCommand = function(actor) {
+function getItemCommand(actor) {
     return function() {
         const items = globals.Game.gameObjects.filter(item => {
             return item.type === "dropped_item" && item.x === actor.x && item.y === actor.y;
@@ -53,9 +53,9 @@ const getItemCommand = function(actor) {
         globals.Game.displayMessage("There's no item to pick up");
         return false;
     };
-};
+}
 
-const openInventoryCommand = function(actor) {
+function openInventoryCommand(actor) {
     return function() {
         showSelectionMenu(
             "Player Inventory",
@@ -66,9 +66,9 @@ const openInventoryCommand = function(actor) {
         actor.ai.state = "inventory";
         return false;
     };
-};
+}
 
-const openSpellsCommand = function(actor) {
+function openSpellsCommand(actor) {
     return function() {
         showSelectionMenu(
             "Spells",
@@ -79,19 +79,19 @@ const openSpellsCommand = function(actor) {
         actor.ai.state = "spell_selection";
         return false;
     };
-};
+}
 
-const openKeyBindingCommand = function(actor) {
+function openKeyBindingCommand(actor) {
     return function() {
         showKeyBindingMenu();
         actor.ai.state = "keybinding";
         return false;
     };
-};
+}
 
 /**
  * Controls the player character through user input
- * 
+ *
  * While it would probably make sense to move input handling code
  * to the Game object since it modifies game state, but putting
  * in an AI component made the code cleaner

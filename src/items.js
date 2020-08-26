@@ -16,7 +16,7 @@ import { randomIntFromInterval } from "./util";
  * @param  {Function} cb callback
  * @return {void}
  */
-const mouseTarget = function (cb) {
+function mouseTarget(cb) {
     globals.Game.unhookMouseLook();
     globals.Game.drawAll();
 
@@ -28,9 +28,9 @@ const mouseTarget = function (cb) {
             globals.Game.hookMouseLook();
 
             let target;
-            let objects = getObjectsAtLocation(globals.Game.gameObjects, pos[0], pos[1]);
+            const objects = getObjectsAtLocation(globals.Game.gameObjects, pos[0], pos[1]);
 
-            for (var i = 0; i < objects.length; i++) {
+            for (let i = 0; i < objects.length; i++) {
                 if (objects[i].fighter) {
                     target = objects[i];
                     break;
@@ -44,7 +44,7 @@ const mouseTarget = function (cb) {
             }
         }
     });
-};
+}
 
 export function castHeal(item, user, ownerCallback) {
     if (user.fighter.hp >= user.fighter.maxHp) {

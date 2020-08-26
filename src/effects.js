@@ -20,12 +20,12 @@ export { Effect };
 /**
  * Create an Effect of applying damage over time
  * @param  {GameObject} victim     Who to apply the effect to
- * @param  {Number} damage         The amount of damage to give each turn 
+ * @param  {Number} damage         The amount of damage to give each turn
  * @param  {Number} turns          The number of turns to last
  * @return {Effect}                The resulting effect object
  */
 export function createBurnEffect(victim, damage, turns) {
-    const act = function (owner) {
+    function act(owner) {
         if (owner.fighter) {
             owner.fighter.takeDamage(null, damage);
         }
@@ -35,7 +35,7 @@ export function createBurnEffect(victim, damage, turns) {
         } else {
             globals.Game.displayMessage(owner.name + " was hurt by the burn for " + damage + " damage");
         }
-    };
+    }
 
     return new Effect(victim, "Burn", turns, act);
 }

@@ -47,20 +47,20 @@ export function createPassableSightCallback(owner) {
  * @param  {GameObject} owner The game object to be used with this function
  * @return {Function}         the callback
  */
-const createVisibilityCallback = function (ai) {
+function createVisibilityCallback(ai) {
     return function(x, y, r, visibility) {
         if (x === globals.Game.player.x && y === globals.Game.player.y && visibility > 0) {
             globals.Game.displayMessage(ai.owner.name + " saw you");
             ai.state = "chase";
         }
     };
-};
+}
 
 /**
  * Basic monster behavior with two states, chase and wander.
  * Default state is wander, which just chooses a random direction
  * sees if it's empty, and moves if it is.
- * 
+ *
  * Uses a definable sight range to check if a target is in range.
  * If one is this switches to chase which uses A* to go towards
  * the target. Attacks the target when it's within one tile from it
@@ -98,22 +98,22 @@ class BasicMonsterAI {
         } else if (this.state === "chase") {
             let x = globals.Game.player.x;
             let y = globals.Game.player.y;
-            let astar = new Path.AStar(
+            const astar = new Path.AStar(
                 x,
                 y,
                 createPassableCallback(this.owner),
                 { topology: 8 }
             );
 
-            let path = [];
-            let pathCallback = function(x, y) {
+            const path = [];
+            function pathCallback(x, y) {
                 path.push([x, y]);
-            };
+            }
             astar.compute(this.owner.x, this.owner.y, pathCallback);
 
             // remove our own position
             path.shift();
-            if (path.length == 1) {
+            if (path.length === 1) {
                 this.owner.fighter.attack(globals.Game.player);
             } else {
                 if (path.length === 0) {
@@ -168,10 +168,10 @@ class PatrollingMonsterAI {
                 { topology: 8 }
             );
 
-            let path = [];
-            const pathCallback = function(x, y) {
+            const path = [];
+            function pathCallback(x, y) {
                 path.push([x, y]);
-            };
+            }
             astar.compute(this.owner.x, this.owner.y, pathCallback);
 
             path.shift();
@@ -192,15 +192,15 @@ class PatrollingMonsterAI {
                 { topology: 8 }
             );
 
-            let path = [];
-            let pathCallback = function(x, y) {
+            const path = [];
+            function pathCallback(x, y) {
                 path.push([x, y]);
-            };
+            }
             astar.compute(this.owner.x, this.owner.y, pathCallback);
 
             // remove our own position
             path.shift();
-            if (path.length == 1) {
+            if (path.length === 1) {
                 this.owner.fighter.attack(globals.Game.player);
             } else {
                 if (path.length === 0) {
@@ -233,11 +233,11 @@ class ConfusedAI {
             const newX = this.owner.x + dir[0];
             const newY = this.owner.y + dir[1];
             const target = isBlocked(globals.Game.map, globals.Game.gameObjects, newX, newY);
-            
+
             if (target !== null) {
                 return;
             }
-            
+
             this.owner.x = newX;
             this.owner.y = newY;
         } else {
