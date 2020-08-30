@@ -19,6 +19,12 @@ To build
 npm run build
 ```
 
+## Tests
+
+```
+npm run test
+```
+
 ## Implemented Features
 
 * Multiple levels loaded and connected from Tiled maps

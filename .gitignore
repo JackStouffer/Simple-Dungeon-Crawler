@@ -1,2 +1,4 @@
 *.map
 node_modules/
+test-dist/
+.vscode

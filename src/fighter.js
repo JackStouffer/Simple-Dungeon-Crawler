@@ -25,7 +25,7 @@ class BasicFighter {
         this.experienceGiven = data.experienceGiven;
         this.level = data.level;
 
-        this.criticalChance = 0.05;
+        this.criticalChance = data.criticalChance || 0.05;
         this.criticalDamageMultipler = 1.5;
 
         this.statusEffects = [];
@@ -44,7 +44,9 @@ class BasicFighter {
             this.level += 1;
             this.experience = 0;
             this.hp = this.maxHp;
+            this.mana = this.maxMana;
             this.strength++;
+
             if (this.owner === globals.Game.player) {
                 globals.Game.displayMessage("You reached level " + this.level + "!");
             }

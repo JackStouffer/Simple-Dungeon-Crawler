@@ -4,8 +4,8 @@
   "description": "A simple dungeon crawling game with console graphics",
   "private": true,
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "eslint": "eslint src/*.js",
+    "test": "webpack --config webpack.test.js && mocha test-dist/main.js --require source-map-support/register && eslint src/*.js tests/*.js",
+    "eslint": "eslint src/*.js tests/*.js",
     "build": "webpack --config webpack.dev.js",
     "dist": "webpack --config webpack.prod.js",
     "start": "webpack-dev-server --config webpack.dev.js --open",
@@ -22,7 +22,11 @@
   },
   "homepage": "https://github.com/JackStouffer/Simple-Dungeon-Crawler#readme",
   "devDependencies": {
+    "chai": "^4.2.0",
     "eslint": "^7.7.0",
+    "mocha": "^8.1.2",
+    "sinon": "^9.0.3",
+    "source-map-support": "^0.5.19",
     "webpack": "^4.44.1",
     "webpack-cli": "^3.3.12",
     "webpack-dev-server": "^3.11.0",

@@ -16,7 +16,7 @@ import { randomIntFromInterval } from "./util";
  * @param  {Function} cb callback
  * @return {void}
  */
-function mouseTarget(cb) {
+export function mouseTarget(cb) {
     globals.Game.unhookMouseLook();
     globals.Game.drawAll();
 
@@ -46,6 +46,15 @@ function mouseTarget(cb) {
     });
 }
 
+/**
+ * Call the heal function on the user's fighter instance. Calls
+ * the provided callback with true if the item was successfully used
+ * and false otherwise.
+ *
+ * @param {Object} item The item data
+ * @param {GameObject} user The object using the item
+ * @param {Function} ownerCallback Callback from the user
+ */
 export function castHeal(item, user, ownerCallback) {
     if (user.fighter.hp >= user.fighter.maxHp) {
         if (user === globals.Game.player) {
