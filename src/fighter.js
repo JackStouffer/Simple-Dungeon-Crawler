@@ -25,7 +25,7 @@ class BasicFighter {
         this.experienceGiven = data.experienceGiven;
         this.level = data.level;
 
-        this.criticalChance = data.criticalChance || 0.05;
+        this.criticalChance = ("criticalChance" in data) ? data.criticalChance : 0.05;
         this.criticalDamageMultipler = 1.5;
 
         this.statusEffects = [];
