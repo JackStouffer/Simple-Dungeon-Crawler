@@ -41,6 +41,11 @@ class Tile {
     }
 }
 
+/**
+ * Load a Tiled map using its name.
+ * @param {String} level The name of the level
+ * @returns {Object}     The map 2d array, player location, and game objects array
+ */
 export function loadTiledMap(level) {
     const sourceData = TileMaps[level];
     const tileSize = sourceData.tileheight;
@@ -142,6 +147,14 @@ export function loadTiledMap(level) {
     return { map, playerLocation, objects };
 }
 
+/**
+ * Return a random pair of x and y coordinates which
+ * is non-blocking and does not have a blocking GameObject
+ * on it.
+ * @param {Array} map     The 2D map array
+ * @param {Array} objects An array of GameObjects
+ * @returns {Object}      The x and y coordinates
+ */
 export function findEmptySpace(map, objects) {
     let x = 0, y = 0;
     while (exports.isBlocked(map, objects, x, y)) {
@@ -151,14 +164,25 @@ export function findEmptySpace(map, objects) {
     return { x, y };
 }
 
+/**
+ * Return all the objects at a given spot on the map.
+ * @param {Array} objects An array of GameObjects
+ * @param {Number} x The x coordinate
+ * @param {Number} y The y coordinate
+ * @returns {Array} An array of GameObjects
+ */
 export function getObjectsAtLocation(objects, x, y) {
     return objects.filter(object => object.x === x && object.y === y);
 }
 
 /**
-    Returns null if the space is open, true or the blocking object
-    if blocked
-*/
+ * Returns null if the space is open, true or the blocking object
+ * if blocked.
+ * @param {Array} map The map 2D array
+ * @param {Array} objects An array of GameObjects
+ * @param {Number} x The x coordinate to check
+ * @param {Number} y The y coordinate to check
+ */
 export function isBlocked(map, objects, x, y) {
     if (x < 0 || y < 0 || x >= WORLD_WIDTH || y >= WORLD_HEIGHT || map[y][x].blocks) {
         return true;
@@ -169,8 +193,13 @@ export function isBlocked(map, objects, x, y) {
 }
 
 /**
-    Returns true if space blocks sight, false otherwise
-*/
+ * Returns true if space blocks sight, false otherwise.
+ * @param {Array} map The 2D map array
+ * @param {Array} objects An array of GameObjects
+ * @param {Number} x The x coordinate to check
+ * @param {Number} y The y coordinate to check
+ * @returns {Boolean} Does the spot block sight
+ */
 export function isSightBlocked(map, objects, x, y) {
     if (x < 0 || y < 0 || x >= WORLD_WIDTH || y >= WORLD_HEIGHT || map[y][x].blocksSight) {
         return true;
@@ -186,7 +215,14 @@ export function isSightBlocked(map, objects, x, y) {
     return false;
 }
 
-function drawTile(display, tile, x, y) {
+/**
+ * Draw a tile given the tile data and the coordinates.
+ * @param {Object} display The ROT.js display object
+ * @param {Tile} tile The tile to draw
+ * @param {Number} x The x coordinate
+ * @param {Number} y The y coordinate
+ */
+export function drawTile(display, tile, x, y) {
     let fgColor, bgColor;
 
     if (tile.blocks) {
