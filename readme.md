@@ -66,6 +66,8 @@ between levels
 * Tutorials that spawn in the log with special color/background when something happens. Have global flags that mark if a tutorial has already happened
 * Find some way to incorporate a speed-based scheduler so different mobs can move more than once per turn
 * Phone interface?
+* refactor isBlocked to be less confusing
+* refactor item functions to use less global data
 
 ### New Mechanics or Levels
 

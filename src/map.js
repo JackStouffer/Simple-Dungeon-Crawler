@@ -40,6 +40,7 @@ class Tile {
         return this.visible && this.lightingColor !== COLOR_AMBIENT_LIGHT;
     }
 }
+export { Tile };
 
 /**
  * Load a Tiled map using its name.
@@ -157,9 +158,9 @@ export function loadTiledMap(level) {
  */
 export function findEmptySpace(map, objects) {
     let x = 0, y = 0;
-    while (exports.isBlocked(map, objects, x, y)) {
-        x = Math.floor(RNG.getUniform() * WORLD_WIDTH);
-        y = Math.floor(RNG.getUniform() * WORLD_HEIGHT);
+    while (isBlocked(map, objects, x, y)) {
+        x = Math.floor(RNG.getUniform() * map[0].length);
+        y = Math.floor(RNG.getUniform() * map.length);
     }
     return { x, y };
 }
@@ -184,7 +185,9 @@ export function getObjectsAtLocation(objects, x, y) {
  * @param {Number} y The y coordinate to check
  */
 export function isBlocked(map, objects, x, y) {
-    if (x < 0 || y < 0 || x >= WORLD_WIDTH || y >= WORLD_HEIGHT || map[y][x].blocks) {
+    if (!Array.isArray(map) || map.length === 0 || !Array.isArray(map[0])) { throw new Error("Bad map data"); }
+
+    if (x < 0 || y < 0 || x >= map[0].length || y >= map.length || map[y][x].blocks) {
         return true;
     }
 
@@ -201,7 +204,9 @@ export function isBlocked(map, objects, x, y) {
  * @returns {Boolean} Does the spot block sight
  */
 export function isSightBlocked(map, objects, x, y) {
-    if (x < 0 || y < 0 || x >= WORLD_WIDTH || y >= WORLD_HEIGHT || map[y][x].blocksSight) {
+    if (!Array.isArray(map) || map.length === 0 || !Array.isArray(map[0])) { throw new Error("Bad map data"); }
+
+    if (x < 0 || y < 0 || x >= map[0].length || y >= map.length || map[y][x].blocksSight) {
         return true;
     }
 
@@ -248,7 +253,6 @@ export function drawTile(display, tile, x, y) {
             bgColor = COLOR_INVISIBLE_GROUND;
         }
     }
-
 
     display.draw(x, y, tile.char, fgColor, bgColor);
 }
