@@ -7,7 +7,9 @@ import globals from "../src/globals";
 import {
     castHeal,
     castDamageSpell,
-    castWildDamageSpell
+    castWildDamageSpell,
+    castConfuse,
+    castClairvoyance
 } from "../src/items";
 import { DamageType } from "../src/data";
 
@@ -34,6 +36,7 @@ describe("items", function () {
                     takeDamage: fake(),
                     addStatusEffect: fake()
                 },
+                ai: { type: "testai" },
                 x: 0,
                 y: 0
             }]
@@ -166,6 +169,58 @@ describe("items", function () {
             castWildDamageSpell({ value: 10, damageType: DamageType.fire }, user, callback);
             expect(callback.calledOnce).to.be.true;
             expect(callback.calledWith(false)).to.be.true;
+        });
+    });
+
+    describe("castConfuse", function () {
+        it("should replace the ai on target and return true", function () {
+            const user = {
+                fighter: {
+                    hp: 10
+                }
+            };
+            const callback = fake();
+
+            castConfuse({ value: 10 }, user, callback);
+            expect(globals.Game.gameObjects[0].ai.constructor.name).to.be.equal("ConfusedAI");
+            expect(callback.calledOnce).to.be.true;
+            expect(callback.calledWith(true)).to.be.true;
+        });
+
+        it("should return false if there are no targets", function () {
+            const user = {
+                fighter: {
+                    hp: 10
+                }
+            };
+            const callback = fake();
+            globals.Game.gameObjects = [];
+
+            castConfuse({ value: 10 }, user, callback);
+            expect(callback.calledOnce).to.be.true;
+            expect(callback.calledWith(false)).to.be.true;
+        });
+    });
+
+    describe("castClairvoyance", function () {
+        it("should set the whole map to explored", function () {
+            const user = {};
+            const callback = fake();
+            globals.Game.map = [
+                [{ explored: false }, { explored: false }],
+                [{ explored: false }, { explored: false }]
+            ];
+
+            castClairvoyance({ value: 10 }, user, callback);
+
+            for (let y = 0; y < globals.Game.map.length; y++) {
+                for (let x = 0; x < globals.Game.map[y].length; x++) {
+                    expect(globals.Game.map[y][x].explored).to.be.true;
+                }
+            }
+
+            expect(callback.calledOnce).to.be.true;
+            expect(callback.calledWith(true)).to.be.true;
         });
     });
 });
