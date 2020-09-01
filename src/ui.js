@@ -11,7 +11,7 @@ import {
     LEVEL_UP_FACTOR
 } from "./data";
 
-export function drawUI(display, level, player) {
+export function drawUI(display, player) {
     for (let i = 0; i < WIDTH; i++) {
         display.draw(i, HEIGHT - UI_HEIGHT, MAP_FILLED_SPACE, "blue", "blue");
     }
@@ -20,7 +20,6 @@ export function drawUI(display, level, player) {
     display.drawText(14,  HEIGHT - UI_HEIGHT, "%c{white}%b{blue}Mana: " + player.fighter.mana + "/" + player.fighter.maxMana);
     display.drawText(30,  HEIGHT - UI_HEIGHT, "%c{white}%b{blue}STR: " + player.fighter.strength);
     display.drawText(38,  HEIGHT - UI_HEIGHT, "%c{white}%b{blue}DEF: " + player.fighter.defense);
-    display.drawText(46,  HEIGHT - UI_HEIGHT, "%c{white}%b{blue}LVL: " + player.fighter.level);
     display.drawText(54,  HEIGHT - UI_HEIGHT, "%c{white}%b{blue}EXP: " + player.fighter.experience + "/" + (LEVEL_UP_BASE + player.fighter.level * LEVEL_UP_FACTOR));
 }
 

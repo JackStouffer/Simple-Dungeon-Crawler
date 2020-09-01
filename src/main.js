@@ -36,7 +36,6 @@ class Manager {
 
     act() {
         this.game.engine.lock();
-        this.game.currentTurn++;
 
         if (this.game.player.fighter === null) {
             this.game.loseCinematic();
@@ -59,8 +58,6 @@ class SimpleDungeonCrawler {
         this.gameObjects = [];
         this.map = [];
         this.currentLogLines = [];
-        this.currentLevel = 0;
-        this.currentTurn = 0;
         this.totalMessages = 0;
         this.display = new Display({
             width: WIDTH,
@@ -80,7 +77,6 @@ class SimpleDungeonCrawler {
         this.player.ai = null;
         window.removeEventListener("keydown", this.player.ai);
         this.player = null;
-        this.currentLevel = 0;
         this.map = [];
         this.gameObjects = [];
         this.currentLogLines = [];
@@ -189,17 +185,10 @@ class SimpleDungeonCrawler {
             .forEach(o => o.graphics.draw(this.display, this.map));
 
         this.player.graphics.draw(this.display, this.map);
-        drawUI(this.display, this.currentLevel, this.player);
+        drawUI(this.display, this.player);
     }
 
     loadLevel (name) {
-        this.currentLevel++;
-
-        if (this.currentLevel === 21) {
-            this.winCinematic();
-            return;
-        }
-
         const {map, playerLocation, objects} = loadTiledMap(name);
         this.map = map;
         this.gameObjects = objects;
