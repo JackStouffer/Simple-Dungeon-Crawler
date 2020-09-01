@@ -2,6 +2,7 @@
 
 import { expect } from "chai";
 import { BasicInventory } from "../src/inventory";
+import { ItemData } from "../src/data";
 
 describe("inventory", function () {
     describe("BasicInventory", function () {
@@ -43,9 +44,12 @@ describe("inventory", function () {
         });
 
         it("should return item names and counts from getNamesAndCounts", function () {
+            ItemData["item"] = {
+                displayName: "Test Item"
+            };
             const inventory = new BasicInventory();
-            inventory.addItem("health_potion", 5);
-            expect(inventory.getNamesAndCounts()).to.be.deep.equal([{"name": "Health Potion", "count": 5}]);
+            inventory.addItem("item", 5);
+            expect(inventory.getNamesAndCounts()).to.be.deep.equal([{"name": "Test Item", "count": 5}]);
         });
     });
 });
