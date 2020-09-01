@@ -383,19 +383,19 @@ if (ENV !== "TEST") {
 
 export const ItemData = {
     "health_potion_weak": {
-        displayName: "Weak Health Potion",
+        displayName: "Weak Potion of Healing",
         value: 25,
         type: "health",
         useFunc: castHeal
     },
     "health_potion": {
-        displayName: "Health Potion",
+        displayName: "Potion of Healing",
         value: 50,
         type: "health",
         useFunc: castHeal
     },
     "health_potion_strong": {
-        displayName: "Health Potion",
+        displayName: "Strong Potion of Healing",
         value: 100,
         type: "health",
         useFunc: castHeal
@@ -511,8 +511,45 @@ export const SpellData = {
     "lightning_bolt": {
         name: "Lightning Bolt",
         manaCost: 50,
-        value: 10,
+        value: 20,
+        damageType: DamageType.lightning,
         useFunc: castDamageSpell
+    },
+    "fireball": {
+        name: "Fireball",
+        manaCost: 50,
+        value: 20,
+        damageType: DamageType.fire,
+        useFunc: castDamageSpell
+    },
+    "confuse": {
+        name: "Confuse",
+        manaCost: 50,
+        value: 8,
+        useFunc: castConfuse
+    },
+    "clairvoyance": {
+        name: "Clairvoyance",
+        manaCost: 50,
+        useFunc: castClairvoyance
+    },
+    "lesser_heal": {
+        name: "Lesser Heal",
+        manaCost: 50,
+        value: 25,
+        useFunc: castHeal
+    },
+    "heal": {
+        name: "Heal",
+        manaCost: 50,
+        value: 50,
+        useFunc: castHeal
+    },
+    "greater_heal": {
+        name: "Greater Heal",
+        manaCost: 50,
+        value: 100,
+        useFunc: castHeal
     }
 };
 
