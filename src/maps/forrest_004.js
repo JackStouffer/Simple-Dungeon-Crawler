@@ -7,7 +7,7 @@
  }
  if(typeof module === 'object' && module && module.exports) {
   module.exports = data;
- }})("level_1",
+ }})("forrest_004",
 { "compressionlevel":-1,
  "editorsettings":
     {
@@ -104,7 +104,7 @@
                         {
                          "name":"levelName",
                          "type":"string",
-                         "value":"level_2"
+                         "value":"durdwin_001"
                         }],
                  "rotation":0,
                  "type":"",

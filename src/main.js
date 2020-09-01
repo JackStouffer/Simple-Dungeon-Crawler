@@ -139,7 +139,7 @@ class SimpleDungeonCrawler {
         this.scheduler = new Scheduler.Simple();
         this.manager = new Manager(this);
         this.player = createObject("player", 1, 1);
-        this.loadLevel("level_1");
+        this.loadLevel("forrest_001");
     }
 
     displayMessage(text) {

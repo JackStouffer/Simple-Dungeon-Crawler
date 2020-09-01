@@ -72,3 +72,4 @@ would apply. Would need to separate the player's "lantern" from the logic around
 * Locked chests, good loot, opened by found keys or lock picks
 * Monster infighting
   * Teams and factions
+* Secrets

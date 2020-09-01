@@ -14,11 +14,14 @@ import {
 } from "./data";
 import { createObject } from "./object";
 
-import level_1 from "./maps/level_1";
-import level_2 from "./maps/level_2";
+import forrest_001 from "./maps/forrest_001";
+import forrest_002 from "./maps/forrest_002";
+import forrest_003 from "./maps/forrest_003";
+import forrest_004 from "./maps/forrest_004";
+import durdwin_001 from "./maps/durdwin_001";
 import dev_room from "./maps/dev_room";
 
-const TileMaps = { level_1, level_2, dev_room };
+const TileMaps = { forrest_001, forrest_002, forrest_003, forrest_004, durdwin_001, dev_room };
 
 class Tile {
     constructor(name, char, fgColor, bgColor, fgColorExplored, bgColorExplored, blocks, blocksSight, visible = false, explored = false) {
@@ -48,6 +51,9 @@ export { Tile };
  * @returns {Object}     The map 2d array, player location, and game objects array
  */
 export function loadTiledMap(level) {
+    console.log(Object.keys(TileMaps));
+    if (!(level in TileMaps)) { throw new Error(`${level} is not a valid level`); }
+
     const sourceData = TileMaps[level];
     const tileSize = sourceData.tileheight;
     const map = [];

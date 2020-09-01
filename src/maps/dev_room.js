@@ -9,6 +9,13 @@
   module.exports = data;
  }})("dev_room",
 { "compressionlevel":-1,
+ "editorsettings":
+    {
+     "export":
+        {
+         "target":"."
+        }
+    },
  "height":39,
  "infinite":false,
  "layers":[
@@ -103,8 +110,8 @@
                  "type":"",
                  "visible":true,
                  "width":0,
-                 "x":1201.79372197309,
-                 "y":887.892376681614
+                 "x":1166.46397769314,
+                 "y":887.051192293996
                 }, 
                 {
                  "height":0,
@@ -228,6 +235,29 @@
                  "width":0,
                  "x":1043.34828101644,
                  "y":507.473841554559
+                }, 
+                {
+                 "height":0,
+                 "id":11,
+                 "name":"Barrel",
+                 "point":true,
+                 "properties":[
+                        {
+                         "name":"id",
+                         "type":"string",
+                         "value":"barrel"
+                        }, 
+                        {
+                         "name":"inventory",
+                         "type":"string",
+                         "value":"health_potion"
+                        }],
+                 "rotation":0,
+                 "type":"",
+                 "visible":true,
+                 "width":0,
+                 "x":1202.4730820996,
+                 "y":883.664199192463
                 }],
          "opacity":1,
          "type":"objectgroup",
@@ -236,7 +266,7 @@
          "y":0
         }],
  "nextlayerid":3,
- "nextobjectid":11,
+ "nextobjectid":12,
  "orientation":"orthogonal",
  "renderorder":"right-down",
  "tiledversion":"1.3.4",

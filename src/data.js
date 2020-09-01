@@ -49,6 +49,17 @@ export const Affinity = {
 Object.freeze(Affinity);
 
 export const TileData = {
+    780: {
+        name: "Gravestone",
+        char: "\u07E1",
+        fgColor: "darkgrey",
+        bgColor: "white",
+        fgColorExplored: COLOR_DARK_WALL,
+        bgColorExplored: COLOR_DARK_WALL,
+        blocks: true,
+        blocksSight: false,
+        reflectivity: 0.18
+    },
     900: {
         name: "empty ground",
         char: "",
@@ -57,6 +68,17 @@ export const TileData = {
         fgColorExplored: COLOR_DARK_GROUND,
         bgColorExplored: COLOR_DARK_GROUND,
         blocks: false,
+        blocksSight: false,
+        reflectivity: 0.18
+    },
+    980: {
+        name: "stove",
+        char: "\u233B",
+        fgColor: "black",
+        bgColor: "brown",
+        fgColorExplored: COLOR_DARK_WALL,
+        bgColorExplored: COLOR_DARK_WALL,
+        blocks: true,
         blocksSight: false,
         reflectivity: 0.18
     },
@@ -80,6 +102,17 @@ export const TileData = {
         bgColorExplored: COLOR_DARK_WALL,
         blocks: true,
         blocksSight: true,
+        reflectivity: 0.18
+    },
+    1543: {
+        name: "bed",
+        char: "\u2583",
+        fgColor: "gold",
+        bgColor: "white",
+        fgColorExplored: COLOR_DARK_WALL,
+        bgColorExplored: COLOR_DARK_WALL,
+        blocks: true,
+        blocksSight: false,
         reflectivity: 0.18
     },
     2710: {
@@ -191,6 +224,39 @@ export const ObjectData = {
         strength: 0,
         defense: 0,
         onDeath: "remove_from_world"
+    },
+    "barrel": {
+        name: "Wooden Barrel",
+        graphics: "basic_graphics",
+        ai: null,
+        fighter: "basic_fighter",
+        inventory: "basic_inventory",
+        interactable: null,
+        char: "\u232D",
+        fgColor: "white",
+        bgColor: "brown",
+        emptyColor: "purple",
+        blocks: true,
+        blocksSight: false,
+        experience: 0,
+        experienceGiven: 0,
+        maxHp: 3,
+        strength: 0,
+        defense: 0,
+        onDeath: "remove_from_world"
+    },
+    "dead_body": {
+        name: "Dead Body",
+        graphics: "basic_graphics",
+        ai: null,
+        fighter: null,
+        inventory: null,
+        interactable: null,
+        char: "%",
+        fgColor: "red",
+        bgColor: "black",
+        blocks: false,
+        blocksSight: false
     },
     "lantern": {
         name: "Small Lantern",
