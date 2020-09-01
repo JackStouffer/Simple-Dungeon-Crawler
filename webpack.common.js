@@ -5,5 +5,16 @@ module.exports = {
     output: {
         filename: 'game.js',
         path: path.resolve(__dirname, 'dist'),
+    },
+    module: {
+        rules: [
+            {
+                test: require.resolve('./src/globals.js'),
+                loader: 'expose-loader',
+                options: {
+                    exposes: ['globals']
+                }
+            },
+        ]
     }
 };
