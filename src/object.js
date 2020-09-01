@@ -77,6 +77,7 @@ class GameObject {
         }
     }
 }
+export { GameObject };
 
 /**
  * Use an id to grab object data and create a new GameObject
@@ -113,8 +114,7 @@ export function createObject(id, x=0, y=0) {
             object.setAI(new DroppedItemAI());
             break;
         default:
-            console.error(`Unhandled AI type ${data.ai}`);
-            break;
+            throw new Error(`Unhandled AI type ${data.ai}`);
         }
     }
 
@@ -127,8 +127,7 @@ export function createObject(id, x=0, y=0) {
             object.setGraphics(new DrawAfterSeen(data.char, data.fgColor, data.bgColor));
             break;
         default:
-            console.error(`Unhandled Graphics type ${data.graphics}`);
-            break;
+            throw new Error(`Unhandled Graphics type ${data.graphics}`);
         }
     }
 
@@ -141,8 +140,7 @@ export function createObject(id, x=0, y=0) {
             object.setLighting(new PlayerLighting(data.lightingColor, data.lightingRange));
             break;
         default:
-            console.error(`Unhandled Lighting type ${data.lighting}`);
-            break;
+            throw new Error(`Unhandled Lighting type ${data.lighting}`);
         }
     }
 
@@ -153,12 +151,11 @@ export function createObject(id, x=0, y=0) {
         case "default":
             callback = enemyDeathCallback;
             break;
-        case "removeFromWorld":
+        case "remove_from_world":
             callback = removeDeathCallback;
             break;
         default:
-            console.error(`Unhandled onDeath type ${data.onDeath}`);
-            break;
+            throw new Error(`Unhandled onDeath type ${data.onDeath}`);
         }
 
         switch (data.fighter) {
@@ -169,8 +166,7 @@ export function createObject(id, x=0, y=0) {
             ));
             break;
         default:
-            console.error(`Unhandled Fighter type ${data.fighter}`);
-            break;
+            throw new Error(`Unhandled Fighter type ${data.fighter}`);
         }
     }
 
@@ -180,8 +176,7 @@ export function createObject(id, x=0, y=0) {
             object.setInventory(new BasicInventory());
             break;
         default:
-            console.error(`Unhandled Inventory type ${data.inventory}`);
-            break;
+            throw new Error(`Unhandled Inventory type ${data.inventory}`);
         }
 
         if (data.inventoryPool) {
@@ -208,8 +203,7 @@ export function createObject(id, x=0, y=0) {
             object.setInteractable(new DoorInteractable());
             break;
         default:
-            console.error(`Unhandled Interactable type ${data.interactable}`);
-            break;
+            throw new Error(`Unhandled Interactable type ${data.interactable}`);
         }
     }
 
@@ -224,7 +218,7 @@ export function createObject(id, x=0, y=0) {
  * @param  {GameObject} target    The GameObject that was killed
  * @return {void}
  */
-function enemyDeathCallback(target) {
+export function enemyDeathCallback(target) {
     globals.Game.displayMessage(target.name + " has been killed");
     target.graphics.char = "%";
     target.graphics.fgColor = "green";
@@ -251,7 +245,7 @@ function enemyDeathCallback(target) {
  * @param  {GameObject} target    The GameObject that was killed
  * @return {void}
  */
-function removeDeathCallback(target) {
+export function removeDeathCallback(target) {
     if (target.inventoryComponent.getIDsAndCounts().length > 0) {
         const item = createObject("dropped_item", target.x, target.y);
         item.inventoryComponent = target.inventoryComponent;

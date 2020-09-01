@@ -1,3 +1,5 @@
+/* global ENV */
+
 "use strict";
 
 import { castHeal, castConfuse, castClairvoyance, castDamageSpell, castWildDamageSpell } from "./items";
@@ -188,7 +190,7 @@ export const ObjectData = {
         maxHp: 5,
         strength: 0,
         defense: 0,
-        onDeath: "removeFromWorld"
+        onDeath: "remove_from_world"
     },
     "lantern": {
         name: "Small Lantern",
@@ -374,7 +376,10 @@ export const ObjectData = {
         onDeath: "default"
     },
 };
-Object.freeze(ObjectData);
+
+if (ENV !== "TEST") {
+    Object.freeze(ObjectData);
+}
 
 export const ItemData = {
     "health_potion_weak": {

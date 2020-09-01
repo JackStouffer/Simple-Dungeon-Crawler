@@ -56,19 +56,6 @@ npm run test
   * Your stats determine their effectiveness and their resource cost
 * After all this is implemented, would need to rebalance the entire game
 
-### Technical Systems
-
-* Keybinding
-* Remove the ability to farm trash mobs by having persistent world state when moving
-between levels
-* Keep perma-death but implement save and resume feature
-* Remove log from game ui and make scrollable text log as element on the page
-* Tutorials that spawn in the log with special color/background when something happens. Have global flags that mark if a tutorial has already happened
-* Find some way to incorporate a speed-based scheduler so different mobs can move more than once per turn
-* Phone interface?
-* refactor isBlocked to be less confusing
-* refactor item functions to use less global data
-
 ### New Mechanics or Levels
 
 * Implement the rest of the levels and a conclusion to the "story"

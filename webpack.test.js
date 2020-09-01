@@ -1,4 +1,5 @@
 const { merge } = require('webpack-merge');
+const { DefinePlugin } = require('webpack');
 const common = require('./webpack.common.js');
 const glob = require("glob");
 
@@ -9,5 +10,10 @@ module.exports = merge(common, {
         path: __dirname + "/test-dist/",
         filename: 'main.js'
     },
-    devtool: "source-map"
+    devtool: "source-map",
+    plugins: [
+        new DefinePlugin({
+            ENV: JSON.stringify("TEST")
+        })
+    ]
 });
