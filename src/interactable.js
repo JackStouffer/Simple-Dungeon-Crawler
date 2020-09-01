@@ -17,11 +17,11 @@ class GiveItemsInteractable {
     }
 
     interact(user) {
-        if (this.owner.inventoryComponent) {
-            const chestItems = this.owner.inventoryComponent.getIDsAndCounts();
-            if (chestItems.length > 0) {
-                for (let i = 0; i < chestItems.length; i++) {
-                    const item = chestItems[i];
+        if (this.owner.inventoryComponent && user.inventoryComponent) {
+            const items = this.owner.inventoryComponent.getIDsAndCounts();
+            if (items.length > 0) {
+                for (let i = 0; i < items.length; i++) {
+                    const item = items[i];
                     globals.Game.displayMessage("Found a " + ItemData[item.id].displayName);
                     user.inventoryComponent.addItem(item.id, item.count);
                     this.owner.inventoryComponent.useItem(item.id);
@@ -30,7 +30,7 @@ class GiveItemsInteractable {
                 globals.Game.displayMessage("Empty");
             }
         } else {
-            console.error("Missing inventoryComponent on ", this.owner);
+            console.error(`Missing inventoryComponent on ${this.owner} or ${user}`);
         }
     }
 }
@@ -53,6 +53,8 @@ class GiveSpellInteractable {
     }
 
     interact(user) {
+        if (!user.fighter) { return; }
+
         if (!this.spellId) {
             throw new Error("No spell id given");
         }

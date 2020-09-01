@@ -502,7 +502,10 @@ export const ItemData = {
         useFunc: castClairvoyance
     }
 };
-Object.freeze(ItemData);
+
+if (ENV !== "TEST") {
+    Object.freeze(ItemData);
+}
 
 export const SpellData = {
     "lightning_bolt": {
@@ -512,4 +515,7 @@ export const SpellData = {
         useFunc: castDamageSpell
     }
 };
-Object.freeze(SpellData);
+
+if (ENV !== "TEST") {
+    Object.freeze(SpellData);
+}
