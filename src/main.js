@@ -172,9 +172,20 @@ class SimpleDungeonCrawler {
 
         drawMap(this.display, this.map);
 
-        // FIX ME: dead bodies draw over enemies on the same tile
         this.gameObjects
             .filter(o => o.graphics && typeof o.graphics.draw === "function")
+            .sort((a, b) => {
+                if (!a.fighter && b.fighter) {
+                    return -1;
+                }
+                if (!a.fighter && !b.fighter) {
+                    return -1;
+                }
+                if (a.fighter && !b.fighter) {
+                    return 1;
+                }
+                return 0;
+            })
             .forEach(o => o.graphics.draw(this.display, this.map));
 
         this.player.graphics.draw(this.display, this.map);
