@@ -10,12 +10,14 @@ _In development_
   * Cast spells just like with magic scrolls
 * Map tiles are now data oriented and can have characters
 * All monsters can now move in eight directions
+* Added barrels that have the same behavior as crates
 * Graphical changes
-  * Added trees, tables, chairs, and cabinets as map tiles
+  * Added trees, tables, chairs, cabinets, stoves, gravestones, and beds as map tiles
   * All world objects now use symbols, with characters and numbers being reserved for enemies
   * Using square rather than rectangular aspect ratio for tiles
 * Fixed a bug with multiple player instances being created and accepting inputs when changing levels
 * Fixed targeting bug with damage scrolls
+* Fixed bug where dead bodies could draw over enemies on the same tile
 
 ## Version 5
 

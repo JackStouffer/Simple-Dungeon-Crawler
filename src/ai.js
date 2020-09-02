@@ -47,7 +47,7 @@ export function createPassableSightCallback(owner) {
  * @param  {GameObject} owner The game object to be used with this function
  * @return {Function}         the callback
  */
-function createVisibilityCallback(ai) {
+export function createVisibilityCallback(ai) {
     return function(x, y, r, visibility) {
         if (x === globals.Game.player.x && y === globals.Game.player.y && visibility > 0) {
             globals.Game.displayMessage(ai.owner.name + " saw you");
@@ -83,14 +83,13 @@ class BasicMonsterAI {
             const fov = new FOV.PreciseShadowcasting(createPassableSightCallback(this.owner));
             fov.compute(this.owner.x, this.owner.y, this.sightRange, createVisibilityCallback(this));
 
-            const dir = DIRS[8][RNG.getItem([0, 1, 2, 3, 4, 5, 6, 7])];
-            const newX = this.owner.x + dir[0];
-            const newY = this.owner.y + dir[1];
-            const target = isBlocked(globals.Game.map, globals.Game.gameObjects, newX, newY);
-
-            if (target !== null) {
-                return;
-            }
+            let target, newX, newY;
+            do {
+                const dir = DIRS[8][RNG.getItem([0, 1, 2, 3, 4, 5, 6, 7])];
+                newX = this.owner.x + dir[0];
+                newY = this.owner.y + dir[1];
+                target = isBlocked(globals.Game.map, globals.Game.gameObjects, newX, newY);
+            } while (target !== null);
 
             this.owner.x = newX;
             this.owner.y = newY;
@@ -227,16 +226,19 @@ class ConfusedAI {
         this.turns = turns;
     }
 
+    setOwner(owner) {
+        this.owner = owner;
+    }
+
     act() {
         if (this.turns > 0) {
-            const dir = DIRS[4][RNG.getItem([0, 1, 2, 3])];
-            const newX = this.owner.x + dir[0];
-            const newY = this.owner.y + dir[1];
-            const target = isBlocked(globals.Game.map, globals.Game.gameObjects, newX, newY);
-
-            if (target !== null) {
-                return;
-            }
+            let target, newX, newY;
+            do {
+                const dir = DIRS[8][RNG.getItem([0, 1, 2, 3, 4, 5, 6, 7])];
+                newX = this.owner.x + dir[0];
+                newY = this.owner.y + dir[1];
+                target = isBlocked(globals.Game.map, globals.Game.gameObjects, newX, newY);
+            } while (target !== null);
 
             this.owner.x = newX;
             this.owner.y = newY;
@@ -285,10 +287,8 @@ class ChestAI {
  * AI which removes the owner from the game when the inventory is empty
  */
 class DroppedItemAI {
-    constructor(bgColor, emptyColor) {
+    constructor() {
         this.owner = null;
-        this.bgColor = bgColor;
-        this.emptyColor = emptyColor;
     }
 
     setOwner(owner) {
