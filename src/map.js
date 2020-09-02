@@ -51,7 +51,6 @@ export { Tile };
  * @returns {Object}     The map 2d array, player location, and game objects array
  */
 export function loadTiledMap(level) {
-    console.log(Object.keys(TileMaps));
     if (!(level in TileMaps)) { throw new Error(`${level} is not a valid level`); }
 
     const sourceData = TileMaps[level];
