@@ -8,9 +8,17 @@ import { isBlocked } from "./map";
 import { showSelectionMenu, showKeyBindingMenu } from "./ui";
 
 /**
-    returns true when moved, false otherwise
+ * Create a move function for a specified GameObject. The funciton
+ * checks if the moved to space contains a blocking object or tile.
+ * If there is a blocking tile, it will not move, if it contains a
+ * blocking object, it first tries to interact, and the attack.
+ *
+ * @param {GameObject} actor The game object to manipulate
+ * @param {Number} direction A clock-wise direction to move in
+ * @param {Number} topology Either four directions or eight
+ * @returns {Function} A function to move the game object, it returns true when moved, false otherwise
  */
-function moveCommand(actor, direction, topology) {
+export function moveCommand(actor, direction, topology) {
     return function() {
         const dir = DIRS[topology][direction];
         const newX = actor.x + dir[0];
@@ -39,7 +47,15 @@ function moveCommand(actor, direction, topology) {
     };
 }
 
-function getItemCommand(actor) {
+/**
+ * Generates a function which checks the actor's tile to see if there
+ * is an object with an id of dropped_item. If there is, interact with
+ * the game object. If not, do nothing but display a message.
+ *
+ * @param {GameObject} actor The game object to manipulate
+ * @returns {Function} A function which returns true if an object was picked up, false otherwise
+ */
+export function getItemCommand(actor) {
     return function() {
         const items = globals.Game.gameObjects.filter(item => {
             return item.type === "dropped_item" && item.x === actor.x && item.y === actor.y;
@@ -55,7 +71,13 @@ function getItemCommand(actor) {
     };
 }
 
-function openInventoryCommand(actor) {
+/**
+ * Generates a function to put the actor into inventory state and show
+ * the inventory selection menu.
+ * @param {GameObject} actor The game object to put into inventory state
+ * @return {Function} A function which always returns false
+ */
+export function openInventoryCommand(actor) {
     return function() {
         showSelectionMenu(
             "Player Inventory",
@@ -68,7 +90,13 @@ function openInventoryCommand(actor) {
     };
 }
 
-function openSpellsCommand(actor) {
+/**
+ * Generate a funciton which puts the object ai into spell_selection state
+ * and shows the spell selection menu.
+ * @param {GameObject} actor The game object to put into spell_selection state
+ * @returns {Function} A function which always returns false
+ */
+export function openSpellsCommand(actor) {
     return function() {
         showSelectionMenu(
             "Spells",
@@ -81,6 +109,12 @@ function openSpellsCommand(actor) {
     };
 }
 
+/**
+ * Generate a funciton which puts the object ai into keybinding state
+ * and shows the keybinding menu.
+ * @param {GameObject} actor The game object to put into keybinding state
+ * @returns {Function} A function which always returns false
+ */
 function openKeyBindingCommand(actor) {
     return function() {
         showKeyBindingMenu();
@@ -124,7 +158,7 @@ class PlayerControlAI {
     act() {
         globals.Game.engine.lock();
         /* wait for user input; do stuff when user hits a key */
-        window.addEventListener("keydown", this);
+        globals.window.addEventListener("keydown", this);
     }
 
     handleEvent(e) {
@@ -227,7 +261,7 @@ class PlayerControlAI {
             console.log("fix me");
         }
 
-        window.removeEventListener("keydown", this);
+        globals.window.removeEventListener("keydown", this);
         globals.Game.engine.unlock();
     }
 }

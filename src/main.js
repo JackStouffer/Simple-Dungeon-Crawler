@@ -8,6 +8,8 @@ import { WIDTH, HEIGHT, UI_HEIGHT } from "./data";
 import { drawMap, getObjectsAtLocation, resetVisibility, loadTiledMap } from "./map";
 import { drawUI, clearScreen } from "./ui";
 
+globals.window = window;
+
 export function mouseLook(e) {
     const pos = globals.Game.display.eventToPosition(e);
     const target = getObjectsAtLocation(globals.Game.gameObjects, pos[0], pos[1])[0];
@@ -75,7 +77,7 @@ class SimpleDungeonCrawler {
         clearScreen(this.display);
         this.player.fighter = null;
         this.player.ai = null;
-        window.removeEventListener("keydown", this.player.ai);
+        globals.window.removeEventListener("keydown", this.player.ai);
         this.player = null;
         this.map = [];
         this.gameObjects = [];
@@ -93,10 +95,10 @@ class SimpleDungeonCrawler {
         this.display.drawText(WIDTH - (WIDTH - 24), 27, "%c{white}Press [enter] to start");
 
         const parent = this;
-        window.addEventListener("keydown", function _listener(e) {
+        globals.window.addEventListener("keydown", function _listener(e) {
             if (e.key === "Enter") {
                 parent.startGameplay();
-                window.removeEventListener("keydown", _listener);
+                globals.window.removeEventListener("keydown", _listener);
             }
         });
     }
@@ -109,10 +111,10 @@ class SimpleDungeonCrawler {
         this.display.drawText(WIDTH - (WIDTH - 18), 24, "%c{white}Press [enter] to restart the game");
 
         const parent = this;
-        window.addEventListener("keydown", function _listener(e) {
+        globals.window.addEventListener("keydown", function _listener(e) {
             if (e.key === "Enter") {
                 parent.startGameplay();
-                window.removeEventListener("keydown", _listener);
+                globals.window.removeEventListener("keydown", _listener);
             }
         });
     }
@@ -124,10 +126,10 @@ class SimpleDungeonCrawler {
         this.display.drawText(WIDTH - (WIDTH - 18), 24, "%c{white}Press [enter] to restart the game");
 
         const parent = this;
-        window.addEventListener("keydown", function _listener(e) {
+        globals.window.addEventListener("keydown", function _listener(e) {
             if (e.key === "Enter") {
                 parent.startGameplay();
-                window.removeEventListener("keydown", _listener);
+                globals.window.removeEventListener("keydown", _listener);
             }
         });
     }
