@@ -2,6 +2,13 @@
 
 "use strict";
 
+import forrest_001 from "./maps/forrest_001";
+import forrest_002 from "./maps/forrest_002";
+import forrest_003 from "./maps/forrest_003";
+import forrest_004 from "./maps/forrest_004";
+import durdwin_001 from "./maps/durdwin_001";
+import dev_room from "./maps/dev_room";
+
 import { castHeal, castConfuse, castClairvoyance, castDamageSpell, castWildDamageSpell } from "./items";
 import { createBurnEffect } from "./effects";
 
@@ -621,4 +628,17 @@ export const SpellData = {
 
 if (ENV !== "TEST") {
     Object.freeze(SpellData);
+}
+
+export const LevelData = {
+    forrest_001,
+    forrest_002,
+    forrest_003,
+    forrest_004,
+    durdwin_001,
+    dev_room
+};
+
+if (ENV !== "TEST") {
+    Object.freeze(LevelData);
 }

@@ -4,6 +4,7 @@ import { expect } from "chai";
 import { fake } from "sinon";
 import {
     Tile,
+    loadTiledMap,
     findEmptySpace,
     isBlocked,
     isSightBlocked,
@@ -15,8 +16,12 @@ import {
     COLOR_INVISIBLE_GROUND,
     COLOR_INVISIBLE_WALL,
     COLOR_DARK_GROUND,
-    COLOR_DARK_WALL
+    COLOR_DARK_WALL,
+    LevelData,
+    TileData,
+    ItemData
 } from "../src/data";
+import testMap from "./test-data/map";
 
 describe("map", function () {
     let map;
@@ -41,6 +46,7 @@ describe("map", function () {
         true
     ];
     let display;
+    LevelData["test"] = testMap;
 
     beforeEach(function () {
         map = [
@@ -51,6 +57,56 @@ describe("map", function () {
         display = {
             draw: fake()
         };
+    });
+
+    describe("loadTiledMap", function () {
+        it("should load tile data into Tiles", function () {
+            const { map } = loadTiledMap("test");
+            expect(map[0][0]).to.be.deep.equal(new Tile(
+                TileData[1048].name,
+                TileData[1048].char,
+                TileData[1048].fgColor,
+                TileData[1048].bgColor,
+                TileData[1048].fgColorExplored,
+                TileData[1048].bgColorExplored,
+                TileData[1048].blocks,
+                TileData[1048].blocksSight
+            ));
+        });
+
+        it("should set the player location correctly", function () {
+            const { playerLocation } = loadTiledMap("test");
+            expect(playerLocation[0]).to.be.equal(27);
+            expect(playerLocation[1]).to.be.equal(23);
+        });
+
+        it("should load a game object correctly", function () {
+            const { objects } = loadTiledMap("test");
+            expect(objects[0].type).to.be.equal("goblin");
+            expect(objects[0].x).to.be.equal(40);
+            expect(objects[0].y).to.be.equal(15);
+        });
+
+        it("should add inventory items to an object", function () {
+            ItemData["test"] = {
+                displayName: "Test Item"
+            };
+            const { objects } = loadTiledMap("test");
+            expect(objects[1].type).to.be.equal("chest");
+            expect(objects[1].inventoryComponent.getIDsAndCounts()).to.be.deep.equal([{ id: "test", count: 1 }]);
+        });
+
+        it("should set the level to load for a load level interactable", function () {
+            const { objects } = loadTiledMap("test");
+            expect(objects[2].type).to.be.equal("load_door");
+            expect(objects[2].interactable.levelName).to.be.equal("test_level");
+        });
+
+        it("should set the spell for a set spell interactable", function () {
+            const { objects } = loadTiledMap("test");
+            expect(objects[3].type).to.be.equal("magic_shrine");
+            expect(objects[3].interactable.spellId).to.be.equal("test_spell");
+        });
     });
 
     describe("findEmptySpace", function () {

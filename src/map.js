@@ -10,18 +10,10 @@ import {
     COLOR_INVISIBLE_WALL,
     COLOR_DARK_GROUND,
     COLOR_INVISIBLE_GROUND,
+    LevelData,
     TileData
 } from "./data";
 import { createObject } from "./object";
-
-import forrest_001 from "./maps/forrest_001";
-import forrest_002 from "./maps/forrest_002";
-import forrest_003 from "./maps/forrest_003";
-import forrest_004 from "./maps/forrest_004";
-import durdwin_001 from "./maps/durdwin_001";
-import dev_room from "./maps/dev_room";
-
-const TileMaps = { forrest_001, forrest_002, forrest_003, forrest_004, durdwin_001, dev_room };
 
 class Tile {
     constructor(name, char, fgColor, bgColor, fgColorExplored, bgColorExplored, blocks, blocksSight, visible = false, explored = false) {
@@ -51,9 +43,9 @@ export { Tile };
  * @returns {Object}     The map 2d array, player location, and game objects array
  */
 export function loadTiledMap(level) {
-    if (!(level in TileMaps)) { throw new Error(`${level} is not a valid level`); }
+    if (!(level in LevelData)) { throw new Error(`${level} is not a valid level`); }
 
-    const sourceData = TileMaps[level];
+    const sourceData = LevelData[level];
     const tileSize = sourceData.tileheight;
     const map = [];
     const objects = [];
