@@ -1,14 +1,23 @@
 # Changelog
 
+## Version 7
+
+_In Development_
+
 ## Version 6
 
-_In development_
+_September 7, 2020_
 
+* Added build system with Webpack
+* Added code linting with ESLint
+* Added Github workflow for continious integration testing
+* Refactored code to ES6 modules
+* Added tests with Mocha and Chai
 * Added magic system
   * Spells are found in the world from shrines
   * Open a selection menu with the `m` key
   * Cast spells just like with magic scrolls
-* Map tiles are now data oriented and can have characters
+* Map tiles are now defined in data and can show characters
 * All monsters can now move in eight directions
 * Added barrels that have the same behavior as crates
 * Graphical changes
