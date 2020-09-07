@@ -66,7 +66,7 @@ class SimpleDungeonCrawler {
             forceSquareRatio: true
         });
         this.canvas = this.display.getContainer();
-        document.getElementById("canvas").appendChild(this.canvas);
+        globals.document.getElementById("canvas").appendChild(this.canvas);
 
         this.openingCinematic();
     }
