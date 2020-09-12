@@ -4,6 +4,8 @@
 
 _In Development_
 
+* Remove usage of ROT.Engine in favor of vanilla async/await
+
 ## Version 6
 
 _September 7, 2020_

@@ -6,6 +6,7 @@ import globals from "./globals";
 import { WIDTH, SpellData, ItemData } from "./data";
 import { isBlocked } from "./map";
 import { showSelectionMenu, showKeyBindingMenu } from "./ui";
+import { readKey } from "./util";
 
 /**
  * Create a move function for a specified GameObject. The funciton
@@ -155,15 +156,13 @@ class PlayerControlAI {
         };
     }
 
-    act() {
-        globals.Game.engine.lock();
-        /* wait for user input; do stuff when user hits a key */
-        globals.window.addEventListener("keydown", this);
+    async act() {
+        const e = await readKey();
+        this.handleEvent(e);
     }
 
-    handleEvent(e) {
-        e.preventDefault();
-
+    // Seperate into different function for easier testing
+    handleEvent (e) {
         if (this.owner.fighter === null || this.owner.fighter.hp <= 0) { return; }
 
         const key = e.key;
@@ -260,9 +259,6 @@ class PlayerControlAI {
         } else if (this.state === "keybinding") {
             console.log("fix me");
         }
-
-        globals.window.removeEventListener("keydown", this);
-        globals.Game.engine.unlock();
     }
 }
 export { PlayerControlAI };

@@ -36,7 +36,7 @@
         "no-duplicate-imports": "error",
         "no-var": "error",
         "no-trailing-spaces": "error",
-        "semi": ["error", "always"],
-        "no-throw-literal": "error"
+        "no-throw-literal": "error",
+        "no-constant-condition": ["error", { "checkLoops": false }]
     }
 }

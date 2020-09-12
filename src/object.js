@@ -68,12 +68,12 @@ class GameObject {
         this.interactable = interactable;
     }
 
-    act() {
+    async act() {
         if (this.ai && typeof this.ai.act === "function") {
-            this.ai.act();
+            await this.ai.act();
         }
         if (this.fighter && typeof this.fighter.act === "function") {
-            this.fighter.act();
+            await this.fighter.act();
         }
     }
 }

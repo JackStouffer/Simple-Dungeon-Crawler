@@ -38,7 +38,7 @@ class BasicFighter {
         this.owner = owner;
     }
 
-    act() {
+    async act() {
         const levelUpEXP = LEVEL_UP_BASE + (this.level * LEVEL_UP_FACTOR);
         if (this.experience >= levelUpEXP) {
             this.level += 1;
@@ -63,6 +63,8 @@ class BasicFighter {
                 }
             }
         }
+
+        return;
     }
 
     takeDamage(attacker, damage) {

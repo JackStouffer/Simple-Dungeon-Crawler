@@ -1,6 +1,6 @@
 "use strict";
 
-import { Display, Scheduler, Engine } from "rot-js";
+import { Display, Scheduler } from "rot-js";
 
 import globals from "./globals";
 import { createObject } from "./object";
@@ -21,30 +21,6 @@ export function mouseLook(e) {
         globals.Game.displayMessage(target.name);
     } else if (!target) {
         globals.Game.displayMessage(globals.Game.map[pos[1]][pos[0]].name);
-    }
-}
-
-/**
- * Class inside the scheduler which handles the normal functions of
- * the game loop which aren't related to initiating the behavior of
- * actors or objects
- */
-class Manager {
-    constructor(game) {
-        this.game = game;
-    }
-
-    act() {
-        this.game.engine.lock();
-
-        if (this.game.player.fighter === null) {
-            this.game.loseCinematic();
-            return;
-        }
-
-        resetVisibility(this.game.map);
-        this.game.drawAll();
-        this.game.engine.unlock();
     }
 }
 
@@ -137,9 +113,10 @@ class SimpleDungeonCrawler {
         this.hookMouseLook();
 
         this.scheduler = new Scheduler.Simple();
-        this.manager = new Manager(this);
         this.player = createObject("player", 1, 1);
         this.loadLevel("forrest_001");
+
+        this.mainLoop();
     }
 
     displayMessage(text) {
@@ -198,11 +175,29 @@ class SimpleDungeonCrawler {
         this.player.fighter.mana = this.player.fighter.maxMana;
 
         this.scheduler.clear();
-        this.scheduler.add(this.manager, true);
         this.scheduler.add(this.player, true);
         this.gameObjects.forEach(e => this.scheduler.add(e, true));
-        this.engine = new Engine(this.scheduler);
-        this.engine.start();
+
+        resetVisibility(this.map);
+        this.drawAll();
+    }
+
+    async mainLoop () {
+        while (true) {
+            const actor = this.scheduler.next();
+
+            if (actor === this.player) {
+                resetVisibility(this.map);
+                this.drawAll();
+            }
+
+            await actor.act();
+
+            if (this.player.fighter === null) {
+                this.loseCinematic();
+                break;
+            }
+        }
     }
 
     hookMouseLook () {

@@ -10,13 +10,13 @@ import { GameObject, createObject, enemyDeathCallback, removeDeathCallback } fro
 describe("object", function () {
     describe("GameObject", function () {
         describe("act", function () {
-            it("should call the act functions for both the fighter and ai", function () {
+            it("should call the act functions for both the fighter and ai", async function () {
                 const obj = new GameObject("", 0, 0, "test");
-                const ai = { act: fake(), setOwner: fake() };
-                const fighter = { act: fake(), setOwner: fake() };
+                const ai = { act: fake.returns(Promise.resolve()), setOwner: fake() };
+                const fighter = { act: fake.returns(Promise.resolve()), setOwner: fake() };
                 obj.setAI(ai);
                 obj.setFighter(fighter);
-                obj.act();
+                await obj.act();
 
                 expect(ai.act.calledOnce).to.be.true;
                 expect(fighter.act.calledOnce).to.be.true;
