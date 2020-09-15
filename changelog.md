@@ -6,6 +6,7 @@ _In Development_
 
 * Remove usage of ROT.Engine in favor of vanilla async/await
 * Use ROT Speed Scheduler instead of Simple
+* Added Haste and Slow spells and potions
 
 ## Version 6
 

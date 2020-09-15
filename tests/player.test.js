@@ -204,7 +204,7 @@ describe("player", function () {
     });
 
     describe("PlayerControlAI", function () {
-        describe("act", function () {
+        describe("handleInput", function () {
             it("should call a command when its key is pressed", async function () {
                 const owner = {
                     x: 0,
@@ -220,7 +220,7 @@ describe("player", function () {
                     return cb({ key: "w" });
                 };
 
-                await owner.ai.act();
+                await owner.ai.handleInput();
                 expect(owner.ai.keyCommandMap["w"][1].calledOnce).to.be.true;
             });
 
@@ -243,7 +243,7 @@ describe("player", function () {
                 owner.ai.setOwner(owner);
                 owner.ai.state = "inventory";
 
-                await owner.ai.act();
+                await owner.ai.handleInput();
                 expect(owner.ai.state).to.be.equal("normal");
                 expect(owner.inventoryComponent.useItem.calledOnce).to.be.false;
             });
@@ -273,7 +273,7 @@ describe("player", function () {
                     }
                 };
 
-                await owner.ai.act();
+                await owner.ai.handleInput();
                 expect(owner.ai.state).to.be.equal("normal");
                 expect(owner.inventoryComponent.useItem.calledWith("test")).to.be.true;
             });
@@ -303,7 +303,7 @@ describe("player", function () {
                     }
                 };
 
-                const acted = await owner.ai.act();
+                const acted = await owner.ai.handleInput();
                 expect(acted).to.be.false;
                 expect(owner.ai.state).to.be.equal("inventory");
                 expect(owner.inventoryComponent.useItem.calledOnce).to.be.false;
@@ -334,7 +334,7 @@ describe("player", function () {
                     }
                 };
 
-                const acted = await owner.ai.act();
+                const acted = await owner.ai.handleInput();
                 expect(acted).to.be.false;
                 expect(owner.ai.state).to.be.equal("normal");
                 expect(owner.fighter.getKnownSpells.calledOnce).to.be.false;
@@ -367,7 +367,7 @@ describe("player", function () {
                     }
                 };
 
-                const acted = await owner.ai.act();
+                const acted = await owner.ai.handleInput();
                 expect(acted).to.be.true;
                 expect(owner.ai.state).to.be.equal("normal");
                 expect(owner.fighter.useMana.calledWith(20)).to.be.true;
@@ -400,7 +400,7 @@ describe("player", function () {
                     }
                 };
 
-                const acted = await owner.ai.act();
+                const acted = await owner.ai.handleInput();
                 expect(acted).to.be.false;
                 expect(owner.ai.state).to.be.equal("spell_selection");
                 expect(owner.fighter.useMana.calledOnce).to.be.false;

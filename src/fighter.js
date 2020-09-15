@@ -60,7 +60,7 @@ class BasicFighter {
                 effect.act();
 
                 if (effect.turns === 0) {
-                    globals.Game.displayMessage(`${this.owner.name} recovered from its ${effect.name}`);
+                    globals.Game.displayMessage(`${effect.name} has ended for ${this.owner.name}`);
                     this.statusEffects.splice(i, 1);
                 }
             }
@@ -122,6 +122,10 @@ class BasicFighter {
         this.statusEffects.push(effect);
     }
 
+    getStatusEffects() {
+        return [...this.statusEffects];
+    }
+
     /**
      * Add a spell to the set of known spells by this
      * fighter.
@@ -140,6 +144,10 @@ class BasicFighter {
 
     getSpeed () {
         return this.speed;
+    }
+
+    setSpeed (s) {
+        this.speed = s;
     }
 }
 export { BasicFighter };

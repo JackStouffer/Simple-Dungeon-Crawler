@@ -9,7 +9,15 @@ import forrest_004 from "./maps/forrest_004";
 import durdwin_001 from "./maps/durdwin_001";
 import dev_room from "./maps/dev_room";
 
-import { castHeal, castConfuse, castClairvoyance, castDamageSpell, castWildDamageSpell } from "./items";
+import {
+    castHeal,
+    castConfuse,
+    castClairvoyance,
+    castDamageSpell,
+    castWildDamageSpell,
+    castHaste,
+    castSlow
+} from "./items";
 import { createBurnEffect } from "./effects";
 
 export const WIDTH = 70;
@@ -580,6 +588,18 @@ export const ItemData = {
         displayName: "Scroll of Clairvoyance",
         type: "clairvoyance_scroll",
         useFunc: castClairvoyance
+    },
+    "haste_potion_weak": {
+        displayName: "Weak Potion of Haste",
+        value: 5,
+        type: "haste",
+        useFunc: castHaste
+    },
+    "slow_poison_weak": {
+        displayName: "Weak Poison of Slow",
+        value: 5,
+        type: "slow",
+        useFunc: castSlow
     }
 };
 
@@ -630,6 +650,18 @@ export const SpellData = {
         manaCost: 50,
         value: 100,
         useFunc: castHeal
+    },
+    "lesser_haste": {
+        name: "Lesser Haste",
+        manaCost: 100,
+        value: 5,
+        useFunc: castHaste
+    },
+    "lesser_slow": {
+        name: "Lesser Slow",
+        manaCost: 100,
+        value: 5,
+        useFunc: castSlow
     }
 };
 

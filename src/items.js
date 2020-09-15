@@ -4,6 +4,7 @@ import { RNG } from "rot-js";
 
 import globals from "./globals";
 import { ConfusedAI } from "./ai";
+import { createHasteEffect, createSlowEffect } from "./effects";
 import { getObjectsAtLocation, getClosestVisibleFighter, setAllToExplored } from "./map";
 import { randomIntFromInterval, readMouse } from "./util";
 
@@ -136,4 +137,49 @@ export async function castConfuse(item) {
 export async function castClairvoyance() {
     globals.Game.displayMessage("You have been granted Clairvoyance");
     setAllToExplored(globals.Game.map);
+    return true;
+}
+
+/**
+ * Double the user's fighter's speed stat for value number
+ * of turns. Does not stack.
+ *
+ * @param {Object} item The item data
+ * @param {GameObject} user The object using the item
+ */
+export async function castHaste(item, user) {
+    if (!user.fighter) { throw new Error("user of castHaste must have a fighter"); }
+
+    const statusEffects = user.fighter.getStatusEffects();
+    if (statusEffects.filter(e => e.name === "Haste").length > 0) {
+        return false;
+    }
+
+    user.fighter.addStatusEffect(createHasteEffect(user, item.value));
+    return true;
+}
+
+/**
+ * Half the target's fighter speed stat for value number
+ * of turns. Does not stack.
+ *
+ * @param {Object} item The item data
+ * @param {GameObject} user The object using the item
+ */
+export async function castSlow(item) {
+    const target = await mouseTarget();
+    if (target === null) {
+        globals.Game.displayMessage("Canceled casting");
+        return false;
+    }
+
+    const statusEffects = target.fighter.getStatusEffects();
+    if (statusEffects.filter(e => e.name === "Slow").length > 0) {
+        globals.Game.displayMessage(`${target.name} is already slowed`);
+        return false;
+    }
+
+    globals.Game.displayMessage(`Spell hits and slows ${target.name}`);
+    target.fighter.addStatusEffect(createSlowEffect(target, item.value));
+    return true;
 }

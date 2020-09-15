@@ -157,6 +157,13 @@ class PlayerControlAI {
     }
 
     async act() {
+        let acted;
+        do {
+            acted = await this.handleInput();
+        } while (!acted);
+    }
+
+    async handleInput() {
         if (this.owner.fighter === null || this.owner.fighter.hp <= 0) { return; }
 
         let e, key, keyCode;

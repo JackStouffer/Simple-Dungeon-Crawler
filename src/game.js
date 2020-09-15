@@ -190,13 +190,9 @@ class SimpleDungeonCrawler {
 
             if (actor === this.player) {
                 this.drawAll();
-                let acted;
-                do {
-                    acted = await actor.act();
-                } while (!acted);
-            } else {
-                await actor.act();
             }
+
+            await actor.act();
 
             if (this.player.fighter === null) {
                 this.loseCinematic();
