@@ -133,7 +133,7 @@ class SimpleDungeonCrawler {
         }
         this.currentLogLines.push(this.totalMessages + ") " + text);
         for (let d = 0; d < this.currentLogLines.length; d++) {
-            this.display.drawText(0,  HEIGHT - 5 + d, "%c{white}" + this.currentLogLines[d]);
+            this.display.drawText(0, HEIGHT - 5 + d, "%c{white}" + this.currentLogLines[d]);
         }
     }
 

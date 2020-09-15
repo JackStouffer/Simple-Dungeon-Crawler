@@ -16,11 +16,11 @@ export function drawUI(display, player) {
         display.draw(i, HEIGHT - UI_HEIGHT, MAP_FILLED_SPACE, "blue", "blue");
     }
 
-    display.drawText(1,  HEIGHT - UI_HEIGHT, "%c{white}%b{blue}HP: " + player.fighter.hp + "/" + player.fighter.maxHp);
-    display.drawText(14,  HEIGHT - UI_HEIGHT, "%c{white}%b{blue}Mana: " + player.fighter.mana + "/" + player.fighter.maxMana);
-    display.drawText(30,  HEIGHT - UI_HEIGHT, "%c{white}%b{blue}STR: " + player.fighter.strength);
-    display.drawText(38,  HEIGHT - UI_HEIGHT, "%c{white}%b{blue}DEF: " + player.fighter.defense);
-    display.drawText(54,  HEIGHT - UI_HEIGHT, "%c{white}%b{blue}EXP: " + player.fighter.experience + "/" + (LEVEL_UP_BASE + player.fighter.level * LEVEL_UP_FACTOR));
+    display.drawText(1, HEIGHT - UI_HEIGHT, "%c{white}%b{blue}HP: " + player.fighter.hp + "/" + player.fighter.maxHp);
+    display.drawText(14, HEIGHT - UI_HEIGHT, "%c{white}%b{blue}Mana: " + player.fighter.mana + "/" + player.fighter.maxMana);
+    display.drawText(30, HEIGHT - UI_HEIGHT, "%c{white}%b{blue}STR: " + player.fighter.strength);
+    display.drawText(38, HEIGHT - UI_HEIGHT, "%c{white}%b{blue}DEF: " + player.fighter.defense);
+    display.drawText(54, HEIGHT - UI_HEIGHT, "%c{white}%b{blue}EXP: " + player.fighter.experience + "/" + (LEVEL_UP_BASE + player.fighter.level * LEVEL_UP_FACTOR));
 }
 
 export function showSelectionMenu(header, items, type, width) {

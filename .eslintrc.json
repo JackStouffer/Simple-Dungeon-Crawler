@@ -10,22 +10,10 @@
         "sourceType": "module"
     },
     "rules": {
-        "indent": [
-            "error",
-            4
-        ],
-        "linebreak-style": [
-            "error",
-            "unix"
-        ],
-        "quotes": [
-            "error",
-            "double"
-        ],
-        "semi": [
-            "error",
-            "always"
-        ],
+        "indent": ["error", 4],
+        "linebreak-style": ["error", "unix"],
+        "quotes": ["error", "double"],
+        "semi": ["error", "always"],
         "default-case": "error",
         "eqeqeq": "error",
         "brace-style": ["error", "1tbs", { "allowSingleLine": true }],
@@ -38,6 +26,17 @@
         "no-trailing-spaces": "error",
         "no-throw-literal": "error",
         "no-constant-condition": ["error", { "checkLoops": false }],
-        "no-console": "error"
+        "no-console": "error",
+        "array-callback-return": "error",
+        "no-extra-label": "error",
+        "no-implied-eval": "error",
+        "no-invalid-this": "error",
+        "no-multi-spaces": "error",
+        "no-return-assign": "error",
+        "no-return-await": "error",
+        "no-self-compare": "error",
+        "no-unused-labels": "error",
+        "require-await": "off",
+        "yoda": "error"
     }
 }
