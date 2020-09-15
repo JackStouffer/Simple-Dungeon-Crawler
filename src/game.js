@@ -112,7 +112,7 @@ class SimpleDungeonCrawler {
         // looking at objects on the map with the mouse
         this.hookMouseLook();
 
-        this.scheduler = new Scheduler.Simple();
+        this.scheduler = new Scheduler.Speed();
         this.player = createObject("player", 1, 1);
         this.loadLevel("forrest_001");
 

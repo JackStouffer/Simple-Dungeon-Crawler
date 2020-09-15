@@ -3,7 +3,7 @@
 import { RNG } from "rot-js";
 
 import globals from "./globals";
-import { ObjectData } from "./data";
+import { ObjectData, BASE_SPEED } from "./data";
 import { BasicMonsterAI, PatrollingMonsterAI, ChestAI, DroppedItemAI } from "./ai";
 import { PlayerControlAI } from "./player";
 import { GiveItemsInteractable, GiveSpellInteractable, LoadLevelInteractable, DoorInteractable } from "./interactable";
@@ -66,6 +66,13 @@ class GameObject {
     setInteractable(interactable) {
         interactable.setOwner(this);
         this.interactable = interactable;
+    }
+
+    getSpeed() {
+        if (this.fighter) {
+            return this.fighter.getSpeed();
+        }
+        return BASE_SPEED;
     }
 
     async act() {

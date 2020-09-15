@@ -18,6 +18,8 @@ class BasicFighter {
 
         this.strength = data.strength;
         this.defense = data.defense;
+        this.speed = data.speed;
+
         this.deathCallback = deathCallback;
         this.owner = null;
 
@@ -134,6 +136,10 @@ class BasicFighter {
 
     getKnownSpells() {
         return [...this.knownSpells];
+    }
+
+    getSpeed () {
+        return this.speed;
     }
 }
 export { BasicFighter };

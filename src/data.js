@@ -29,6 +29,7 @@ export const COLOR_AMBIENT_LIGHT = "rgb(50, 50, 50)";
 export const MAP_FILLED_SPACE = "#";
 export const MAP_EMPTY_SPACE = ".";
 
+export const BASE_SPEED = 10;
 export const LEVEL_UP_BASE = 50;
 export const LEVEL_UP_FACTOR = 150;
 
@@ -217,6 +218,7 @@ export const ObjectData = {
         graphics: "basic_graphics",
         ai: null,
         fighter: "basic_fighter",
+        speed: BASE_SPEED,
         inventory: "basic_inventory",
         interactable: null,
         char: "\u2612",
@@ -237,6 +239,7 @@ export const ObjectData = {
         graphics: "basic_graphics",
         ai: null,
         fighter: "basic_fighter",
+        speed: BASE_SPEED,
         inventory: "basic_inventory",
         interactable: null,
         char: "\u232D",
@@ -331,6 +334,7 @@ export const ObjectData = {
         ai: "player_control_ai",
         inventory: "basic_inventory",
         fighter: "basic_fighter",
+        speed: BASE_SPEED,
         interactable: null,
         char: "@",
         fgColor: "blue",
@@ -358,6 +362,7 @@ export const ObjectData = {
         graphics: "basic_graphics",
         ai: "basic_monster_ai",
         fighter: "basic_fighter",
+        speed: BASE_SPEED,
         inventory: "basic_inventory",
         interactable: null,
         char: "G",
@@ -390,6 +395,7 @@ export const ObjectData = {
         graphics: "basic_graphics",
         ai: "patrolling_monster_ai",
         fighter: "basic_fighter",
+        speed: BASE_SPEED,
         inventory: "basic_inventory",
         interactable: null,
         char: "G",
@@ -423,6 +429,7 @@ export const ObjectData = {
         graphics: "basic_graphics",
         ai: "basic_monster_ai",
         fighter: "basic_fighter",
+        speed: BASE_SPEED,
         inventory: "basic_inventory",
         interactable: null,
         char: "r",

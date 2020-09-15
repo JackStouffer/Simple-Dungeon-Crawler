@@ -5,6 +5,7 @@
 _In Development_
 
 * Remove usage of ROT.Engine in favor of vanilla async/await
+* Use ROT Speed Scheduler instead of Simple
 
 ## Version 6
 
