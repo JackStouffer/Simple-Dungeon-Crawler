@@ -44,15 +44,10 @@ describe("player", function () {
             ],
             gameObjects: [],
             displayMessage: fake(),
+            drawAll: fake(),
             display: {
                 draw: fake(),
                 drawText: fake()
-            },
-            engine: {
-                unlock: fake()
-            },
-            manager: {
-                act: fake()
             }
         };
         globals.window = {
@@ -209,8 +204,8 @@ describe("player", function () {
     });
 
     describe("PlayerControlAI", function () {
-        describe("handleEvent", function () {
-            it("should call a command when its key is pressed", function () {
+        describe("act", function () {
+            it("should call a command when its key is pressed", async function () {
                 const owner = {
                     x: 0,
                     y: 0,
@@ -220,17 +215,19 @@ describe("player", function () {
                     ai: new PlayerControlAI()
                 };
                 owner.ai.setOwner(owner);
-                owner.ai.keyCommandMap["w"] = ["", fake()];
-
-                const event = {
-                    key: "w",
-                    preventDefault: fake()
+                owner.ai.keyCommandMap["w"] = ["", fake.returns(true)];
+                globals.window.addEventListener = function (_, cb) {
+                    return cb({ key: "w" });
                 };
-                owner.ai.handleEvent(event);
+
+                await owner.ai.act();
                 expect(owner.ai.keyCommandMap["w"][1].calledOnce).to.be.true;
             });
 
-            it("should go back to normal state when escape is pressed when in inventory", function () {
+            it("should go back to normal state when escape is pressed when in inventory", async function () {
+                globals.window.addEventListener = function (_, cb) {
+                    return cb({ key: "Escape" });
+                };
                 const owner = {
                     x: 0,
                     y: 0,
@@ -246,16 +243,15 @@ describe("player", function () {
                 owner.ai.setOwner(owner);
                 owner.ai.state = "inventory";
 
-                const event = {
-                    key: "Escape",
-                    preventDefault: fake()
-                };
-                owner.ai.handleEvent(event);
+                await owner.ai.act();
                 expect(owner.ai.state).to.be.equal("normal");
                 expect(owner.inventoryComponent.useItem.calledOnce).to.be.false;
             });
 
-            it("should use an item when in inventory state", function () {
+            it("should use an item when in inventory state", async function () {
+                globals.window.addEventListener = function (_, cb) {
+                    return cb({ key: "a" });
+                };
                 const owner = {
                     x: 0,
                     y: 0,
@@ -272,21 +268,20 @@ describe("player", function () {
                 owner.ai.state = "inventory";
                 ItemData["test"] = {
                     displayName: "Test Item",
-                    useFunc: function (__, ___, cb) {
-                        return cb(true);
+                    useFunc: async function () {
+                        return true;
                     }
                 };
 
-                const event = {
-                    key: "a",
-                    preventDefault: fake()
-                };
-                owner.ai.handleEvent(event);
+                await owner.ai.act();
                 expect(owner.ai.state).to.be.equal("normal");
                 expect(owner.inventoryComponent.useItem.calledWith("test")).to.be.true;
             });
 
-            it("should not use item or change state if bad key is pressed", function () {
+            it("should not use item or change state if bad key is pressed", async function () {
+                globals.window.addEventListener = function (_, cb) {
+                    return cb({ key: "z" });
+                };
                 const owner = {
                     x: 0,
                     y: 0,
@@ -303,21 +298,21 @@ describe("player", function () {
                 owner.ai.state = "inventory";
                 ItemData["test"] = {
                     displayName: "Test Item",
-                    useFunc: function (__, ___, cb) {
-                        return cb(true);
+                    useFunc: async function () {
+                        return true;
                     }
                 };
 
-                const event = {
-                    key: "z",
-                    preventDefault: fake()
-                };
-                owner.ai.handleEvent(event);
+                const acted = await owner.ai.act();
+                expect(acted).to.be.false;
                 expect(owner.ai.state).to.be.equal("inventory");
                 expect(owner.inventoryComponent.useItem.calledOnce).to.be.false;
             });
 
-            it("should go back to normal state when escape is pressed when in spell_selection", function () {
+            it("should go back to normal state when escape is pressed when in spell_selection", async function () {
+                globals.window.addEventListener = function (_, cb) {
+                    return cb({ key: "Escape" });
+                };
                 const owner = {
                     x: 0,
                     y: 0,
@@ -334,21 +329,21 @@ describe("player", function () {
                     displayName: "Test Item",
                     value: 10,
                     manaCost: 20,
-                    useFunc: function (__, ___, cb) {
-                        return cb(true);
+                    useFunc: async function () {
+                        return true;
                     }
                 };
 
-                const event = {
-                    key: "Escape",
-                    preventDefault: fake()
-                };
-                owner.ai.handleEvent(event);
+                const acted = await owner.ai.act();
+                expect(acted).to.be.false;
                 expect(owner.ai.state).to.be.equal("normal");
                 expect(owner.fighter.getKnownSpells.calledOnce).to.be.false;
             });
 
-            it("should use an spell when in spell_selection state", function () {
+            it("should use an spell when in spell_selection state", async function () {
+                globals.window.addEventListener = function (_, cb) {
+                    return cb({ key: "a" });
+                };
                 const owner = {
                     x: 0,
                     y: 0,
@@ -365,23 +360,23 @@ describe("player", function () {
                     displayName: "Test Item",
                     value: 10,
                     manaCost: 20,
-                    useFunc: function (spell, caster, cb) {
+                    useFunc: async function (spell, caster) {
                         expect(spell).to.be.deep.equal(SpellData["test"]);
                         expect(caster).to.be.equal(owner);
-                        return cb(true);
+                        return true;
                     }
                 };
 
-                const event = {
-                    key: "a",
-                    preventDefault: fake()
-                };
-                owner.ai.handleEvent(event);
+                const acted = await owner.ai.act();
+                expect(acted).to.be.true;
                 expect(owner.ai.state).to.be.equal("normal");
                 expect(owner.fighter.useMana.calledWith(20)).to.be.true;
             });
 
-            it("should not use spell or change state if bad key is pressed", function () {
+            it("should not use spell or change state if bad key is pressed", async function () {
+                globals.window.addEventListener = function (_, cb) {
+                    return cb({ key: "z" });
+                };
                 const owner = {
                     x: 0,
                     y: 0,
@@ -398,18 +393,15 @@ describe("player", function () {
                     displayName: "Test Item",
                     value: 10,
                     manaCost: 20,
-                    useFunc: function (spell, caster, cb) {
+                    useFunc: async function (spell, caster) {
                         expect(spell).to.be.deep.equal(SpellData["test"]);
                         expect(caster).to.be.equal(owner);
-                        return cb(true);
+                        return true;
                     }
                 };
 
-                const event = {
-                    key: "z",
-                    preventDefault: fake()
-                };
-                owner.ai.handleEvent(event);
+                const acted = await owner.ai.act();
+                expect(acted).to.be.false;
                 expect(owner.ai.state).to.be.equal("spell_selection");
                 expect(owner.fighter.useMana.calledOnce).to.be.false;
             });

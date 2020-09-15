@@ -138,6 +138,8 @@ class SimpleDungeonCrawler {
     }
 
     drawAll() {
+        resetVisibility(this.map);
+
         this.gameObjects
             .filter(o => o.lighting && typeof o.lighting.compute === "function")
             .forEach(o => o.lighting.compute(this.map));
@@ -147,6 +149,7 @@ class SimpleDungeonCrawler {
 
         this.gameObjects
             .filter(o => o.graphics && typeof o.graphics.draw === "function")
+            // Make sure objects with fighters cannot be drawn over
             .sort((a, b) => {
                 if (!a.fighter && b.fighter) {
                     return -1;
@@ -178,7 +181,6 @@ class SimpleDungeonCrawler {
         this.scheduler.add(this.player, true);
         this.gameObjects.forEach(e => this.scheduler.add(e, true));
 
-        resetVisibility(this.map);
         this.drawAll();
     }
 
@@ -187,11 +189,14 @@ class SimpleDungeonCrawler {
             const actor = this.scheduler.next();
 
             if (actor === this.player) {
-                resetVisibility(this.map);
                 this.drawAll();
+                let acted;
+                do {
+                    acted = await actor.act();
+                } while (!acted);
+            } else {
+                await actor.act();
             }
-
-            await actor.act();
 
             if (this.player.fighter === null) {
                 this.loseCinematic();

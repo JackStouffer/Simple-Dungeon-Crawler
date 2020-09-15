@@ -1,3 +1,7 @@
+"use strict";
+
+import globals from "./globals";
+
 /**
  * Give a random integer inclusive between the given
  * min and max values.
@@ -15,6 +19,17 @@ export function randomIntFromInterval(min, max) {
  */
 export async function readKey() {
     return new Promise(resolve => {
-        window.addEventListener("keypress", resolve, { once: true });
+        globals.window.addEventListener("keydown", resolve, { once: true });
+    });
+}
+
+/**
+ * Gives a promise that resolves on the next mousedown
+ * event. Returns the event object.
+ * @returns {Promise} A promise on the keypress
+ */
+export async function readMouse() {
+    return new Promise(resolve => {
+        globals.Game.canvas.addEventListener("mousedown", resolve, { once: true });
     });
 }

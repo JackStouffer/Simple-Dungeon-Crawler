@@ -157,40 +157,30 @@ class PlayerControlAI {
     }
 
     async act() {
-        const e = await readKey();
-        this.handleEvent(e);
-    }
-
-    // Seperate into different function for easier testing
-    handleEvent (e) {
         if (this.owner.fighter === null || this.owner.fighter.hp <= 0) { return; }
 
-        const key = e.key;
+        let e, key, keyCode;
+        const aCode = "a".charCodeAt(0);
+        const zCode = "z".charCodeAt(0);
 
         if (this.state === "normal") {
-            /* one of numpad directions? */
-            if (!(key in this.keyCommandMap)) {
-                return;
-            }
+            do {
+                e = await readKey();
+                key = e.key;
+            } while (!(key in this.keyCommandMap));
 
-            const acted = this.keyCommandMap[key][1]();
-
-            if (!acted) {
-                return;
-            }
+            return this.keyCommandMap[key][1]();
         } else if (this.state === "inventory") {
-            const aCode = "a".charCodeAt(0);
-            const zCode = "z".charCodeAt(0);
-            const keyCode = key.charCodeAt(0);
-
-            if (keyCode < aCode && keyCode > zCode) {
-                return;
-            }
+            do {
+                e = await readKey();
+                key = e.key;
+                keyCode = key.charCodeAt(0);
+            } while (key !== "Escape" && (keyCode < aCode && keyCode > zCode));
 
             if (key === "Escape") {
                 this.state = "normal";
-                globals.Game.manager.act();
-                return;
+                globals.Game.drawAll();
+                return false;
             }
 
             const inventoryInputMap = {};
@@ -201,33 +191,31 @@ class PlayerControlAI {
             }
 
             if (!(keyCode in inventoryInputMap)) {
-                return;
+                return false;
             }
 
             const itemDetails = ItemData[inventoryInputMap[keyCode]];
-            const useCallback = used => {
-                this.owner.ai.state = "normal";
-                if (used) {
-                    this.owner.inventoryComponent.useItem(inventoryInputMap[keyCode]);
-                    globals.Game.displayMessage("Used " + itemDetails.displayName);
-                    globals.Game.engine.unlock();
-                }
-            };
-            itemDetails.useFunc(itemDetails, this.owner, useCallback.bind(this));
-            return;
-        } else if (this.state === "spell_selection") {
-            const aCode = "a".charCodeAt(0);
-            const zCode = "z".charCodeAt(0);
-            const keyCode = key.charCodeAt(0);
+            const used = await itemDetails.useFunc(itemDetails, this.owner);
 
-            if (keyCode < aCode && keyCode > zCode) {
-                return;
+            this.owner.ai.state = "normal";
+            if (used) {
+                this.owner.inventoryComponent.useItem(inventoryInputMap[keyCode]);
+                globals.Game.displayMessage("Used " + itemDetails.displayName);
+                return true;
             }
+
+            return false;
+        } else if (this.state === "spell_selection") {
+            do {
+                e = await readKey();
+                key = e.key;
+                keyCode = key.charCodeAt(0);
+            } while (key !== "Escape" && (keyCode < aCode && keyCode > zCode));
 
             if (key === "Escape") {
                 this.state = "normal";
-                globals.Game.manager.act();
-                return;
+                globals.Game.drawAll();
+                return false;
             }
 
             const spellInputMap = {};
@@ -238,26 +226,26 @@ class PlayerControlAI {
             }
 
             if (!(keyCode in spellInputMap)) {
-                return;
+                return false;
             }
 
             const details = SpellData[spellInputMap[keyCode]];
 
             if (details.manaCost > this.owner.fighter.mana) {
                 globals.Game.displayMessage(`Not enough mana to cast ${details.name}`);
-                return;
+                return false;
             }
 
-            const useCallback = used => {
-                this.owner.ai.state = "normal";
-                if (used) {
-                    this.owner.fighter.useMana(details.manaCost);
-                    globals.Game.engine.unlock();
-                }
-            };
-            details.useFunc(details, this.owner, useCallback.bind(this));
+            const used = await details.useFunc(details, this.owner);
+            this.owner.ai.state = "normal";
+            if (used) {
+                this.owner.fighter.useMana(details.manaCost);
+                return true;
+            }
+            return false;
         } else if (this.state === "keybinding") {
             console.log("fix me");
+            return false;
         }
     }
 }
