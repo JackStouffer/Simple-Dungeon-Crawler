@@ -101,8 +101,7 @@ export function loadTiledMap(level) {
             spellId = findProperty("spellId");
 
         if (!id) {
-            console.error(`No id for ${o.name}`);
-            return;
+            throw new Error(`No id for ${o.name}`);
         }
 
         if (o.point) {

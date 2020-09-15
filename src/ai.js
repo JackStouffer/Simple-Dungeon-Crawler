@@ -278,7 +278,7 @@ class ChestAI {
                 this.owner.graphics.bgColor = this.bgColor;
             }
         } else {
-            console.error("Missing inventoryComponent for ChestAI");
+            throw new Error("Missing inventoryComponent for ChestAI");
         }
     }
 }
@@ -301,7 +301,7 @@ class DroppedItemAI {
                 globals.Game.removeObject(this.owner);
             }
         } else {
-            console.error("Missing inventoryComponent for DroppedItemAI");
+            throw new Error("Missing inventoryComponent for DroppedItemAI");
         }
     }
 }

@@ -37,6 +37,7 @@
         "no-var": "error",
         "no-trailing-spaces": "error",
         "no-throw-literal": "error",
-        "no-constant-condition": ["error", { "checkLoops": false }]
+        "no-constant-condition": ["error", { "checkLoops": false }],
+        "no-console": "error"
     }
 }

@@ -25,8 +25,7 @@ export function drawUI(display, player) {
 
 export function showSelectionMenu(header, items, type, width) {
     if (items.length > 26) {
-        console.error("too many items");
-        return;
+        throw new Error("too many items");
     }
 
     const aCode = "a".charCodeAt(0);

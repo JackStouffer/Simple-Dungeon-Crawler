@@ -30,7 +30,7 @@ class GiveItemsInteractable {
                 globals.Game.displayMessage("Empty");
             }
         } else {
-            console.error(`Missing inventoryComponent on ${this.owner} or ${user}`);
+            throw new Error(`Missing inventoryComponent on ${this.owner} or ${user}`);
         }
     }
 }

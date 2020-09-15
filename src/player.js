@@ -244,8 +244,7 @@ class PlayerControlAI {
             }
             return false;
         } else if (this.state === "keybinding") {
-            console.log("fix me");
-            return false;
+            throw new Error("fix me");
         }
     }
 }

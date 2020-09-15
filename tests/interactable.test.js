@@ -16,7 +16,7 @@ describe("interactable", function () {
     });
 
     describe("GiveItemsInteractable", function () {
-        it("should do nothing if the user does not have an inventory component", function () {
+        it("should throw error if the user does not have an inventory component", function () {
             ItemData["test1"] = { displayName: "test1" };
             ItemData["test2"] = { displayName: "test2" };
 
@@ -29,9 +29,7 @@ describe("interactable", function () {
             };
             owner.interactable.setOwner(owner);
             const user = {};
-            owner.interactable.interact(user);
-
-            expect(owner.inventoryComponent.useItem.callCount).to.be.equal(0);
+            expect(() => owner.interactable.interact(user)).to.throw();
         });
 
         it("should give all items from the owner to the user", function () {
