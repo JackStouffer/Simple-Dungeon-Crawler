@@ -4,7 +4,7 @@ import { Display, Scheduler } from "rot-js";
 
 import globals from "./globals";
 import { createObject } from "./object";
-import { WIDTH, HEIGHT, UI_HEIGHT } from "./data";
+import { WIDTH, HEIGHT } from "./data";
 import { drawMap, getObjectsAtLocation, resetVisibility, loadTiledMap } from "./map";
 import { drawUI, clearScreen } from "./ui";
 
@@ -33,8 +33,7 @@ class SimpleDungeonCrawler {
         this.scheduler = null;
         this.gameObjects = [];
         this.map = [];
-        this.currentLogLines = [];
-        this.totalMessages = 0;
+        this.totalTurns = 0;
         this.display = new Display({
             width: WIDTH,
             height: HEIGHT,
@@ -42,7 +41,7 @@ class SimpleDungeonCrawler {
             forceSquareRatio: true
         });
         this.canvas = this.display.getContainer();
-        globals.document.getElementById("canvas").appendChild(this.canvas);
+        globals.document.getElementById("canvas").prepend(this.canvas);
 
         this.openingCinematic();
     }
@@ -51,12 +50,14 @@ class SimpleDungeonCrawler {
         clearScreen(this.display);
         this.player.fighter = null;
         this.player.ai = null;
-        globals.window.removeEventListener("keydown", this.player.ai);
         this.player = null;
         this.map = [];
         this.gameObjects = [];
-        this.currentLogLines = [];
+        this.totalTurns = 0;
         this.scheduler.clear();
+
+        const log = globals.document.getElementById("log");
+        log.innerHTML = "";
     }
 
     openingCinematic() {
@@ -75,6 +76,9 @@ class SimpleDungeonCrawler {
                 globals.window.removeEventListener("keydown", _listener);
             }
         });
+
+        this.displayMessage("Game messages will display here");
+        this.displayMessage("Tutorials look like this", "tutorial");
     }
 
     winCinematic() {
@@ -119,22 +123,28 @@ class SimpleDungeonCrawler {
         this.mainLoop();
     }
 
-    displayMessage(text) {
-        this.totalMessages++;
+    displayMessage(text, type = "default") {
+        const log = globals.document.getElementById("log");
+        const el = document.createElement("div");
+        const p = document.createElement("p");
+        const small = document.createElement("p");
+        p.innerHTML = `${text}`;
 
-        for (let i = 0; i < WIDTH; i++) {
-            for (let j = 1; j < UI_HEIGHT; j++) {
-                this.display.draw(i, HEIGHT - j, "", "black", "black");
-            }
+        if (type === "tutorial") {
+            el.className = "tutorial";
+        } else {
+            small.innerHTML = `<small>Turn: ${this.totalTurns}</small>`;
         }
 
-        if (this.currentLogLines.length === 5) {
-            this.currentLogLines.splice(0, 1);
+        el.appendChild(p);
+        el.appendChild(small);
+        log.appendChild(el);
+
+        while (log.children.length > 100) {
+            log.children[0].remove();
         }
-        this.currentLogLines.push(this.totalMessages + ") " + text);
-        for (let d = 0; d < this.currentLogLines.length; d++) {
-            this.display.drawText(0, HEIGHT - 5 + d, "%c{white}" + this.currentLogLines[d]);
-        }
+
+        log.scrollTop = log.scrollHeight;
     }
 
     drawAll() {
@@ -190,6 +200,7 @@ class SimpleDungeonCrawler {
 
             if (actor === this.player) {
                 this.drawAll();
+                this.totalTurns++;
             }
 
             await actor.act();

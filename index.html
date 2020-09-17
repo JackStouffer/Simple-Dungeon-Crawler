@@ -3,19 +3,57 @@
   <head>
     <title>Simple Dungeon Crawler</title>
     <meta charset="UTF-8"/>
+    <style>
+        #canvas {
+            width: 100%;
+            display: flex;
+            flex-direction: row;
+            flex-wrap: nowrap;
+            justify-content: center;
+        }
+
+        #log {
+            width: 200px;
+            max-height: 585px;
+            margin-left: 20px;
+            overflow-y: scroll;
+        }
+
+        #log div {
+            background-color: lightgray;
+            padding: 15px;
+            margin-bottom: 20px;
+        }
+
+        #log div.tutorial {
+            background-color: purple;
+            color: white;
+            padding: 15px;
+            margin-bottom: 20px;
+        }
+
+        #log div p {
+            margin: 0 0 5px 0;
+            font-family: monospace;
+        }
+    </style>
   </head>
   <body>
-        <div id="canvas"></div>
+        <div id="canvas">
+            <div id="log">
+                
+            </div>
+        </div>
 
         <div id="help">
         <h2>How To Play</h2>
         <ul>
-          <li>Click on something to look at it</li>
-          <li>Use <code>WASD</code> for cardinal movement and <code>QEZC</code> for diagonal movement</li>
-          <li>Walk into enemies to attack</li>
-          <li>Walk into chests and doors to interact</li>
-          <li>Use <code>i</code> to open your inventory, then the letter shown to use an item</li>
-          <li>Use <code>m</code> to open your magic</li>
+            <li>Click on something to look at it</li>
+            <li>Use <code>WASD</code> for cardinal movement and <code>QEZC</code> for diagonal movement</li>
+            <li>Walk into enemies to attack</li>
+            <li>Walk into chests and doors to interact</li>
+            <li>Use <code>i</code> to open your inventory, then the letter shown to use an item</li>
+            <li>Use <code>m</code> to open your magic</li>
         </ul>
         </div>
         

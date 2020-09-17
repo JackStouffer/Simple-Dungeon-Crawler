@@ -12,8 +12,10 @@ import {
 } from "./data";
 
 export function drawUI(display, player) {
-    for (let i = 0; i < WIDTH; i++) {
-        display.draw(i, HEIGHT - UI_HEIGHT, MAP_FILLED_SPACE, "blue", "blue");
+    for (let x = 0; x < WIDTH; x++) {
+        for (let y = 0; y < UI_HEIGHT; y++) {
+            display.draw(x, HEIGHT - (UI_HEIGHT - y), MAP_FILLED_SPACE, "blue", "blue");
+        }
     }
 
     display.drawText(1, HEIGHT - UI_HEIGHT, "%c{white}%b{blue}HP: " + player.fighter.hp + "/" + player.fighter.maxHp);
