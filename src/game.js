@@ -1,12 +1,20 @@
 "use strict";
 
 import { Display, Scheduler } from "rot-js";
+import EventEmitter from "events";
 
 import globals from "./globals";
 import { createObject } from "./object";
 import { WIDTH, HEIGHT } from "./data";
-import { drawMap, getObjectsAtLocation, resetVisibility, loadTiledMap } from "./map";
+import {
+    drawMap,
+    getObjectsAtLocation,
+    resetVisibility,
+    loadTiledMap,
+    findVolumeCollision
+} from "./map";
 import { drawUI, clearScreen } from "./ui";
+import { explainMovement, explainAttacking } from "./tutorials";
 
 export function mouseLook(e) {
     const pos = globals.Game.display.eventToPosition(e);
@@ -42,8 +50,15 @@ class SimpleDungeonCrawler {
         });
         this.canvas = this.display.getContainer();
         globals.document.getElementById("canvas").prepend(this.canvas);
+        globals.gameEventEmitter = new EventEmitter();
 
+        this.registerListeners();
         this.openingCinematic();
+    }
+
+    registerListeners () {
+        globals.gameEventEmitter.on("tutorial.start", explainMovement);
+        globals.gameEventEmitter.on("tutorial.attacking", explainAttacking);
     }
 
     reset () {
@@ -76,9 +91,6 @@ class SimpleDungeonCrawler {
                 globals.window.removeEventListener("keydown", _listener);
             }
         });
-
-        this.displayMessage("Game messages will display here");
-        this.displayMessage("Tutorials look like this", "tutorial");
     }
 
     winCinematic() {
@@ -119,6 +131,8 @@ class SimpleDungeonCrawler {
         this.scheduler = new Scheduler.Speed();
         this.player = createObject("player", 1, 1);
         this.loadLevel("forrest_001");
+
+        globals.gameEventEmitter.emit("tutorial.start");
 
         this.mainLoop();
     }
@@ -179,9 +193,10 @@ class SimpleDungeonCrawler {
     }
 
     loadLevel (name) {
-        const {map, playerLocation, objects} = loadTiledMap(name);
+        const { map, playerLocation, objects, volumes } = loadTiledMap(name);
         this.map = map;
         this.gameObjects = objects;
+        this.volumes = volumes;
 
         this.player.x = playerLocation[0];
         this.player.y = playerLocation[1];
@@ -208,6 +223,11 @@ class SimpleDungeonCrawler {
             if (this.player.fighter === null) {
                 this.loseCinematic();
                 break;
+            }
+
+            const volumes = findVolumeCollision(this.volumes, actor);
+            if (volumes.length) {
+                volumes.forEach(v => v.enter(actor));
             }
         }
     }

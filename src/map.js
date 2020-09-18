@@ -14,6 +14,7 @@ import {
     TileData
 } from "./data";
 import { createObject } from "./object";
+import { TriggerVolume } from "./volume";
 
 class Tile {
     constructor(name, char, fgColor, bgColor, fgColorExplored, bgColorExplored, blocks, blocksSight, visible = false, explored = false) {
@@ -49,6 +50,7 @@ export function loadTiledMap(level) {
     const tileSize = sourceData.tileheight;
     const map = [];
     const objects = [];
+    const volumes = [];
     let playerLocation = null;
 
     if (sourceData.width !== WORLD_WIDTH && sourceData.height !== WORLD_HEIGHT) {
@@ -94,17 +96,17 @@ export function loadTiledMap(level) {
             }
         }
 
-        let obj;
-        const id = findProperty("id"),
-            inventory = findProperty("inventory"),
-            levelName = findProperty("levelName"),
-            spellId = findProperty("spellId");
-
-        if (!id) {
-            throw new Error(`No id for ${o.name}`);
-        }
-
         if (o.point) {
+            let obj;
+            const id = findProperty("id"),
+                inventory = findProperty("inventory"),
+                levelName = findProperty("levelName"),
+                spellId = findProperty("spellId");
+
+            if (!id) {
+                throw new Error(`No id for ${o.name}`);
+            }
+
             if (id === "player") {
                 playerLocation = [Math.floor(o.x / tileSize), Math.floor(o.y / tileSize)];
             } else {
@@ -130,18 +132,18 @@ export function loadTiledMap(level) {
         } else if (o.type === "Rectangle") {
             const x = Math.floor(o.x / tileSize);
             const y = Math.floor(o.y / tileSize);
-            const width = Math.floor(o.width / tileSize) + x;
-            const height = Math.floor(o.height / tileSize) + y;
+            const width = Math.ceil(o.width / tileSize);
+            const height = Math.ceil(o.height / tileSize);
+            const type = findProperty("type");
 
-            for (let i = y; i < height; i++) {
-                for (let j = x; j < width; j++) {
-                    objects.push(createObject(id, i, j));
-                }
+            if (type === "trigger_volume") {
+                const event = findProperty("event");
+                volumes.push(new TriggerVolume(x, y, width, height, event));
             }
         }
     });
 
-    return { map, playerLocation, objects };
+    return { map, playerLocation, objects, volumes };
 }
 
 /**
@@ -332,4 +334,16 @@ export function drawMap(display, map) {
             drawTile(display, map[y][x], x, y);
         }
     }
+}
+
+export function findVolumeCollision(volumes, object) {
+    return volumes.filter(v => {
+        if (v.x < object.x &&
+            v.x + v.width > object.x &&
+            v.y <= object.y &&
+            v.y + v.height >= object.y) {
+            return true;
+        }
+        return false;
+    });
 }

@@ -324,9 +324,9 @@
                  "y":1112.95441431044
                 }, 
                 {
-                 "height":40.9804376401454,
+                 "height":31.7176047570887,
                  "id":19,
-                 "name":"",
+                 "name":"Attacking Tutorial",
                  "properties":[
                         {
                          "name":"event",
@@ -339,11 +339,33 @@
                          "value":"trigger_volume"
                         }],
                  "rotation":0,
-                 "type":"",
+                 "type":"Rectangle",
                  "visible":true,
-                 "width":53.3518905126421,
-                 "x":385.06147065646,
-                 "y":155.41637671074
+                 "width":64.5444802463356,
+                 "x":351.869652825507,
+                 "y":160.047793152268
+                }, 
+                {
+                 "height":31.7176,
+                 "id":20,
+                 "name":"Attacking Tutorial",
+                 "properties":[
+                        {
+                         "name":"event",
+                         "type":"string",
+                         "value":"tutorial.attacking"
+                        }, 
+                        {
+                         "name":"type",
+                         "type":"string",
+                         "value":"trigger_volume"
+                        }],
+                 "rotation":0,
+                 "type":"Rectangle",
+                 "visible":true,
+                 "width":64.1585486298727,
+                 "x":1055.33871101891,
+                 "y":768.394384098803
                 }],
          "opacity":1,
          "type":"objectgroup",
@@ -352,7 +374,7 @@
          "y":0
         }],
  "nextlayerid":3,
- "nextobjectid":20,
+ "nextobjectid":21,
  "orientation":"orthogonal",
  "renderorder":"right-down",
  "tiledversion":"1.3.4",
