@@ -56,12 +56,12 @@ class SimpleDungeonCrawler {
         this.openingCinematic();
     }
 
-    registerListeners () {
+    registerListeners() {
         globals.gameEventEmitter.on("tutorial.start", explainMovement);
         globals.gameEventEmitter.on("tutorial.attacking", explainAttacking);
     }
 
-    reset () {
+    reset() {
         clearScreen(this.display);
         this.player.fighter = null;
         this.player.ai = null;
@@ -192,7 +192,7 @@ class SimpleDungeonCrawler {
         drawUI(this.display, this.player);
     }
 
-    loadLevel (name) {
+    loadLevel(name) {
         const { map, playerLocation, objects, volumes } = loadTiledMap(name);
         this.map = map;
         this.gameObjects = objects;
@@ -209,7 +209,7 @@ class SimpleDungeonCrawler {
         this.drawAll();
     }
 
-    async mainLoop () {
+    async mainLoop() {
         while (true) {
             const actor = this.scheduler.next();
 
@@ -232,7 +232,7 @@ class SimpleDungeonCrawler {
         }
     }
 
-    hookMouseLook () {
+    hookMouseLook() {
         // break out the hook and unhook mouse look into their own functions
         // because other actions need to take over the mouse at some points
         // and we don't want anything other than the Game object interacting
@@ -240,11 +240,11 @@ class SimpleDungeonCrawler {
         this.canvas.addEventListener("mousedown", mouseLook);
     }
 
-    unhookMouseLook () {
+    unhookMouseLook() {
         this.canvas.removeEventListener("mousedown", mouseLook);
     }
 
-    addObject (object) {
+    addObject(object) {
         this.gameObjects.push(object);
         this.scheduler.add(this.gameObjects[this.gameObjects.length - 1], true);
     }
@@ -254,7 +254,7 @@ class SimpleDungeonCrawler {
      * @param  {GameObject} object The object to remove
      * @return {void}
      */
-    removeObject (object) {
+    removeObject(object) {
         // could use an object pool or a linked list to speed up this operation
         // but that seems overkill for this
         this.gameObjects.splice(this.gameObjects.indexOf(object), 1);

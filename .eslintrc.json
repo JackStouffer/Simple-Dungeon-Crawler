@@ -37,6 +37,11 @@
         "no-self-compare": "error",
         "no-unused-labels": "error",
         "require-await": "off",
-        "yoda": "error"
+        "yoda": "error",
+        "space-before-function-paren": ["error", {
+            "anonymous": "ignore",
+            "named": "never",
+            "asyncArrow": "ignore"
+        }]
     }
 }

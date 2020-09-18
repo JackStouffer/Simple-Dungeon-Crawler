@@ -142,11 +142,11 @@ class BasicFighter {
         return [...this.knownSpells];
     }
 
-    getSpeed () {
+    getSpeed() {
         return this.speed;
     }
 
-    setSpeed (s) {
+    setSpeed(s) {
         this.speed = s;
     }
 }
