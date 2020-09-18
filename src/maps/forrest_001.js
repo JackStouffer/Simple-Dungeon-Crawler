@@ -322,6 +322,28 @@
                  "width":0,
                  "x":1073.2833237161,
                  "y":1112.95441431044
+                }, 
+                {
+                 "height":40.9804376401454,
+                 "id":19,
+                 "name":"",
+                 "properties":[
+                        {
+                         "name":"event",
+                         "type":"string",
+                         "value":"tutorial.attacking"
+                        }, 
+                        {
+                         "name":"type",
+                         "type":"string",
+                         "value":"trigger_volume"
+                        }],
+                 "rotation":0,
+                 "type":"",
+                 "visible":true,
+                 "width":53.3518905126421,
+                 "x":385.06147065646,
+                 "y":155.41637671074
                 }],
          "opacity":1,
          "type":"objectgroup",
@@ -330,7 +352,7 @@
          "y":0
         }],
  "nextlayerid":3,
- "nextobjectid":17,
+ "nextobjectid":20,
  "orientation":"orthogonal",
  "renderorder":"right-down",
  "tiledversion":"1.3.4",
@@ -338,7 +360,7 @@
  "tilesets":[
         {
          "firstgid":1,
-         "source":"..\/DungeonCrawl_ProjectUtumnoTileset.tsx"
+         "source":"DungeonCrawl_ProjectUtumnoTileset.tsx"
         }],
  "tilewidth":32,
  "type":"map",

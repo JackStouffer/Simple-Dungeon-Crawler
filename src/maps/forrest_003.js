@@ -115,7 +115,7 @@
  "tilesets":[
         {
          "firstgid":1,
-         "source":"..\/DungeonCrawl_ProjectUtumnoTileset.tsx"
+         "source":"DungeonCrawl_ProjectUtumnoTileset.tsx"
         }],
  "tilewidth":32,
  "type":"map",
