@@ -10,6 +10,7 @@ import {
     LEVEL_UP_BASE,
     LEVEL_UP_FACTOR
 } from "./data";
+import { readKey } from "./util";
 
 export function drawUI(display, player) {
     for (let x = 0; x < WIDTH; x++) {
@@ -65,9 +66,9 @@ export function showSelectionMenu(header, items, type, width) {
     }
 }
 
-export function showKeyBindingMenu() {
+export function showKeyBindingMenu(keyCommands, selectedKey = null) {
     // add one for header
-    const height = 16;
+    const height = keyCommands.length + UI_HEIGHT + 4;
     const width = WIDTH;
 
     // draw background
@@ -82,15 +83,66 @@ export function showKeyBindingMenu() {
     }
 
     globals.Game.display.drawText(2, 1, "%c{white}%b{black} Keyboard Bindings");
-    globals.Game.display.drawText(2, 3, "%c{white}%b{black} Click on an option to change it");
+    globals.Game.display.drawText(2, 3, "%c{white}%b{black} Use the arrow keys to select a binding, and enter to change it");
+    globals.Game.display.drawText(2, 5, "%c{white}%b{black} Use Escape to exit");
 
-    const commands = Object.keys(globals.Game.player.keyCommandMap);
-    for (let i = 0; i < commands.length; i++) {
-        const key = commands[i];
-        globals.Game.display.drawText(
-            2, i + 5,
-            "%c{white}%b{black} " + globals.Game.player.keyCommandMap[key][0] + ": " + key
-        );
+    for (let i = 0; i < keyCommands.length; i++) {
+        const key = keyCommands[i].key;
+
+        if (key === selectedKey) {
+            globals.Game.display.drawText(
+                2, i + 7,
+                "%c{white}%b{grey} " + keyCommands[i].description + ": " + key
+            );
+        } else {
+            globals.Game.display.drawText(
+                2, i + 7,
+                "%c{white}%b{black} " + keyCommands[i].description + ": " + key
+            );
+        }
+    }
+}
+
+export async function handleKeybindingInput(keyCommands) {
+    let e, keyPress;
+    let state = "selection";
+    let currentKey = 0;
+    const allowedSelectionKeys = new Set(["ArrowDown", "ArrowUp", "Enter", "Escape"]);
+
+    showKeyBindingMenu(keyCommands, keyCommands[currentKey].key);
+
+    while (true) {
+        if (state === "selection") {
+            do {
+                e = await readKey();
+                e.preventDefault();
+                keyPress = e.key;
+            } while (!allowedSelectionKeys.has(keyPress));
+
+            if (keyPress === "Escape") {
+                return;
+            }
+
+            if (keyPress === "ArrowUp" && currentKey > 0) {
+                currentKey--;
+            }
+
+            if (keyPress === "ArrowDown" && currentKey < keyCommands.length - 1) {
+                currentKey++;
+            }
+
+            if (keyPress === "Enter") {
+                state = "change";
+            }
+        } else if (state === "change") {
+            e = await readKey();
+            e.preventDefault();
+            keyPress = e.key;
+            keyCommands[currentKey].key = keyPress;
+            state = "selection";
+        }
+
+        showKeyBindingMenu(keyCommands, keyCommands[currentKey].key);
     }
 }
 

@@ -215,13 +215,13 @@ describe("player", function () {
                     ai: new PlayerControlAI()
                 };
                 owner.ai.setOwner(owner);
-                owner.ai.keyCommandMap["w"] = ["", fake.returns(true)];
+                owner.ai.keyCommands = [{ key: "w", description: "Move Up", command: fake.returns(true) }];
                 globals.window.addEventListener = function (_, cb) {
                     return cb({ key: "w" });
                 };
 
                 await owner.ai.handleInput();
-                expect(owner.ai.keyCommandMap["w"][1].calledOnce).to.be.true;
+                expect(owner.ai.keyCommands[0].command.calledOnce).to.be.true;
             });
 
             it("should go back to normal state when escape is pressed when in inventory", async function () {

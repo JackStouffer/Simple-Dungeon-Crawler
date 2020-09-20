@@ -5,7 +5,7 @@ import { DIRS } from "rot-js";
 import globals from "./globals";
 import { WIDTH, SpellData, ItemData } from "./data";
 import { isBlocked } from "./map";
-import { showSelectionMenu, showKeyBindingMenu } from "./ui";
+import { showSelectionMenu, handleKeybindingInput } from "./ui";
 import { readKey } from "./util";
 
 /**
@@ -118,7 +118,6 @@ export function openSpellsCommand(actor) {
  */
 function openKeyBindingCommand(actor) {
     return function() {
-        showKeyBindingMenu();
         actor.ai.state = "keybinding";
         return false;
     };
@@ -134,26 +133,26 @@ function openKeyBindingCommand(actor) {
 class PlayerControlAI {
     constructor() {
         this.owner = null;
-        this.keyCommandMap = {};
+        this.keyCommands = [];
         this.state = "normal";
     }
 
     setOwner(owner) {
         this.owner = owner;
-        this.keyCommandMap = {
-            "w": ["Move Up", moveCommand(this.owner, 0, 8)],
-            "e": ["Move Up Right", moveCommand(this.owner, 1, 8)],
-            "d": ["Move Right", moveCommand(this.owner, 2, 8)],
-            "c": ["Move Down Right", moveCommand(this.owner, 3, 8)],
-            "s": ["Move Down", moveCommand(this.owner, 4, 8)],
-            "z": ["Move Down Left", moveCommand(this.owner, 5, 8)],
-            "a": ["Move Left", moveCommand(this.owner, 6, 8)],
-            "q": ["Move Up Left", moveCommand(this.owner, 7, 8)],
-            "i": ["Inventory", openInventoryCommand(this.owner)],
-            "g": ["Get Item", getItemCommand(this.owner)],
-            "m": ["Spells", openSpellsCommand(this.owner)],
-            "Escape": ["Key Bindings", openKeyBindingCommand(this.owner)]
-        };
+        this.keyCommands = [
+            { key: "w", description: "Move Up", command: moveCommand(this.owner, 0, 8) },
+            { key: "e", description: "Move Up Right", command: moveCommand(this.owner, 1, 8) },
+            { key: "d", description: "Move Right", command: moveCommand(this.owner, 2, 8) },
+            { key: "c", description: "Move Down Right", command: moveCommand(this.owner, 3, 8) },
+            { key: "s", description: "Move Down", command: moveCommand(this.owner, 4, 8) },
+            { key: "z", description: "Move Down Left", command: moveCommand(this.owner, 5, 8) },
+            { key: "a", description: "Move Left", command: moveCommand(this.owner, 6, 8) },
+            { key: "q", description: "Move Up Left", command: moveCommand(this.owner, 7, 8) },
+            { key: "i", description: "Inventory", command: openInventoryCommand(this.owner) },
+            { key: "g", description: "Get Item", command: getItemCommand(this.owner) },
+            { key: "m", description: "Spells", command: openSpellsCommand(this.owner) },
+            { key: "Escape", description: "Key Bindings", command: openKeyBindingCommand(this.owner) }
+        ];
     }
 
     async act() {
@@ -171,12 +170,13 @@ class PlayerControlAI {
         const zCode = "z".charCodeAt(0);
 
         if (this.state === "normal") {
+            const allowedKeys = new Set(this.keyCommands.map(c => c.key));
             do {
                 e = await readKey();
                 key = e.key;
-            } while (!(key in this.keyCommandMap));
+            } while (!allowedKeys.has(key));
 
-            return this.keyCommandMap[key][1]();
+            return this.keyCommands.filter(c => c.key === key)[0].command();
         } else if (this.state === "inventory") {
             do {
                 e = await readKey();
@@ -251,7 +251,10 @@ class PlayerControlAI {
             }
             return false;
         } else if (this.state === "keybinding") {
-            throw new Error("fix me");
+            await handleKeybindingInput(this.keyCommands);
+            globals.Game.drawAll();
+            this.state = "normal";
+            return false;
         }
     }
 }
