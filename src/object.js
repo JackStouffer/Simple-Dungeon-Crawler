@@ -105,49 +105,46 @@ export function createObject(id, x=0, y=0) {
 
     if (data.ai) {
         switch (data.ai) {
-        case "player_control_ai":
-            object.setAI(new PlayerControlAI());
-            break;
-        case "basic_monster_ai":
-            object.setAI(new BasicMonsterAI(data.sightRange));
-            break;
-        case "patrolling_monster_ai":
-            object.setAI(new PatrollingMonsterAI(data.sightRange));
-            break;
-        case "chest_ai":
-            object.setAI(new ChestAI(data.bgColor, data.emptyColor));
-            break;
-        case "dropped_item_ai":
-            object.setAI(new DroppedItemAI());
-            break;
-        default:
-            throw new Error(`Unhandled AI type ${data.ai}`);
+            case "basic_monster_ai":
+                object.setAI(new BasicMonsterAI(data.sightRange));
+                break;
+            case "patrolling_monster_ai":
+                object.setAI(new PatrollingMonsterAI(data.sightRange));
+                break;
+            case "chest_ai":
+                object.setAI(new ChestAI(data.bgColor, data.emptyColor));
+                break;
+            case "dropped_item_ai":
+                object.setAI(new DroppedItemAI());
+                break;
+            default:
+                throw new Error(`Unhandled AI type ${data.ai}`);
         }
     }
 
     if (data.graphics) {
         switch (data.graphics) {
-        case "basic_graphics":
-            object.setGraphics(new BasicGraphics(data.char, data.fgColor, data.bgColor));
-            break;
-        case "draw_after_seen":
-            object.setGraphics(new DrawAfterSeen(data.char, data.fgColor, data.bgColor));
-            break;
-        default:
-            throw new Error(`Unhandled Graphics type ${data.graphics}`);
+            case "basic_graphics":
+                object.setGraphics(new BasicGraphics(data.char, data.fgColor, data.bgColor));
+                break;
+            case "draw_after_seen":
+                object.setGraphics(new DrawAfterSeen(data.char, data.fgColor, data.bgColor));
+                break;
+            default:
+                throw new Error(`Unhandled Graphics type ${data.graphics}`);
         }
     }
 
     if (data.lighting) {
         switch (data.lighting) {
-        case "reflectivity":
-            object.setLighting(new ReflectivityLighting(data.lightingColor, data.lightingRange));
-            break;
-        case "player_lighting":
-            object.setLighting(new PlayerLighting(data.lightingColor, data.lightingRange));
-            break;
-        default:
-            throw new Error(`Unhandled Lighting type ${data.lighting}`);
+            case "reflectivity":
+                object.setLighting(new ReflectivityLighting(data.lightingColor, data.lightingRange));
+                break;
+            case "player_lighting":
+                object.setLighting(new PlayerLighting(data.lightingColor, data.lightingRange));
+                break;
+            default:
+                throw new Error(`Unhandled Lighting type ${data.lighting}`);
         }
     }
 
@@ -155,35 +152,35 @@ export function createObject(id, x=0, y=0) {
         let callback;
 
         switch (data.onDeath) {
-        case "default":
-            callback = enemyDeathCallback;
-            break;
-        case "remove_from_world":
-            callback = removeDeathCallback;
-            break;
-        default:
-            throw new Error(`Unhandled onDeath type ${data.onDeath}`);
+            case "default":
+                callback = enemyDeathCallback;
+                break;
+            case "remove_from_world":
+                callback = removeDeathCallback;
+                break;
+            default:
+                throw new Error(`Unhandled onDeath type ${data.onDeath}`);
         }
 
         switch (data.fighter) {
-        case "basic_fighter":
-            object.setFighter(new BasicFighter(
-                data,
-                callback
-            ));
-            break;
-        default:
-            throw new Error(`Unhandled Fighter type ${data.fighter}`);
+            case "basic_fighter":
+                object.setFighter(new BasicFighter(
+                    data,
+                    callback
+                ));
+                break;
+            default:
+                throw new Error(`Unhandled Fighter type ${data.fighter}`);
         }
     }
 
     if (data.inventory) {
         switch (data.inventory) {
-        case "basic_inventory":
-            object.setInventory(new BasicInventory());
-            break;
-        default:
-            throw new Error(`Unhandled Inventory type ${data.inventory}`);
+            case "basic_inventory":
+                object.setInventory(new BasicInventory());
+                break;
+            default:
+                throw new Error(`Unhandled Inventory type ${data.inventory}`);
         }
 
         if (data.inventoryPool) {
@@ -197,20 +194,20 @@ export function createObject(id, x=0, y=0) {
 
     if (data.interactable) {
         switch (data.interactable) {
-        case "give_items_interactable":
-            object.setInteractable(new GiveItemsInteractable());
-            break;
-        case "give_spell_interactable":
-            object.setInteractable(new GiveSpellInteractable());
-            break;
-        case "load_level_interactable":
-            object.setInteractable(new LoadLevelInteractable());
-            break;
-        case "door_interactable":
-            object.setInteractable(new DoorInteractable());
-            break;
-        default:
-            throw new Error(`Unhandled Interactable type ${data.interactable}`);
+            case "give_items_interactable":
+                object.setInteractable(new GiveItemsInteractable());
+                break;
+            case "give_spell_interactable":
+                object.setInteractable(new GiveSpellInteractable());
+                break;
+            case "load_level_interactable":
+                object.setInteractable(new LoadLevelInteractable());
+                break;
+            case "door_interactable":
+                object.setInteractable(new DoorInteractable());
+                break;
+            default:
+                throw new Error(`Unhandled Interactable type ${data.interactable}`);
         }
     }
 
