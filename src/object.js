@@ -5,7 +5,6 @@ import { RNG } from "rot-js";
 import globals from "./globals";
 import { ObjectData, BASE_SPEED } from "./data";
 import { BasicMonsterAI, PatrollingMonsterAI, ChestAI, DroppedItemAI } from "./ai";
-import { PlayerControlAI } from "./player";
 import { GiveItemsInteractable, GiveSpellInteractable, LoadLevelInteractable, DoorInteractable } from "./interactable";
 import { BasicInventory } from "./inventory";
 import { BasicGraphics, DrawAfterSeen } from "./graphics";
@@ -75,13 +74,15 @@ class GameObject {
         return BASE_SPEED;
     }
 
-    async act() {
+    async act(input = null) {
+        let acted = true;
         if (this.ai && typeof this.ai.act === "function") {
-            await this.ai.act();
+            acted = await this.ai.act(input);
         }
         if (this.fighter && typeof this.fighter.act === "function") {
             await this.fighter.act();
         }
+        return acted;
     }
 }
 export { GameObject };
@@ -233,7 +234,7 @@ export function enemyDeathCallback(target) {
     target.interactable = null;
     target.name = "Remains of a " + target.name;
 
-    if (target.inventoryComponent.getIDsAndCounts().length > 0) {
+    if (target.inventoryComponent.getItems().length > 0) {
         const item = createObject("dropped_item", target.x, target.y);
         item.inventoryComponent = target.inventoryComponent;
         globals.Game.addObject(item);
@@ -250,7 +251,7 @@ export function enemyDeathCallback(target) {
  * @return {void}
  */
 export function removeDeathCallback(target) {
-    if (target.inventoryComponent.getIDsAndCounts().length > 0) {
+    if (target.inventoryComponent.getItems().length > 0) {
         const item = createObject("dropped_item", target.x, target.y);
         item.inventoryComponent = target.inventoryComponent;
         globals.Game.addObject(item);

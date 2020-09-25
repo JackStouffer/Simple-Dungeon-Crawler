@@ -66,13 +66,6 @@ describe("object", function () {
         });
 
         describe("ai", function () {
-            it("should set the ai to the player control ai", function () {
-                ObjectData["test_object"].ai = "player_control_ai";
-                const obj = createObject("test_object");
-                expect(obj.ai.constructor.name).to.be.equal("PlayerControlAI");
-                expect(obj.ai.owner).to.be.deep.equal(obj);
-            });
-
             it("should set the ai to the basic monster ai", function () {
                 ObjectData["test_object"].ai = "basic_monster_ai";
                 const obj = createObject("test_object");
@@ -220,9 +213,11 @@ describe("object", function () {
                     ["health_potion_weak", 1]
                 ];
                 const obj = createObject("test_object");
-                expect(obj.inventoryComponent.getIDsAndCounts()).to.be.deep.equal([
-                    { id: "health_potion_weak", count: 1 }
-                ]);
+                expect(obj.inventoryComponent.getItems()).to.be.deep.equal([{
+                    id: "health_potion_weak",
+                    count: 1,
+                    displayName: "Weak Potion of Healing"
+                }]);
             });
 
             it("should throw an error when using an unkown inventory type", function () {
@@ -287,7 +282,7 @@ describe("object", function () {
                 ai: {},
                 interactable: {},
                 inventoryComponent: {
-                    getIDsAndCounts: fake.returns([])
+                    getItems: fake.returns([])
                 }
             };
             enemyDeathCallback(target);
@@ -303,7 +298,7 @@ describe("object", function () {
 
         it("should add items in inventory to the world as dropped items", function () {
             const inventoryComponent = {
-                getIDsAndCounts: fake.returns([{ id: "test1", count: 1 }, { id: "test2", count: 2 }])
+                getItems: fake.returns([{ id: "test1", count: 1 }, { id: "test2", count: 2 }])
             };
             const target = {
                 name: "test",
@@ -341,7 +336,7 @@ describe("object", function () {
                 ai: {},
                 interactable: {},
                 inventoryComponent: {
-                    getIDsAndCounts: fake.returns([])
+                    getItems: fake.returns([])
                 }
             };
             removeDeathCallback(target);
@@ -350,7 +345,7 @@ describe("object", function () {
 
         it("should add items in inventory to the world as dropped items", function () {
             const inventoryComponent = {
-                getIDsAndCounts: fake.returns([{ id: "test1", count: 1 }, { id: "test2", count: 2 }])
+                getItems: fake.returns([{ id: "test1", count: 1 }, { id: "test2", count: 2 }])
             };
             const target = {
                 name: "test",

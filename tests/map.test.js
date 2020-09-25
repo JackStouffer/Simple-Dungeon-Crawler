@@ -93,7 +93,11 @@ describe("map", function () {
             };
             const { objects } = loadTiledMap("test");
             expect(objects[1].type).to.be.equal("chest");
-            expect(objects[1].inventoryComponent.getIDsAndCounts()).to.be.deep.equal([{ id: "test", count: 1 }]);
+            expect(objects[1].inventoryComponent.getItems()).to.be.deep.equal([{
+                id: "test",
+                count: 1,
+                displayName: "Test Item"
+            }]);
         });
 
         it("should set the level to load for a load level interactable", function () {

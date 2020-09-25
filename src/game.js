@@ -1,3 +1,5 @@
+/* global ENV */
+
 "use strict";
 
 import { Display, Scheduler } from "rot-js";
@@ -5,6 +7,7 @@ import EventEmitter from "events";
 
 import globals from "./globals";
 import { createObject } from "./object";
+import { moveCommand, openInventoryCommand, openSpellsCommand, getItemCommand } from "./commands";
 import { WIDTH, HEIGHT } from "./data";
 import {
     drawMap,
@@ -13,8 +16,9 @@ import {
     loadTiledMap,
     findVolumeCollision
 } from "./map";
-import { drawUI, clearScreen } from "./ui";
+import { drawUI, clearScreen, KeyBindingMenu, InventoryMenu, SpellSelectionMenu } from "./ui";
 import { explainMovement, explainAttacking } from "./tutorials";
+import { readKey } from "./util";
 
 export function mouseLook(e) {
     const pos = globals.Game.display.eventToPosition(e);
@@ -34,6 +38,7 @@ export function mouseLook(e) {
 
 class SimpleDungeonCrawler {
     constructor() {
+        this.state = "gameplay";
         this.canvas = null;
         this.display = null;
         this.player = null;
@@ -42,18 +47,42 @@ class SimpleDungeonCrawler {
         this.gameObjects = [];
         this.map = [];
         this.totalTurns = 0;
-        this.display = new Display({
-            width: WIDTH,
-            height: HEIGHT,
-            fontSize: 13,
-            forceSquareRatio: true
-        });
-        this.canvas = this.display.getContainer();
-        globals.document.getElementById("canvas").prepend(this.canvas);
+
+        if (ENV === "TEST") {
+            this.display = null;
+            this.canvas = null;
+        } else {
+            this.display = new Display({
+                width: WIDTH,
+                height: HEIGHT,
+                fontSize: 13,
+                forceSquareRatio: true
+            });
+            this.canvas = this.display.getContainer();
+            globals.document.getElementById("canvas").prepend(this.canvas);
+        }
+
+        this.keyCommands = [
+            { key: "w", description: "Move Up", command: moveCommand(0, 8) },
+            { key: "e", description: "Move Up Right", command: moveCommand(1, 8) },
+            { key: "d", description: "Move Right", command: moveCommand(2, 8) },
+            { key: "c", description: "Move Down Right", command: moveCommand(3, 8) },
+            { key: "s", description: "Move Down", command: moveCommand(4, 8) },
+            { key: "z", description: "Move Down Left", command: moveCommand(5, 8) },
+            { key: "a", description: "Move Left", command: moveCommand(6, 8) },
+            { key: "q", description: "Move Up Left", command: moveCommand(7, 8) },
+            { key: "i", description: "Inventory", command: openInventoryCommand() },
+            { key: "g", description: "Get Item", command: getItemCommand() },
+            { key: "m", description: "Spells", command: openSpellsCommand() }
+        ];
+
+        this.keyBindingMenu = new KeyBindingMenu();
+        this.inventoryMenu = new InventoryMenu();
+        this.spellSelectionMenu = new SpellSelectionMenu();
+
         globals.gameEventEmitter = new EventEmitter();
 
         this.registerListeners();
-        this.openingCinematic();
     }
 
     registerListeners() {
@@ -130,6 +159,7 @@ class SimpleDungeonCrawler {
 
         this.scheduler = new Scheduler.Speed();
         this.player = createObject("player", 1, 1);
+
         this.loadLevel("forrest_001");
 
         globals.gameEventEmitter.emit("tutorial.start");
@@ -209,16 +239,90 @@ class SimpleDungeonCrawler {
         this.drawAll();
     }
 
+    async handleInput() {
+        let acted;
+        do {
+            if (this.player.fighter === null || this.player.fighter.hp <= 0) { return; }
+
+            if (this.state === "gameplay") {
+                this.drawAll();
+            } else if (this.state === "pause_menu") {
+                this.keyBindingMenu.draw(this.keyCommands);
+            } else if (this.state === "inventory_menu") {
+                this.inventoryMenu.draw(this.player.inventoryComponent.getItems());
+            } else if (this.state === "spell_menu") {
+                this.spellSelectionMenu.draw(this.player.fighter.getKnownSpells());
+            }
+
+            const e = await readKey();
+            e.preventDefault();
+
+            if (this.state === "gameplay") {
+                if (e.key === "Escape") {
+                    this.state = "pause_menu";
+                    continue;
+                }
+
+                if (this.keyCommands.map(c => c.key).indexOf(e.key) === -1) {
+                    acted = false;
+                    continue;
+                }
+
+                const command = this.keyCommands.filter(c => c.key === e.key)[0].command;
+                acted = command(this.player);
+            } else if (this.state === "pause_menu") {
+                if (e.key === "Escape") {
+                    this.state = "gameplay";
+                    this.keyBindingMenu.resetState();
+                    this.drawAll();
+                    continue;
+                }
+
+                this.keyBindingMenu.handleInput(e.key, this.keyCommands);
+            } else if (this.state === "inventory_menu") {
+                if (e.key === "Escape") {
+                    this.state = "gameplay";
+                    this.inventoryMenu.resetState();
+                    this.drawAll();
+                    continue;
+                }
+
+                const command = this.inventoryMenu.handleInput(e.key, this.player.inventoryComponent.getItems());
+                if (command) {
+                    acted = await command(this.player);
+                    if (acted) {
+                        this.state = "gameplay";
+                    }
+                }
+            } else if (this.state === "spell_menu") {
+                if (e.key === "Escape") {
+                    this.state = "gameplay";
+                    this.spellSelectionMenu.resetState();
+                    this.drawAll();
+                    continue;
+                }
+
+                const command = this.spellSelectionMenu.handleInput(e.key, this.player.fighter.getKnownSpells());
+                if (command) {
+                    acted = await command(this.player);
+                    if (acted) {
+                        this.state = "gameplay";
+                    }
+                }
+            }
+        } while (!acted);
+    }
+
     async mainLoop() {
         while (true) {
             const actor = this.scheduler.next();
 
             if (actor === this.player) {
-                this.drawAll();
                 this.totalTurns++;
+                await this.handleInput();
+            } else {
+                await actor.act();
             }
-
-            await actor.act();
 
             if (this.player.fighter === null) {
                 this.loseCinematic();

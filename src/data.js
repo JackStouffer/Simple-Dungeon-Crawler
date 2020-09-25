@@ -339,7 +339,7 @@ export const ObjectData = {
         lighting: "player_lighting",
         lightingColor: "white",
         lightingRange: 7,
-        ai: "player_control_ai",
+        ai: null,
         inventory: "basic_inventory",
         fighter: "basic_fighter",
         speed: BASE_SPEED,
@@ -609,58 +609,67 @@ if (ENV !== "TEST") {
 
 export const SpellData = {
     "lightning_bolt": {
-        name: "Lightning Bolt",
+        displayName: "Lightning Bolt",
         manaCost: 50,
         value: 20,
+        type: "damage",
         damageType: DamageType.lightning,
         useFunc: castDamageSpell
     },
     "fireball": {
-        name: "Fireball",
+        displayName: "Fireball",
         manaCost: 50,
         value: 20,
+        type: "damage",
         damageType: DamageType.fire,
         useFunc: castDamageSpell
     },
     "confuse": {
-        name: "Confuse",
+        displayName: "Confuse",
         manaCost: 50,
         value: 8,
+        type: "effect",
         useFunc: castConfuse
     },
     "clairvoyance": {
-        name: "Clairvoyance",
+        displayName: "Clairvoyance",
         manaCost: 50,
+        type: "passive",
         useFunc: castClairvoyance
     },
     "lesser_heal": {
-        name: "Lesser Heal",
+        displayName: "Lesser Heal",
         manaCost: 50,
         value: 25,
+        type: "heal",
         useFunc: castHeal
     },
     "heal": {
-        name: "Heal",
+        displayName: "Heal",
         manaCost: 50,
         value: 50,
+        type: "heal",
         useFunc: castHeal
     },
     "greater_heal": {
-        name: "Greater Heal",
+        displayName: "Greater Heal",
         manaCost: 50,
         value: 100,
+        type: "heal",
         useFunc: castHeal
     },
     "lesser_haste": {
-        name: "Lesser Haste",
+        displayName: "Lesser Haste",
         manaCost: 100,
         value: 5,
+        type: "effect",
         useFunc: castHaste
     },
     "lesser_slow": {
-        name: "Lesser Slow",
+        displayName: "Lesser Slow",
         manaCost: 100,
         value: 5,
+        type: "effect",
         useFunc: castSlow
     }
 };

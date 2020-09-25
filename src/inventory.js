@@ -15,17 +15,15 @@ class BasicInventory {
         this.owner = owner;
     }
 
-    // This implementation relies on JS now having a set ordering to
-    // keys in objects when using ownKeys. Not a perfect solution since
-    // it's not obvious what's going on.
-    getIDsAndCounts() {
+    getItems() {
+        // FIX ME: Use JS Map
+        // This implementation relies on JS now having a set ordering to
+        // keys in objects when using ownKeys. Not a perfect solution since
+        // it's not obvious what's going on.
         const orderedKeys = Reflect.ownKeys(this._inventory);
-        return orderedKeys.map(e => { return { id: e, count: this._inventory[e] }; });
-    }
-
-    getNamesAndCounts() {
-        const orderedKeys = Reflect.ownKeys(this._inventory);
-        return orderedKeys.map(e => { return { name: ItemData[e].displayName, count: this._inventory[e] }; });
+        return orderedKeys.map(e => {
+            return { id: e, displayName: ItemData[e].displayName, count: this._inventory[e] };
+        });
     }
 
     hasItem(id) {

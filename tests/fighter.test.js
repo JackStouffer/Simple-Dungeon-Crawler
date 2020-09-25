@@ -6,6 +6,7 @@ import globals from "../src/globals";
 import { createObject } from "../src/object";
 import { BasicFighter } from "../src/fighter";
 import { Effect } from "../src/effects";
+import { SpellData } from "../src/data";
 
 globals.Game = {
     player: null,
@@ -181,19 +182,71 @@ describe("fighter", function () {
             });
 
             it("should give a list of known spells", function () {
+                SpellData["spell"] = {
+                    displayName: "Test Spell",
+                    type: "damage",
+                    value: 10,
+                    manaCost: 20
+                };
+                SpellData["spell2"] = {
+                    displayName: "Test Spell 2",
+                    type: "damage",
+                    value: 10,
+                    manaCost: 20
+                };
+
                 const fighter = new BasicFighter(data);
                 fighter.addSpellById("spell");
-                expect(fighter.getKnownSpells()).to.be.deep.equal(["spell"]);
+                expect(fighter.getKnownSpells()).to.be.deep.equal([
+                    {
+                        id: "spell",
+                        displayName: "Test Spell",
+                        manaCost: 20,
+                        value: 10,
+                        type: "damage"
+                    }
+                ]);
                 fighter.addSpellById("spell2");
-                expect(fighter.getKnownSpells()).to.be.deep.equal(["spell", "spell2"]);
+                expect(fighter.getKnownSpells()).to.be.deep.equal([
+                    {
+                        id: "spell",
+                        displayName: "Test Spell",
+                        manaCost: 20,
+                        value: 10,
+                        type: "damage"
+                    },
+                    {
+                        id: "spell2",
+                        displayName: "Test Spell 2",
+                        manaCost: 20,
+                        value: 10,
+                        type: "damage"
+                    }
+                ]);
             });
 
             it("should not change output when the same spell is added twice", function () {
                 const fighter = new BasicFighter(data);
                 fighter.addSpellById("spell");
-                expect(fighter.getKnownSpells()).to.be.deep.equal(["spell"]);
+                expect(fighter.getKnownSpells()).to.be.deep.equal([
+                    {
+                        id: "spell",
+                        displayName: "Test Spell",
+                        manaCost: 20,
+                        value: 10,
+                        type: "damage"
+                    }
+                ]);
                 fighter.addSpellById("spell");
-                expect(fighter.getKnownSpells()).to.be.deep.equal(["spell"]);
+                expect(fighter.getKnownSpells()).to.be.deep.equal([
+                    {
+                        id: "spell",
+                        displayName: "Test Spell",
+                        manaCost: 20,
+                        value: 10,
+                        type: "damage"
+                    }
+                ]);
             });
         });
     });

@@ -272,7 +272,7 @@ class ChestAI {
 
     async act() {
         if (this.owner && this.owner.inventoryComponent) {
-            if (this.owner.inventoryComponent.getIDsAndCounts().length === 0) {
+            if (this.owner.inventoryComponent.getItems().length === 0) {
                 this.owner.graphics.bgColor = this.emptyColor;
             } else {
                 this.owner.graphics.bgColor = this.bgColor;
@@ -297,7 +297,7 @@ class DroppedItemAI {
 
     async act() {
         if (this.owner && this.owner.inventoryComponent) {
-            if (this.owner.inventoryComponent.getIDsAndCounts().length === 0) {
+            if (this.owner.inventoryComponent.getItems().length === 0) {
                 globals.Game.removeObject(this.owner);
             }
         } else {

@@ -27,16 +27,17 @@ npm run test
 
 ## Implemented Features
 
-* Multiple levels loaded and connected from Tiled maps
-* An inventory system
 * A very basic leveling system
+* A magic system
+* An inventory system
+* Potions
+* Magic scrolls
+* Multiple levels loaded and connected from Tiled maps
 * Monsters with basic AI, like rats and goblins
-* Lighting and sight FOVs
+* Two pass lighting and sight FOVs
 * Intractable world items like chests, boxes, and doors
 * Some scenery like tables, lanterns, fires, chairs, and cabinets
-* A magic system with damage spells and two types of utility spells
-* Health potions
-* Magic scrolls
+* Keybinding for keyboard controls
 
 ## Planned Features
 

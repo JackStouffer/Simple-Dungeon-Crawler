@@ -236,7 +236,7 @@ describe("ai", function () {
         it("should change the color when empty", function () {
             const owner = {
                 inventoryComponent: {
-                    getIDsAndCounts: fake.returns([])
+                    getItems: fake.returns([])
                 },
                 graphics: {
                     bgColor: "test"
@@ -251,7 +251,7 @@ describe("ai", function () {
         it("should not change the color when items are in the inventory", function () {
             const owner = {
                 inventoryComponent: {
-                    getIDsAndCounts: fake.returns([{ id: "test", count: 1 }])
+                    getItems: fake.returns([{ id: "test", count: 1 }])
                 },
                 graphics: {
                     bgColor: "test"
@@ -268,7 +268,7 @@ describe("ai", function () {
         it("should remove itself when inventory is empty", function () {
             const owner = {
                 inventoryComponent: {
-                    getIDsAndCounts: fake.returns([])
+                    getItems: fake.returns([])
                 },
                 ai: new DroppedItemAI()
             };
@@ -280,7 +280,7 @@ describe("ai", function () {
         it("should not remove itself when inventory has items", function () {
             const owner = {
                 inventoryComponent: {
-                    getIDsAndCounts: fake.returns([{ id: "test", count: 1 }])
+                    getItems: fake.returns([{ id: "test", count: 1 }])
                 },
                 ai: new DroppedItemAI()
             };

@@ -38,7 +38,7 @@ describe("interactable", function () {
 
             const owner = {
                 inventoryComponent: {
-                    getIDsAndCounts: fake.returns([{ id: "test1", count: 1 }, { id: "test2", count: 1 }]),
+                    getItems: fake.returns([{ id: "test1", count: 1 }, { id: "test2", count: 1 }]),
                     useItem: fake()
                 },
                 interactable: new GiveItemsInteractable()

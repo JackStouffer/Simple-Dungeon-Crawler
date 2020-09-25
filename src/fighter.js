@@ -2,7 +2,7 @@
 
 import { RNG } from "rot-js";
 
-import { LEVEL_UP_BASE, LEVEL_UP_FACTOR } from "./data";
+import { LEVEL_UP_BASE, LEVEL_UP_FACTOR, SpellData } from "./data";
 import globals from "./globals";
 
 /**
@@ -139,7 +139,19 @@ class BasicFighter {
     }
 
     getKnownSpells() {
-        return [...this.knownSpells];
+        return [...this.knownSpells].map(s => {
+            return {
+                id: s,
+                displayName: SpellData[s].displayName,
+                manaCost: SpellData[s].manaCost,
+                value: SpellData[s].value,
+                type: SpellData[s].type
+            };
+        });
+    }
+
+    hasSpell(spellID) {
+        return this.knownSpells.has(spellID);
     }
 
     getSpeed() {

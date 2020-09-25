@@ -10,7 +10,7 @@ import {
     LEVEL_UP_BASE,
     LEVEL_UP_FACTOR
 } from "./data";
-import { readKey } from "./util";
+import { useItemCommand, useSpellCommand } from "./commands";
 
 export function drawUI(display, player) {
     for (let x = 0; x < WIDTH; x++) {
@@ -26,126 +26,6 @@ export function drawUI(display, player) {
     display.drawText(54, HEIGHT - UI_HEIGHT, "%c{white}%b{blue}EXP: " + player.fighter.experience + "/" + (LEVEL_UP_BASE + player.fighter.level * LEVEL_UP_FACTOR));
 }
 
-export function showSelectionMenu(header, items, type, width) {
-    if (items.length > 26) {
-        throw new Error("too many items");
-    }
-
-    const aCode = "a".charCodeAt(0);
-
-    // add four for header
-    const height = items.length + UI_HEIGHT;
-
-    // draw background
-    for (let w = 0; w < width; w++) {
-        for (let h = 0; h < height; h++) {
-            if (w === 0 || h === 0 || w === width - 1 || h === height - 1) {
-                globals.Game.display.draw(w, h, "1", "grey", "grey");
-            } else {
-                globals.Game.display.draw(w, h, "1", "black", "black");
-            }
-        }
-    }
-
-    globals.Game.display.drawText(2, 1, "%c{white}%b{black}" + header);
-    for (let i = 0; i < items.length; i++) {
-        switch (type) {
-        case "inventory":
-            globals.Game.display.drawText(
-                2, i + 3, `%c{white}%b{black} ${String.fromCharCode(i + aCode)}: ${items[i].name} (${items[i].count})`
-            );
-            break;
-        case "spells":
-            globals.Game.display.drawText(
-                2, i + 3, `%c{white}%b{black} ${String.fromCharCode(i + aCode)}: ${items[i].name} dmg: ${items[i].value} cost: ${items[i].manaCost}`
-            );
-            break;
-        default:
-            throw new Error(`Unknown menu type ${type}`);
-        }
-    }
-}
-
-export function showKeyBindingMenu(keyCommands, selectedKey = null) {
-    // add one for header
-    const height = keyCommands.length + UI_HEIGHT + 4;
-    const width = WIDTH;
-
-    // draw background
-    for (let w = 0; w < width; w++) {
-        for (let h = 0; h < height; h++) {
-            if (w === 0 || h === 0 || w === width - 1 || h === height - 1) {
-                globals.Game.display.draw(w, h, "1", "grey", "grey");
-            } else {
-                globals.Game.display.draw(w, h, "1", "black", "black");
-            }
-        }
-    }
-
-    globals.Game.display.drawText(2, 1, "%c{white}%b{black} Keyboard Bindings");
-    globals.Game.display.drawText(2, 3, "%c{white}%b{black} Use the arrow keys to select a binding, and enter to change it");
-    globals.Game.display.drawText(2, 5, "%c{white}%b{black} Use Escape to exit");
-
-    for (let i = 0; i < keyCommands.length; i++) {
-        const key = keyCommands[i].key;
-
-        if (key === selectedKey) {
-            globals.Game.display.drawText(
-                2, i + 7,
-                "%c{white}%b{grey} " + keyCommands[i].description + ": " + key
-            );
-        } else {
-            globals.Game.display.drawText(
-                2, i + 7,
-                "%c{white}%b{black} " + keyCommands[i].description + ": " + key
-            );
-        }
-    }
-}
-
-export async function handleKeybindingInput(keyCommands) {
-    let e, keyPress;
-    let state = "selection";
-    let currentKey = 0;
-    const allowedSelectionKeys = new Set(["ArrowDown", "ArrowUp", "Enter", "Escape"]);
-
-    showKeyBindingMenu(keyCommands, keyCommands[currentKey].key);
-
-    while (true) {
-        if (state === "selection") {
-            do {
-                e = await readKey();
-                e.preventDefault();
-                keyPress = e.key;
-            } while (!allowedSelectionKeys.has(keyPress));
-
-            if (keyPress === "Escape") {
-                return;
-            }
-
-            if (keyPress === "ArrowUp" && currentKey > 0) {
-                currentKey--;
-            }
-
-            if (keyPress === "ArrowDown" && currentKey < keyCommands.length - 1) {
-                currentKey++;
-            }
-
-            if (keyPress === "Enter") {
-                state = "change";
-            }
-        } else if (state === "change") {
-            e = await readKey();
-            e.preventDefault();
-            keyPress = e.key;
-            keyCommands[currentKey].key = keyPress;
-            state = "selection";
-        }
-
-        showKeyBindingMenu(keyCommands, keyCommands[currentKey].key);
-    }
-}
-
 export function clearScreen(display) {
     for (let y = 0; y < HEIGHT; y++) {
         for (let x = 0; x < WIDTH; x++) {
@@ -153,3 +33,227 @@ export function clearScreen(display) {
         }
     }
 }
+
+class InventoryMenu {
+    constructor() {
+        this.currentSelection = 0;
+        this.allowedKeys = new Set(["ArrowDown", "ArrowUp", "Enter"]);
+    }
+
+    resetState() {
+        this.currentSelection = 0;
+    }
+
+    draw(inventoryItems) {
+        // add four for header
+        const height = inventoryItems.length + UI_HEIGHT;
+
+        // draw background
+        for (let w = 0; w < WIDTH; w++) {
+            for (let h = 0; h < height; h++) {
+                if (w === 0 || h === 0 || w === WIDTH - 1 || h === height - 1) {
+                    globals.Game.display.draw(w, h, "1", "grey", "grey");
+                } else {
+                    globals.Game.display.draw(w, h, "1", "black", "black");
+                }
+            }
+        }
+
+        globals.Game.display.drawText(2, 1, "%c{white}%b{black}Player Inventory");
+        for (let i = 0; i < inventoryItems.length; i++) {
+            let displayString;
+            if (i === this.currentSelection) {
+                displayString = `%c{white}%b{grey}${inventoryItems[i].displayName} (${inventoryItems[i].count})`;
+            } else {
+                displayString = `%c{white}%b{black}${inventoryItems[i].displayName} (${inventoryItems[i].count})`;
+            }
+            globals.Game.display.drawText(2, i + 3, displayString);
+        }
+    }
+
+    handleInput(key, inventoryItems) {
+        if (!this.allowedKeys.has(key)) {
+            return null;
+        }
+
+        if (key === "Enter") {
+            return useItemCommand(inventoryItems[this.currentSelection].id);
+        }
+
+        if (key === "ArrowUp" && this.currentSelection > 0) {
+            this.currentSelection--;
+        }
+
+        if (key === "ArrowDown" && this.currentSelection < inventoryItems.length - 1) {
+            this.currentSelection++;
+        }
+
+        return null;
+    }
+}
+export { InventoryMenu };
+
+class SpellSelectionMenu {
+    constructor() {
+        this.currentSelection = 0;
+        this.allowedKeys = new Set(["ArrowDown", "ArrowUp", "Enter"]);
+    }
+
+    resetState() {
+        this.currentSelection = 0;
+    }
+
+    draw(spells) {
+        // add four for header
+        const height = spells.length + UI_HEIGHT;
+
+        // draw background
+        for (let w = 0; w < WIDTH; w++) {
+            for (let h = 0; h < height; h++) {
+                if (w === 0 || h === 0 || w === WIDTH - 1 || h === height - 1) {
+                    globals.Game.display.draw(w, h, "1", "grey", "grey");
+                } else {
+                    globals.Game.display.draw(w, h, "1", "black", "black");
+                }
+            }
+        }
+
+        globals.Game.display.drawText(2, 1, "%c{white}%b{black}Spells");
+        for (let i = 0; i < spells.length; i++) {
+            const spell = spells[i];
+            let displaySettings;
+
+            if (i === this.currentSelection) {
+                displaySettings = "%c{white}%b{grey}";
+            } else {
+                displaySettings = "%c{white}%b{black}";
+            }
+
+            globals.Game.display.drawText(2, i + 3, displaySettings + ` ${spell.displayName}`);
+
+            let infoString = "%c{white}%b{black}";
+            switch (spell.type) {
+                case "damage":
+                    infoString += `dmg: ${spell.value}`;
+                    break;
+                case "effect":
+                    infoString += `turns: ${spell.value}`;
+                    break;
+                case "heal":
+                    infoString += `health: ${spell.value}`;
+                    break;
+                default: break;
+            }
+            globals.Game.display.drawText(25, i + 3, infoString);
+
+            globals.Game.display.drawText(40, i + 3, `%c{white}%b{black}cost: ${spell.manaCost}`);
+        }
+    }
+
+    handleInput(key, spells) {
+        if (!this.allowedKeys.has(key)) {
+            return null;
+        }
+
+        if (key === "Enter") {
+            return useSpellCommand(spells[this.currentSelection].id);
+        }
+
+        if (key === "ArrowUp" && this.currentSelection > 0) {
+            this.currentSelection--;
+        }
+
+        if (key === "ArrowDown" && this.currentSelection < spells.length - 1) {
+            this.currentSelection++;
+        }
+
+        return null;
+    }
+}
+export { SpellSelectionMenu };
+
+class KeyBindingMenu {
+    constructor() {
+        this.state = "selection";
+        this.currentSelection = 0;
+    }
+
+    resetState() {
+        this.state = "selection";
+        this.currentSelection = 0;
+    }
+
+    draw(keyCommands) {
+        // add one for header
+        const height = keyCommands.length + UI_HEIGHT + 4;
+        const width = WIDTH;
+
+        // draw background
+        for (let w = 0; w < width; w++) {
+            for (let h = 0; h < height; h++) {
+                if (w === 0 || h === 0 || w === width - 1 || h === height - 1) {
+                    globals.Game.display.draw(w, h, "1", "grey", "grey");
+                } else {
+                    globals.Game.display.draw(w, h, "1", "black", "black");
+                }
+            }
+        }
+
+        globals.Game.display.drawText(2, 1, "%c{white}%b{black} Keyboard Bindings");
+        globals.Game.display.drawText(2, 3, "%c{white}%b{black} Use the arrow keys to select a binding, and enter to change it");
+        globals.Game.display.drawText(2, 5, "%c{white}%b{black} Use Escape to exit");
+
+        for (let i = 0; i < keyCommands.length; i++) {
+            const key = keyCommands[i].key;
+
+            if (i === this.currentSelection) {
+                if (this.state === "selection") {
+                    globals.Game.display.drawText(
+                        2, i + 7,
+                        "%c{white}%b{grey} " + keyCommands[i].description + ": " + key
+                    );
+                } else {
+                    globals.Game.display.drawText(
+                        2, i + 7,
+                        "%c{white}%b{grey} " + keyCommands[i].description + ":"
+                    );
+                }
+            } else {
+                globals.Game.display.drawText(
+                    2, i + 7,
+                    "%c{white}%b{black} " + keyCommands[i].description + ": " + key
+                );
+            }
+        }
+    }
+
+    handleInput(key, keyCommands) {
+        if (this.state === "selection") {
+            const allowedSelectionKeys = new Set(["ArrowDown", "ArrowUp", "Enter", "Escape"]);
+
+            if (!allowedSelectionKeys.has(key)) {
+                return;
+            }
+
+            if (key === "Escape") {
+                return;
+            }
+
+            if (key === "ArrowUp" && this.currentSelection > 0) {
+                this.currentSelection--;
+            }
+
+            if (key === "ArrowDown" && this.currentSelection < keyCommands.length - 1) {
+                this.currentSelection++;
+            }
+
+            if (key === "Enter") {
+                this.state = "change";
+            }
+        } else if (this.state === "change") {
+            keyCommands[this.currentSelection].key = key;
+            this.state = "selection";
+        }
+    }
+}
+export { KeyBindingMenu };

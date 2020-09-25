@@ -18,7 +18,7 @@ class GiveItemsInteractable {
 
     interact(user) {
         if (this.owner.inventoryComponent && user.inventoryComponent) {
-            const items = this.owner.inventoryComponent.getIDsAndCounts();
+            const items = this.owner.inventoryComponent.getItems();
             if (items.length > 0) {
                 for (let i = 0; i < items.length; i++) {
                     const item = items[i];
