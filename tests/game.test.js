@@ -4,7 +4,8 @@ import { fake } from "sinon";
 import { expect } from "chai";
 
 import globals from "../src/globals";
-import { GameState, SimpleDungeonCrawler } from "../src/game";
+import { SimpleDungeonCrawler } from "../src/game";
+import { GameState } from "../src/data";
 
 describe("game", function () {
     describe("SimpleDungeonCrawler", function () {
