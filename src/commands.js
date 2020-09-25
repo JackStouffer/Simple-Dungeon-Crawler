@@ -3,7 +3,7 @@
 import { DIRS } from "rot-js";
 
 import globals from "./globals";
-import { SpellData, ItemData } from "./data";
+import { SpellData, ItemData, GameState } from "./data";
 import { isBlocked } from "./map";
 
 /**
@@ -76,7 +76,7 @@ export function getItemCommand() {
  */
 export function openInventoryCommand() {
     return function() {
-        globals.Game.state = "inventory_menu";
+        globals.Game.state = GameState.inventoryMenu;
         return false;
     };
 }
@@ -87,7 +87,7 @@ export function openInventoryCommand() {
  */
 export function openSpellsCommand() {
     return function() {
-        globals.Game.state = "spell_menu";
+        globals.Game.state = GameState.spellMenu;
         return false;
     };
 }

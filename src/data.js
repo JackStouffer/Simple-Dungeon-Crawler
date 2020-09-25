@@ -690,3 +690,17 @@ export const LevelData = {
 if (ENV !== "TEST") {
     Object.freeze(LevelData);
 }
+
+export const GameState = {
+    gameplay: 1,
+    openingCinematic: 2,
+    winCinematic: 3,
+    loseCinematic: 4,
+    pauseMenu: 5,
+    inventoryMenu: 6,
+    spellMenu: 7
+};
+
+if (ENV !== "TEST") {
+    Object.freeze(GameState);
+}

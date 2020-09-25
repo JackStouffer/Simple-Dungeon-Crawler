@@ -8,7 +8,7 @@ import EventEmitter from "events";
 import globals from "./globals";
 import { createObject } from "./object";
 import { moveCommand, openInventoryCommand, openSpellsCommand, getItemCommand } from "./commands";
-import { WIDTH, HEIGHT } from "./data";
+import { WIDTH, HEIGHT, GameState } from "./data";
 import {
     drawMap,
     getObjectsAtLocation,
@@ -38,7 +38,7 @@ export function mouseLook(e) {
 
 class SimpleDungeonCrawler {
     constructor() {
-        this.state = "gameplay";
+        this.state = GameState.gameplay;
         this.canvas = null;
         this.display = null;
         this.player = null;
@@ -192,7 +192,7 @@ class SimpleDungeonCrawler {
     }
 
     render() {
-        if (this.state === "gameplay") {
+        if (this.state === GameState.gameplay) {
             resetVisibility(this.map);
 
             this.gameObjects
@@ -221,11 +221,11 @@ class SimpleDungeonCrawler {
 
             this.player.graphics.draw(this.display, this.map);
             drawUI(this.display, this.player);
-        } else if (this.state === "pause_menu") {
+        } else if (this.state === GameState.pauseMenu) {
             this.keyBindingMenu.draw(this.keyCommands);
-        } else if (this.state === "inventory_menu") {
+        } else if (this.state === GameState.inventoryMenu) {
             this.inventoryMenu.draw(this.player.inventoryComponent.getItems());
-        } else if (this.state === "spell_menu") {
+        } else if (this.state === GameState.spellMenu) {
             this.spellSelectionMenu.draw(this.player.fighter.getKnownSpells());
         }
     }
@@ -255,9 +255,9 @@ class SimpleDungeonCrawler {
             const e = await readKey();
             e.preventDefault();
 
-            if (this.state === "gameplay") {
+            if (this.state === GameState.gameplay) {
                 if (e.key === "Escape") {
-                    this.state = "pause_menu";
+                    this.state = GameState.pauseMenu;
                     continue;
                 }
 
@@ -268,18 +268,18 @@ class SimpleDungeonCrawler {
 
                 const command = this.keyCommands.filter(c => c.key === e.key)[0].command;
                 acted = command(this.player);
-            } else if (this.state === "pause_menu") {
+            } else if (this.state === GameState.pauseMenu) {
                 if (e.key === "Escape") {
-                    this.state = "gameplay";
+                    this.state = GameState.gameplay;
                     this.keyBindingMenu.resetState();
                     this.render();
                     continue;
                 }
 
                 this.keyBindingMenu.handleInput(e.key, this.keyCommands);
-            } else if (this.state === "inventory_menu") {
+            } else if (this.state === GameState.inventoryMenu) {
                 if (e.key === "Escape") {
-                    this.state = "gameplay";
+                    this.state = GameState.gameplay;
                     this.inventoryMenu.resetState();
                     this.render();
                     continue;
@@ -289,12 +289,12 @@ class SimpleDungeonCrawler {
                 if (command) {
                     acted = await command(this.player);
                     if (acted) {
-                        this.state = "gameplay";
+                        this.state = GameState.gameplay;
                     }
                 }
-            } else if (this.state === "spell_menu") {
+            } else if (this.state === GameState.spellMenu) {
                 if (e.key === "Escape") {
-                    this.state = "gameplay";
+                    this.state = GameState.gameplay;
                     this.spellSelectionMenu.resetState();
                     this.render();
                     continue;
@@ -304,7 +304,7 @@ class SimpleDungeonCrawler {
                 if (command) {
                     acted = await command(this.player);
                     if (acted) {
-                        this.state = "gameplay";
+                        this.state = GameState.gameplay;
                     }
                 }
             }

@@ -11,6 +11,7 @@ import {
     openInventoryCommand,
     openSpellsCommand
 } from "../src/commands";
+import { GameState } from "../src/data";
 
 const emptySpaceData = [
     "empty",
@@ -183,7 +184,7 @@ describe("player", function () {
             };
             const func = openInventoryCommand();
             func(owner);
-            expect(globals.Game.state).to.be.equal("inventory_menu");
+            expect(globals.Game.state).to.be.equal(GameState.inventoryMenu);
         });
     });
 
@@ -199,7 +200,7 @@ describe("player", function () {
             };
             const func = openSpellsCommand();
             func(owner);
-            expect(globals.Game.state).to.be.equal("spell_menu");
+            expect(globals.Game.state).to.be.equal(GameState.spellMenu);
         });
     });
 });
