@@ -4,9 +4,13 @@
 
 _In Development_
 
-* Remove usage of ROT.Engine in favor of vanilla async/await
-* Use ROT Speed Scheduler instead of Simple
 * Added Haste and Slow spells and potions
+* Remove usage of ROT.Engine in favor of vanilla async/await
+* Use ROT Speed Scheduler instead of Simple Scheduler
+* Move to standard game loop setup
+* Completely refactor input handling to move it into the game loop
+* Use arrow keys for movement in menus so the player isn't limited to 26 options
+* Added keybinding
 
 ## Version 6
 
