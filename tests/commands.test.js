@@ -43,7 +43,7 @@ describe("player", function () {
             ],
             gameObjects: [],
             displayMessage: fake(),
-            drawAll: fake(),
+            render: fake(),
             display: {
                 draw: fake(),
                 drawText: fake()

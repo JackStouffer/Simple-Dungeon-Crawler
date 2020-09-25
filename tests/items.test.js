@@ -21,7 +21,7 @@ describe("items", function () {
         globals.Game = {
             player: null,
             displayMessage: fake(),
-            drawAll: fake(),
+            render: fake(),
             map: [[{ visible: true }]],
             canvas: {
                 addEventListener: function (_, cb) {

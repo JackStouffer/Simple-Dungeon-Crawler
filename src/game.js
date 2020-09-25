@@ -191,35 +191,43 @@ class SimpleDungeonCrawler {
         log.scrollTop = log.scrollHeight;
     }
 
-    drawAll() {
-        resetVisibility(this.map);
+    render() {
+        if (this.state === "gameplay") {
+            resetVisibility(this.map);
 
-        this.gameObjects
-            .filter(o => o.lighting && typeof o.lighting.compute === "function")
-            .forEach(o => o.lighting.compute(this.map));
-        this.player.lighting.compute(this.map);
+            this.gameObjects
+                .filter(o => o.lighting && typeof o.lighting.compute === "function")
+                .forEach(o => o.lighting.compute(this.map));
+            this.player.lighting.compute(this.map);
 
-        drawMap(this.display, this.map);
+            drawMap(this.display, this.map);
 
-        this.gameObjects
-            .filter(o => o.graphics && typeof o.graphics.draw === "function")
-            // Make sure objects with fighters cannot be drawn over
-            .sort((a, b) => {
-                if (!a.fighter && b.fighter) {
-                    return -1;
-                }
-                if (!a.fighter && !b.fighter) {
-                    return -1;
-                }
-                if (a.fighter && !b.fighter) {
-                    return 1;
-                }
-                return 0;
-            })
-            .forEach(o => o.graphics.draw(this.display, this.map));
+            this.gameObjects
+                .filter(o => o.graphics && typeof o.graphics.draw === "function")
+                // Make sure objects with fighters cannot be drawn over
+                .sort((a, b) => {
+                    if (!a.fighter && b.fighter) {
+                        return -1;
+                    }
+                    if (!a.fighter && !b.fighter) {
+                        return -1;
+                    }
+                    if (a.fighter && !b.fighter) {
+                        return 1;
+                    }
+                    return 0;
+                })
+                .forEach(o => o.graphics.draw(this.display, this.map));
 
-        this.player.graphics.draw(this.display, this.map);
-        drawUI(this.display, this.player);
+            this.player.graphics.draw(this.display, this.map);
+            drawUI(this.display, this.player);
+        } else if (this.state === "pause_menu") {
+            this.keyBindingMenu.draw(this.keyCommands);
+        } else if (this.state === "inventory_menu") {
+            this.inventoryMenu.draw(this.player.inventoryComponent.getItems());
+        } else if (this.state === "spell_menu") {
+            this.spellSelectionMenu.draw(this.player.fighter.getKnownSpells());
+        }
     }
 
     loadLevel(name) {
@@ -235,8 +243,6 @@ class SimpleDungeonCrawler {
         this.scheduler.clear();
         this.scheduler.add(this.player, true);
         this.gameObjects.forEach(e => this.scheduler.add(e, true));
-
-        this.drawAll();
     }
 
     async handleInput() {
@@ -244,15 +250,7 @@ class SimpleDungeonCrawler {
         do {
             if (this.player.fighter === null || this.player.fighter.hp <= 0) { return; }
 
-            if (this.state === "gameplay") {
-                this.drawAll();
-            } else if (this.state === "pause_menu") {
-                this.keyBindingMenu.draw(this.keyCommands);
-            } else if (this.state === "inventory_menu") {
-                this.inventoryMenu.draw(this.player.inventoryComponent.getItems());
-            } else if (this.state === "spell_menu") {
-                this.spellSelectionMenu.draw(this.player.fighter.getKnownSpells());
-            }
+            this.render();
 
             const e = await readKey();
             e.preventDefault();
@@ -274,7 +272,7 @@ class SimpleDungeonCrawler {
                 if (e.key === "Escape") {
                     this.state = "gameplay";
                     this.keyBindingMenu.resetState();
-                    this.drawAll();
+                    this.render();
                     continue;
                 }
 
@@ -283,7 +281,7 @@ class SimpleDungeonCrawler {
                 if (e.key === "Escape") {
                     this.state = "gameplay";
                     this.inventoryMenu.resetState();
-                    this.drawAll();
+                    this.render();
                     continue;
                 }
 
@@ -298,7 +296,7 @@ class SimpleDungeonCrawler {
                 if (e.key === "Escape") {
                     this.state = "gameplay";
                     this.spellSelectionMenu.resetState();
-                    this.drawAll();
+                    this.render();
                     continue;
                 }
 

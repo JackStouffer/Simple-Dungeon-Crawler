@@ -17,7 +17,7 @@ import { randomIntFromInterval, readMouse } from "./util";
  */
 export async function mouseTarget() {
     globals.Game.unhookMouseLook();
-    globals.Game.drawAll();
+    globals.Game.render();
 
     let e;
     do {
