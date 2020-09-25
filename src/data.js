@@ -271,8 +271,8 @@ export const ObjectData = {
         inventory: null,
         interactable: null,
         char: "%",
-        fgColor: "red",
-        bgColor: "black",
+        fgColor: "black",
+        bgColor: "red",
         blocks: false,
         blocksSight: false
     },

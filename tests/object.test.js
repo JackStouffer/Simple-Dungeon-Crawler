@@ -287,8 +287,8 @@ describe("object", function () {
             };
             enemyDeathCallback(target);
             expect(target.graphics.char).to.be.equal("%");
-            expect(target.graphics.fgColor).to.be.equal("red");
-            expect(target.graphics.bgColor).to.be.equal("black");
+            expect(target.graphics.fgColor).to.be.equal("black");
+            expect(target.graphics.bgColor).to.be.equal("red");
             expect(target.blocks).to.be.false;
             expect(target.fighter).to.be.equal(null);
             expect(target.ai).to.be.equal(null);

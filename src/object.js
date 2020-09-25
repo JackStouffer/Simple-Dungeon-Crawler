@@ -226,8 +226,8 @@ export function createObject(id, x=0, y=0) {
 export function enemyDeathCallback(target) {
     globals.Game.displayMessage(target.name + " has been killed");
     target.graphics.char = "%";
-    target.graphics.fgColor = "red";
-    target.graphics.bgColor = "black";
+    target.graphics.fgColor = "black";
+    target.graphics.bgColor = "red";
     target.blocks = false;
     target.fighter = null;
     target.ai = null;
