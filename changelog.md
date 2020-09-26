@@ -2,12 +2,13 @@
 
 ## Version 7
 
-_In Development_
+_September 26, 2020_
 
 * Gameplay
   * Added Haste and Slow spells and potions
   * Use arrow keys for movement in menus so the player isn't limited to 26 options
   * Added keybinding
+  * Fixed a bug where the player could mouse look into the fog of war
 * Technical
   * Remove usage of ROT.Engine in favor of vanilla async/await
   * Use ROT Speed Scheduler instead of Simple Scheduler
@@ -16,6 +17,7 @@ _In Development_
   * Completely refactor input handling to move it into the game loop and out of player code
   * Refactor text crawls to be game states rather than special cases
 * Graphical changes
+  * Blocking tiles no longer render outside the player's sight range
   * Redesigned the spell menu now shows more information
   * Game messages now appear as a scrolling list next to the game window
   * Dead bodies have changed colors
