@@ -21,8 +21,15 @@ import { explainMovement, explainAttacking } from "./tutorials";
 import { readKey } from "./util";
 
 export function mouseLook(e) {
-    const pos = globals.Game.display.eventToPosition(e);
-    const target = getObjectsAtLocation(globals.Game.gameObjects, pos[0], pos[1])[0];
+    const [x, y] = globals.Game.display.eventToPosition(e);
+    const target = getObjectsAtLocation(globals.Game.gameObjects, x, y)[0];
+    const tile = globals.Game.map[y][x];
+
+    if (!tile.isVisibleAndLit()) {
+        displayMessage("Can't see what's there.");
+        return;
+    }
+
     if (target && target.name && target.ai && target.ai.state) {
         if (target.ai.state === "wander") {
             displayMessage("A " + target.name + ", it hasn't seen you.");
@@ -32,7 +39,7 @@ export function mouseLook(e) {
     } else if (target && target.name) {
         displayMessage(target.name);
     } else if (!target) {
-        displayMessage(globals.Game.map[pos[1]][pos[0]].name);
+        displayMessage(tile.name);
     }
 }
 

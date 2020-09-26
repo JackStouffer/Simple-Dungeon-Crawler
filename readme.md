@@ -19,6 +19,18 @@ To build
 npm run build
 ```
 
+To develop
+
+```
+npm run watch
+```
+
+To build the compress distributable version
+
+```
+npm run dist
+```
+
 ## Tests
 
 ```
@@ -43,7 +55,7 @@ npm run test
 
 ### RPG Features
 
-* A leveling system
+* A better leveling system
   * Would be rather simple, you would only be able to choose which stats to increase from a small number
 * Fleshing out the magic system to make it a viable alternative to physical combat
 * Rouge builds
