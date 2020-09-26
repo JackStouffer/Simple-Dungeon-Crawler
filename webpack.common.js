@@ -1,20 +1,14 @@
-const path = require('path');
-
 module.exports = {
-    entry: './src/main.js',
-    output: {
-        filename: 'game.js',
-        path: path.resolve(__dirname, 'dist'),
-    },
+    entry: "./src/main.js",
     module: {
         rules: [
             {
-                test: require.resolve('./src/globals.js'),
-                loader: 'expose-loader',
+                test: require.resolve("./src/globals.js"),
+                loader: "expose-loader",
                 options: {
-                    exposes: ['globals']
+                    exposes: ["globals"]
                 }
-            },
+            }
         ]
     }
 };

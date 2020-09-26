@@ -4,13 +4,21 @@
 
 _In Development_
 
-* Added Haste and Slow spells and potions
-* Remove usage of ROT.Engine in favor of vanilla async/await
-* Use ROT Speed Scheduler instead of Simple Scheduler
-* Move to standard game loop setup
-* Completely refactor input handling to move it into the game loop
-* Use arrow keys for movement in menus so the player isn't limited to 26 options
-* Added keybinding
+* Gameplay
+  * Added Haste and Slow spells and potions
+  * Use arrow keys for movement in menus so the player isn't limited to 26 options
+  * Added keybinding
+* Technical
+  * Remove usage of ROT.Engine in favor of vanilla async/await
+  * Use ROT Speed Scheduler instead of Simple Scheduler
+  * Move to standard game loop setup
+  * Improved webpack build by using the HTML plugin
+  * Completely refactor input handling to move it into the game loop and out of player code
+  * Refactor text crawls to be game states rather than special cases
+* Graphical changes
+  * Redesigned the spell menu now shows more information
+  * Game messages now appear as a scrolling list next to the game window
+  * Dead bodies have changed colors
 
 ## Version 6
 
