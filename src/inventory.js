@@ -2,58 +2,85 @@
 
 import { ItemData } from "./data";
 
+/**
+ * Inventory component. Holds items and their counts.
+ */
 class BasicInventory {
     constructor() {
         this.owner = null;
-
-        // A class implementation without private data members?
-        // Can JS do anything right?
-        this._inventory = {};
+        // Uses the Map in order to make sure the
+        // key order is consistent across browsers
+        this._inventory = new Map();
     }
 
+    /**
+     * Set the reference back to the entity.
+     * @param {GameObject} owner The component owner
+     * @returns {void}
+     */
     setOwner(owner) {
         this.owner = owner;
     }
 
+    /**
+     * Return an array of items with their id, displayName, and count
+     * of the item in the inventory.
+     * @returns {Array} An array of objects
+     */
     getItems() {
-        // FIX ME: Use JS Map
-        // This implementation relies on JS now having a set ordering to
-        // keys in objects when using ownKeys. Not a perfect solution since
-        // it's not obvious what's going on.
-        const orderedKeys = Reflect.ownKeys(this._inventory);
-        return orderedKeys.map(e => {
-            return { id: e, displayName: ItemData[e].displayName, count: this._inventory[e] };
+        return [...this._inventory.keys()].map(e => {
+            return { id: e, displayName: ItemData[e].displayName, count: this._inventory.get(e) };
         });
     }
 
+    /**
+     * Does the inventory contain at least one of the given item.
+     * @param {String} id Item ID
+     * @returns {Boolean} Has item
+     */
     hasItem(id) {
-        return id in this._inventory;
+        return this._inventory.has(id);
     }
 
+    /**
+     * Add an item to the inventory by ID. Can add more than one
+     * of the item with the count parameter.
+     * @param {String} id Item ID
+     * @param {Number} count The number of the item to add
+     * @returns {Boolean} If the item was successfully added
+     */
     addItem(id, count=1) {
-        if (id in this._inventory) {
-            const newValue = this._inventory[id] + count;
+        if (this.hasItem(id)) {
+            const newValue = this._inventory.get(id) + count;
 
             if (newValue === 100) {
                 return false;
             }
 
-            this._inventory[id] = newValue;
+            this._inventory.set(id, newValue);
         } else {
-            this._inventory[id] = count;
+            this._inventory.set(id, count);
         }
+
         return true;
     }
 
+    /**
+     * Use an item by ID, thereby reducing its count in the
+     * inventory or removing it from the list of items if the
+     * count results in zero.
+     * @param {String} id Item ID
+     * @returns {void}
+     */
     useItem(id) {
-        if (!(id in this._inventory)) {
+        if (!this.hasItem(id)) {
             throw new Error(`Item ${id} not in inventory`);
         }
 
-        this._inventory[id]--;
+        this._inventory.set(id, this._inventory.get(id) - 1);
 
-        if (this._inventory[id] === 0) {
-            delete this._inventory[id];
+        if (this._inventory.get(id) === 0) {
+            this._inventory.delete(id);
         }
     }
 }

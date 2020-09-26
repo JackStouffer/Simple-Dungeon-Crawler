@@ -9,6 +9,7 @@ _In Development_
 _September 26, 2020_
 
 * Gameplay
+  * Added tutorials
   * Added Haste and Slow spells and potions
   * Use arrow keys for movement in menus so the player isn't limited to 26 options
   * Added keybinding

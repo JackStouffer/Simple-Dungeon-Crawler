@@ -36,6 +36,13 @@ globals.gameEventEmitter = new EventEmitter();
 globals.gameEventEmitter.on("tutorial.start", explainMovement);
 globals.gameEventEmitter.on("tutorial.attacking", explainAttacking);
 
+/**
+ * Function to bind the mousedown event to looking at
+ * objects or tiles in the game world and printing a
+ * message to the log.
+ * @param {Event} e The JS event object
+ * @returns {void}
+ */
 export function mouseLook(e) {
     const [x, y] = globals.Game.display.eventToPosition(e);
     const target = getObjectsAtLocation(globals.Game.gameObjects, x, y)[0];

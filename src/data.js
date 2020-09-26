@@ -88,7 +88,7 @@ export const TileData = {
         reflectivity: 0.18
     },
     980: {
-        name: "stove",
+        name: "A stove",
         char: "\u233B",
         fgColor: "black",
         bgColor: "brown",
