@@ -38,12 +38,11 @@ export function mouseLook(e) {
 
 class SimpleDungeonCrawler {
     constructor() {
-        this.state = GameState.gameplay;
+        this.state = GameState.openingCinematic;
         this.canvas = null;
         this.display = null;
         this.player = null;
-        this.engine = null;
-        this.scheduler = null;
+        this.scheduler = new Scheduler.Speed();
         this.gameObjects = [];
         this.map = [];
         this.totalTurns = 0;
@@ -91,79 +90,25 @@ class SimpleDungeonCrawler {
     }
 
     reset() {
-        clearScreen(this.display);
-        this.player.fighter = null;
-        this.player.ai = null;
-        this.player = null;
+        this.player = createObject("player", 1, 1);
         this.map = [];
         this.gameObjects = [];
         this.totalTurns = 0;
         this.scheduler.clear();
 
-        const log = globals.document.getElementById("log");
-        log.innerHTML = "";
-    }
+        this.loadLevel("forrest_001");
 
-    openingCinematic() {
-        this.display.drawText(WIDTH - (WIDTH - 7), 12, "%c{white}Your country is being overrun by the forces of darkness");
-        this.display.drawText(WIDTH - (WIDTH - 8), 15, "%c{white}Tales tell of a weapon of great power lost in the");
-        this.display.drawText(WIDTH - (WIDTH - 4), 16, "%c{white}lands beyond the dwarf stronghold Durdwin, under the Red Hills.");
-        this.display.drawText(WIDTH - (WIDTH - 17), 18, "%c{white}None who have entered have returned");
-        this.display.drawText(WIDTH - (WIDTH - 14), 20, "%c{white}It is the last hope of a desperate people");
-        this.display.drawText(WIDTH - (WIDTH - 16), 21, "%c{white}You have volunteered to retrieve it");
-        this.display.drawText(WIDTH - (WIDTH - 24), 27, "%c{white}Press [enter] to start");
-
-        const parent = this;
-        globals.window.addEventListener("keydown", function _listener(e) {
-            if (e.key === "Enter") {
-                parent.startGameplay();
-                globals.window.removeEventListener("keydown", _listener);
-            }
-        });
-    }
-
-    winCinematic() {
-        this.reset();
-
-        this.display.drawText(WIDTH - (WIDTH - 12), 12, "%c{white}You have reached the bottom and have retrieved");
-        this.display.drawText(WIDTH - (WIDTH - 16), 13, "%c{white}the fabled weapon and saved your people");
-        this.display.drawText(WIDTH - (WIDTH - 18), 24, "%c{white}Press [enter] to restart the game");
-
-        const parent = this;
-        globals.window.addEventListener("keydown", function _listener(e) {
-            if (e.key === "Enter") {
-                parent.startGameplay();
-                globals.window.removeEventListener("keydown", _listener);
-            }
-        });
-    }
-
-    loseCinematic() {
-        this.reset();
-
-        this.display.drawText(WIDTH - (WIDTH - 5), 12, "%c{white}You have died, and the last hope of your people dies with you");
-        this.display.drawText(WIDTH - (WIDTH - 18), 24, "%c{white}Press [enter] to restart the game");
-
-        const parent = this;
-        globals.window.addEventListener("keydown", function _listener(e) {
-            if (e.key === "Enter") {
-                parent.startGameplay();
-                globals.window.removeEventListener("keydown", _listener);
-            }
-        });
+        if (ENV !== "TEST") {
+            const log = globals.document.getElementById("log");
+            log.innerHTML = "";
+        }
     }
 
     startGameplay() {
-        // looking at objects on the map with the mouse
         this.hookMouseLook();
-
-        this.scheduler = new Scheduler.Speed();
         this.player = createObject("player", 1, 1);
-
         this.loadLevel("forrest_001");
-
         globals.gameEventEmitter.emit("tutorial.start");
-
         this.mainLoop();
     }
 
@@ -192,41 +137,68 @@ class SimpleDungeonCrawler {
     }
 
     render() {
-        if (this.state === GameState.gameplay) {
-            resetVisibility(this.map);
+        switch (this.state) {
+            case GameState.gameplay:
+                resetVisibility(this.map);
+                this.gameObjects
+                    .filter(o => o.lighting && typeof o.lighting.compute === "function")
+                    .forEach(o => o.lighting.compute(this.map));
+                this.player.lighting.compute(this.map);
 
-            this.gameObjects
-                .filter(o => o.lighting && typeof o.lighting.compute === "function")
-                .forEach(o => o.lighting.compute(this.map));
-            this.player.lighting.compute(this.map);
+                drawMap(this.display, this.map);
 
-            drawMap(this.display, this.map);
+                this.gameObjects
+                    .filter(o => o.graphics && typeof o.graphics.draw === "function")
+                    // Make sure objects with fighters cannot be drawn over
+                    .sort((a, b) => {
+                        if (!a.fighter && b.fighter) {
+                            return -1;
+                        }
+                        if (!a.fighter && !b.fighter) {
+                            return -1;
+                        }
+                        if (a.fighter && !b.fighter) {
+                            return 1;
+                        }
+                        return 0;
+                    })
+                    .forEach(o => o.graphics.draw(this.display, this.map));
 
-            this.gameObjects
-                .filter(o => o.graphics && typeof o.graphics.draw === "function")
-                // Make sure objects with fighters cannot be drawn over
-                .sort((a, b) => {
-                    if (!a.fighter && b.fighter) {
-                        return -1;
-                    }
-                    if (!a.fighter && !b.fighter) {
-                        return -1;
-                    }
-                    if (a.fighter && !b.fighter) {
-                        return 1;
-                    }
-                    return 0;
-                })
-                .forEach(o => o.graphics.draw(this.display, this.map));
-
-            this.player.graphics.draw(this.display, this.map);
-            drawUI(this.display, this.player);
-        } else if (this.state === GameState.pauseMenu) {
-            this.keyBindingMenu.draw(this.keyCommands);
-        } else if (this.state === GameState.inventoryMenu) {
-            this.inventoryMenu.draw(this.player.inventoryComponent.getItems());
-        } else if (this.state === GameState.spellMenu) {
-            this.spellSelectionMenu.draw(this.player.fighter.getKnownSpells());
+                this.player.graphics.draw(this.display, this.map);
+                drawUI(this.display, this.player);
+                break;
+            case GameState.pauseMenu:
+                this.keyBindingMenu.draw(this.keyCommands);
+                break;
+            case GameState.inventoryMenu:
+                this.inventoryMenu.draw(this.player.inventoryComponent.getItems());
+                break;
+            case GameState.spellMenu:
+                this.spellSelectionMenu.draw(this.player.fighter.getKnownSpells());
+                break;
+            case GameState.openingCinematic:
+                clearScreen(this.display);
+                this.display.drawText(WIDTH - (WIDTH - 7), 12, "%c{white}Your country is being overrun by the forces of darkness");
+                this.display.drawText(WIDTH - (WIDTH - 8), 15, "%c{white}Tales tell of a weapon of great power lost in the");
+                this.display.drawText(WIDTH - (WIDTH - 4), 16, "%c{white}lands beyond the dwarf stronghold Durdwin, under the Red Hills.");
+                this.display.drawText(WIDTH - (WIDTH - 17), 18, "%c{white}None who have entered have returned");
+                this.display.drawText(WIDTH - (WIDTH - 14), 20, "%c{white}It is the last hope of a desperate people");
+                this.display.drawText(WIDTH - (WIDTH - 16), 21, "%c{white}You have volunteered to retrieve it");
+                this.display.drawText(WIDTH - (WIDTH - 24), 27, "%c{white}Press [enter] to start");
+                break;
+            case GameState.loseCinematic:
+                clearScreen(this.display);
+                this.display.drawText(WIDTH - (WIDTH - 5), 12, "%c{white}You have died, and the last hope of your people dies with you");
+                this.display.drawText(WIDTH - (WIDTH - 18), 24, "%c{white}Press [enter] to restart the game");
+                break;
+            case GameState.winCinematic:
+                clearScreen(this.display);
+                this.display.drawText(WIDTH - (WIDTH - 12), 12, "%c{white}You have reached the bottom and have retrieved");
+                this.display.drawText(WIDTH - (WIDTH - 16), 13, "%c{white}the fabled weapon and saved your people");
+                this.display.drawText(WIDTH - (WIDTH - 18), 24, "%c{white}Press [enter] to restart the game");
+                break;
+            default:
+                throw new Error(`Unknown state ${this.state}`);
         }
     }
 
@@ -248,8 +220,6 @@ class SimpleDungeonCrawler {
     async handleInput() {
         let acted;
         do {
-            if (this.player.fighter === null || this.player.fighter.hp <= 0) { return; }
-
             this.render();
 
             const e = await readKey();
@@ -307,6 +277,20 @@ class SimpleDungeonCrawler {
                         this.state = GameState.gameplay;
                     }
                 }
+            } else if (this.state === GameState.openingCinematic) {
+                if (e.key === "Enter") {
+                    this.state = GameState.gameplay;
+                }
+            } else if (this.state === GameState.winCinematic) {
+                if (e.key === "Enter") {
+                    this.reset();
+                    this.state = GameState.gameplay;
+                }
+            } else if (this.state === GameState.loseCinematic) {
+                if (e.key === "Enter") {
+                    this.reset();
+                    this.state = GameState.gameplay;
+                }
             }
         } while (!acted);
     }
@@ -322,9 +306,8 @@ class SimpleDungeonCrawler {
                 await actor.act();
             }
 
-            if (this.player.fighter === null) {
-                this.loseCinematic();
-                break;
+            if (this.player.fighter === null || this.player.fighter.hp <= 0) {
+                this.state = GameState.loseCinematic;
             }
 
             const volumes = findVolumeCollision(this.volumes, actor);
