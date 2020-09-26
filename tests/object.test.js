@@ -266,7 +266,6 @@ describe("object", function () {
         beforeEach(function () {
             globals.Game = {
                 gameObjects: [],
-                displayMessage: fake(),
                 addObject: function (e) {
                     this.gameObjects.push(e);
                 }
@@ -319,7 +318,6 @@ describe("object", function () {
         beforeEach(function () {
             globals.Game = {
                 gameObjects: [],
-                displayMessage: fake(),
                 addObject: function (e) {
                     this.gameObjects.push(e);
                 },

@@ -5,6 +5,7 @@ import { DIRS } from "rot-js";
 import globals from "./globals";
 import { SpellData, ItemData, GameState } from "./data";
 import { isBlocked } from "./map";
+import { displayMessage } from "./ui";
 
 /**
  * Create a move function for a specified GameObject. The funciton
@@ -65,7 +66,7 @@ export function getItemCommand() {
             return true;
         }
 
-        globals.Game.displayMessage("There's no item to pick up");
+        displayMessage("There's no item to pick up");
         return false;
     };
 }

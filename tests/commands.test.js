@@ -43,7 +43,6 @@ describe("player", function () {
                 [new Tile(...filledSpaceData), new Tile(...filledSpaceData), new Tile(...filledSpaceData)]
             ],
             gameObjects: [],
-            displayMessage: fake(),
             render: fake(),
             display: {
                 draw: fake(),

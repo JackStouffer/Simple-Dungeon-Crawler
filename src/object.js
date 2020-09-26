@@ -10,6 +10,7 @@ import { BasicInventory } from "./inventory";
 import { BasicGraphics, DrawAfterSeen } from "./graphics";
 import { ReflectivityLighting, PlayerLighting } from "./lighting";
 import { BasicFighter } from "./fighter";
+import { displayMessage } from "./ui";
 
 
 /**
@@ -224,7 +225,7 @@ export function createObject(id, x=0, y=0) {
  * @return {void}
  */
 export function enemyDeathCallback(target) {
-    globals.Game.displayMessage(target.name + " has been killed");
+    displayMessage(target.name + " has been killed");
     target.graphics.char = "%";
     target.graphics.fgColor = "black";
     target.graphics.bgColor = "red";

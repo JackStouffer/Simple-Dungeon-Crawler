@@ -2,8 +2,9 @@
 
 import { RNG } from "rot-js";
 
-import { LEVEL_UP_BASE, LEVEL_UP_FACTOR, SpellData } from "./data";
 import globals from "./globals";
+import { LEVEL_UP_BASE, LEVEL_UP_FACTOR, SpellData } from "./data";
+import { displayMessage } from "./ui";
 
 /**
  * Component which controls the combat information and interaction
@@ -50,7 +51,7 @@ class BasicFighter {
             this.strength++;
 
             if (this.owner === globals.Game.player) {
-                globals.Game.displayMessage("You reached level " + this.level + "!");
+                displayMessage(`You reached level ${this.level}!`);
             }
         }
 
@@ -60,7 +61,7 @@ class BasicFighter {
                 effect.act();
 
                 if (effect.turns === 0) {
-                    globals.Game.displayMessage(`${effect.name} has ended for ${this.owner.name}`);
+                    displayMessage(`${effect.name} has ended for ${this.owner.name}`);
                     this.statusEffects.splice(i, 1);
                 }
             }
@@ -96,14 +97,14 @@ class BasicFighter {
 
         if (damage > 0) {
             if (critical) {
-                globals.Game.displayMessage("CRITICAL! " + this.owner.name + " attacks " + target.name + " for " + damage + " damage.");
+                displayMessage("CRITICAL! " + this.owner.name + " attacks " + target.name + " for " + damage + " damage.");
             } else {
-                globals.Game.displayMessage(this.owner.name + " attacks " + target.name + " for " + damage + " damage.");
+                displayMessage(this.owner.name + " attacks " + target.name + " for " + damage + " damage.");
             }
 
             target.fighter.takeDamage(this.owner, damage);
         } else {
-            globals.Game.displayMessage(this.owner.name + " attacks " + target.name + ", but it's too weak!");
+            displayMessage(this.owner.name + " attacks " + target.name + ", but it's too weak!");
         }
     }
 

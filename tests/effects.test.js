@@ -1,14 +1,12 @@
 /* global describe, it */
 
 import { expect } from "chai";
-import { fake } from "sinon";
 import globals from "../src/globals";
 import { createObject } from "../src/object";
 import { createBurnEffect, createHasteEffect, createSlowEffect } from "../src/effects";
 
 globals.Game = {
-    player: null,
-    displayMessage: fake()
+    player: null
 };
 
 describe("effects", function () {

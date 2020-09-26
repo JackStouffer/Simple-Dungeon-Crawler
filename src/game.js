@@ -16,7 +16,7 @@ import {
     loadTiledMap,
     findVolumeCollision
 } from "./map";
-import { drawUI, clearScreen, KeyBindingMenu, InventoryMenu, SpellSelectionMenu } from "./ui";
+import { drawUI, clearScreen, KeyBindingMenu, InventoryMenu, SpellSelectionMenu, displayMessage } from "./ui";
 import { explainMovement, explainAttacking } from "./tutorials";
 import { readKey } from "./util";
 
@@ -25,14 +25,14 @@ export function mouseLook(e) {
     const target = getObjectsAtLocation(globals.Game.gameObjects, pos[0], pos[1])[0];
     if (target && target.name && target.ai && target.ai.state) {
         if (target.ai.state === "wander") {
-            globals.Game.displayMessage("A " + target.name + ", it hasn't seen you.");
+            displayMessage("A " + target.name + ", it hasn't seen you.");
         } else {
-            globals.Game.displayMessage("A " + target.name);
+            displayMessage("A " + target.name);
         }
     } else if (target && target.name) {
-        globals.Game.displayMessage(target.name);
+        displayMessage(target.name);
     } else if (!target) {
-        globals.Game.displayMessage(globals.Game.map[pos[1]][pos[0]].name);
+        displayMessage(globals.Game.map[pos[1]][pos[0]].name);
     }
 }
 
@@ -110,30 +110,6 @@ class SimpleDungeonCrawler {
         this.loadLevel("forrest_001");
         globals.gameEventEmitter.emit("tutorial.start");
         this.mainLoop();
-    }
-
-    displayMessage(text, type = "default") {
-        const log = globals.document.getElementById("log");
-        const el = document.createElement("div");
-        const p = document.createElement("p");
-        const small = document.createElement("p");
-        p.innerHTML = `${text}`;
-
-        if (type === "tutorial") {
-            el.className = "tutorial";
-        } else {
-            small.innerHTML = `<small>Turn: ${this.totalTurns}</small>`;
-        }
-
-        el.appendChild(p);
-        el.appendChild(small);
-        log.appendChild(el);
-
-        while (log.children.length > 100) {
-            log.children[0].remove();
-        }
-
-        log.scrollTop = log.scrollHeight;
     }
 
     render() {
@@ -344,6 +320,10 @@ class SimpleDungeonCrawler {
         // but that seems overkill for this
         this.gameObjects.splice(this.gameObjects.indexOf(object), 1);
         this.scheduler.remove(object);
+    }
+
+    getTurnNumber() {
+        return this.totalTurns;
     }
 }
 export { SimpleDungeonCrawler };

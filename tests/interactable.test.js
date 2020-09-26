@@ -9,7 +9,6 @@ import { GiveItemsInteractable, GiveSpellInteractable, DoorInteractable, LoadLev
 describe("interactable", function () {
     beforeEach(function () {
         globals.Game = {
-            displayMessage: fake(),
             removeObject: fake(),
             loadLevel: fake()
         };

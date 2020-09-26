@@ -9,8 +9,7 @@ import { Effect } from "../src/effects";
 import { SpellData } from "../src/data";
 
 globals.Game = {
-    player: null,
-    displayMessage: fake()
+    player: null
 };
 
 describe("fighter", function () {

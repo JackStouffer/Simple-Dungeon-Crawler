@@ -1,6 +1,7 @@
 "use strict";
 
 import globals from "./globals";
+import { displayMessage } from "./ui";
 
 class Effect {
     constructor(owner, name, turns, actCallback = null, endCallback = null) {
@@ -39,9 +40,9 @@ export function createBurnEffect(victim, damage, turns) {
         }
 
         if (owner === globals.Game.player) {
-            globals.Game.displayMessage("You were hurt by the burn for " + damage + " damage");
+            displayMessage(`You were hurt by the burn for ${damage} damage`);
         } else {
-            globals.Game.displayMessage(owner.name + " was hurt by the burn for " + damage + " damage");
+            displayMessage(`${owner.name} was hurt by the burn for ${damage} damage`);
         }
     }
 

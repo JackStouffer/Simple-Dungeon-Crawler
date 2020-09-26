@@ -1,3 +1,5 @@
+/* global ENV */
+
 "use strict";
 
 import globals from "./globals";
@@ -32,6 +34,32 @@ export function clearScreen(display) {
             display.draw(x, y, MAP_EMPTY_SPACE, "black", "black");
         }
     }
+}
+
+export function displayMessage(text, type = "default") {
+    if (ENV === "TEST") { return; }
+
+    const log = globals.document.getElementById("log");
+    const el = document.createElement("div");
+    const p = document.createElement("p");
+    const small = document.createElement("p");
+    p.innerHTML = `${text}`;
+
+    if (type === "tutorial") {
+        el.className = "tutorial";
+    } else {
+        small.innerHTML = `<small>Turn: ${globals.Game.getTurnNumber()}</small>`;
+    }
+
+    el.appendChild(p);
+    el.appendChild(small);
+    log.appendChild(el);
+
+    while (log.children.length > 100) {
+        log.children[0].remove();
+    }
+
+    log.scrollTop = log.scrollHeight;
 }
 
 class InventoryMenu {

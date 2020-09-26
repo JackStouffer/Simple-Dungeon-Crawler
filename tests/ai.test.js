@@ -43,7 +43,6 @@ describe("ai", function () {
                 x: 0,
                 y: 0
             },
-            displayMessage: fake(),
             gameObjects: [],
             map: [
                 [new Tile(...emptySpaceData), new Tile(...emptySpaceData), new Tile(...filledSpaceData)],

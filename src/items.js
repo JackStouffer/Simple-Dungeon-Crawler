@@ -6,6 +6,7 @@ import globals from "./globals";
 import { ConfusedAI } from "./ai";
 import { createHasteEffect, createSlowEffect } from "./effects";
 import { getObjectsAtLocation, getClosestVisibleFighter, setAllToExplored } from "./map";
+import { displayMessage } from "./ui";
 import { randomIntFromInterval, readMouse } from "./util";
 
 /**
@@ -55,9 +56,9 @@ export async function mouseTarget() {
 export async function castHeal(item, user) {
     if (user.fighter.hp >= user.fighter.maxHp) {
         if (user === globals.Game.player) {
-            globals.Game.displayMessage("You are already at full health.");
+            displayMessage("You are already at full health.");
         } else {
-            globals.Game.displayMessage(user.name + " tries and fails to take a health potion");
+            displayMessage(user.name + " tries and fails to take a health potion");
         }
 
         return false;
@@ -68,15 +69,15 @@ export async function castHeal(item, user) {
 }
 
 export async function castDamageSpell(item, user) {
-    globals.Game.displayMessage("Left click on an enemy to target it, click elsewhere to cancel");
+    displayMessage("Left click on an enemy to target it, click elsewhere to cancel");
     const target = await mouseTarget();
 
     if (target === null) {
-        globals.Game.displayMessage("Canceled casting");
+        displayMessage("Canceled casting");
         return false;
     }
 
-    globals.Game.displayMessage(`Spell hits ${target.name} for ${item.value} damage`);
+    displayMessage(`Spell hits ${target.name} for ${item.value} damage`);
     target.fighter.takeDamage(user, item.value, item.damageType);
 
     // Check for the fighter again because it could have died already
@@ -98,12 +99,12 @@ export async function castWildDamageSpell(item, user) {
 
     if (target === null) {
         if (user === globals.Game.player) {
-            globals.Game.displayMessage("No target is close enough to use the scroll");
+            displayMessage("No target is close enough to use the scroll");
         }
         return false;
     }
 
-    globals.Game.displayMessage(`Spell hits ${target.name} for ${item.value} damage`);
+    displayMessage(`Spell hits ${target.name} for ${item.value} damage`);
     target.fighter.takeDamage(user, item.value, item.damageType);
 
     // Check for the fighter again because it could have died already
@@ -121,13 +122,13 @@ export async function castWildDamageSpell(item, user) {
 }
 
 export async function castConfuse(item) {
-    globals.Game.displayMessage("Left click on an enemy to target it, click elsewhere to cancel");
+    displayMessage("Left click on an enemy to target it, click elsewhere to cancel");
     const target = await mouseTarget();
     if (target === null) {
         return false;
     }
 
-    globals.Game.displayMessage(target.name + " is now confused");
+    displayMessage(target.name + " is now confused");
     const oldAI = target.ai;
     target.ai = new ConfusedAI(oldAI, item.value);
     target.ai.owner = target;
@@ -135,7 +136,7 @@ export async function castConfuse(item) {
 }
 
 export async function castClairvoyance() {
-    globals.Game.displayMessage("You have been granted Clairvoyance");
+    displayMessage("You have been granted Clairvoyance");
     setAllToExplored(globals.Game.map);
     return true;
 }
@@ -169,17 +170,17 @@ export async function castHaste(item, user) {
 export async function castSlow(item) {
     const target = await mouseTarget();
     if (target === null) {
-        globals.Game.displayMessage("Canceled casting");
+        displayMessage("Canceled casting");
         return false;
     }
 
     const statusEffects = target.fighter.getStatusEffects();
     if (statusEffects.filter(e => e.name === "Slow").length > 0) {
-        globals.Game.displayMessage(`${target.name} is already slowed`);
+        displayMessage(`${target.name} is already slowed`);
         return false;
     }
 
-    globals.Game.displayMessage(`Spell hits and slows ${target.name}`);
+    displayMessage(`Spell hits and slows ${target.name}`);
     target.fighter.addStatusEffect(createSlowEffect(target, item.value));
     return true;
 }

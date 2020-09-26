@@ -4,6 +4,7 @@ import { FOV, DIRS, RNG, Path } from "rot-js";
 
 import globals from "./globals";
 import { isBlocked, isSightBlocked, findEmptySpace } from "./map";
+import { displayMessage } from "./ui";
 
 /**
  * Creates a function which returns if an x and y coordinate
@@ -50,7 +51,7 @@ export function createPassableSightCallback(owner) {
 export function createVisibilityCallback(ai) {
     return function(x, y, r, visibility) {
         if (x === globals.Game.player.x && y === globals.Game.player.y && visibility > 0) {
-            globals.Game.displayMessage(ai.owner.name + " saw you");
+            displayMessage(ai.owner.name + " saw you");
             ai.state = "chase";
         }
     };
@@ -244,9 +245,9 @@ class ConfusedAI {
             this.owner.y = newY;
         } else {
             if (this.owner === globals.Game.player) {
-                globals.Game.displayMessage("You are no longer confused");
+                displayMessage("You are no longer confused");
             } else {
-                globals.Game.displayMessage(this.owner.name + " is no longer confused");
+                displayMessage(`${this.owner.name} is no longer confused`);
             }
 
             this.owner.ai = this.oldAI;

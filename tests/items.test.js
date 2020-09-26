@@ -20,7 +20,6 @@ describe("items", function () {
     beforeEach(() => {
         globals.Game = {
             player: null,
-            displayMessage: fake(),
             render: fake(),
             map: [[{ visible: true }]],
             canvas: {

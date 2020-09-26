@@ -2,6 +2,7 @@
 
 import globals from "./globals";
 import { ItemData, SpellData } from "./data";
+import { displayMessage } from "./ui";
 
 /**
  * Component gives all the items in the inventory of the GameObject
@@ -22,12 +23,12 @@ class GiveItemsInteractable {
             if (items.length > 0) {
                 for (let i = 0; i < items.length; i++) {
                     const item = items[i];
-                    globals.Game.displayMessage("Found a " + ItemData[item.id].displayName);
+                    displayMessage("Found a " + ItemData[item.id].displayName);
                     user.inventoryComponent.addItem(item.id, item.count);
                     this.owner.inventoryComponent.useItem(item.id);
                 }
             } else {
-                globals.Game.displayMessage("Empty");
+                displayMessage("Empty");
             }
         } else {
             throw new Error(`Missing inventoryComponent on ${this.owner} or ${user}`);
@@ -66,9 +67,9 @@ class GiveSpellInteractable {
         const res = user.fighter.addSpellById(this.spellId);
         const data = SpellData[this.spellId];
         if (res) {
-            globals.Game.displayMessage(`You learned a new spell: ${data.name}`);
+            displayMessage(`You learned a new spell: ${data.name}`);
         } else {
-            globals.Game.displayMessage(`You already know ${data.name}`);
+            displayMessage(`You already know ${data.name}`);
         }
     }
 }
