@@ -229,13 +229,13 @@ export function drawTile(display, tile, x, y) {
     let fgColor, bgColor;
 
     if (tile.blocks) {
-        if (!tile.explored) {
-            fgColor = COLOR_INVISIBLE_WALL;
-            bgColor = COLOR_INVISIBLE_WALL;
-        } else if (tile.explored && tile.visible) {
+        if (tile.isVisibleAndLit()) {
             fgColor = tile.fgColor;
             bgColor = tile.bgColor;
-        } else if (tile.explored && !tile.visible) {
+        } else if (!tile.explored) {
+            fgColor = COLOR_INVISIBLE_WALL;
+            bgColor = COLOR_INVISIBLE_WALL;
+        } else if (tile.explored && !tile.isVisibleAndLit()) {
             fgColor = COLOR_DARK_WALL;
             bgColor = COLOR_DARK_WALL;
         }
