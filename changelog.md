@@ -1,5 +1,9 @@
 # Changelog
 
+## Version 8
+
+_In Development_
+
 ## Version 7
 
 _September 26, 2020_
