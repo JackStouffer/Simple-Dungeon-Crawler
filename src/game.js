@@ -7,7 +7,12 @@ import EventEmitter from "events";
 
 import globals from "./globals";
 import { createObject } from "./object";
-import { moveCommand, openInventoryCommand, openSpellsCommand, getItemCommand } from "./commands";
+import {
+    moveCommand,
+    openInventoryCommand,
+    openSpellsCommand,
+    getItemCommand
+} from "./commands";
 import { WIDTH, HEIGHT, GameState } from "./data";
 import {
     drawMap,
@@ -16,9 +21,20 @@ import {
     loadTiledMap,
     findVolumeCollision
 } from "./map";
-import { drawUI, clearScreen, KeyBindingMenu, InventoryMenu, SpellSelectionMenu, displayMessage } from "./ui";
+import {
+    drawUI,
+    clearScreen,
+    KeyBindingMenu,
+    InventoryMenu,
+    SpellSelectionMenu,
+    displayMessage
+} from "./ui";
 import { explainMovement, explainAttacking } from "./tutorials";
 import { readKey } from "./util";
+
+globals.gameEventEmitter = new EventEmitter();
+globals.gameEventEmitter.on("tutorial.start", explainMovement);
+globals.gameEventEmitter.on("tutorial.attacking", explainAttacking);
 
 export function mouseLook(e) {
     const [x, y] = globals.Game.display.eventToPosition(e);
@@ -85,15 +101,6 @@ class SimpleDungeonCrawler {
         this.keyBindingMenu = new KeyBindingMenu();
         this.inventoryMenu = new InventoryMenu();
         this.spellSelectionMenu = new SpellSelectionMenu();
-
-        globals.gameEventEmitter = new EventEmitter();
-
-        this.registerListeners();
-    }
-
-    registerListeners() {
-        globals.gameEventEmitter.on("tutorial.start", explainMovement);
-        globals.gameEventEmitter.on("tutorial.attacking", explainAttacking);
     }
 
     reset() {
