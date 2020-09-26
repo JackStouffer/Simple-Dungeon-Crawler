@@ -159,9 +159,9 @@ class SimpleDungeonCrawler {
                         }
                         return 0;
                     })
-                    .forEach(o => o.graphics.draw(this.display, this.map));
+                    .forEach(o => o.graphics.draw(this.display, this.map, this.gameObjects));
 
-                this.player.graphics.draw(this.display, this.map);
+                this.player.graphics.draw(this.display, this.map, this.gameObjects);
                 drawUI(this.display, this.player);
                 break;
             case GameState.pauseMenu:

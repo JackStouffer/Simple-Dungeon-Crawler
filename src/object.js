@@ -7,7 +7,7 @@ import { ObjectData, BASE_SPEED } from "./data";
 import { BasicMonsterAI, PatrollingMonsterAI, ChestAI, DroppedItemAI } from "./ai";
 import { GiveItemsInteractable, GiveSpellInteractable, LoadLevelInteractable, DoorInteractable } from "./interactable";
 import { BasicInventory } from "./inventory";
-import { BasicGraphics, DrawAfterSeen } from "./graphics";
+import { BasicGraphics, TransparencyGraphics, DrawAfterSeen } from "./graphics";
 import { ReflectivityLighting, PlayerLighting } from "./lighting";
 import { BasicFighter } from "./fighter";
 import { displayMessage } from "./ui";
@@ -39,31 +39,91 @@ class GameObject {
     }
 
     setGraphics(graphics) {
+        if (graphics === null && this.graphics !== null) {
+            this.graphics.setOwner(null);
+            this.graphics = null;
+            return;
+        }
+
+        if (graphics === null && this.graphics === null) {
+            return;
+        }
+
         graphics.setOwner(this);
         this.graphics = graphics;
     }
 
     setLighting(lighting) {
+        if (lighting === null && this.lighting !== null) {
+            this.lighting.setOwner(null);
+            this.lighting = null;
+            return;
+        }
+
+        if (lighting === null && this.lighting === null) {
+            return;
+        }
+
         lighting.setOwner(this);
         this.lighting = lighting;
     }
 
     setFighter(fighter) {
+        if (fighter === null && this.fighter !== null) {
+            this.fighter.setOwner(null);
+            this.fighter = null;
+            return;
+        }
+
+        if (fighter === null && this.fighter === null) {
+            return;
+        }
+
         fighter.setOwner(this);
         this.fighter = fighter;
     }
 
     setAI(ai) {
+        if (ai === null && this.ai !== null) {
+            this.ai.setOwner(null);
+            this.ai = null;
+            return;
+        }
+
+        if (ai === null && this.ai === null) {
+            return;
+        }
+
         ai.setOwner(this);
         this.ai = ai;
     }
 
     setInventory(inventoryComponent) {
+        if (inventoryComponent === null && this.inventoryComponent !== null) {
+            this.inventoryComponent.setOwner(null);
+            this.inventoryComponent = null;
+            return;
+        }
+
+        if (inventoryComponent === null && this.inventoryComponent === null) {
+            return;
+        }
+
         inventoryComponent.setOwner(this);
         this.inventoryComponent = inventoryComponent;
     }
 
     setInteractable(interactable) {
+        if (interactable === null && this.interactable !== null) {
+            this.interactable.setOwner(null);
+            this.interactable = null;
+            return;
+        }
+
+        if (interactable === null && this.interactable === null) {
+            return;
+        }
+
         interactable.setOwner(this);
         this.interactable = interactable;
     }
@@ -128,6 +188,9 @@ export function createObject(id, x=0, y=0) {
         switch (data.graphics) {
             case "basic_graphics":
                 object.setGraphics(new BasicGraphics(data.char, data.fgColor, data.bgColor));
+                break;
+            case "transparency_graphics":
+                object.setGraphics(new TransparencyGraphics(data.char, data.fgColor));
                 break;
             case "draw_after_seen":
                 object.setGraphics(new DrawAfterSeen(data.char, data.fgColor, data.bgColor));
@@ -226,14 +289,13 @@ export function createObject(id, x=0, y=0) {
  */
 export function enemyDeathCallback(target) {
     displayMessage(target.name + " has been killed");
-    target.graphics.char = "%";
-    target.graphics.fgColor = "black";
-    target.graphics.bgColor = "red";
+
+    target.name = `Remains of a ${target.name}`;
     target.blocks = false;
-    target.fighter = null;
-    target.ai = null;
-    target.interactable = null;
-    target.name = "Remains of a " + target.name;
+    target.setGraphics(new BasicGraphics("%", "black", "red"));
+    target.setFighter(null);
+    target.setAI(null);
+    target.setInteractable(null);
 
     if (target.inventoryComponent.getItems().length > 0) {
         const item = createObject("dropped_item", target.x, target.y);

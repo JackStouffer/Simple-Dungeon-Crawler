@@ -32,6 +32,10 @@ class Tile {
         this.lightingColor = bgColor;
     }
 
+    /**
+     * Is the tile visible and is lit by non-ambient light
+     * @returns {Boolean} Is visible and lit
+     */
     isVisibleAndLit() {
         return this.visible && this.lightingColor !== COLOR_AMBIENT_LIGHT;
     }
@@ -336,6 +340,14 @@ export function drawMap(display, map) {
     }
 }
 
+/**
+ * Does AABB collision for all of the volumes for a
+ * given GameObject. Returns the list of volumes that
+ * are colliding.
+ * @param {Array} volumes An array of volume objects
+ * @param {GameObject} object A game object
+ * @returns {Array} An array of volumes
+ */
 export function findVolumeCollision(volumes, object) {
     return volumes.filter(v => {
         if (v.x < object.x &&

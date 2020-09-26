@@ -282,6 +282,18 @@ describe("object", function () {
                 interactable: {},
                 inventoryComponent: {
                     getItems: fake.returns([])
+                },
+                setAI: function (ai) {
+                    this.ai = ai;
+                },
+                setGraphics: function (g) {
+                    this.graphics = g;
+                },
+                setInteractable: function (i) {
+                    this.interactable = i;
+                },
+                setFighter: function (f) {
+                    this.fighter = f;
                 }
             };
             enemyDeathCallback(target);
@@ -306,7 +318,19 @@ describe("object", function () {
                 blocks: true,
                 ai: {},
                 interactable: {},
-                inventoryComponent
+                inventoryComponent,
+                setAI: function (ai) {
+                    this.ai = ai;
+                },
+                setGraphics: function (g) {
+                    this.graphics = g;
+                },
+                setInteractable: function (i) {
+                    this.interactable = i;
+                },
+                setFighter: function (f) {
+                    this.fighter = f;
+                }
             };
             enemyDeathCallback(target);
             expect(globals.Game.gameObjects).to.have.lengthOf(1);
