@@ -19,7 +19,8 @@ export function createPassableCallback(owner) {
         if (owner.x === x && owner.y === y) {
             return true;
         }
-        return isBlocked(globals.Game.map, globals.Game.gameObjects, x, y) === null;
+        const { blocks } = isBlocked(globals.Game.map, globals.Game.gameObjects, x, y);
+        return !blocks;
     };
 }
 
@@ -84,13 +85,13 @@ class BasicMonsterAI {
             const fov = new FOV.PreciseShadowcasting(createPassableSightCallback(this.owner));
             fov.compute(this.owner.x, this.owner.y, this.sightRange, createVisibilityCallback(this));
 
-            let target, newX, newY;
+            let blocks, newX, newY;
             do {
                 const dir = DIRS[8][RNG.getItem([0, 1, 2, 3, 4, 5, 6, 7])];
                 newX = this.owner.x + dir[0];
                 newY = this.owner.y + dir[1];
-                target = isBlocked(globals.Game.map, globals.Game.gameObjects, newX, newY);
-            } while (target !== null);
+                ({ blocks } = isBlocked(globals.Game.map, globals.Game.gameObjects, newX, newY));
+            } while (blocks === true);
 
             this.owner.x = newX;
             this.owner.y = newY;
@@ -233,13 +234,13 @@ class ConfusedAI {
 
     async act() {
         if (this.turns > 0) {
-            let target, newX, newY;
+            let blocks, newX, newY;
             do {
                 const dir = DIRS[8][RNG.getItem([0, 1, 2, 3, 4, 5, 6, 7])];
                 newX = this.owner.x + dir[0];
                 newY = this.owner.y + dir[1];
-                target = isBlocked(globals.Game.map, globals.Game.gameObjects, newX, newY);
-            } while (target !== null);
+                ({ blocks } = isBlocked(globals.Game.map, globals.Game.gameObjects, newX, newY));
+            } while (blocks === true);
 
             this.owner.x = newX;
             this.owner.y = newY;

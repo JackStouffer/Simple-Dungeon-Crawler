@@ -23,22 +23,22 @@ export function moveCommand(direction, topology) {
         const dir = DIRS[topology][direction];
         const newX = actor.x + dir[0];
         const newY = actor.y + dir[1];
-        const target = isBlocked(globals.Game.map, globals.Game.gameObjects, newX, newY);
+        const { object, blocks } = isBlocked(globals.Game.map, globals.Game.gameObjects, newX, newY);
 
-        if (target === true) {
-            return false;
+        if (object) {
+            if (object.interactable) {
+                object.interactable.interact(actor);
+                return true;
+            }
+
+            if (object.fighter) {
+                actor.fighter.attack(object);
+                return true;
+            }
         }
 
-        if (target) {
-            if (target.interactable) {
-                target.interactable.interact(actor);
-                return true;
-            }
-
-            if (target.fighter) {
-                actor.fighter.attack(target);
-                return true;
-            }
+        if (blocks === true) {
+            return false;
         }
 
         actor.x = newX;

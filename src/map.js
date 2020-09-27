@@ -160,9 +160,11 @@ export function loadTiledMap(level) {
  */
 export function findEmptySpace(map, objects) {
     let x = 0, y = 0;
-    while (isBlocked(map, objects, x, y)) {
+    let blocks = true;
+    while (blocks) {
         x = Math.floor(RNG.getUniform() * map[0].length);
         y = Math.floor(RNG.getUniform() * map.length);
+        ({ blocks } = isBlocked(map, objects, x, y));
     }
     return { x, y };
 }
@@ -190,11 +192,11 @@ export function isBlocked(map, objects, x, y) {
     if (!Array.isArray(map) || map.length === 0 || !Array.isArray(map[0])) { throw new Error("Bad map data"); }
 
     if (x < 0 || y < 0 || x >= map[0].length || y >= map.length || map[y][x].blocks) {
-        return true;
+        return { object: null, blocks: true };
     }
 
     const target = objects.filter(object => object.x === x && object.y === y && object.blocks === true)[0];
-    return target ? target : null;
+    return target ? { object: target, blocks: true } : { object: null, blocks: false };
 }
 
 /**

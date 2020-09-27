@@ -131,15 +131,21 @@ describe("map", function () {
 
     describe("isBlocked", function () {
         it("should return true if the space on the map is blocked", function () {
-            expect(isBlocked(map, [], 0, 3)).to.be.true;
+            const { object, blocks } = isBlocked(map, [], 0, 3);
+            expect(blocks).to.be.true;
+            expect(object).to.be.null;
         });
 
-        it("should return null if the space on the map is empty", function () {
-            expect(isBlocked(map, [], 0, 0)).to.be.equal(null);
+        it("should return false if the space on the map is not blocked", function () {
+            const { object, blocks } = isBlocked(map, [], 0, 0);
+            expect(blocks).to.be.false;
+            expect(object).to.be.null;
         });
 
         it("should return the blocking object if it's on the space", function () {
-            expect(isBlocked(map, [{ x: 0, y: 0, blocks: true }], 0, 0)).to.be.deep.equal({ x: 0, y: 0, blocks: true });
+            const { object, blocks } = isBlocked(map, [{ x: 0, y: 0, blocks: true }], 0, 0);
+            expect(object).to.be.deep.equal({ x: 0, y: 0, blocks: true });
+            expect(blocks).to.be.true;
         });
     });
 

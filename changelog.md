@@ -4,6 +4,13 @@
 
 _In Development_
 
+* Technical
+  * Refactor BasicInventory to use JS ES6 Map to guarantee key order
+  * Refactor isBlocked's return value be more clear
+* Graphical changes
+  * Fix a bug where the player's `@` character gets drawn multiple times
+  * Fix a bug where the player's `@` character appears previously occupied tiles
+
 ## Version 7
 
 _September 26, 2020_

@@ -88,6 +88,15 @@ describe("player", function () {
             expect(player.y).to.be.equal(1);
         });
 
+        it("should not move the player when the spot is blocked", function () {
+            const player = { x: 1, y: 1 };
+            const func = moveCommand(4, 8);
+            const ret = func(player);
+            expect(player.x).to.be.equal(1);
+            expect(player.y).to.be.equal(1);
+            expect(ret).to.be.false;
+        });
+
         it("should interact with an object", function () {
             const player = { x: 0, y: 0 };
             globals.Game.gameObjects = [{
