@@ -164,14 +164,14 @@ describe("ai", function () {
 
     describe("PatrollingMonsterAI", function () {
         it("should move in a random direction when in patrol state", function () {
-            const owner = { x: 1, y: 1, ai: new PatrollingMonsterAI(0) };
+            const owner = { x: 0, y: 0, blocks: true, ai: new PatrollingMonsterAI(0) };
             owner.ai.setOwner(owner);
             owner.ai.act();
-            expect(owner.x === 1 && owner.y === 1).to.be.false;
+            expect(owner.x === 0 && owner.y === 0).to.be.false;
         });
 
         it("should see the player and change states when player is in range", function () {
-            const owner = { x: 2, y: 2, ai: new PatrollingMonsterAI(8) };
+            const owner = { x: 2, y: 2, blocks: true, ai: new PatrollingMonsterAI(8) };
             owner.ai.setOwner(owner);
             owner.ai.act();
             expect(owner.ai.state).to.be.equal("chase");
@@ -181,6 +181,7 @@ describe("ai", function () {
             const owner = {
                 x: 1,
                 y: 0,
+                blocks: true,
                 ai: new PatrollingMonsterAI(8),
                 fighter: {
                     attack: fake()

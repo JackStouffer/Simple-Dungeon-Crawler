@@ -78,7 +78,7 @@ class BasicMonsterAI {
         this.owner = owner;
     }
 
-    async act() {
+    act() {
         // wander in random directions
         if (this.state === "wander") {
             // compute the FOV to see if the player is sighted
@@ -151,7 +151,7 @@ class PatrollingMonsterAI {
         this.owner = owner;
     }
 
-    async act() {
+    act() {
         // choose a random spot open in the map and go there
         if (this.state === "patrol") {
             // compute the FOV to see if the player is sighted
@@ -232,7 +232,7 @@ class ConfusedAI {
         this.owner = owner;
     }
 
-    async act() {
+    act() {
         if (this.turns > 0) {
             let blocks, newX, newY;
             do {
@@ -272,7 +272,7 @@ class ChestAI {
         this.owner = owner;
     }
 
-    async act() {
+    act() {
         if (this.owner && this.owner.inventoryComponent) {
             if (this.owner.inventoryComponent.getItems().length === 0) {
                 this.owner.graphics.bgColor = this.emptyColor;
@@ -297,7 +297,7 @@ class DroppedItemAI {
         this.owner = owner;
     }
 
-    async act() {
+    act() {
         if (this.owner && this.owner.inventoryComponent) {
             if (this.owner.inventoryComponent.getItems().length === 0) {
                 globals.Game.removeObject(this.owner);

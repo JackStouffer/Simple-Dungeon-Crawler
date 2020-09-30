@@ -187,8 +187,8 @@ describe("object", function () {
                 ObjectData["test_object"].fighter = "basic_fighter";
                 const obj = createObject("test_object");
                 expect(obj.fighter.constructor.name).to.be.equal("BasicFighter");
-                expect(obj.fighter.hp).to.be.equal(ObjectData["test_object"].maxHp);
-                expect(obj.fighter.mana).to.be.equal(ObjectData["test_object"].maxMana);
+                expect(obj.fighter.stats.hp).to.be.equal(ObjectData["test_object"].maxHp);
+                expect(obj.fighter.stats.mana).to.be.equal(ObjectData["test_object"].maxMana);
                 expect(obj.fighter.level).to.be.equal(ObjectData["test_object"].level);
                 expect(obj.fighter.owner).to.be.deep.equal(obj);
             });

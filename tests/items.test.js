@@ -38,7 +38,8 @@ describe("items", function () {
                     takeDamage: fake(),
                     addStatusEffect: fake(),
                     getStatusEffects: fake.returns([]),
-                    getSpeed: fake.returns(1)
+                    getSpeed: fake.returns(1),
+                    setSpeed: fake()
                 },
                 ai: { type: "testai" },
                 x: 0,
@@ -214,53 +215,52 @@ describe("items", function () {
 
     describe("castHaste", function () {
         it("should add a Haste effect to the fighters status effects", async function () {
-            const statusEffects = [];
+            const effects = [];
             const user = {
                 fighter: {
-                    addStatusEffect: (e) => statusEffects.push(e),
-                    getStatusEffects: () => statusEffects,
-                    getSpeed: () => 1
+                    addStatisticEffect: (e) => effects.push(e),
+                    getStatisticEffects: () => effects,
+                    getSpeed: () => 1,
+                    setSpeed: () => null
                 }
             };
 
             const used = await castHaste({ value: 10 }, user);
-            expect(statusEffects).to.have.lengthOf(1);
-            expect(statusEffects[0].constructor.name).to.be.equal("Effect");
-            expect(statusEffects[0].name).to.be.equal("Haste");
+            expect(effects).to.have.lengthOf(1);
+            expect(effects[0].constructor.name).to.be.equal("StatisticEffect");
+            expect(effects[0].name).to.be.equal("Haste");
             expect(used).to.be.true;
         });
 
         it("should give false if there's already a Haste effect on the fighter", async function () {
-            const statusEffects = [];
+            const effects = [];
             const user = {
                 fighter: {
-                    addStatusEffect: (e) => statusEffects.push(e),
-                    getStatusEffects: () => statusEffects,
-                    getSpeed: () => 1
+                    addStatisticEffect: (e) => effects.push(e),
+                    getStatisticEffects: () => effects,
+                    getSpeed: () => 1,
+                    setSpeed: () => null
                 }
             };
-            statusEffects.push(createHasteEffect(user, 1));
+            effects.push(createHasteEffect(user, 1));
 
             const used = await castHaste({ value: 10 }, user);
-            expect(statusEffects).to.have.lengthOf(1);
+            expect(effects).to.have.lengthOf(1);
             expect(used).to.be.false;
         });
     });
 
     describe("castSlow", function () {
         it("should add a Slow effect to the fighters status effects", async function () {
-            const user = {};
-
-            const used = await castSlow({ value: 10 }, user);
+            const used = await castSlow({ value: 10 });
             expect(globals.Game.gameObjects[0].fighter.addStatusEffect.calledOnce).to.be.true;
             expect(used).to.be.true;
         });
 
         it("should give false if there's already a Slow effect on the fighter", async function () {
-            const user = {};
             globals.Game.gameObjects[0].fighter.getStatusEffects = fake.returns([createSlowEffect(globals.Game.gameObjects[0], 1)]);
 
-            const used = await castSlow({ value: 10 }, user);
+            const used = await castSlow({ value: 10 });
             expect(globals.Game.gameObjects[0].fighter.addStatusEffect.calledOnce).to.be.false;
             expect(used).to.be.false;
         });

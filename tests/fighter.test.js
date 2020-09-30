@@ -5,17 +5,18 @@ import { fake } from "sinon";
 import globals from "../src/globals";
 import { createObject } from "../src/object";
 import { BasicFighter } from "../src/fighter";
-import { Effect } from "../src/effects";
+import { StatisticEffect, StatusEffect } from "../src/effects";
 import { SpellData } from "../src/data";
 
 globals.Game = {
-    player: null
+    player: null,
+    addObject: fake()
 };
 
 describe("fighter", function () {
     describe("BasicFighter", function () {
         let data;
-        const owner = { name: "test" };
+        const owner = { name: "test", blocks: true };
 
         beforeEach(function () {
             data = {
@@ -23,6 +24,7 @@ describe("fighter", function () {
                 maxMana: 10,
                 strength: 1,
                 defense: 1,
+                speed: 10,
                 experience: 0,
                 experienceGiven: 10,
                 level: 1,
@@ -45,14 +47,14 @@ describe("fighter", function () {
                 fighter.useMana(1);
                 fighter.experience = 10000;
                 fighter.act();
-                expect(fighter.hp).to.be.equal(data.maxHp);
-                expect(fighter.mana).to.be.equal(data.maxMana);
+                expect(fighter.stats.hp).to.be.equal(data.maxHp);
+                expect(fighter.stats.mana).to.be.equal(data.maxMana);
             });
 
             it("should call the act function on status effects", function () {
                 const fighter = new BasicFighter(data);
                 const callback = fake();
-                const effect = new Effect(fighter, "test", 2, callback);
+                const effect = new StatusEffect(fighter, "test", 2, callback);
                 fighter.addStatusEffect(effect);
 
                 fighter.act();
@@ -64,34 +66,42 @@ describe("fighter", function () {
                 const fighter = new BasicFighter(data);
                 fighter.setOwner(owner);
                 const callback = fake();
-                const effect = new Effect(fighter, "test", 1, callback);
+                const effect = new StatusEffect(fighter, "test", 1, callback);
                 fighter.addStatusEffect(effect);
 
                 fighter.act();
-                expect(fighter.statusEffects).to.have.lengthOf(0);
+                expect(fighter.getStatusEffects()).to.have.lengthOf(0);
+            });
+
+            it("should remove a stat effect when it's out of turns", function () {
+                const fighter = new BasicFighter(data);
+                fighter.setOwner(owner);
+                const effect = new StatisticEffect(fighter, "test", 1, { type: "add", stat: "maxHp", value: 1 });
+                fighter.addStatisticEffect(effect);
+
+                fighter.act();
+                expect(fighter.getStatisticEffects()).to.have.lengthOf(0);
             });
         });
 
         describe("takeDamage", function () {
-            it("should reduce hp when takeDamage is called", function () {
+            it("should reduce hp by (value - defense) when takeDamage is called", function () {
                 const fighter = new BasicFighter(data);
-                const enemy = createObject("goblin");
-                fighter.takeDamage(enemy, 1);
-                expect(fighter.hp).to.be.equal(9);
+                fighter.takeDamage(5);
+                expect(fighter.stats.hp).to.be.equal(6);
             });
 
-            it("should add experience to the attacker if hp reaches zero", function () {
+            it("should always reduce enemy health by at least 1", function () {
                 const fighter = new BasicFighter(data);
-                const enemy = createObject("goblin");
-                fighter.takeDamage(enemy, 100);
-                expect(enemy.fighter.experience).to.be.equal(10);
+                fighter.stats.defense = 1000;
+                fighter.takeDamage(1);
+                expect(fighter.stats.hp).to.be.equal(9);
             });
 
             it("should call the deathCallback on death", function () {
                 const deathCallback = fake();
                 const fighter = new BasicFighter(data, deathCallback);
-                const enemy = createObject("goblin");
-                fighter.takeDamage(enemy, 100);
+                fighter.takeDamage(100);
                 expect(deathCallback.calledOnce).to.be.true;
             });
         });
@@ -102,10 +112,10 @@ describe("fighter", function () {
                 fighter.setOwner(owner);
 
                 const enemy = createObject("goblin");
-                const health = enemy.fighter.hp;
+                const health = enemy.fighter.stats.hp;
 
                 fighter.attack(enemy);
-                expect(enemy.fighter.hp).to.be.equal(health - 1);
+                expect(enemy.fighter.stats.hp).to.be.equal(health - 1);
             });
 
             it("should reduce enemy hp by strength - defense", function () {
@@ -114,22 +124,10 @@ describe("fighter", function () {
                 fighter.setOwner(owner);
 
                 const enemy = createObject("goblin");
-                const health = enemy.fighter.hp;
+                const health = enemy.fighter.stats.hp;
 
                 fighter.attack(enemy);
-                expect(enemy.fighter.hp).to.be.equal(health - 9);
-            });
-
-            it("should always reduce enemy health by at least 1", function () {
-                const fighter = new BasicFighter(data);
-                fighter.setOwner(owner);
-
-                const enemy = createObject("goblin");
-                enemy.fighter.defense = 1000;
-                const health = enemy.fighter.hp;
-
-                fighter.attack(enemy);
-                expect(enemy.fighter.hp).to.be.equal(health - 1);
+                expect(enemy.fighter.stats.hp).to.be.equal(health - 9);
             });
 
             it("should reduce enemy health by (strength - defense) * 1.5 when a critical occurs", function () {
@@ -139,25 +137,35 @@ describe("fighter", function () {
                 fighter.setOwner(owner);
 
                 const enemy = createObject("goblin");
-                const health = enemy.fighter.hp;
+                const health = enemy.fighter.stats.hp;
 
                 fighter.attack(enemy);
-                expect(enemy.fighter.hp).to.be.equal(health - 14);
+                expect(enemy.fighter.stats.hp).to.be.equal(health - 14);
+            });
+
+            it("should add experience to the attacker if hp reaches zero", function () {
+                const fighter = new BasicFighter(data);
+                fighter.setOwner(owner);
+                fighter.stats.strength = 1000;
+
+                const enemy = createObject("goblin");
+                fighter.attack(enemy);
+                expect(fighter.experience).to.be.equal(10);
             });
         });
 
         describe("heal", function () {
             it("should increase hp when heal is called", function () {
                 const fighter = new BasicFighter(data);
-                fighter.hp = 5;
+                fighter.stats.hp = 5;
                 fighter.heal(5);
-                expect(fighter.hp).to.be.equal(10);
+                expect(fighter.stats.hp).to.be.equal(10);
             });
 
             it("should not increase hp past the max", function () {
                 const fighter = new BasicFighter(data);
                 fighter.heal(5);
-                expect(fighter.hp).to.be.equal(10);
+                expect(fighter.stats.hp).to.be.equal(10);
             });
         });
 
@@ -246,6 +254,200 @@ describe("fighter", function () {
                         type: "damage"
                     }
                 ]);
+            });
+        });
+
+        describe("getEffectiveStats", function () {
+            it("should do nothing if there are no status effects", function () {
+                const fighter = new BasicFighter(data);
+                const stats = fighter.getEffectiveStats();
+                expect(stats).to.be.deep.equal({
+                    hp: 10,
+                    maxHp: 10,
+                    mana: 10,
+                    maxMana: 10,
+                    strength: 1,
+                    defense: 1,
+                    speed: 10
+                });
+            });
+
+            it("should modify the given stats", function () {
+                const fighter = new BasicFighter(data);
+
+                fighter.addStatisticEffect(new StatisticEffect(
+                    null,
+                    "test",
+                    1,
+                    { stat: "speed", type: "multiply", value: 0.5 }
+                ));
+
+                const stats = fighter.getEffectiveStats();
+                expect(stats).to.be.deep.equal({
+                    hp: 10,
+                    maxHp: 10,
+                    mana: 10,
+                    maxMana: 10,
+                    strength: 1,
+                    defense: 1,
+                    speed: 5
+                });
+            });
+
+            it("should handle multiple modifiers", function () {
+                const fighter = new BasicFighter(data);
+
+                fighter.addStatisticEffect(new StatisticEffect(
+                    null,
+                    "test",
+                    1,
+                    { stat: "speed", type: "multiply", value: 0.5 }
+                ));
+                fighter.addStatisticEffect(new StatisticEffect(
+                    null,
+                    "test",
+                    1,
+                    { stat: "speed", type: "add", value: -1 }
+                ));
+                fighter.addStatisticEffect(new StatisticEffect(
+                    null,
+                    "test",
+                    1,
+                    { stat: "maxHp", type: "add", value: 10 }
+                ));
+                fighter.addStatisticEffect(new StatisticEffect(
+                    null,
+                    "test",
+                    1,
+                    { stat: "maxMana", type: "add", value: 3 }
+                ));
+
+                const stats = fighter.getEffectiveStats();
+                expect(stats).to.be.deep.equal({
+                    hp: 10,
+                    maxHp: 20,
+                    mana: 10,
+                    maxMana: 13,
+                    strength: 1,
+                    defense: 1,
+                    speed: 4
+                });
+            });
+
+            it("should reduce health when maxHp is reduced", function () {
+                const fighter = new BasicFighter(data);
+
+                fighter.addStatisticEffect(new StatisticEffect(
+                    null,
+                    "test",
+                    1,
+                    { stat: "maxHp", type: "add", value: -5 }
+                ));
+
+                const stats = fighter.getEffectiveStats();
+                expect(fighter.stats.hp).to.be.equal(5);
+                expect(stats).to.be.deep.equal({
+                    hp: 5,
+                    maxHp: 5,
+                    mana: 10,
+                    maxMana: 10,
+                    strength: 1,
+                    defense: 1,
+                    speed: 10
+                });
+            });
+
+            it("should put maxHp back, but not hp, when maxHp is reduced", function () {
+                const fighter = new BasicFighter(data);
+
+                fighter.addStatisticEffect(new StatisticEffect(
+                    null,
+                    "test",
+                    1,
+                    { stat: "maxHp", type: "add", value: -5 }
+                ));
+
+                let stats = fighter.getEffectiveStats();
+                expect(stats).to.be.deep.equal({
+                    hp: 5,
+                    maxHp: 5,
+                    mana: 10,
+                    maxMana: 10,
+                    strength: 1,
+                    defense: 1,
+                    speed: 10
+                });
+
+                fighter.statisticEffects = [];
+                stats = fighter.getEffectiveStats();
+                expect(fighter.stats.hp).to.be.equal(5);
+                expect(stats).to.be.deep.equal({
+                    hp: 5,
+                    maxHp: 10,
+                    mana: 10,
+                    maxMana: 10,
+                    strength: 1,
+                    defense: 1,
+                    speed: 10
+                });
+            });
+
+            it("should reduce mana when maxMana is reduced", function () {
+                const fighter = new BasicFighter(data);
+
+                fighter.addStatisticEffect(new StatisticEffect(
+                    null,
+                    "test",
+                    1,
+                    { stat: "maxMana", type: "add", value: -5 }
+                ));
+
+                const stats = fighter.getEffectiveStats();
+                expect(fighter.stats.mana).to.be.equal(5);
+                expect(stats).to.be.deep.equal({
+                    hp: 10,
+                    maxHp: 10,
+                    mana: 5,
+                    maxMana: 5,
+                    strength: 1,
+                    defense: 1,
+                    speed: 10
+                });
+            });
+
+            it("should put maxMana back, but not mana, when maxMana is reduced", function () {
+                const fighter = new BasicFighter(data);
+
+                fighter.addStatisticEffect(new StatisticEffect(
+                    null,
+                    "test",
+                    1,
+                    { stat: "maxMana", type: "add", value: -5 }
+                ));
+
+                let stats = fighter.getEffectiveStats();
+                expect(stats).to.be.deep.equal({
+                    hp: 10,
+                    maxHp: 10,
+                    mana: 5,
+                    maxMana: 5,
+                    strength: 1,
+                    defense: 1,
+                    speed: 10
+                });
+
+                fighter.statisticEffects = [];
+                stats = fighter.getEffectiveStats();
+                expect(fighter.stats.mana).to.be.equal(5);
+                expect(stats).to.be.deep.equal({
+                    hp: 10,
+                    maxHp: 10,
+                    mana: 5,
+                    maxMana: 10,
+                    strength: 1,
+                    defense: 1,
+                    speed: 10
+                });
             });
         });
     });

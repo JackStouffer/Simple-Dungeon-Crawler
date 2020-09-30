@@ -126,8 +126,8 @@ export function useSpellCommand(spellID) {
         if (!actor.fighter.hasSpell(spellID)) { return false; }
 
         const details = SpellData[spellID];
-
-        if (details.manaCost > actor.fighter.mana) {
+        const stats = actor.fighter.getEffectiveStats();
+        if (details.manaCost > stats.mana) {
             return false;
         }
 

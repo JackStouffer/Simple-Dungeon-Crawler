@@ -299,8 +299,9 @@ class SimpleDungeonCrawler {
             if (actor === this.player) {
                 this.totalTurns++;
                 await this.handleInput();
+                actor.act();
             } else {
-                await actor.act();
+                actor.act();
             }
 
             if (this.player.fighter === null || this.player.fighter.hp <= 0) {

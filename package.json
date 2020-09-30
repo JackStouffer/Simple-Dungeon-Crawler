@@ -35,6 +35,7 @@
     "webpack-merge": "^5.1.2"
   },
   "dependencies": {
+    "lodash": "^4.17.20",
     "rot-js": "^2.1.4"
   }
 }

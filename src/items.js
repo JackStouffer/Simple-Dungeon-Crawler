@@ -151,12 +151,12 @@ export async function castClairvoyance() {
 export async function castHaste(item, user) {
     if (!user.fighter) { throw new Error("user of castHaste must have a fighter"); }
 
-    const statusEffects = user.fighter.getStatusEffects();
-    if (statusEffects.filter(e => e.name === "Haste").length > 0) {
+    const effects = user.fighter.getStatisticEffects();
+    if (effects.filter(e => e.name === "Haste").length > 0) {
         return false;
     }
 
-    user.fighter.addStatusEffect(createHasteEffect(user, item.value));
+    user.fighter.addStatisticEffect(createHasteEffect(user, item.value));
     return true;
 }
 
@@ -181,6 +181,6 @@ export async function castSlow(item) {
     }
 
     displayMessage(`Spell hits and slows ${target.name}`);
-    target.fighter.addStatusEffect(createSlowEffect(target, item.value));
+    target.fighter.addStatisticEffect(createSlowEffect(target, item.value));
     return true;
 }

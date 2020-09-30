@@ -5,11 +5,12 @@
 _In Development_
 
 * Technical
-  * Refactor BasicInventory to use JS ES6 Map to guarantee key order
+  * Refactor BasicInventory to use JS ES6 `Map` to guarantee key order
   * Refactor isBlocked's return value be more clear
 * Graphical changes
-  * Fix a bug where the player's `@` character gets drawn multiple times
-  * Fix a bug where the player's `@` character appears previously occupied tiles
+  * Fixed a bug where the player's `@` character gets drawn multiple times
+  * Fixed a bug where the player's `@` character appears on previously occupied tiles
+  * Fixed a bug where the players tile was not lit on spawn
 
 ## Version 7
 

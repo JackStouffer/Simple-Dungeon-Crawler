@@ -14,7 +14,5 @@ class TriggerVolume {
             globals.gameEventEmitter.emit(this.eventName);
         }
     }
-
-    exit() {}
 }
 export { TriggerVolume };

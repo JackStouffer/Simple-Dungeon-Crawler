@@ -135,13 +135,13 @@ class GameObject {
         return BASE_SPEED;
     }
 
-    async act(input = null) {
+    act(input = null) {
         let acted = true;
         if (this.ai && typeof this.ai.act === "function") {
-            acted = await this.ai.act(input);
+            acted = this.ai.act(input);
         }
         if (this.fighter && typeof this.fighter.act === "function") {
-            await this.fighter.act();
+            this.fighter.act();
         }
         return acted;
     }
