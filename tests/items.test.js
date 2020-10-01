@@ -38,8 +38,8 @@ describe("items", function () {
                     takeDamage: fake(),
                     addStatusEffect: fake(),
                     getStatusEffects: fake.returns([]),
-                    getSpeed: fake.returns(1),
-                    setSpeed: fake()
+                    addStatisticEffect: fake(),
+                    getSpeed: fake.returns(1)
                 },
                 ai: { type: "testai" },
                 x: 0,
@@ -253,7 +253,7 @@ describe("items", function () {
     describe("castSlow", function () {
         it("should add a Slow effect to the fighters status effects", async function () {
             const used = await castSlow({ value: 10 });
-            expect(globals.Game.gameObjects[0].fighter.addStatusEffect.calledOnce).to.be.true;
+            expect(globals.Game.gameObjects[0].fighter.addStatisticEffect.calledOnce).to.be.true;
             expect(used).to.be.true;
         });
 

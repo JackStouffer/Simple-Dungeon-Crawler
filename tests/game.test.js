@@ -18,7 +18,10 @@ describe("game", function () {
             };
             globals.Game.player = {
                 graphics: { draw: fake() },
-                fighter: { getKnownSpells: fake.returns([]) },
+                fighter: {
+                    getEffectiveStats: fake.returns({}),
+                    getKnownSpells: fake.returns([])
+                },
                 lighting: { compute: fake() },
                 inventoryComponent: { getItems: fake.returns([]) },
             };

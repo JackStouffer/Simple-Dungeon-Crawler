@@ -5,8 +5,10 @@
 _In Development_
 
 * Technical
-  * Refactor BasicInventory to use JS ES6 `Map` to guarantee key order
-  * Refactor isBlocked's return value be more clear
+  * Refactor `BasicInventory` to use JS ES6 `Map` to guarantee key order
+  * Refactor `isBlocked`'s return value be more clear
+  * Add `StatisticEffect` class to easily implement timed changes to fighter stats
+  * Refactor haste and slow spells to use `StatisticEffect` instances
 * Graphical changes
   * Fixed a bug where the player's `@` character gets drawn multiple times
   * Fixed a bug where the player's `@` character appears on previously occupied tiles

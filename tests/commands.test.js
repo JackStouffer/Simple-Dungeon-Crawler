@@ -9,9 +9,11 @@ import {
     moveCommand,
     getItemCommand,
     openInventoryCommand,
-    openSpellsCommand
+    openSpellsCommand,
+    useSpellCommand,
+    useItemCommand
 } from "../src/commands";
-import { GameState } from "../src/data";
+import { GameState, SpellData, ItemData } from "../src/data";
 
 const emptySpaceData = [
     "empty",
@@ -209,6 +211,163 @@ describe("player", function () {
             const func = openSpellsCommand();
             func(owner);
             expect(globals.Game.state).to.be.equal(GameState.spellMenu);
+        });
+    });
+
+    describe("useItemCommand", function () {
+        it("should return false if the fighter does have that item", async function () {
+            ItemData["item"] = {
+                displayName: "Test",
+                value: 10,
+                type: "health",
+                useFunc: fake.returns(Promise.resolve(false))
+            };
+            const owner = {
+                inventoryComponent: {
+                    hasItem: fake.returns(false),
+                }
+            };
+
+            const func = useItemCommand("item");
+            const ret = await func(owner);
+            expect(ret).to.be.false;
+            expect(ItemData["item"].useFunc.calledOnce).to.be.false;
+        });
+
+        it("should return false if useFunc does", async function () {
+            ItemData["item"] = {
+                displayName: "Test",
+                value: 10,
+                type: "health",
+                useFunc: fake.returns(Promise.resolve(false))
+            };
+            const owner = {
+                inventoryComponent: {
+                    hasItem: fake.returns(true),
+                    useItem: fake()
+                }
+            };
+
+            const func = useItemCommand("item");
+            const ret = await func(owner);
+            expect(ret).to.be.false;
+            expect(owner.inventoryComponent.useItem.calledOnce).to.be.false;
+            expect(ItemData["item"].useFunc.calledOnce).to.be.true;
+        });
+
+        it("should return true and use the item", async function () {
+            ItemData["item"] = {
+                displayName: "Test",
+                value: 10,
+                type: "health",
+                useFunc: fake.returns(Promise.resolve(true))
+            };
+            const owner = {
+                inventoryComponent: {
+                    hasItem: fake.returns(true),
+                    useItem: fake()
+                }
+            };
+
+            const func = useItemCommand("item");
+            const ret = await func(owner);
+            expect(ret).to.be.true;
+            expect(owner.inventoryComponent.useItem.calledOnce).to.be.true;
+            expect(ItemData["item"].useFunc.calledOnce).to.be.true;
+        });
+    });
+
+    describe("useSpellCommand", function () {
+        it("should return false if the fighter does not know the spell", async function () {
+            SpellData["spell"] = {
+                displayName: "Test Spell",
+                type: "damage",
+                value: 10,
+                manaCost: 20
+            };
+            const owner = {
+                fighter: {
+                    hasSpell: fake.returns(false),
+                }
+            };
+
+            const func = useSpellCommand("spell");
+            const ret = await func(owner);
+            expect(ret).to.be.false;
+        });
+
+        it("should return false if the fighter does not have enough mana", async function () {
+            SpellData["spell"] = {
+                displayName: "Test Spell",
+                type: "damage",
+                value: 10,
+                manaCost: 20
+            };
+            const owner = {
+                fighter: {
+                    hasSpell: fake.returns(true),
+                    getEffectiveStats: fake.returns({
+                        mana: 0
+                    })
+                }
+            };
+
+            const func = useSpellCommand("spell");
+            const ret = await func(owner);
+            expect(ret).to.be.false;
+            expect(owner.fighter.getEffectiveStats.calledOnce).to.be.true;
+        });
+
+        it("should return false if useFunc does", async function () {
+            SpellData["spell"] = {
+                displayName: "Test Spell",
+                type: "damage",
+                value: 10,
+                manaCost: 20,
+                useFunc: fake.returns(Promise.resolve(false))
+            };
+            const owner = {
+                fighter: {
+                    hasSpell: fake.returns(true),
+                    getEffectiveStats: fake.returns({
+                        mana: 20
+                    }),
+                    useMana: fake()
+                }
+            };
+
+            const func = useSpellCommand("spell");
+            const ret = await func(owner);
+            expect(ret).to.be.false;
+            expect(owner.fighter.getEffectiveStats.calledOnce).to.be.true;
+            expect(owner.fighter.useMana.calledWith(20)).to.be.false;
+            expect(SpellData["spell"].useFunc.calledOnce).to.be.true;
+        });
+
+        it("should return true and use mana", async function () {
+            SpellData["spell"] = {
+                displayName: "Test Spell",
+                type: "damage",
+                value: 10,
+                manaCost: 20,
+                useFunc: fake.returns(Promise.resolve(true))
+            };
+            const owner = {
+                fighter: {
+                    hasSpell: fake.returns(true),
+                    getEffectiveStats: fake.returns({
+                        mana: 20
+                    }),
+                    useMana: fake()
+                }
+            };
+
+            const func = useSpellCommand("spell");
+            const ret = await func(owner);
+            expect(ret).to.be.true;
+            expect(owner.fighter.getEffectiveStats.calledOnce).to.be.true;
+            expect(owner.fighter.useMana.calledWith(20)).to.be.true;
+            expect(SpellData["spell"].useFunc.calledOnce).to.be.true;
         });
     });
 });
