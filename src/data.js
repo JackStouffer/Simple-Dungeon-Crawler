@@ -42,13 +42,18 @@ export const LEVEL_UP_BASE = 50;
 export const LEVEL_UP_FACTOR = 150;
 
 /**
- * Damage type enum
+ * Damage type enum.
+ *
+ * Fire: weak to water
+ * Electric: weak to nature
+ * Water: weak to electric
+ * Nature: weak to fire
  */
 export const DamageType = {
     physical: 1,
     fire: 2,
-    lightning: 3,
-    ice: 4,
+    electric: 3,
+    water: 4,
     nature: 5
 };
 Object.freeze(DamageType);
@@ -57,9 +62,9 @@ Object.freeze(DamageType);
  * Damage affinity damage multiplier
  */
 export const Affinity = {
-    weak: 0.5,
+    weak: 2,
     normal: 1,
-    strong: 2,
+    strong: 0.5,
     nullified: 0
 };
 Object.freeze(Affinity);
@@ -240,7 +245,14 @@ export const ObjectData = {
         maxHp: 5,
         strength: 0,
         defense: 0,
-        onDeath: "remove_from_world"
+        onDeath: "remove_from_world",
+        damageAffinity: {
+            [DamageType.physical]: Affinity.normal,
+            [DamageType.fire]: Affinity.weak,
+            [DamageType.electric]: Affinity.normal,
+            [DamageType.water]: Affinity.normal,
+            [DamageType.nature]: Affinity.normal
+        }
     },
     "barrel": {
         name: "Wooden Barrel",
@@ -261,7 +273,14 @@ export const ObjectData = {
         maxHp: 3,
         strength: 0,
         defense: 0,
-        onDeath: "remove_from_world"
+        onDeath: "remove_from_world",
+        damageAffinity: {
+            [DamageType.physical]: Affinity.normal,
+            [DamageType.fire]: Affinity.weak,
+            [DamageType.electric]: Affinity.normal,
+            [DamageType.water]: Affinity.normal,
+            [DamageType.nature]: Affinity.normal
+        }
     },
     "dead_body": {
         name: "Dead Body",
@@ -358,8 +377,8 @@ export const ObjectData = {
         damageAffinity: {
             [DamageType.physical]: Affinity.normal,
             [DamageType.fire]: Affinity.normal,
-            [DamageType.lightning]: Affinity.normal,
-            [DamageType.ice]: Affinity.normal,
+            [DamageType.electric]: Affinity.normal,
+            [DamageType.water]: Affinity.normal,
             [DamageType.nature]: Affinity.normal
         },
         onDeath: "default"
@@ -387,8 +406,8 @@ export const ObjectData = {
         damageAffinity: {
             [DamageType.physical]: Affinity.normal,
             [DamageType.fire]: Affinity.normal,
-            [DamageType.lightning]: Affinity.normal,
-            [DamageType.ice]: Affinity.normal,
+            [DamageType.electric]: Affinity.normal,
+            [DamageType.water]: Affinity.normal,
             [DamageType.nature]: Affinity.normal
         },
         inventoryPool: [
@@ -420,8 +439,8 @@ export const ObjectData = {
         damageAffinity: {
             [DamageType.physical]: Affinity.normal,
             [DamageType.fire]: Affinity.normal,
-            [DamageType.lightning]: Affinity.normal,
-            [DamageType.ice]: Affinity.normal,
+            [DamageType.electric]: Affinity.normal,
+            [DamageType.water]: Affinity.normal,
             [DamageType.nature]: Affinity.normal
         },
         inventoryPool: [
@@ -453,8 +472,39 @@ export const ObjectData = {
         damageAffinity: {
             [DamageType.physical]: Affinity.normal,
             [DamageType.fire]: Affinity.normal,
-            [DamageType.lightning]: Affinity.normal,
-            [DamageType.ice]: Affinity.normal,
+            [DamageType.electric]: Affinity.normal,
+            [DamageType.water]: Affinity.normal,
+            [DamageType.nature]: Affinity.normal
+        },
+        inventoryPool: [],
+        onDeath: "default"
+    },
+    "water_sprite": {
+        name: "Water Sprite",
+        graphics: "basic_graphics",
+        ai: "basic_monster_ai",
+        fighter: "basic_fighter",
+        speed: BASE_SPEED,
+        inventory: "basic_inventory",
+        interactable: null,
+        char: "s",
+        fgColor: "white",
+        bgColor: "blue",
+        blocks: true,
+        blocksSight: false,
+        level: 1,
+        experience: 0,
+        experienceGiven: 10,
+        maxHp: 10,
+        maxMana: 0,
+        strength: 2,
+        defense: 1,
+        sightRange: 7,
+        damageAffinity: {
+            [DamageType.physical]: Affinity.normal,
+            [DamageType.fire]: Affinity.strong,
+            [DamageType.electric]: Affinity.weak,
+            [DamageType.water]: Affinity.nullified,
             [DamageType.nature]: Affinity.normal
         },
         inventoryPool: [],
@@ -490,21 +540,21 @@ export const ItemData = {
         value: 20,
         type: "damage_scroll",
         useFunc: castDamageSpell,
-        damageType: DamageType.lightning
+        damageType: DamageType.electric
     },
     "lightning_scroll": {
         displayName: "Scroll of Lightning",
         value: 50,
         type: "damage_scroll",
         useFunc: castDamageSpell,
-        damageType: DamageType.lightning
+        damageType: DamageType.electric
     },
     "lightning_scroll_strong": {
         displayName: "Strong Scroll of Lightning",
         value: 100,
         type: "damage_scroll",
         useFunc: castDamageSpell,
-        damageType: DamageType.lightning
+        damageType: DamageType.electric
     },
     "fireball_scroll_weak": {
         displayName: "Weak Scroll of Fire",
@@ -535,21 +585,21 @@ export const ItemData = {
         value: 50,
         type: "wild_damage_scroll",
         useFunc: castWildDamageSpell,
-        damageType: DamageType.lightning
+        damageType: DamageType.electric
     },
     "lightning_scroll_wild": {
         displayName: "Scroll of Wild Lightning",
         value: 100,
         type: "wild_damage_scroll",
         useFunc: castWildDamageSpell,
-        damageType: DamageType.lightning
+        damageType: DamageType.electric
     },
     "lightning_scroll_strong_wild": {
         displayName: "Strong Scroll of Wild Lightning",
         value: 150,
         type: "wild_damage_scroll",
         useFunc: castWildDamageSpell,
-        damageType: DamageType.lightning
+        damageType: DamageType.electric
     },
     "fireball_scroll_weak_wild": {
         displayName: "Weak Scroll of Wild Fire",
@@ -610,7 +660,7 @@ export const SpellData = {
         manaCost: 50,
         value: 20,
         type: "damage",
-        damageType: DamageType.lightning,
+        damageType: DamageType.electric,
         useFunc: castDamageSpell
     },
     "fireball": {

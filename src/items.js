@@ -68,8 +68,8 @@ export async function castHeal(item, user) {
     return true;
 }
 
-export async function castDamageSpell(item, user) {
-    displayMessage("Left click on an enemy to target it, click elsewhere to cancel");
+export async function castDamageSpell(item) {
+    displayMessage("Left click on an enemy to target it, click elsewhere to cancel", "tutorial");
     const target = await mouseTarget();
 
     if (target === null) {
@@ -78,7 +78,7 @@ export async function castDamageSpell(item, user) {
     }
 
     displayMessage(`Spell hits ${target.name} for ${item.value} damage`);
-    target.fighter.takeDamage(user, item.value, item.damageType);
+    target.fighter.takeDamage(item.value, false, item.damageType);
 
     // Check for the fighter again because it could have died already
     if (target.fighter && item.statusEffectFunc) {
@@ -105,7 +105,7 @@ export async function castWildDamageSpell(item, user) {
     }
 
     displayMessage(`Spell hits ${target.name} for ${item.value} damage`);
-    target.fighter.takeDamage(user, item.value, item.damageType);
+    target.fighter.takeDamage(item.value, false, item.damageType);
 
     // Check for the fighter again because it could have died already
     if (target.fighter && item.statusEffectFunc) {

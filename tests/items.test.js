@@ -78,7 +78,7 @@ describe("items", function () {
             const used = await castDamageSpell({ value: 10, damageType: DamageType.fire }, user);
             expect(used).to.be.true;
             expect(globals.Game.gameObjects[0].fighter.takeDamage.calledOnce).to.be.true;
-            expect(globals.Game.gameObjects[0].fighter.takeDamage.calledWith(user, 10, DamageType.fire)).to.be.true;
+            expect(globals.Game.gameObjects[0].fighter.takeDamage.calledWith(10, false, DamageType.fire)).to.be.true;
         });
 
         it("should add a status effect", async function () {
@@ -128,7 +128,7 @@ describe("items", function () {
             const used = await castWildDamageSpell({ value: 10, damageType: DamageType.fire }, user);
             expect(used).to.be.true;
             expect(globals.Game.gameObjects[0].fighter.takeDamage.calledOnce).to.be.true;
-            expect(globals.Game.gameObjects[0].fighter.takeDamage.calledWith(user, 10, DamageType.fire)).to.be.true;
+            expect(globals.Game.gameObjects[0].fighter.takeDamage.calledWith(10, false, DamageType.fire)).to.be.true;
         });
 
         it("should add a status effect", async function () {

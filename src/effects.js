@@ -1,6 +1,7 @@
 "use strict";
 
 import cloneDeep from "lodash/cloneDeep";
+import { DamageType } from "./data";
 
 import globals from "./globals";
 import { displayMessage } from "./ui";
@@ -92,7 +93,7 @@ export { StatusEffect, StatisticEffect };
 export function createBurnEffect(victim, damage, turns) {
     function act(owner) {
         if (owner.fighter) {
-            owner.fighter.takeDamage(null, damage);
+            owner.fighter.takeDamage(damage, false, DamageType.fire);
         }
 
         if (owner === globals.Game.player) {

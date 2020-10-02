@@ -8,7 +8,7 @@ import { isBlocked } from "./map";
 import { displayMessage } from "./ui";
 
 /**
- * Create a move function for a specified GameObject. The funciton
+ * Create a move function for a specified GameObject. The function
  * checks if the moved to space contains a blocking object or tile.
  * If there is a blocking tile, it will not move, if it contains a
  * blocking object, it first tries to interact, and the attack.
@@ -83,7 +83,7 @@ export function openInventoryCommand() {
 }
 
 /**
- * Generate a funciton which puts the game into spell_menu state.
+ * Generate a function which puts the game into spell_menu state.
  * @returns {Function} A function which always returns false
  */
 export function openSpellsCommand() {

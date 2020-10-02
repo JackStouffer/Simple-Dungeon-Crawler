@@ -49,6 +49,9 @@ export function displayMessage(text, type = "default") {
 
     if (type === "tutorial") {
         el.className = "tutorial";
+    } else if (type === "critical") {
+        el.className = "critical";
+        small.innerHTML = `<small>Turn: ${globals.Game.getTurnNumber()}</small>`;
     } else {
         small.innerHTML = `<small>Turn: ${globals.Game.getTurnNumber()}</small>`;
     }

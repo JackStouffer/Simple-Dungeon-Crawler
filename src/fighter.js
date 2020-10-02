@@ -5,7 +5,13 @@
 import { RNG } from "rot-js";
 
 import globals from "./globals";
-import { LEVEL_UP_BASE, LEVEL_UP_FACTOR, SpellData } from "./data";
+import {
+    LEVEL_UP_BASE,
+    LEVEL_UP_FACTOR,
+    DamageType,
+    SpellData,
+    ObjectData
+} from "./data";
 import { displayMessage } from "./ui";
 import { cloneDeep } from "lodash";
 
@@ -38,6 +44,7 @@ class BasicFighter {
         this.statusEffects = [];
         this.statisticEffects = [];
         this.ailmentSusceptibility = data.ailmentSusceptibility;
+        this.damageAffinity = data.damageAffinity;
 
         this.knownSpells = new Set();
     }
@@ -89,12 +96,19 @@ class BasicFighter {
      * @param {Number} damage The amount of damage
      * @returns {Boolean} Did the attack kill the target
      */
-    takeDamage(damage) {
+    takeDamage(damage, critical, damageType) {
         const effectiveStats = this.getEffectiveStats();
+        damage = damage * this.damageAffinity[damageType];
         damage = Math.max(1, damage - effectiveStats.defense);
 
         if (damage > 0) {
             this.stats.hp -= damage;
+        }
+
+        if (critical) {
+            displayMessage(`CRITICAL! ${this.owner.name} takes ${damage} damage.`, "critical");
+        } else {
+            displayMessage(`${this.owner.name} takes ${damage} damage.`);
         }
 
         if (this.stats.hp <= 0) {
@@ -121,18 +135,12 @@ class BasicFighter {
         }
 
         if (damage > 0) {
-            if (critical) {
-                displayMessage("CRITICAL! " + this.owner.name + " attacks " + target.name + " for " + damage + " damage.");
-            } else {
-                displayMessage(this.owner.name + " attacks " + target.name + " for " + damage + " damage.");
-            }
-
-            const killed = target.fighter.takeDamage(damage);
+            const killed = target.fighter.takeDamage(damage, critical, DamageType.physical);
             if (killed) {
-                this.experience += this.experienceGiven;
+                this.experience += ObjectData[target.type].experienceGiven;
             }
         } else {
-            displayMessage(this.owner.name + " attacks " + target.name + ", but it's too weak!");
+            displayMessage(`${this.owner.name} attacks ${target.name}, but it's too weak!`);
         }
     }
 

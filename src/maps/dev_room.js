@@ -75,13 +75,13 @@
                 {
                  "height":0,
                  "id":3,
-                 "name":"Goblin",
+                 "name":"Water Sprite",
                  "point":true,
                  "properties":[
                         {
                          "name":"id",
                          "type":"string",
-                         "value":"goblin"
+                         "value":"water_sprite"
                         }],
                  "rotation":0,
                  "type":"",

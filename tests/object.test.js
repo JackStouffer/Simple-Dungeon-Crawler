@@ -49,8 +49,8 @@ describe("object", function () {
                 damageAffinity: {
                     [DamageType.physical]: Affinity.normal,
                     [DamageType.fire]: Affinity.normal,
-                    [DamageType.lightning]: Affinity.normal,
-                    [DamageType.ice]: Affinity.normal,
+                    [DamageType.electric]: Affinity.normal,
+                    [DamageType.water]: Affinity.normal,
                     [DamageType.nature]: Affinity.normal
                 },
                 inventoryPool: [

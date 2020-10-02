@@ -6,7 +6,7 @@ import globals from "../src/globals";
 import { createObject } from "../src/object";
 import { BasicFighter } from "../src/fighter";
 import { StatisticEffect, StatusEffect } from "../src/effects";
-import { SpellData } from "../src/data";
+import { DamageType, SpellData, Affinity, ObjectData } from "../src/data";
 
 globals.Game = {
     player: null,
@@ -29,7 +29,44 @@ describe("fighter", function () {
                 experienceGiven: 10,
                 level: 1,
                 ailmentSusceptibility: 0,
-                criticalChance: 0
+                criticalChance: 0,
+                damageAffinity: {
+                    [DamageType.physical]: Affinity.normal,
+                    [DamageType.fire]: Affinity.normal,
+                    [DamageType.electric]: Affinity.normal,
+                    [DamageType.water]: Affinity.normal,
+                    [DamageType.nature]: Affinity.normal
+                }
+            };
+            ObjectData["enemy"] = {
+                name: "Test Enemy",
+                graphics: "transparency_graphics",
+                ai: "basic_monster_ai",
+                fighter: "basic_fighter",
+                speed: 10,
+                inventory: "basic_inventory",
+                interactable: null,
+                char: "G",
+                fgColor: "green",
+                blocks: true,
+                blocksSight: false,
+                level: 3,
+                experience: 0,
+                experienceGiven: 50,
+                maxHp: 30,
+                maxMana: 0,
+                strength: 3,
+                defense: 1,
+                sightRange: 7,
+                damageAffinity: {
+                    [DamageType.physical]: Affinity.normal,
+                    [DamageType.fire]: Affinity.normal,
+                    [DamageType.electric]: Affinity.normal,
+                    [DamageType.water]: Affinity.normal,
+                    [DamageType.nature]: Affinity.normal
+                },
+                inventoryPool: [],
+                onDeath: "default"
             };
         });
 
@@ -42,8 +79,11 @@ describe("fighter", function () {
             });
 
             it("should replenish the hp and mp on level up", function () {
+                const owner = { name: "test" };
                 const fighter = new BasicFighter(data);
-                fighter.takeDamage(1);
+                fighter.setOwner(owner);
+
+                fighter.takeDamage(1, false, DamageType.physical);
                 fighter.useMana(1);
                 fighter.experience = 10000;
                 fighter.act();
@@ -86,22 +126,31 @@ describe("fighter", function () {
 
         describe("takeDamage", function () {
             it("should reduce hp by (value - defense) when takeDamage is called", function () {
+                const owner = { name: "test" };
                 const fighter = new BasicFighter(data);
-                fighter.takeDamage(5);
+                fighter.setOwner(owner);
+
+                fighter.takeDamage(5, false, DamageType.physical);
                 expect(fighter.stats.hp).to.be.equal(6);
             });
 
             it("should always reduce enemy health by at least 1", function () {
+                const owner = { name: "test" };
                 const fighter = new BasicFighter(data);
+                fighter.setOwner(owner);
+
                 fighter.stats.defense = 1000;
-                fighter.takeDamage(1);
+                fighter.takeDamage(1, false, DamageType.physical);
                 expect(fighter.stats.hp).to.be.equal(9);
             });
 
             it("should call the deathCallback on death", function () {
                 const deathCallback = fake();
+                const owner = { name: "test" };
                 const fighter = new BasicFighter(data, deathCallback);
-                fighter.takeDamage(100);
+                fighter.setOwner(owner);
+
+                fighter.takeDamage(100, false, DamageType.physical);
                 expect(deathCallback.calledOnce).to.be.true;
             });
         });
@@ -111,7 +160,7 @@ describe("fighter", function () {
                 const fighter = new BasicFighter(data);
                 fighter.setOwner(owner);
 
-                const enemy = createObject("goblin");
+                const enemy = createObject("enemy");
                 const health = enemy.fighter.stats.hp;
 
                 fighter.attack(enemy);
@@ -123,7 +172,7 @@ describe("fighter", function () {
                 const fighter = new BasicFighter(data);
                 fighter.setOwner(owner);
 
-                const enemy = createObject("goblin");
+                const enemy = createObject("enemy");
                 const health = enemy.fighter.stats.hp;
 
                 fighter.attack(enemy);
@@ -136,7 +185,7 @@ describe("fighter", function () {
                 const fighter = new BasicFighter(data);
                 fighter.setOwner(owner);
 
-                const enemy = createObject("goblin");
+                const enemy = createObject("enemy");
                 const health = enemy.fighter.stats.hp;
 
                 fighter.attack(enemy);
@@ -148,9 +197,9 @@ describe("fighter", function () {
                 fighter.setOwner(owner);
                 fighter.stats.strength = 1000;
 
-                const enemy = createObject("goblin");
+                const enemy = createObject("enemy");
                 fighter.attack(enemy);
-                expect(fighter.experience).to.be.equal(10);
+                expect(fighter.experience).to.be.equal(50);
             });
         });
 
