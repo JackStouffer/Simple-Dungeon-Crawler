@@ -9,6 +9,7 @@ import {
     LEVEL_UP_BASE,
     LEVEL_UP_FACTOR,
     DamageType,
+    DamageTypeNames,
     SpellData,
     ObjectData
 } from "./data";
@@ -106,9 +107,9 @@ class BasicFighter {
         }
 
         if (critical) {
-            displayMessage(`CRITICAL! ${this.owner.name} takes ${damage} damage.`, "critical");
+            displayMessage(`CRITICAL! ${this.owner.name} takes ${damage} of ${DamageTypeNames[damageType]} damage.`, "critical");
         } else {
-            displayMessage(`${this.owner.name} takes ${damage} damage.`);
+            displayMessage(`${this.owner.name} takes ${damage} ${DamageTypeNames[damageType]} damage.`);
         }
 
         if (this.stats.hp <= 0) {
@@ -224,7 +225,17 @@ class BasicFighter {
      * @returns {Boolean} If the spell was successfully learned
      */
     addSpellById(id) {
+        if (!(id in SpellData)) { throw new Error(`${id} is not a valid spell id`); }
         if (this.knownSpells.has(id)) { return false; }
+
+        if (this.owner === globals.Game.player) {
+            globals.gameEventEmitter.emit("tutorial.spellMenu");
+
+            if (SpellData[id].type === "wild") {
+                globals.gameEventEmitter.emit("tutorial.wildSpells");
+            }
+        }
+
         this.knownSpells.add(id);
         return true;
     }

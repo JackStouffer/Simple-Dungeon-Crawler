@@ -315,6 +315,8 @@ export function enemyDeathCallback(target) {
  */
 export function removeDeathCallback(target) {
     if (target.inventoryComponent.getItems().length > 0) {
+        globals.gameEventEmitter.emit("tutorial.pickUpItem");
+
         const item = createObject("dropped_item", target.x, target.y);
         item.inventoryComponent = target.inventoryComponent;
         globals.Game.addObject(item);

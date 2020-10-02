@@ -67,9 +67,9 @@ class GiveSpellInteractable {
         const res = user.fighter.addSpellById(this.spellId);
         const data = SpellData[this.spellId];
         if (res) {
-            displayMessage(`You learned a new spell: ${data.name}`);
+            displayMessage(`You learned a new spell: ${data.displayName}`);
         } else {
-            displayMessage(`You already know ${data.name}`);
+            displayMessage(`You already know ${data.displayName}`);
         }
     }
 }

@@ -1,5 +1,6 @@
 "use strict";
 
+import globals from "./globals";
 import { ItemData } from "./data";
 
 /**
@@ -50,6 +51,8 @@ class BasicInventory {
      * @returns {Boolean} If the item was successfully added
      */
     addItem(id, count=1) {
+        if (!(id in ItemData)) { throw new Error(`${id} is not a valid item id`); }
+
         if (this.hasItem(id)) {
             const newValue = this._inventory.get(id) + count;
 
@@ -60,6 +63,14 @@ class BasicInventory {
             this._inventory.set(id, newValue);
         } else {
             this._inventory.set(id, count);
+        }
+
+        if (this.owner === globals.Game.player) {
+            globals.gameEventEmitter.emit("tutorial.inventory");
+
+            if (ItemData[id].type === "wild_damage_scroll") {
+                globals.gameEventEmitter.emit("tutorial.wildSpells");
+            }
         }
 
         return true;

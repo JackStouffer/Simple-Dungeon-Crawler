@@ -29,12 +29,25 @@ import {
     SpellSelectionMenu,
     displayMessage
 } from "./ui";
-import { explainMovement, explainAttacking } from "./tutorials";
+import {
+    explainMovement,
+    explainAttacking,
+    explainSpellTargeting,
+    explainWildSpells,
+    explainInventory,
+    explainSpellMenu,
+    explainPickUpItem
+} from "./tutorials";
 import { readKey } from "./util";
 
 globals.gameEventEmitter = new EventEmitter();
 globals.gameEventEmitter.on("tutorial.start", explainMovement);
 globals.gameEventEmitter.on("tutorial.attacking", explainAttacking);
+globals.gameEventEmitter.on("tutorial.inventory", explainInventory);
+globals.gameEventEmitter.on("tutorial.spellMenu", explainSpellMenu);
+globals.gameEventEmitter.on("tutorial.pickUpItem", explainPickUpItem);
+globals.gameEventEmitter.on("tutorial.spellTargeting", explainSpellTargeting);
+globals.gameEventEmitter.on("tutorial.wildSpells", explainWildSpells);
 
 /**
  * Function to bind the mousedown event to looking at

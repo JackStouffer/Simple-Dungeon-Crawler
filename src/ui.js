@@ -169,6 +169,9 @@ class SpellSelectionMenu {
                 case "damage":
                     infoString += `dmg: ${spell.value}`;
                     break;
+                case "wild":
+                    infoString += `dmg: ${spell.value}`;
+                    break;
                 case "effect":
                     infoString += `turns: ${spell.value}`;
                     break;

@@ -2,6 +2,8 @@
 
 "use strict";
 
+import invert from "lodash/invert";
+
 import forrest_001 from "./maps/forrest_001";
 import forrest_002 from "./maps/forrest_002";
 import forrest_003 from "./maps/forrest_003";
@@ -57,6 +59,9 @@ export const DamageType = {
     nature: 5
 };
 Object.freeze(DamageType);
+
+export const DamageTypeNames = invert(DamageType);
+Object.freeze(DamageTypeNames);
 
 /**
  * Damage affinity damage multiplier
@@ -663,6 +668,14 @@ export const SpellData = {
         damageType: DamageType.electric,
         useFunc: castDamageSpell
     },
+    "wild_lightning_bolt": {
+        displayName: "Lightning Bolt",
+        manaCost: 60,
+        value: 30,
+        type: "wild",
+        damageType: DamageType.electric,
+        useFunc: castWildDamageSpell
+    },
     "fireball": {
         displayName: "Fireball",
         manaCost: 50,
@@ -670,6 +683,14 @@ export const SpellData = {
         type: "damage",
         damageType: DamageType.fire,
         useFunc: castDamageSpell
+    },
+    "wild_fireball": {
+        displayName: "Wild Fireball",
+        manaCost: 60,
+        value: 30,
+        type: "wild",
+        damageType: DamageType.fire,
+        useFunc: castWildDamageSpell
     },
     "confuse": {
         displayName: "Confuse",
@@ -708,14 +729,14 @@ export const SpellData = {
     "lesser_haste": {
         displayName: "Lesser Haste",
         manaCost: 100,
-        value: 5,
+        value: 6,
         type: "effect",
         useFunc: castHaste
     },
     "lesser_slow": {
         displayName: "Lesser Slow",
         manaCost: 100,
-        value: 5,
+        value: 6,
         type: "effect",
         useFunc: castSlow
     }
