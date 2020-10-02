@@ -5,7 +5,7 @@ import { RNG } from "rot-js";
 import globals from "./globals";
 import { ConfusedAI } from "./ai";
 import { createHasteEffect, createSlowEffect } from "./effects";
-import { getObjectsAtLocation, getClosestVisibleFighter, setAllToExplored } from "./map";
+import { getObjectsAtLocation, getRandomFighterWithinRange, setAllToExplored } from "./map";
 import { displayMessage } from "./ui";
 import { randomIntFromInterval, readMouse } from "./util";
 
@@ -94,7 +94,7 @@ export async function castDamageSpell(item) {
 }
 
 export async function castWildDamageSpell(item, user) {
-    const target = getClosestVisibleFighter(globals.Game.map, globals.Game.gameObjects, user, 8);
+    const target = getRandomFighterWithinRange(globals.Game.map, globals.Game.gameObjects, user, 16);
 
     if (target === null) {
         if (user === globals.Game.player) {
@@ -103,7 +103,6 @@ export async function castWildDamageSpell(item, user) {
         return false;
     }
 
-    displayMessage(`Spell hits ${target.name} for ${item.value} damage`);
     target.fighter.takeDamage(item.value, false, item.damageType);
 
     // Check for the fighter again because it could have died already

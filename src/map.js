@@ -1,6 +1,7 @@
 "use strict";
 
 import { RNG } from "rot-js";
+import isNil from "lodash/isNil";
 
 import {
     WORLD_HEIGHT,
@@ -274,8 +275,8 @@ function distanceBetweenObjects(a, b) {
 }
 
 /**
- * Find the closest other actor from an actor origin given the actor is
- * on a visible tile.
+ * Find a random actor which has a fighter and an ai and is on a
+ * visible tile and is within the given max distance.
  *
  * @param  {Array}      map          The current map
  * @param  {Array}      actors       The current list of actors
@@ -283,22 +284,14 @@ function distanceBetweenObjects(a, b) {
  * @param  {Number}     maxDistance  The max allowed distance before giving up
  * @return {GameObject}              The closest actor
  */
-export function getClosestVisibleFighter(map, actors, origin, maxDistance) {
-    let closestActor = null;
-    let closestDistance = maxDistance + 1;
+export function getRandomFighterWithinRange(map, actors, origin, maxDistance) {
+    const possibleActors = actors
+        .filter(a => !isNil(a.fighter))
+        .filter(a => !isNil(a.ai))
+        .filter(a => a !== origin)
+        .filter(a => distanceBetweenObjects(origin, a) <= maxDistance);
 
-    for (let i = 0; i < actors.length; i++) {
-        const actor = actors[i];
-        if (actor.fighter !== undefined && actor.fighter !== null && actor !== origin && map[actor.y][actor.x].visible) {
-            const distance = distanceBetweenObjects(origin, actor);
-            if (distance < closestDistance) {
-                closestActor = actor;
-                closestDistance = distance;
-            }
-        }
-    }
-
-    return closestActor;
+    return possibleActors.length > 0 ? RNG.getItem(possibleActors) : null;
 }
 
 /**

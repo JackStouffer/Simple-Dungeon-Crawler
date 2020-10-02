@@ -9,7 +9,7 @@ import {
     isBlocked,
     isSightBlocked,
     drawTile,
-    getClosestVisibleFighter,
+    getRandomFighterWithinRange,
     drawMap
 } from "../src/map";
 import {
@@ -47,6 +47,9 @@ describe("map", function () {
     ];
     let display;
     LevelData["test"] = testMap;
+    ItemData["test"] = {
+        displayName: "test"
+    };
 
     beforeEach(function () {
         map = [
@@ -209,29 +212,16 @@ describe("map", function () {
         });
     });
 
-    describe("getClosestVisibleFighter", function () {
-        it("should return the closest fighter", function () {
+    describe("getRandomFighterWithinRange", function () {
+        it("should return the a fighter", function () {
             for (let y = 0; y < map.length; y++) {
                 for (let x = 0; x < map[y].length; x++) {
                     map[y][x].visible = true;
                 }
             }
 
-            const gameObjects = [{ name: "test1", x: 2, y: 1, fighter: {} }, { name: "test2", x: 2, y: 0, fighter: {} }];
-            const actor = getClosestVisibleFighter(map, gameObjects, { x: 0, y: 0 }, 8);
-            expect(actor.name).to.be.equal("test2");
-        });
-
-        it("should not return the closest fighter if it's not visible", function () {
-            for (let y = 0; y < map.length; y++) {
-                for (let x = 0; x < map[y].length; x++) {
-                    map[y][x].visible = true;
-                }
-            }
-            map[0][2].visible = false;
-
-            const gameObjects = [{ name: "test1", x: 2, y: 1, fighter: {} }, { name: "test2", x: 2, y: 0, fighter: {} }];
-            const actor = getClosestVisibleFighter(map, gameObjects, { x: 0, y: 0 }, 8);
+            const gameObjects = [{ name: "test1", x: 2, y: 1, fighter: {}, ai: {} }];
+            const actor = getRandomFighterWithinRange(map, gameObjects, { x: 0, y: 0 }, 8);
             expect(actor.name).to.be.equal("test1");
         });
 
@@ -242,8 +232,8 @@ describe("map", function () {
                 }
             }
 
-            const gameObjects = [{ name: "test1", x: 2, y: 1, fighter: {} }];
-            const actor = getClosestVisibleFighter(map, gameObjects, { x: 0, y: 0 }, 1);
+            const gameObjects = [{ name: "test1", x: 2, y: 1, fighter: {}, ai: {} }];
+            const actor = getRandomFighterWithinRange(map, gameObjects, { x: 0, y: 0 }, 1);
             expect(actor).to.be.equal(null);
         });
     });
