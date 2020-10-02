@@ -266,10 +266,13 @@ class SimpleDungeonCrawler {
                 }
 
                 const command = this.inventoryMenu.handleInput(e.key, this.player.inventoryComponent.getItems());
+
                 if (command) {
+                    this.state = GameState.gameplay;
+                    this.render();
                     acted = await command(this.player);
-                    if (acted) {
-                        this.state = GameState.gameplay;
+                    if (!acted) {
+                        this.state = GameState.inventoryMenu;
                     }
                 }
             } else if (this.state === GameState.spellMenu) {
@@ -281,10 +284,13 @@ class SimpleDungeonCrawler {
                 }
 
                 const command = this.spellSelectionMenu.handleInput(e.key, this.player.fighter.getKnownSpells());
+
                 if (command) {
+                    this.state = GameState.gameplay;
+                    this.render();
                     acted = await command(this.player);
-                    if (acted) {
-                        this.state = GameState.gameplay;
+                    if (!acted) {
+                        this.state = GameState.spellMenu;
                     }
                 }
             } else if (this.state === GameState.openingCinematic) {

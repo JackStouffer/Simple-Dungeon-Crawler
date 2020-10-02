@@ -4,6 +4,10 @@
 
 _In Development_
 
+* Gameplay
+  * Added more tutorials
+  * Wild spells now target any random enemy within a certain range, visible or not
+  * Damage effectiveness is now calculated according to the enemy's strengths and weaknesses
 * Technical
   * Refactor `BasicInventory` to use JS ES6 `Map` to guarantee key order
   * Refactor `isBlocked`'s return value be more clear
@@ -13,6 +17,7 @@ _In Development_
   * Fixed a bug where the player's `@` character gets drawn multiple times
   * Fixed a bug where the player's `@` character appears on previously occupied tiles
   * Fixed a bug where the players tile was not lit on spawn
+  * Fixed a bug where the inventory and spell menu drew over the screen when targeting a spell
 
 ## Version 7
 
