@@ -12,11 +12,11 @@ import {
     castClairvoyance,
     castHaste,
     castSlow
-} from "../src/items";
+} from "../src/skills";
 import { createHasteEffect, createSlowEffect } from "../src/effects";
 import { DamageType } from "../src/data";
 
-describe("items", function () {
+describe("skills", function () {
     beforeEach(() => {
         globals.Game = {
             player: null,

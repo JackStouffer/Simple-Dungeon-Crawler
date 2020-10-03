@@ -19,7 +19,7 @@ import {
     castWildDamageSpell,
     castHaste,
     castSlow
-} from "./items";
+} from "./skills";
 import { createBurnEffect } from "./effects";
 
 export const WIDTH = 70;
