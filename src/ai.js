@@ -104,7 +104,10 @@ function getNextStepTowardsTarget(actor, targetX, targetY) {
  * @return {Number} the ROT.js DIR
  */
 function newPositionToDirection(currentX, currentY, newX, newY) {
-    return findKey(DIRS[8], function(o) { return isEqual(o, [newX - currentX, newY - currentY]); });
+    return findKey(
+        DIRS[8],
+        function(o) { return isEqual(o, [newX - currentX, newY - currentY]); }
+    );
 }
 
 /**
@@ -132,7 +135,11 @@ class BasicMonsterAI {
         if (this.state === "wander") {
             // compute the FOV to see if the player is sighted
             const fov = new FOV.PreciseShadowcasting(createPassableSightCallback(this.owner));
-            fov.compute(this.owner.x, this.owner.y, this.sightRange, createVisibilityCallback(this));
+            fov.compute(
+                this.owner.x,
+                this.owner.y,
+                this.sightRange, createVisibilityCallback(this)
+            );
 
             let blocks, newX, newY, dir;
             do {
@@ -145,7 +152,11 @@ class BasicMonsterAI {
             return moveCommand(dir, 8);
         // chase the player with A*
         } else if (this.state === "chase") {
-            const { x, y } = getNextStepTowardsTarget(this.owner, globals.Game.player.x, globals.Game.player.y);
+            const { x, y } = getNextStepTowardsTarget(
+                this.owner,
+                globals.Game.player.x,
+                globals.Game.player.y
+            );
             if (x === null || y === null) {
                 return null;
             }
@@ -181,13 +192,22 @@ class PatrollingMonsterAI {
         if (this.state === "patrol") {
             // compute the FOV to see if the player is sighted
             const fov = new FOV.PreciseShadowcasting(createPassableSightCallback(this.owner));
-            fov.compute(this.owner.x, this.owner.y, this.sightRange, createVisibilityCallback(this));
+            fov.compute(
+                this.owner.x,
+                this.owner.y,
+                this.sightRange,
+                createVisibilityCallback(this)
+            );
 
             if (this.patrolTarget === null) {
                 this.patrolTarget = findEmptySpace(globals.Game.map, globals.Game.gameObjects);
             }
 
-            const { x, y } = getNextStepTowardsTarget(this.owner, this.patrolTarget.x, this.patrolTarget.y);
+            const { x, y } = getNextStepTowardsTarget(
+                this.owner,
+                this.patrolTarget.x,
+                this.patrolTarget.y
+            );
             if (x === null || y === null) {
                 this.patrolTarget = null;
                 return null;
@@ -195,7 +215,11 @@ class PatrollingMonsterAI {
             return moveCommand(newPositionToDirection(this.owner.x, this.owner.y, x, y), 8);
         // chase the player with A*
         } else if (this.state === "chase") {
-            const { x, y } = getNextStepTowardsTarget(this.owner, globals.Game.player.x, globals.Game.player.y);
+            const { x, y } = getNextStepTowardsTarget(
+                this.owner,
+                globals.Game.player.x,
+                globals.Game.player.y
+            );
             if (x === null || y === null) {
                 return null;
             }

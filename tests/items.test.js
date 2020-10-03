@@ -78,7 +78,13 @@ describe("items", function () {
             const used = await castDamageSpell({ value: 10, damageType: DamageType.fire }, user);
             expect(used).to.be.true;
             expect(globals.Game.gameObjects[0].fighter.takeDamage.calledOnce).to.be.true;
-            expect(globals.Game.gameObjects[0].fighter.takeDamage.calledWith(10, false, DamageType.fire)).to.be.true;
+            expect(
+                globals
+                    .Game
+                    .gameObjects[0]
+                    .fighter
+                    .takeDamage.calledWith(10, false, DamageType.fire)
+            ).to.be.true;
         });
 
         it("should add a status effect", async function () {
@@ -92,7 +98,10 @@ describe("items", function () {
             globals.Game.gameObjects[0].fighter.ailmentSusceptibility = 1;
             const statusEffectFunc = fake.returns({ name: "test" });
 
-            const used = await castDamageSpell({ value: 10, damageType: DamageType.fire, statusEffectFunc }, user);
+            const used = await castDamageSpell(
+                { value: 10, damageType: DamageType.fire, statusEffectFunc },
+                user
+            );
             expect(used).to.be.true;
             expect(globals.Game.gameObjects[0].fighter.addStatusEffect.calledOnce).to.be.true;
             expect(globals.Game.gameObjects[0].fighter.addStatusEffect.calledWith({ name: "test" })).to.be.true;
@@ -125,10 +134,27 @@ describe("items", function () {
                 y: 0
             };
 
-            const used = await castWildDamageSpell({ value: 10, damageType: DamageType.fire }, user);
+            const used = await castWildDamageSpell(
+                { value: 10, damageType: DamageType.fire },
+                user
+            );
             expect(used).to.be.true;
-            expect(globals.Game.gameObjects[0].fighter.takeDamage.calledOnce).to.be.true;
-            expect(globals.Game.gameObjects[0].fighter.takeDamage.calledWith(10, false, DamageType.fire)).to.be.true;
+            expect(
+                globals
+                    .Game
+                    .gameObjects[0]
+                    .fighter
+                    .takeDamage
+                    .calledOnce
+            ).to.be.true;
+            expect(
+                globals
+                    .Game
+                    .gameObjects[0]
+                    .fighter
+                    .takeDamage
+                    .calledWith(10, false, DamageType.fire)
+            ).to.be.true;
         });
 
         it("should add a status effect", async function () {
@@ -144,7 +170,10 @@ describe("items", function () {
             globals.Game.gameObjects[0].fighter.ailmentSusceptibility = 1;
             const statusEffectFunc = fake.returns({ name: "test" });
 
-            const used = await castWildDamageSpell({ value: 10, damageType: DamageType.fire, statusEffectFunc }, user);
+            const used = await castWildDamageSpell(
+                { value: 10, damageType: DamageType.fire, statusEffectFunc },
+                user
+            );
             expect(used).to.be.true;
             expect(globals.Game.gameObjects[0].fighter.addStatusEffect.calledOnce).to.be.true;
             expect(globals.Game.gameObjects[0].fighter.addStatusEffect.calledWith({ name: "test" })).to.be.true;
@@ -162,7 +191,10 @@ describe("items", function () {
             };
             globals.Game.gameObjects = [];
 
-            const used = await castWildDamageSpell({ value: 10, damageType: DamageType.fire }, user);
+            const used = await castWildDamageSpell(
+                { value: 10, damageType: DamageType.fire },
+                user
+            );
             expect(used).to.be.false;
         });
     });
@@ -258,7 +290,9 @@ describe("items", function () {
         });
 
         it("should give false if there's already a Slow effect on the fighter", async function () {
-            globals.Game.gameObjects[0].fighter.getStatusEffects = fake.returns([createSlowEffect(globals.Game.gameObjects[0], 1)]);
+            globals.Game.gameObjects[0].fighter.getStatusEffects = fake.returns(
+                [createSlowEffect(globals.Game.gameObjects[0], 1)]
+            );
 
             const used = await castSlow({ value: 10 });
             expect(globals.Game.gameObjects[0].fighter.addStatusEffect.calledOnce).to.be.false;

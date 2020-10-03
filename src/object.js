@@ -209,10 +209,14 @@ export function createObject(id, x=0, y=0) {
     if (data.lighting) {
         switch (data.lighting) {
             case "reflectivity":
-                object.setLighting(new ReflectivityLighting(data.lightingColor, data.lightingRange));
+                object.setLighting(
+                    new ReflectivityLighting(data.lightingColor, data.lightingRange)
+                );
                 break;
             case "player_lighting":
-                object.setLighting(new PlayerLighting(data.lightingColor, data.lightingRange));
+                object.setLighting(
+                    new PlayerLighting(data.lightingColor, data.lightingRange)
+                );
                 break;
             default:
                 throw new Error(`Unhandled Lighting type ${data.lighting}`);

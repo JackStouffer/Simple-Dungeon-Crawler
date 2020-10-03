@@ -262,7 +262,10 @@ class SimpleDungeonCrawler {
                     continue;
                 }
 
-                const command = this.inventoryMenu.handleInput(e.key, this.player.inventoryComponent.getItems());
+                const command = this.inventoryMenu.handleInput(
+                    e.key,
+                    this.player.inventoryComponent.getItems()
+                );
 
                 if (command) {
                     this.state = GameState.gameplay;
@@ -280,7 +283,10 @@ class SimpleDungeonCrawler {
                     continue;
                 }
 
-                const command = this.spellSelectionMenu.handleInput(e.key, this.player.fighter.getKnownSpells());
+                const command = this.spellSelectionMenu.handleInput(
+                    e.key,
+                    this.player.fighter.getKnownSpells()
+                );
 
                 if (command) {
                     this.state = GameState.gameplay;

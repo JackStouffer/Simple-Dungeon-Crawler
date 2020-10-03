@@ -47,9 +47,21 @@ describe("ai", function () {
             },
             gameObjects: [],
             map: [
-                [new Tile(...emptySpaceData), new Tile(...emptySpaceData), new Tile(...filledSpaceData)],
-                [new Tile(...emptySpaceData), new Tile(...emptySpaceData), new Tile(...emptySpaceData)],
-                [new Tile(...filledSpaceData), new Tile(...filledSpaceData), new Tile(...filledSpaceData)]
+                [
+                    new Tile(...emptySpaceData),
+                    new Tile(...emptySpaceData),
+                    new Tile(...filledSpaceData)
+                ],
+                [
+                    new Tile(...emptySpaceData),
+                    new Tile(...emptySpaceData),
+                    new Tile(...emptySpaceData)
+                ],
+                [
+                    new Tile(...filledSpaceData),
+                    new Tile(...filledSpaceData),
+                    new Tile(...filledSpaceData)
+                ]
             ],
             removeObject: fake()
         };

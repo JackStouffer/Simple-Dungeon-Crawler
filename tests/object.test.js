@@ -99,7 +99,7 @@ describe("object", function () {
                 expect(obj.ai.owner).to.be.deep.equal(obj);
             });
 
-            it("should throw an error when using an unkown ai type", function () {
+            it("should throw an error when using an unknown ai type", function () {
                 ObjectData["test_object"].ai = "aaaaa";
                 expect(() => createObject("test_object")).to.throw();
             });
@@ -126,7 +126,7 @@ describe("object", function () {
                 expect(obj.graphics.owner).to.be.deep.equal(obj);
             });
 
-            it("should throw an error when using an unkown graphics type", function () {
+            it("should throw an error when using an unknown graphics type", function () {
                 ObjectData["test_object"].graphics = "aaaaa";
                 expect(() => createObject("test_object")).to.throw();
             });
@@ -155,7 +155,7 @@ describe("object", function () {
                 expect(obj.lighting.owner).to.be.deep.equal(obj);
             });
 
-            it("should throw an error when using an unkown lighting type", function () {
+            it("should throw an error when using an unknown lighting type", function () {
                 ObjectData["test_object"].lighting = "aaaaa";
                 expect(() => createObject("test_object")).to.throw();
             });
@@ -176,7 +176,7 @@ describe("object", function () {
                 expect(obj.fighter.deathCallback.name).to.be.equal("removeDeathCallback");
             });
 
-            it("should throw an error when using an unkown death callback", function () {
+            it("should throw an error when using an unknown death callback", function () {
                 ObjectData["test_object"].onDeath = "aaaaa";
                 ObjectData["test_object"].fighter = "basic_fighter";
                 expect(() => createObject("test_object")).to.throw();
@@ -193,7 +193,7 @@ describe("object", function () {
                 expect(obj.fighter.owner).to.be.deep.equal(obj);
             });
 
-            it("should throw an error when using an unkown fighter type", function () {
+            it("should throw an error when using an unknown fighter type", function () {
                 ObjectData["test_object"].onDeath = "default";
                 ObjectData["test_object"].fighter = "aaaaa";
                 expect(() => createObject("test_object")).to.throw();
@@ -220,7 +220,7 @@ describe("object", function () {
                 }]);
             });
 
-            it("should throw an error when using an unkown inventory type", function () {
+            it("should throw an error when using an unknown inventory type", function () {
                 ObjectData["test_object"].inventory = "aaaaa";
                 expect(() => createObject("test_object")).to.throw();
             });
@@ -255,7 +255,7 @@ describe("object", function () {
                 expect(obj.interactable.owner).to.be.deep.equal(obj);
             });
 
-            it("should throw an error when using an unkown interactable type", function () {
+            it("should throw an error when using an unknown interactable type", function () {
                 ObjectData["test_object"].interactable = "aaaaa";
                 expect(() => createObject("test_object")).to.throw();
             });
@@ -334,7 +334,12 @@ describe("object", function () {
             };
             enemyDeathCallback(target);
             expect(globals.Game.gameObjects).to.have.lengthOf(1);
-            expect(globals.Game.gameObjects[0].inventoryComponent).to.be.deep.equal(inventoryComponent);
+            expect(
+                globals
+                    .Game
+                    .gameObjects[0]
+                    .inventoryComponent
+            ).to.be.deep.equal(inventoryComponent);
         });
     });
 
@@ -380,7 +385,12 @@ describe("object", function () {
             };
             removeDeathCallback(target);
             expect(globals.Game.gameObjects).to.have.lengthOf(1);
-            expect(globals.Game.gameObjects[0].inventoryComponent).to.be.deep.equal(inventoryComponent);
+            expect(
+                globals
+                    .Game
+                    .gameObjects[0]
+                    .inventoryComponent
+            ).to.be.deep.equal(inventoryComponent);
         });
     });
 });

@@ -40,9 +40,21 @@ describe("player", function () {
     beforeEach(function () {
         globals.Game = {
             map: [
-                [new Tile(...emptySpaceData), new Tile(...emptySpaceData), new Tile(...filledSpaceData)],
-                [new Tile(...emptySpaceData), new Tile(...emptySpaceData), new Tile(...emptySpaceData)],
-                [new Tile(...filledSpaceData), new Tile(...filledSpaceData), new Tile(...filledSpaceData)]
+                [
+                    new Tile(...emptySpaceData),
+                    new Tile(...emptySpaceData),
+                    new Tile(...filledSpaceData)
+                ],
+                [
+                    new Tile(...emptySpaceData),
+                    new Tile(...emptySpaceData),
+                    new Tile(...emptySpaceData)
+                ],
+                [
+                    new Tile(...filledSpaceData),
+                    new Tile(...filledSpaceData),
+                    new Tile(...filledSpaceData)
+                ]
             ],
             gameObjects: [],
             render: fake(),

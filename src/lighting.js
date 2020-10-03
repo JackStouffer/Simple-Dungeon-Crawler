@@ -42,7 +42,10 @@ class ReflectivityLighting {
         const fov = new FOV.PreciseShadowcasting(
             createPassableSightCallback(this.owner)
         );
-        const lighting = new Lighting(createReflectivityCallback(map), { range: this.range, passes: 2 });
+        const lighting = new Lighting(
+            createReflectivityCallback(map),
+            { range: this.range, passes: 2 }
+        );
         lighting.setFOV(fov);
         lighting.setLight(this.owner.x, this.owner.y, this.color);
         lighting.compute(lightingCallback);
@@ -91,7 +94,10 @@ class PlayerLighting {
         const lightingFov = new FOV.PreciseShadowcasting(
             createPassableSightCallback(this.owner)
         );
-        const lighting = new Lighting(createReflectivityCallback(map), { range: this.range, passes: 2 });
+        const lighting = new Lighting(
+            createReflectivityCallback(map),
+            { range: this.range, passes: 2 }
+        );
         lighting.setFOV(lightingFov);
         lighting.setLight(this.owner.x, this.owner.y, this.color);
         lighting.compute(lightingCallback);

@@ -53,9 +53,21 @@ describe("map", function () {
 
     beforeEach(function () {
         map = [
-            [new Tile(...emptySpaceData), new Tile(...emptySpaceData), new Tile(...filledSpaceData)],
-            [new Tile(...emptySpaceData), new Tile(...emptySpaceData), new Tile(...emptySpaceData)],
-            [new Tile(...filledSpaceData), new Tile(...filledSpaceData), new Tile(...filledSpaceData)]
+            [
+                new Tile(...emptySpaceData),
+                new Tile(...emptySpaceData),
+                new Tile(...filledSpaceData)
+            ],
+            [
+                new Tile(...emptySpaceData),
+                new Tile(...emptySpaceData),
+                new Tile(...emptySpaceData)
+            ],
+            [
+                new Tile(...filledSpaceData),
+                new Tile(...filledSpaceData),
+                new Tile(...filledSpaceData)
+            ]
         ];
         display = {
             draw: fake()
@@ -162,7 +174,9 @@ describe("map", function () {
         });
 
         it("should return true if an object on the spot blocks sight", function () {
-            expect(isSightBlocked(map, [{ x: 0, y: 0, blocksSight: true }], 0, 0)).to.be.deep.equal(true);
+            expect(
+                isSightBlocked(map, [{ x: 0, y: 0, blocksSight: true }], 0, 0)
+            ).to.be.deep.equal(true);
         });
     });
 
@@ -202,7 +216,7 @@ describe("map", function () {
             expect(display.draw.calledWith(0, 0, "", "white", "#ffffff")).to.be.true;
         });
 
-        it("should draw a non-blocking tile with the fgcolor when visible", function () {
+        it("should draw a non-blocking tile with the fgColor when visible", function () {
             const tile = new Tile(...filledSpaceData);
             tile.explored = true;
             tile.visible = true;

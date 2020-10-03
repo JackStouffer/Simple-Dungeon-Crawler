@@ -18,7 +18,18 @@ import { createObject } from "./object";
 import { TriggerVolume } from "./volume";
 
 class Tile {
-    constructor(name, char, fgColor, bgColor, fgColorExplored, bgColorExplored, blocks, blocksSight, visible = false, explored = false) {
+    constructor(
+        name,
+        char,
+        fgColor,
+        bgColor,
+        fgColorExplored,
+        bgColorExplored,
+        blocks,
+        blocksSight,
+        visible = false,
+        explored = false
+    ) {
         this.name = name;
         this.char = char;
         this.fgColor = fgColor;
@@ -196,7 +207,9 @@ export function isBlocked(map, objects, x, y) {
         return { object: null, blocks: true };
     }
 
-    const target = objects.filter(object => object.x === x && object.y === y && object.blocks === true)[0];
+    const target = objects.filter(
+        object => object.x === x && object.y === y && object.blocks === true
+    )[0];
     return target ? { object: target, blocks: true } : { object: null, blocks: false };
 }
 
