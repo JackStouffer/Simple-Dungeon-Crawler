@@ -2,8 +2,8 @@
 
 "use strict";
 
-import { Display, Scheduler } from "rot-js";
 import EventEmitter from "events";
+import { Display, Scheduler } from "rot-js";
 
 import globals from "./globals";
 import { createObject } from "./object";
@@ -153,7 +153,6 @@ class SimpleDungeonCrawler {
                 this.gameObjects
                     .filter(o => o.lighting && typeof o.lighting.compute === "function")
                     .forEach(o => o.lighting.compute(this.map));
-                this.player.lighting.compute(this.map);
 
                 drawMap(this.display, this.map);
 
@@ -174,7 +173,6 @@ class SimpleDungeonCrawler {
                     })
                     .forEach(o => o.graphics.draw(this.display, this.map, this.gameObjects));
 
-                this.player.graphics.draw(this.display, this.map, this.gameObjects);
                 drawUI(this.display, this.player);
                 break;
             case GameState.pauseMenu:
@@ -215,15 +213,14 @@ class SimpleDungeonCrawler {
     loadLevel(name) {
         const { map, playerLocation, objects, volumes } = loadTiledMap(name);
         this.map = map;
+        objects.push(this.player);
         this.gameObjects = objects;
         this.volumes = volumes;
 
         this.player.x = playerLocation[0];
         this.player.y = playerLocation[1];
-        this.player.fighter.mana = this.player.fighter.maxMana;
 
         this.scheduler.clear();
-        this.scheduler.add(this.player, true);
         this.gameObjects.forEach(e => this.scheduler.add(e, true));
     }
 

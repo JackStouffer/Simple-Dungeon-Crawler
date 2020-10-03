@@ -94,7 +94,10 @@ export async function castDamageSpell(item) {
 }
 
 export async function castWildDamageSpell(item, user) {
-    const target = getRandomFighterWithinRange(globals.Game.map, globals.Game.gameObjects, user, 16);
+    let target;
+    do {
+        target = getRandomFighterWithinRange(globals.Game.map, globals.Game.gameObjects, user, 16);
+    } while (target === user);
 
     if (target === null) {
         if (user === globals.Game.player) {

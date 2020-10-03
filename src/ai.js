@@ -1,8 +1,11 @@
 "use strict";
 
 import { FOV, DIRS, RNG, Path } from "rot-js";
+import findKey from "lodash/findKey";
+import isEqual from "lodash/isEqual";
 
 import globals from "./globals";
+import { moveCommand } from "./commands";
 import { isBlocked, isSightBlocked, findEmptySpace } from "./map";
 import { displayMessage } from "./ui";
 
@@ -59,6 +62,52 @@ export function createVisibilityCallback(ai) {
 }
 
 /**
+ * Calculate a path from the actor to the target and return
+ * the x and y coordinates of the next step along that path.
+ *
+ * @param {GameObject} actor The game object to start from
+ * @param {Number} targetX The target x coordinate
+ * @param {Number} targetY The target y coordinate
+ * @returns {Object} The x and y coordinates
+ */
+function getNextStepTowardsTarget(actor, targetX, targetY) {
+    const aStar = new Path.AStar(
+        targetX,
+        targetY,
+        createPassableCallback(actor),
+        { topology: 8 }
+    );
+
+    const path = [];
+    function pathCallback(x, y) {
+        path.push([x, y]);
+    }
+    aStar.compute(actor.x, actor.y, pathCallback);
+
+    // remove our own position
+    path.shift();
+
+    if (path.length > 0) {
+        return { x: path[0][0], y: path[0][1] };
+    }
+    return { x: null, y: null };
+}
+
+/**
+ * Turn a change in position to a ROT.js DIR, so
+ * a number between 0 and 7.
+ *
+ * @param {Number} currentX The starting x coordinate
+ * @param {Number} currentY The starting y coordinate
+ * @param {Number} newX The new x coordinate
+ * @param {Number} newY The new y coordinate
+ * @return {Number} the ROT.js DIR
+ */
+function newPositionToDirection(currentX, currentY, newX, newY) {
+    return findKey(DIRS[8], function(o) { return isEqual(o, [newX - currentX, newY - currentY]); });
+}
+
+/**
  * Basic monster behavior with two states, chase and wander.
  * Default state is wander, which just chooses a random direction
  * sees if it's empty, and moves if it is.
@@ -85,47 +134,23 @@ class BasicMonsterAI {
             const fov = new FOV.PreciseShadowcasting(createPassableSightCallback(this.owner));
             fov.compute(this.owner.x, this.owner.y, this.sightRange, createVisibilityCallback(this));
 
-            let blocks, newX, newY;
+            let blocks, newX, newY, dir;
             do {
-                const dir = DIRS[8][RNG.getItem([0, 1, 2, 3, 4, 5, 6, 7])];
-                newX = this.owner.x + dir[0];
-                newY = this.owner.y + dir[1];
+                dir = RNG.getItem([0, 1, 2, 3, 4, 5, 6, 7]);
+                newX = this.owner.x + DIRS[8][dir][0];
+                newY = this.owner.y + DIRS[8][dir][1];
                 ({ blocks } = isBlocked(globals.Game.map, globals.Game.gameObjects, newX, newY));
             } while (blocks === true);
 
-            this.owner.x = newX;
-            this.owner.y = newY;
+            return moveCommand(dir, 8);
         // chase the player with A*
         } else if (this.state === "chase") {
-            let x = globals.Game.player.x;
-            let y = globals.Game.player.y;
-            const astar = new Path.AStar(
-                x,
-                y,
-                createPassableCallback(this.owner),
-                { topology: 8 }
-            );
-
-            const path = [];
-            function pathCallback(x, y) {
-                path.push([x, y]);
+            const { x, y } = getNextStepTowardsTarget(this.owner, globals.Game.player.x, globals.Game.player.y);
+            if (x === null || y === null) {
+                return null;
             }
-            astar.compute(this.owner.x, this.owner.y, pathCallback);
 
-            // remove our own position
-            path.shift();
-            if (path.length === 1) {
-                this.owner.fighter.attack(globals.Game.player);
-            } else {
-                if (path.length === 0) {
-                    return;
-                }
-
-                x = path[0][0];
-                y = path[0][1];
-                this.owner.x = x;
-                this.owner.y = y;
-            }
+            return moveCommand(newPositionToDirection(this.owner.x, this.owner.y, x, y), 8);
         }
     }
 }
@@ -162,55 +187,20 @@ class PatrollingMonsterAI {
                 this.patrolTarget = findEmptySpace(globals.Game.map, globals.Game.gameObjects);
             }
 
-            const astar = new Path.AStar(
-                this.patrolTarget.x,
-                this.patrolTarget.y,
-                createPassableCallback(this.owner),
-                { topology: 8 }
-            );
-
-            const path = [];
-            function pathCallback(x, y) {
-                path.push([x, y]);
-            }
-            astar.compute(this.owner.x, this.owner.y, pathCallback);
-
-            path.shift();
-
-            if (path.length === 0) {
+            const { x, y } = getNextStepTowardsTarget(this.owner, this.patrolTarget.x, this.patrolTarget.y);
+            if (x === null || y === null) {
                 this.patrolTarget = null;
-                return;
+                return null;
             }
-
-            this.owner.x = path[0][0];
-            this.owner.y = path[0][1];
+            return moveCommand(newPositionToDirection(this.owner.x, this.owner.y, x, y), 8);
         // chase the player with A*
         } else if (this.state === "chase") {
-            const astar = new Path.AStar(
-                globals.Game.player.x,
-                globals.Game.player.y,
-                createPassableSightCallback(this.owner),
-                { topology: 8 }
-            );
-
-            const path = [];
-            function pathCallback(x, y) {
-                path.push([x, y]);
+            const { x, y } = getNextStepTowardsTarget(this.owner, globals.Game.player.x, globals.Game.player.y);
+            if (x === null || y === null) {
+                return null;
             }
-            astar.compute(this.owner.x, this.owner.y, pathCallback);
 
-            // remove our own position
-            path.shift();
-            if (path.length === 1) {
-                this.owner.fighter.attack(globals.Game.player);
-            } else {
-                if (path.length === 0) {
-                    return;
-                }
-
-                this.owner.x = path[0][0];
-                this.owner.y = path[0][1];
-            }
+            return moveCommand(newPositionToDirection(this.owner.x, this.owner.y, x, y), 8);
         }
     }
 }
@@ -234,16 +224,16 @@ class ConfusedAI {
 
     act() {
         if (this.turns > 0) {
-            let blocks, newX, newY;
+            let blocks, newX, newY, dir;
             do {
-                const dir = DIRS[8][RNG.getItem([0, 1, 2, 3, 4, 5, 6, 7])];
-                newX = this.owner.x + dir[0];
-                newY = this.owner.y + dir[1];
+                dir = RNG.getItem([0, 1, 2, 3, 4, 5, 6, 7]);
+                newX = this.owner.x + DIRS[8][dir][0];
+                newY = this.owner.y + DIRS[8][dir][1];
                 ({ blocks } = isBlocked(globals.Game.map, globals.Game.gameObjects, newX, newY));
             } while (blocks === true);
 
-            this.owner.x = newX;
-            this.owner.y = newY;
+            this.turns--;
+            return moveCommand(dir, 8);
         } else {
             if (this.owner === globals.Game.player) {
                 displayMessage("You are no longer confused");
@@ -252,8 +242,8 @@ class ConfusedAI {
             }
 
             this.owner.ai = this.oldAI;
+            return null;
         }
-        this.turns--;
     }
 }
 
@@ -282,6 +272,7 @@ class ChestAI {
         } else {
             throw new Error("Missing inventoryComponent for ChestAI");
         }
+        return null;
     }
 }
 
@@ -305,6 +296,7 @@ class DroppedItemAI {
         } else {
             throw new Error("Missing inventoryComponent for DroppedItemAI");
         }
+        return null;
     }
 }
 

@@ -135,14 +135,20 @@ class GameObject {
         return BASE_SPEED;
     }
 
-    act(input = null) {
+    act() {
         let acted = true;
+
         if (this.ai && typeof this.ai.act === "function") {
-            acted = this.ai.act(input);
+            const command = this.ai.act();
+            if (command) {
+                acted = command(this);
+            }
         }
+
         if (this.fighter && typeof this.fighter.act === "function") {
             this.fighter.act();
         }
+
         return acted;
     }
 }

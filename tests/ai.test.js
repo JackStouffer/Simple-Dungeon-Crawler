@@ -41,7 +41,9 @@ describe("ai", function () {
         globals.Game = {
             player: {
                 x: 0,
-                y: 0
+                y: 0,
+                blocks: true,
+                fighter: {}
             },
             gameObjects: [],
             map: [
@@ -51,6 +53,7 @@ describe("ai", function () {
             ],
             removeObject: fake()
         };
+        globals.Game.gameObjects.push(globals.Game.player);
     });
 
     describe("createPassableCallback", function () {
@@ -63,7 +66,7 @@ describe("ai", function () {
         it("should mark empty space as passable", function () {
             const owner = { x: 1, y: 1 };
             const func = createPassableCallback(owner);
-            expect(func(0, 0)).to.be.true;
+            expect(func(1, 0)).to.be.true;
         });
 
         it("should mark filled space as not passable", function () {
@@ -134,14 +137,16 @@ describe("ai", function () {
         it("should move in a random direction when in wander state", function () {
             const owner = { x: 1, y: 1, ai: new BasicMonsterAI(0) };
             owner.ai.setOwner(owner);
-            owner.ai.act();
+            const command = owner.ai.act();
+            command(owner);
             expect(owner.x === 1 && owner.y === 1).to.be.false;
         });
 
         it("should see the player and change states when player is in range", function () {
             const owner = { x: 2, y: 2, ai: new BasicMonsterAI(8) };
             owner.ai.setOwner(owner);
-            owner.ai.act();
+            const command = owner.ai.act();
+            command(owner);
             expect(owner.ai.state).to.be.equal("chase");
         });
 
@@ -156,7 +161,8 @@ describe("ai", function () {
             };
             owner.ai.setOwner(owner);
             owner.ai.state = "chase";
-            owner.ai.act();
+            const command = owner.ai.act();
+            command(owner);
             expect(owner.fighter.attack.calledOnce).to.be.true;
             expect(owner.fighter.attack.calledWith(globals.Game.player)).to.be.true;
         });
@@ -166,14 +172,16 @@ describe("ai", function () {
         it("should move in a random direction when in patrol state", function () {
             const owner = { x: 0, y: 0, blocks: true, ai: new PatrollingMonsterAI(0) };
             owner.ai.setOwner(owner);
-            owner.ai.act();
+            const command = owner.ai.act();
+            command(owner);
             expect(owner.x === 0 && owner.y === 0).to.be.false;
         });
 
         it("should see the player and change states when player is in range", function () {
             const owner = { x: 2, y: 2, blocks: true, ai: new PatrollingMonsterAI(8) };
             owner.ai.setOwner(owner);
-            owner.ai.act();
+            const command = owner.ai.act();
+            command(owner);
             expect(owner.ai.state).to.be.equal("chase");
         });
 
@@ -189,7 +197,8 @@ describe("ai", function () {
             };
             owner.ai.setOwner(owner);
             owner.ai.state = "chase";
-            owner.ai.act();
+            const command = owner.ai.act();
+            command(owner);
             expect(owner.fighter.attack.calledOnce).to.be.true;
             expect(owner.fighter.attack.calledWith(globals.Game.player)).to.be.true;
         });
@@ -209,7 +218,8 @@ describe("ai", function () {
             const confusedAI = new ConfusedAI(owner.ai, 1);
             confusedAI.setOwner(owner);
             owner.ai = confusedAI;
-            owner.ai.act();
+            const command = owner.ai.act();
+            command(owner);
             expect(owner.x === 1 && owner.y === 1).to.be.false;
         });
 
@@ -226,8 +236,11 @@ describe("ai", function () {
             const confusedAI = new ConfusedAI(owner.ai, 1);
             confusedAI.setOwner(owner);
             owner.ai = confusedAI;
-            owner.ai.act();
-            owner.ai.act();
+
+            let command = owner.ai.act();
+            command(owner);
+            command = owner.ai.act();
+
             expect(owner.ai.constructor.name).to.be.equal("PatrollingMonsterAI");
         });
     });
