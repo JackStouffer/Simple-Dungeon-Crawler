@@ -7,7 +7,6 @@ import {
     WORLD_HEIGHT,
     WORLD_WIDTH,
     COLOR_AMBIENT_LIGHT,
-    COLOR_DARK_WALL,
     COLOR_INVISIBLE_WALL,
     COLOR_DARK_GROUND,
     COLOR_INVISIBLE_GROUND,
@@ -256,8 +255,8 @@ export function drawTile(display, tile, x, y) {
             fgColor = COLOR_INVISIBLE_WALL;
             bgColor = COLOR_INVISIBLE_WALL;
         } else if (tile.explored && !tile.isVisibleAndLit()) {
-            fgColor = COLOR_DARK_WALL;
-            bgColor = COLOR_DARK_WALL;
+            fgColor = tile.fgColorExplored;
+            bgColor = tile.bgColorExplored;
         }
     } else {
         if (tile.isVisibleAndLit()) {
