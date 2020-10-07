@@ -110,14 +110,17 @@ class InventoryMenu {
         }
 
         if (key === "Enter") {
+            globals.gameEventEmitter.emit("ui.select");
             return useItemCommand(inventoryItems[this.currentSelection].id);
         }
 
         if (key === "ArrowUp" && this.currentSelection > 0) {
+            globals.gameEventEmitter.emit("ui.cursorMove");
             this.currentSelection--;
         }
 
         if (key === "ArrowDown" && this.currentSelection < inventoryItems.length - 1) {
+            globals.gameEventEmitter.emit("ui.cursorMove");
             this.currentSelection++;
         }
 
@@ -192,14 +195,17 @@ class SpellSelectionMenu {
         }
 
         if (key === "Enter") {
+            globals.gameEventEmitter.emit("ui.select");
             return useSpellCommand(spells[this.currentSelection].id);
         }
 
         if (key === "ArrowUp" && this.currentSelection > 0) {
+            globals.gameEventEmitter.emit("ui.cursorMove");
             this.currentSelection--;
         }
 
         if (key === "ArrowDown" && this.currentSelection < spells.length - 1) {
+            globals.gameEventEmitter.emit("ui.cursorMove");
             this.currentSelection++;
         }
 
@@ -272,21 +278,26 @@ class KeyBindingMenu {
             }
 
             if (key === "Escape") {
+                globals.gameEventEmitter.emit("ui.select");
                 return;
             }
 
             if (key === "ArrowUp" && this.currentSelection > 0) {
+                globals.gameEventEmitter.emit("ui.cursorMove");
                 this.currentSelection--;
             }
 
             if (key === "ArrowDown" && this.currentSelection < keyCommands.length - 1) {
+                globals.gameEventEmitter.emit("ui.cursorMove");
                 this.currentSelection++;
             }
 
             if (key === "Enter") {
+                globals.gameEventEmitter.emit("ui.select");
                 this.state = "change";
             }
         } else if (this.state === "change") {
+            globals.gameEventEmitter.emit("ui.select");
             keyCommands[this.currentSelection].key = key;
             this.state = "selection";
         }

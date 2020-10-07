@@ -24,6 +24,7 @@ describe("game", function () {
                 },
                 lighting: { compute: fake() },
                 inventoryComponent: { getItems: fake.returns([]) },
+                getSpeed: fake.returns(1)
             };
         });
 
@@ -65,6 +66,7 @@ describe("game", function () {
                 let calls = 0;
                 globals.Game.keyCommands = [{ key: "w", description: "Move Up", command: fake.returns(true) }];
                 globals.Game.state = GameState.inventoryMenu;
+                globals.Game.canvas = { addEventListener: fake() };
                 globals.window.addEventListener = function (_, cb) {
                     if (calls === 0) {
                         calls++;
@@ -131,6 +133,7 @@ describe("game", function () {
                 let calls = 0;
                 globals.Game.keyCommands = [{ key: "w", description: "Move Up", command: fake.returns(true) }];
                 globals.Game.state = GameState.openingCinematic;
+                globals.Game.canvas = { addEventListener: fake() };
                 globals.window.addEventListener = function (_, cb) {
                     if (calls === 0) {
                         calls++;

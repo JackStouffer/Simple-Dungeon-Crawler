@@ -332,5 +332,12 @@ export function removeDeathCallback(target) {
         globals.Game.addObject(item);
     }
 
+    if (target.type === "crate") {
+        globals.gameEventEmitter.emit("crate.break");
+    }
+    if (target.type === "barrel") {
+        globals.gameEventEmitter.emit("barrel.break");
+    }
+
     globals.Game.removeObject(target);
 }

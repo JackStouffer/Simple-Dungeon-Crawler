@@ -27,6 +27,10 @@ class GiveItemsInteractable {
                     user.inventoryComponent.addItem(item.id, item.count);
                     this.owner.inventoryComponent.useItem(item.id);
                 }
+
+                if (user === globals.Game.player && this.owner.type === "chest") {
+                    globals.gameEventEmitter.emit("chest.open");
+                }
             } else {
                 displayMessage("Empty");
             }
@@ -93,6 +97,7 @@ class DoorInteractable {
     }
 
     interact() {
+        globals.gameEventEmitter.emit("door.open");
         globals.Game.removeObject(this.owner);
     }
 }
@@ -119,6 +124,10 @@ class LoadLevelInteractable {
             throw new Error("No level name has been set for load");
         }
         globals.Game.loadLevel(this.levelName);
+
+        if (this.owner.type === "load_door") {
+            globals.gameEventEmitter.emit("door.open");
+        }
     }
 }
 export { GiveItemsInteractable, GiveSpellInteractable, DoorInteractable, LoadLevelInteractable };

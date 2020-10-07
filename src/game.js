@@ -6,6 +6,22 @@ import EventEmitter from "events";
 import { Display, Scheduler } from "rot-js";
 
 import globals from "./globals";
+import {
+    loadSounds,
+    loadEventualSounds,
+    playOpenInventory,
+    playCloseInventory,
+    playOpenSpells,
+    playCloseSpells,
+    playUIClick,
+    playUIRollover,
+    playLevelTheme,
+    pauseMusic,
+    resumeMusic,
+    playDoorOpen,
+    playChestOpen,
+    playBoxBreak
+} from "./audio";
 import { createObject } from "./object";
 import {
     moveCommand,
@@ -41,13 +57,6 @@ import {
 import { readKey } from "./util";
 
 globals.gameEventEmitter = new EventEmitter();
-globals.gameEventEmitter.on("tutorial.start", explainMovement);
-globals.gameEventEmitter.on("tutorial.attacking", explainAttacking);
-globals.gameEventEmitter.on("tutorial.inventory", explainInventory);
-globals.gameEventEmitter.on("tutorial.spellMenu", explainSpellMenu);
-globals.gameEventEmitter.on("tutorial.pickUpItem", explainPickUpItem);
-globals.gameEventEmitter.on("tutorial.spellTargeting", explainSpellTargeting);
-globals.gameEventEmitter.on("tutorial.wildSpells", explainWildSpells);
 
 /**
  * Function to bind the mousedown event to looking at
@@ -102,6 +111,9 @@ class SimpleDungeonCrawler {
             });
             this.canvas = this.display.getContainer();
             globals.document.getElementById("canvas").prepend(this.canvas);
+
+            const loading = globals.document.getElementById("loading");
+            loading.parentNode.removeChild(loading);
         }
 
         this.keyCommands = [
@@ -138,11 +150,49 @@ class SimpleDungeonCrawler {
         }
     }
 
-    startGameplay() {
-        this.hookMouseLook();
+    async startGameplay() {
+        this.display.drawText(WIDTH - (WIDTH - 28), 22, "%c{white}Loading Sounds");
+
+        try {
+            await loadSounds();
+        } catch (err) {
+            clearScreen(this.display);
+            this.display.drawText(WIDTH - (WIDTH - 10), 22, "%c{white}Error loading game files, please reload the page");
+            return;
+        }
+
+        loadEventualSounds();
+
+        globals.gameEventEmitter.on("ui.openInventory", playOpenInventory);
+        globals.gameEventEmitter.on("ui.closeInventory", playCloseInventory);
+        globals.gameEventEmitter.on("ui.openSpells", playOpenSpells);
+        globals.gameEventEmitter.on("ui.closeSpells", playCloseSpells);
+        globals.gameEventEmitter.on("ui.openKeybinding", pauseMusic);
+        globals.gameEventEmitter.on("ui.openKeybinding", playUIClick);
+        globals.gameEventEmitter.on("ui.closeKeybinding", resumeMusic);
+        globals.gameEventEmitter.on("ui.closeKeybinding", playUIClick);
+        globals.gameEventEmitter.on("ui.select", playUIClick);
+        globals.gameEventEmitter.on("ui.cursorMove", playUIRollover);
+
+        globals.gameEventEmitter.on("level.loaded", playLevelTheme);
+        globals.gameEventEmitter.on("door.open", playDoorOpen);
+        globals.gameEventEmitter.on("chest.open", playChestOpen);
+        globals.gameEventEmitter.on("crate.break", playBoxBreak);
+        globals.gameEventEmitter.on("barrel.break", playBoxBreak);
+
+        globals.gameEventEmitter.on("tutorial.start", explainMovement);
+        globals.gameEventEmitter.on("tutorial.attacking", explainAttacking);
+        globals.gameEventEmitter.on("tutorial.inventory", explainInventory);
+        globals.gameEventEmitter.on("tutorial.spellMenu", explainSpellMenu);
+        globals.gameEventEmitter.on("tutorial.pickUpItem", explainPickUpItem);
+        globals.gameEventEmitter.on("tutorial.spellTargeting", explainSpellTargeting);
+        globals.gameEventEmitter.on("tutorial.wildSpells", explainWildSpells);
+
         this.player = createObject("player", 1, 1);
-        this.loadLevel("forrest_001");
+        this.scheduler.add(this.player);
+
         globals.gameEventEmitter.emit("tutorial.start");
+
         this.mainLoop();
     }
 
@@ -222,6 +272,8 @@ class SimpleDungeonCrawler {
 
         this.scheduler.clear();
         this.gameObjects.forEach(e => this.scheduler.add(e, true));
+
+        globals.gameEventEmitter.emit("level.loaded", name);
     }
 
     async handleInput() {
@@ -234,6 +286,7 @@ class SimpleDungeonCrawler {
 
             if (this.state === GameState.gameplay) {
                 if (e.key === "Escape") {
+                    globals.gameEventEmitter.emit("ui.openKeybinding");
                     this.state = GameState.pauseMenu;
                     continue;
                 }
@@ -247,6 +300,7 @@ class SimpleDungeonCrawler {
                 acted = command(this.player);
             } else if (this.state === GameState.pauseMenu) {
                 if (e.key === "Escape") {
+                    globals.gameEventEmitter.emit("ui.closeKeybinding");
                     this.state = GameState.gameplay;
                     this.keyBindingMenu.resetState();
                     this.render();
@@ -256,6 +310,7 @@ class SimpleDungeonCrawler {
                 this.keyBindingMenu.handleInput(e.key, this.keyCommands);
             } else if (this.state === GameState.inventoryMenu) {
                 if (e.key === "Escape") {
+                    globals.gameEventEmitter.emit("ui.closeInventory");
                     this.state = GameState.gameplay;
                     this.inventoryMenu.resetState();
                     this.render();
@@ -277,6 +332,7 @@ class SimpleDungeonCrawler {
                 }
             } else if (this.state === GameState.spellMenu) {
                 if (e.key === "Escape") {
+                    globals.gameEventEmitter.emit("ui.closeSpells");
                     this.state = GameState.gameplay;
                     this.spellSelectionMenu.resetState();
                     this.render();
@@ -298,6 +354,8 @@ class SimpleDungeonCrawler {
                 }
             } else if (this.state === GameState.openingCinematic) {
                 if (e.key === "Enter") {
+                    this.hookMouseLook();
+                    this.loadLevel("forrest_001");
                     this.state = GameState.gameplay;
                 }
             } else if (this.state === GameState.winCinematic) {

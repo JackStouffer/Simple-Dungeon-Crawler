@@ -6,8 +6,8 @@
   "scripts": {
     "test": "webpack --config webpack.test.js && mocha test-dist/main.js --require source-map-support/register && eslint src/*.js tests/*.js",
     "eslint": "eslint src/*.js tests/*.js",
-    "build": "webpack --config webpack.dev.js",
-    "dist": "webpack --config webpack.prod.js",
+    "build": "webpack --config webpack.dev.js && cp -r bin/ dev/bin/",
+    "dist": "webpack --config webpack.prod.js && cp -r bin/ dev/bin/",
     "start": "webpack-dev-server --config webpack.dev.js --open",
     "watch": "webpack --config webpack.dev.js --watch"
   },
@@ -35,6 +35,7 @@
     "webpack-merge": "^5.1.2"
   },
   "dependencies": {
+    "howler": "^2.2.0",
     "lodash": "^4.17.20",
     "rot-js": "^2.1.4"
   }

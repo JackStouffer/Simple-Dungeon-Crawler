@@ -1,63 +1,82 @@
 <!DOCTYPE html>
 <html>
-  <head>
-    <title>Simple Dungeon Crawler</title>
-    <meta charset="UTF-8"/>
-    <style>
-        #canvas {
-            width: 100%;
-            display: flex;
-            flex-direction: row;
-            flex-wrap: nowrap;
-            justify-content: center;
-        }
+    <head>
+        <title>Simple Dungeon Crawler</title>
+        <meta charset="UTF-8"/>
+        <style>
+            #loading {
+                padding-top: 50px;
+                padding-bottom: 50px;
+                font-weight: bold;
+            }
 
-        #log {
-            width: 200px;
-            max-height: 585px;
-            margin-left: 20px;
-            overflow-y: scroll;
-        }
+            #canvas {
+                width: 100%;
+                display: flex;
+                flex-direction: row;
+                flex-wrap: nowrap;
+                justify-content: center;
+            }
 
-        #log div {
-            background-color: lightgray;
-            padding: 15px;
-            margin-bottom: 20px;
-        }
+            #log {
+                width: 200px;
+                max-height: 585px;
+                margin-left: 20px;
+                overflow-y: scroll;
+            }
 
-        #log div.tutorial {
-            background-color: purple;
-            color: white;
-        }
+            #log div {
+                background-color: lightgray;
+                padding: 15px;
+                margin-bottom: 20px;
+            }
 
-        #log div.critical {
-            background-color: red;
-            color: white;
-        }
+            #log div.tutorial {
+                background-color: purple;
+                color: white;
+            }
 
-        #log div p {
-            margin: 0 0 5px 0;
-            font-family: monospace;
-        }
-    </style>
-  </head>
-  <body>
+            #log div.critical {
+                background-color: red;
+                color: white;
+            }
+
+            #log div p {
+                margin: 0 0 5px 0;
+                font-family: monospace;
+            }
+        </style>
+    </head>
+    <body>
         <div id="canvas">
+            <div id="loading">Loading Game Code</div>
+
             <div id="log">
                 
             </div>
         </div>
 
         <div id="help">
-        <h2>How To Play</h2>
-        <ul>
-            <li>Click on something to look at it</li>
-            <li>Use <code>WASD</code> for cardinal movement and <code>QEZC</code> for diagonal movement</li>
-            <li>Walk into enemies to attack</li>
-            <li>Walk into chests and doors to interact</li>
-            <li>Use <code>i</code> to open your inventory, then the letter shown to use an item</li>
-            <li>Use <code>m</code> to open your magic</li>
-        </ul>
+            <h1>How To Play</h1>
+            <ul>
+                <li>Click on something to look at it</li>
+                <li>Use <code>WASD</code> for cardinal movement and <code>QEZC</code> for diagonal movement</li>
+                <li>Walk into enemies to attack</li>
+                <li>Walk into chests and doors to interact</li>
+                <li>Use <code>i</code> to open your inventory, then the letter shown to use an item</li>
+                <li>Use <code>m</code> to open your magic</li>
+            </ul>
         </div>
-  </body>
+
+        <h4>Legal</h4>
+        <p>UI sound effects by Kenney Vleugels (<a href="www.kenney.nl">www.kenney.nl</a>)</p>
+
+        <p>Water Prelude by Kevin MacLeod
+        <br>Link: <a href="https://incompetech.filmmusic.io/song/4610-water-prelude">https://incompetech.filmmusic.io/song/4610-water-prelude</a>
+        <br>License: <a href="http://creativecommons.org/licenses/by/4.0/">http://creativecommons.org/licenses/by/4.0/</a></p>
+        
+        <p>Unpromised by Kevin MacLeod
+        <br>Link: <a href="https://incompetech.filmmusic.io/song/4568-unpromised">https://incompetech.filmmusic.io/song/4568-unpromised</a>
+        <br>License: <a href="http://creativecommons.org/licenses/by/4.0/">http://creativecommons.org/licenses/by/4.0/</a></p>
+    </body>
 </html>

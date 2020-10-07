@@ -82,6 +82,7 @@ export function getItemCommand() {
  */
 export function openInventoryCommand() {
     return function() {
+        globals.gameEventEmitter.emit("ui.openInventory");
         globals.Game.state = GameState.inventoryMenu;
         return false;
     };
@@ -93,6 +94,7 @@ export function openInventoryCommand() {
  */
 export function openSpellsCommand() {
     return function() {
+        globals.gameEventEmitter.emit("ui.openSpells");
         globals.Game.state = GameState.spellMenu;
         return false;
     };

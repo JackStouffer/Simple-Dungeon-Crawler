@@ -9,6 +9,7 @@ module.exports = merge(common, {
     devtool: "inline-source-map",
     devServer: {
         contentBase: "./dev",
+        compress: true
     },
     output: {
         filename: "game.js",
