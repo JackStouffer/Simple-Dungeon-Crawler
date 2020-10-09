@@ -16,7 +16,6 @@ import {
     COLOR_INVISIBLE_GROUND,
     COLOR_INVISIBLE_WALL,
     COLOR_DARK_GROUND,
-    COLOR_DARK_WALL,
     LevelData,
     TileData,
     ItemData
@@ -200,11 +199,11 @@ describe("map", function () {
             expect(display.draw.calledWith(0, 0, "", COLOR_DARK_GROUND, COLOR_DARK_GROUND)).to.be.true;
         });
 
-        it("should draw a blocking tile as dark when it's explored but not visible", function () {
+        it("should draw a blocking tile with its explored color when it's explored but not visible", function () {
             const tile = new Tile(...filledSpaceData);
             tile.explored = true;
             drawTile(display, tile, 0, 0);
-            expect(display.draw.calledWith(0, 0, "", COLOR_DARK_WALL, COLOR_DARK_WALL)).to.be.true;
+            expect(display.draw.calledWith(0, 0, "", "black", "black")).to.be.true;
         });
 
         it("should draw a non-blocking tile with the light color when visible", function () {
@@ -254,7 +253,12 @@ describe("map", function () {
 
     describe("drawMap", function () {
         it("should call draw on all tiles", function () {
-            drawMap(display, map);
+            const camera = {
+                worldToScreen: function (x, y) {
+                    return { x, y };
+                }
+            };
+            drawMap(display, camera, map);
             expect(display.draw.callCount).to.be.equal(9);
         });
     });

@@ -5,6 +5,8 @@
 _In Development_
 
 * Gameplay
+  * Added support for large maps with a scrolling camera
+  * Added sound and music
   * Added more tutorials
   * Wild spells now target any random enemy within a certain range, visible or not
   * Damage effectiveness is now calculated according to the enemy's strengths and weaknesses
@@ -14,6 +16,7 @@ _In Development_
   * Add `StatisticEffect` class to easily implement timed changes to fighter stats
   * Refactor haste and slow spells to use `StatisticEffect` instances
 * Graphical changes
+  * Changed how explored but not visible tiles are shown
   * Fixed a bug where the player's `@` character gets drawn multiple times
   * Fixed a bug where the player's `@` character appears on previously occupied tiles
   * Fixed a bug where the players tile was not lit on spawn

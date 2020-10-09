@@ -111,9 +111,9 @@ function newPositionToDirection(currentX, currentY, newX, newY) {
 }
 
 /**
- * Basic monster behavior with two states, chase and wander.
- * Default state is wander, which just chooses a random direction
- * sees if it's empty, and moves if it is.
+ * Basic monster behavior designed for dumb mobs. Only two states:
+ * chase and wander. Default state is wander, which just chooses
+ * a random direction and sees if it's empty, then moves if it is.
  *
  * Uses a definable sight range to check if a target is in range.
  * If one is this switches to chase which uses A* to go towards

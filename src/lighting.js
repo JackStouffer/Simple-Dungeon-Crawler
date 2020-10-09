@@ -2,12 +2,11 @@
 
 import { Color, Lighting, FOV } from "rot-js";
 
-import { WORLD_WIDTH, WORLD_HEIGHT } from "./data";
 import { createPassableSightCallback } from "./ai";
 
 function createReflectivityCallback(map) {
     return function (x, y) {
-        if (x < 0 || y < 0 || x >= WORLD_WIDTH || y >= WORLD_HEIGHT) {
+        if (x < 0 || y < 0 || y >= map.length || x >= map[y].length) {
             return 0;
         }
         return map[y][x].blocksSight ? 0 : map[y][x].reflectivity;
@@ -29,7 +28,7 @@ class ReflectivityLighting {
 
     compute(map) {
         function lightingCallback(x, y, color) {
-            if (x < 0 || y < 0 || x >= WORLD_WIDTH || y >= WORLD_HEIGHT) {
+            if (x < 0 || y < 0 || y >= map.length || x >= map[y].length) {
                 return;
             }
             map[y][x].lightingColor = Color.toRGB(
@@ -69,7 +68,7 @@ class PlayerLighting {
 
     compute(map) {
         function lightingCallback(x, y, color) {
-            if (x < 0 || y < 0 || x >= WORLD_WIDTH || y >= WORLD_HEIGHT) {
+            if (x < 0 || y < 0 || y >= map.length || x >= map[y].length) {
                 return;
             }
             map[y][x].lightingColor = Color.toRGB(
@@ -85,7 +84,7 @@ class PlayerLighting {
             createPassableSightCallback(this.owner)
         );
         sightFov.compute(this.owner.x, this.owner.y, 100, function(x, y) {
-            if (x < 0 || y < 0 || x >= WORLD_WIDTH || y >= WORLD_HEIGHT) {
+            if (x < 0 || y < 0 || y >= map.length || x >= map[y].length) {
                 return;
             }
             map[y][x].visible = true;

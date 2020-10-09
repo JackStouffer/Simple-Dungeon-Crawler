@@ -19,9 +19,10 @@ class BasicGraphics {
         this.owner = owner;
     }
 
-    draw(display, map) {
+    draw(display, camera, map) {
         if (this.owner && map[this.owner.y][this.owner.x].isVisibleAndLit()) {
-            display.draw(this.owner.x, this.owner.y, this.char, this.fgColor, this.bgColor);
+            const { x, y } = camera.worldToScreen(this.owner.x, this.owner.y);
+            display.draw(x, y, this.char, this.fgColor, this.bgColor);
         }
     }
 }
@@ -52,7 +53,7 @@ class TransparencyGraphics {
      * @param {Array} map The map 2D array
      * @param {Array} objects An array of GameObjects
      */
-    draw(display, map, objects) {
+    draw(display, camera, map, objects) {
         if (this.owner && map[this.owner.y][this.owner.x].isVisibleAndLit()) {
             let bgColor = map[this.owner.y][this.owner.x].lightingColor;
             const objectsAtLocation = getObjectsAtLocation(objects, this.owner.x, this.owner.y);
@@ -68,9 +69,11 @@ class TransparencyGraphics {
                 }
             }
 
+            const { x, y } = camera.worldToScreen(this.owner.x, this.owner.y);
+
             display.draw(
-                this.owner.x,
-                this.owner.y,
+                x,
+                y,
                 this.char,
                 this.fgColor,
                 bgColor
@@ -95,9 +98,10 @@ class DrawAfterSeen {
         this.owner = owner;
     }
 
-    draw(display, map) {
+    draw(display, camera, map) {
         if (this.owner && map[this.owner.y][this.owner.x].explored) {
-            display.draw(this.owner.x, this.owner.y, this.char, this.fgColor, this.bgColor);
+            const { x, y } = camera.worldToScreen(this.owner.x, this.owner.y);
+            display.draw(x, y, this.char, this.fgColor, this.bgColor);
         }
     }
 }

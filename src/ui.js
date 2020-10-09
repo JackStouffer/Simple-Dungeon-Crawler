@@ -8,7 +8,6 @@ import {
     HEIGHT,
     UI_HEIGHT,
     MAP_FILLED_SPACE,
-    MAP_EMPTY_SPACE,
     LEVEL_UP_BASE,
     LEVEL_UP_FACTOR
 } from "./data";
@@ -28,14 +27,6 @@ export function drawUI(display, player) {
     display.drawText(30, HEIGHT - UI_HEIGHT, "%c{white}%b{blue}STR: " + stats.strength);
     display.drawText(38, HEIGHT - UI_HEIGHT, "%c{white}%b{blue}DEF: " + stats.defense);
     display.drawText(54, HEIGHT - UI_HEIGHT, "%c{white}%b{blue}EXP: " + player.fighter.experience + "/" + (LEVEL_UP_BASE + player.fighter.level * LEVEL_UP_FACTOR));
-}
-
-export function clearScreen(display) {
-    for (let y = 0; y < HEIGHT; y++) {
-        for (let x = 0; x < WIDTH; x++) {
-            display.draw(x, y, MAP_EMPTY_SPACE, "black", "black");
-        }
-    }
 }
 
 export function displayMessage(text, type = "default") {

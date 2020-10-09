@@ -9,9 +9,14 @@ import {
 } from "../src/graphics";
 
 describe("graphics", function () {
-    let display;
+    let display, camera;
 
     beforeEach(function () {
+        camera = {
+            worldToScreen: function (x, y) {
+                return { x, y };
+            }
+        };
         display = {
             draw: fake()
         };
@@ -25,7 +30,7 @@ describe("graphics", function () {
                 graphics: new BasicGraphics("T", "white", "black")
             };
             owner.graphics.setOwner(owner);
-            owner.graphics.draw(display, [[{ isVisibleAndLit: fake.returns(true) }]]);
+            owner.graphics.draw(display, camera, [[{ isVisibleAndLit: fake.returns(true) }]]);
             expect(display.draw.calledWith(0, 0, "T", "white", "black")).to.be.true;
         });
 
@@ -36,7 +41,7 @@ describe("graphics", function () {
                 graphics: new BasicGraphics("T", "white", "black")
             };
             owner.graphics.setOwner(owner);
-            owner.graphics.draw(display, [[{ isVisibleAndLit: fake.returns(false) }]]);
+            owner.graphics.draw(display, camera, [[{ isVisibleAndLit: fake.returns(false) }]]);
             expect(display.draw.calledOnce).to.be.false;
         });
     });
@@ -56,7 +61,7 @@ describe("graphics", function () {
                 graphics: new TransparencyGraphics("T", "white")
             };
             owner.graphics.setOwner(owner);
-            owner.graphics.draw(display, map, objects);
+            owner.graphics.draw(display, camera, map, objects);
             expect(display.draw.calledWith(0, 0, "T", "white", "red")).to.be.true;
         });
 
@@ -74,7 +79,7 @@ describe("graphics", function () {
                 graphics: new TransparencyGraphics("T", "white")
             };
             owner.graphics.setOwner(owner);
-            owner.graphics.draw(display, map, objects);
+            owner.graphics.draw(display, camera, map, objects);
             expect(display.draw.calledOnce).to.be.false;
         });
 
@@ -99,7 +104,7 @@ describe("graphics", function () {
                 graphics: new TransparencyGraphics("T", "white")
             };
             owner.graphics.setOwner(owner);
-            owner.graphics.draw(display, map, objects);
+            owner.graphics.draw(display, camera, map, objects);
             expect(display.draw.calledWith(0, 0, "T", "white", "yellow")).to.be.true;
         });
 
@@ -124,7 +129,7 @@ describe("graphics", function () {
                 graphics: new TransparencyGraphics("T", "white")
             };
             owner.graphics.setOwner(owner);
-            owner.graphics.draw(display, map, objects);
+            owner.graphics.draw(display, camera, map, objects);
             expect(display.draw.calledWith(0, 0, "T", "white", "red")).to.be.true;
         });
     });
@@ -137,7 +142,7 @@ describe("graphics", function () {
                 graphics: new DrawAfterSeen("T", "white", "black")
             };
             owner.graphics.setOwner(owner);
-            owner.graphics.draw(display, [[{ explored: true }]]);
+            owner.graphics.draw(display, camera, [[{ explored: true }]]);
             expect(display.draw.calledWith(0, 0, "T", "white", "black")).to.be.true;
         });
 
@@ -148,7 +153,7 @@ describe("graphics", function () {
                 graphics: new DrawAfterSeen("T", "white", "black")
             };
             owner.graphics.setOwner(owner);
-            owner.graphics.draw(display, [[{ explored: false }]]);
+            owner.graphics.draw(display, camera, [[{ explored: false }]]);
             expect(display.draw.calledOnce).to.be.false;
         });
     });

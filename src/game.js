@@ -22,6 +22,7 @@ import {
     playChestOpen,
     playBoxBreak
 } from "./audio";
+import { Camera } from "./camera";
 import { createObject } from "./object";
 import {
     moveCommand,
@@ -39,7 +40,6 @@ import {
 } from "./map";
 import {
     drawUI,
-    clearScreen,
     KeyBindingMenu,
     InventoryMenu,
     SpellSelectionMenu,
@@ -133,6 +133,7 @@ class SimpleDungeonCrawler {
         this.keyBindingMenu = new KeyBindingMenu();
         this.inventoryMenu = new InventoryMenu();
         this.spellSelectionMenu = new SpellSelectionMenu();
+        this.gameCamera = new Camera();
     }
 
     reset() {
@@ -156,7 +157,7 @@ class SimpleDungeonCrawler {
         try {
             await loadSounds();
         } catch (err) {
-            clearScreen(this.display);
+            this.display.clear();
             this.display.drawText(WIDTH - (WIDTH - 10), 22, "%c{white}Error loading game files, please reload the page");
             return;
         }
@@ -190,6 +191,7 @@ class SimpleDungeonCrawler {
 
         this.player = createObject("player", 1, 1);
         this.scheduler.add(this.player);
+        this.gameCamera.follow(this.player);
 
         globals.gameEventEmitter.emit("tutorial.start");
 
@@ -199,12 +201,15 @@ class SimpleDungeonCrawler {
     render() {
         switch (this.state) {
             case GameState.gameplay:
+                this.display.clear();
+                this.gameCamera.update(this.map);
+
                 resetVisibility(this.map);
                 this.gameObjects
                     .filter(o => o.lighting && typeof o.lighting.compute === "function")
                     .forEach(o => o.lighting.compute(this.map));
 
-                drawMap(this.display, this.map);
+                drawMap(this.display, this.gameCamera, this.map);
 
                 this.gameObjects
                     .filter(o => o.graphics && typeof o.graphics.draw === "function")
@@ -221,7 +226,12 @@ class SimpleDungeonCrawler {
                         }
                         return 0;
                     })
-                    .forEach(o => o.graphics.draw(this.display, this.map, this.gameObjects));
+                    .forEach(o => o.graphics.draw(
+                        this.display,
+                        this.gameCamera,
+                        this.map,
+                        this.gameObjects
+                    ));
 
                 drawUI(this.display, this.player);
                 break;
@@ -235,7 +245,7 @@ class SimpleDungeonCrawler {
                 this.spellSelectionMenu.draw(this.player.fighter.getKnownSpells());
                 break;
             case GameState.openingCinematic:
-                clearScreen(this.display);
+                this.display.clear();
                 this.display.drawText(WIDTH - (WIDTH - 7), 12, "%c{white}Your country is being overrun by the forces of darkness");
                 this.display.drawText(WIDTH - (WIDTH - 8), 15, "%c{white}Tales tell of a weapon of great power lost in the");
                 this.display.drawText(WIDTH - (WIDTH - 4), 16, "%c{white}lands beyond the dwarf stronghold Durdwin, under the Red Hills.");
@@ -245,12 +255,12 @@ class SimpleDungeonCrawler {
                 this.display.drawText(WIDTH - (WIDTH - 24), 27, "%c{white}Press [enter] to start");
                 break;
             case GameState.loseCinematic:
-                clearScreen(this.display);
+                this.display.clear();
                 this.display.drawText(WIDTH - (WIDTH - 5), 12, "%c{white}You have died, and the last hope of your people dies with you");
                 this.display.drawText(WIDTH - (WIDTH - 18), 24, "%c{white}Press [enter] to restart the game");
                 break;
             case GameState.winCinematic:
-                clearScreen(this.display);
+                this.display.clear();
                 this.display.drawText(WIDTH - (WIDTH - 12), 12, "%c{white}You have reached the bottom and have retrieved");
                 this.display.drawText(WIDTH - (WIDTH - 16), 13, "%c{white}the fabled weapon and saved your people");
                 this.display.drawText(WIDTH - (WIDTH - 18), 24, "%c{white}Press [enter] to restart the game");

@@ -1,0 +1,173 @@
+{
+    "activeFile": "durdwin_001.js",
+    "automapping.whileDrawing": false,
+    "expandedProjectPaths": [
+        "."
+    ],
+    "file.lastUsedOpenFilter": "All Files (*)",
+    "fileStates": {
+        "/Users/Jack/Desktop/test.tmx": {
+            "scale": 1,
+            "selectedLayer": 0,
+            "viewCenter": {
+                "x": 289,
+                "y": 327
+            }
+        },
+        "/Users/Jack/Downloads/example01.tmx": {
+            "scale": 2.0929,
+            "selectedLayer": 2,
+            "viewCenter": {
+                "x": 647.9048210616846,
+                "y": 238.42515170337808
+            }
+        },
+        "/Users/Jack/Dropbox/code/dlang/dungeon_game/assets/maps/level_one.tmx": {
+            "scale": 1,
+            "selectedLayer": 0,
+            "viewCenter": {
+                "x": 366,
+                "y": 321
+            }
+        },
+        "/Users/Jack/Dropbox/code/gamedev/art/kenny.nl/roguelike-pack/Map/sample_map.tmx": {
+            "scale": 2.3949,
+            "selectedLayer": 0,
+            "viewCenter": {
+                "x": 937.1998830848888,
+                "y": 379.9741116539313
+            }
+        },
+        "/Users/Jack/Dropbox/code/portfolio/games/simple_rouge/v5/maps/level_1.js": {
+            "scale": 0.3486,
+            "selectedLayer": 0,
+            "viewCenter": {
+                "x": 543.6029833620194,
+                "y": 585.1979345955249
+            }
+        },
+        "/Users/Jack/Dropbox/code/portfolio/games/simple_rouge/v5/maps/level_2.js": {
+            "scale": 0.7425,
+            "selectedLayer": 1,
+            "viewCenter": {
+                "x": 769.6969696969695,
+                "y": 511.7845117845118
+            }
+        },
+        "/Users/Jack/Dropbox/code/portfolio/games/simple_rouge/v6/maps/dev_room.js": {
+            "scale": 0.7845,
+            "selectedLayer": 1,
+            "viewCenter": {
+                "x": 1161.8865519439132,
+                "y": 718.9292543021033
+            }
+        },
+        "/Users/Jack/Dropbox/code/portfolio/games/simple_rouge/v6/maps/level_1.js": {
+            "scale": 0.3803,
+            "selectedLayer": 1,
+            "viewCenter": {
+                "x": 937.4178280305022,
+                "y": 733.6313436760452
+            }
+        },
+        "/Users/Jack/Dropbox/code/portfolio/games/simple_rouge/v6/maps/level_2.js": {
+            "scale": 0.3505,
+            "selectedLayer": 1,
+            "viewCenter": {
+                "x": 922.9671897289587,
+                "y": 818.830242510699
+            }
+        },
+        "DungeonCrawl_ProjectUtumnoTileset.tsx": {
+            "dynamicWrapping": false,
+            "scaleInDock": 1.7451
+        },
+        "World.tsx": {
+            "dynamicWrapping": true,
+            "scaleInDock": 1,
+            "scaleInEditor": 1
+        },
+        "dev_room.js": {
+            "scale": 0.7117,
+            "selectedLayer": 1,
+            "viewCenter": {
+                "x": 1138.8225375860616,
+                "y": 781.2280455247998
+            }
+        },
+        "durdwin_001.js": {
+            "scale": 0.0702,
+            "selectedLayer": 0,
+            "viewCenter": {
+                "x": -1303.4188034188037,
+                "y": 3390.313390313391
+            }
+        },
+        "forrest_001.js": {
+            "scale": 0.0564,
+            "selectedLayer": 1,
+            "viewCenter": {
+                "x": 1125.8865248226948,
+                "y": 1507.0921985815603
+            }
+        },
+        "forrest_002.js": {
+            "scale": 0.3881,
+            "selectedLayer": 1,
+            "viewCenter": {
+                "x": 1178.8198917804689,
+                "y": 863.1795928884309
+            }
+        },
+        "forrest_003.js": {
+            "scale": 0.3332526408450704,
+            "selectedLayer": 1,
+            "viewCenter": {
+                "x": 1132.7742191111406,
+                "y": 681.1648946708049
+            }
+        },
+        "forrest_004.js": {
+            "scale": 0.5336,
+            "selectedLayer": 0,
+            "viewCenter": {
+                "x": 630.6221889055473,
+                "y": 163.04347826086962
+            }
+        }
+    },
+    "loadedWorlds": [
+        "/Users/Jack/Dropbox/code/gamedev/simple_rouge/src/maps/game_world.world"
+    ],
+    "map.fixedSize": true,
+    "map.height": 39,
+    "map.lastUsedExportFilter": "Json map files (*.json)",
+    "map.layerDataFormat": 5,
+    "map.orientation": 1,
+    "map.tileHeight": 32,
+    "map.tileWidth": 32,
+    "map.width": 70,
+    "openFiles": [
+        "forrest_001.js",
+        "durdwin_001.js"
+    ],
+    "project": "simple_dungeon_crawl.tiled-project",
+    "property.type": "string",
+    "recentFiles": [
+        "forrest_001.js",
+        "durdwin_001.js",
+        "World.tsx"
+    ],
+    "tileset.embedInMap": false,
+    "tileset.lastUsedFilter": "Tiled tileset files (*.tsx *.xml)",
+    "tileset.lastUsedFormat": "tsx",
+    "tileset.margin": 0,
+    "tileset.spacing": 0,
+    "tileset.tileSize": {
+        "height": 32,
+        "width": 32
+    },
+    "tileset.transparentColor": "#ff00ff",
+    "tileset.type": 1,
+    "tileset.useTransparentColor": false
+}

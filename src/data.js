@@ -5,9 +5,6 @@
 import invert from "lodash/invert";
 
 import forrest_001 from "./maps/forrest_001";
-import forrest_002 from "./maps/forrest_002";
-import forrest_003 from "./maps/forrest_003";
-import forrest_004 from "./maps/forrest_004";
 import durdwin_001 from "./maps/durdwin_001";
 import dev_room from "./maps/dev_room";
 
@@ -748,9 +745,6 @@ if (ENV !== "TEST") {
 
 export const LevelData = {
     forrest_001,
-    forrest_002,
-    forrest_003,
-    forrest_004,
     durdwin_001,
     dev_room
 };

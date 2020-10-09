@@ -12,11 +12,15 @@ describe("game", function () {
         beforeEach(function () {
             globals.window = {};
             globals.Game = new SimpleDungeonCrawler();
+            globals.Game.map = [[]];
             globals.Game.display = {
                 draw: fake(),
-                drawText: fake()
+                drawText: fake(),
+                clear: fake()
             };
             globals.Game.player = {
+                x: 0,
+                y: 0,
                 graphics: { draw: fake() },
                 fighter: {
                     getEffectiveStats: fake.returns({}),
@@ -26,6 +30,7 @@ describe("game", function () {
                 inventoryComponent: { getItems: fake.returns([]) },
                 getSpeed: fake.returns(1)
             };
+            globals.Game.gameCamera.follow(globals.Game.player);
         });
 
         describe("handleInput", function () {

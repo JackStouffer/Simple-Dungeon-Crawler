@@ -2,16 +2,15 @@
 
 import { RNG } from "rot-js";
 import isNil from "lodash/isNil";
+import get from "lodash/get";
 
 import {
-    WORLD_HEIGHT,
-    WORLD_WIDTH,
     COLOR_AMBIENT_LIGHT,
     COLOR_INVISIBLE_WALL,
     COLOR_DARK_GROUND,
     COLOR_INVISIBLE_GROUND,
     LevelData,
-    TileData
+    TileData, WIDTH, HEIGHT
 } from "./data";
 import { createObject } from "./object";
 import { TriggerVolume } from "./volume";
@@ -53,6 +52,7 @@ class Tile {
 }
 export { Tile };
 
+
 /**
  * Load a Tiled map using its name.
  * @param {String} level The name of the level
@@ -68,15 +68,17 @@ export function loadTiledMap(level) {
     const volumes = [];
     let playerLocation = null;
 
-    if (sourceData.width !== WORLD_WIDTH && sourceData.height !== WORLD_HEIGHT) {
-        throw new Error(`Loaded map ${name} doesn't match world width/height`);
+    const tileLayer = get(sourceData.layers.filter(l => l.name === "Tile Layer"), "[0]");
+    const objectLayer = get(sourceData.layers.filter(l => l.name === "Object Layer"), "[0]");
+
+    if (!tileLayer) {
+        throw new Error(`No tile layer in map ${level}`);
+    }
+    if (!objectLayer) {
+        throw new Error(`No object layer in map ${level}`);
     }
 
-    if (sourceData.layers.length !== 2) {
-        throw new Error(`Loaded map ${name} should only have two layers`);
-    }
-
-    const translated = sourceData.layers[0].data.map(tile => {
+    const translated = tileLayer.data.map(tile => {
         if (!(tile in TileData)) { throw new Error(`${tile} is not valid tile`); }
 
         const data = TileData[tile];
@@ -92,11 +94,11 @@ export function loadTiledMap(level) {
         );
     });
 
-    for (let i = 0; i < translated.length; i += WORLD_WIDTH) {
-        map.push(translated.slice(i, i + WORLD_WIDTH));
+    for (let i = 0; i < translated.length; i += sourceData.width) {
+        map.push(translated.slice(i, i + sourceData.width));
     }
 
-    sourceData.layers[1].objects.forEach(o => {
+    objectLayer.objects.forEach(o => {
         function findProperty(name) {
             if (!o.properties || !o.properties.length) { return null; }
 
@@ -245,6 +247,10 @@ export function isSightBlocked(map, objects, x, y) {
  * @param {Number} y The y coordinate
  */
 export function drawTile(display, tile, x, y) {
+    if (x > WIDTH || x < 0 || y > HEIGHT || y < 0) {
+        return;
+    }
+
     let fgColor, bgColor;
 
     if (tile.blocks) {
@@ -335,14 +341,16 @@ export function setAllToExplored(map) {
 
 /**
  * Calls drawTile on an array of Tile arrays
- * @param  {Object} display The ROT display
- * @param  {Array} map      An array of arrays of Tiles
+ * @param  {Display} display The ROT display
+ * @param  {Camera}  camera  camera object
+ * @param  {Array}   map     An array of arrays of Tiles
  * @return {void}
  */
-export function drawMap(display, map) {
+export function drawMap(display, camera, map) {
     for (let y = 0; y < map.length; y++) {
         for (let x = 0; x < map[y].length; x++) {
-            drawTile(display, map[y][x], x, y);
+            const { x: screenX, y: screenY } = camera.worldToScreen(x, y);
+            drawTile(display, map[y][x], screenX, screenY);
         }
     }
 }
