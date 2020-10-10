@@ -2,7 +2,7 @@
 
 ## Version 8
 
-_In Development_
+_October 10, 2020_
 
 * Gameplay
   * Added support for large maps with a scrolling camera
@@ -10,6 +10,7 @@ _In Development_
   * Added more tutorials
   * Wild spells now target any random enemy within a certain range, visible or not
   * Damage effectiveness is now calculated according to the enemy's strengths and weaknesses
+  * Smart monsters will now patrol an area with a defined patrol path
 * Technical
   * Refactor `BasicInventory` to use JS ES6 `Map` to guarantee key order
   * Refactor `isBlocked`'s return value be more clear
