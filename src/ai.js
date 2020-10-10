@@ -1,3 +1,5 @@
+/* global ENV */
+
 "use strict";
 
 import { FOV, DIRS, RNG, Path } from "rot-js";
@@ -6,7 +8,7 @@ import isEqual from "lodash/isEqual";
 
 import globals from "./globals";
 import { moveCommand } from "./commands";
-import { isBlocked, isSightBlocked, findEmptySpace } from "./map";
+import { isBlocked, isSightBlocked, distanceBetweenObjects } from "./map";
 import { displayMessage } from "./ui";
 
 /**
@@ -130,7 +132,7 @@ class BasicMonsterAI {
         this.owner = owner;
     }
 
-    act() {
+    act(map, gameObjects) {
         // wander in random directions
         if (this.state === "wander") {
             // compute the FOV to see if the player is sighted
@@ -146,7 +148,7 @@ class BasicMonsterAI {
                 dir = RNG.getItem([0, 1, 2, 3, 4, 5, 6, 7]);
                 newX = this.owner.x + DIRS[8][dir][0];
                 newY = this.owner.y + DIRS[8][dir][1];
-                ({ blocks } = isBlocked(globals.Game.map, globals.Game.gameObjects, newX, newY));
+                ({ blocks } = isBlocked(map, gameObjects, newX, newY));
             } while (blocks === true);
 
             return moveCommand(dir, 8);
@@ -180,6 +182,7 @@ class PatrollingMonsterAI {
         this.owner = null;
         this.state = "patrol";
         this.sightRange = sightRange;
+        this.pathName = null;
         this.patrolTarget = null;
     }
 
@@ -187,7 +190,15 @@ class PatrollingMonsterAI {
         this.owner = owner;
     }
 
-    act() {
+    setPath(name) {
+        this.pathName = name;
+    }
+
+    act(map, gameObjects, pathNodes) {
+        if (ENV === "DEV" && !this.pathName) {
+            throw new Error("pathName not set for PatrollingMonsterAI");
+        }
+
         // choose a random spot open in the map and go there
         if (this.state === "patrol") {
             // compute the FOV to see if the player is sighted
@@ -199,18 +210,37 @@ class PatrollingMonsterAI {
                 createVisibilityCallback(this)
             );
 
+            // For the first node, find the closest node on the path
+            // to the current position, we can just follow the path
+            // after that
             if (this.patrolTarget === null) {
-                this.patrolTarget = findEmptySpace(globals.Game.map, globals.Game.gameObjects);
+                const filterPred = (n) => { return n.pathName === this.pathName; };
+                const mapPred = (e) => {
+                    e.distance = distanceBetweenObjects(e, this.owner);
+                    return e;
+                };
+                const sortedNodes = [...pathNodes.values()]
+                    .filter(filterPred.bind(this))
+                    .map(mapPred.bind(this))
+                    .sort((a, b) => {
+                        return a.distance - b.distance;
+                    });
+
+                this.patrolTarget = sortedNodes[0];
             }
 
-            const { x, y } = getNextStepTowardsTarget(
+            let { x, y } = getNextStepTowardsTarget(
                 this.owner,
                 this.patrolTarget.x,
                 this.patrolTarget.y
             );
             if (x === null || y === null) {
-                this.patrolTarget = null;
-                return null;
+                this.patrolTarget = pathNodes.get(this.patrolTarget.next);
+                ({ x, y } = getNextStepTowardsTarget(
+                    this.owner,
+                    this.patrolTarget.x,
+                    this.patrolTarget.y
+                ));
             }
             return moveCommand(newPositionToDirection(this.owner.x, this.owner.y, x, y), 8);
         // chase the player with A*

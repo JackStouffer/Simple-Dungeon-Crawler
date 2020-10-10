@@ -43,12 +43,12 @@
                     "point":true,
                     "properties":[
                            {
-                            "name":"id",
+                            "name":"objectType",
                             "type":"string",
                             "value":"player"
                            }],
                     "rotation":0,
-                    "type":"",
+                    "type":"object",
                     "visible":true,
                     "width":0,
                     "x":880.250035462825,
@@ -61,12 +61,12 @@
                     "point":true,
                     "properties":[
                            {
-                            "name":"id",
+                            "name":"objectType",
                             "type":"string",
                             "value":"goblin"
                            }],
                     "rotation":0,
-                    "type":"",
+                    "type":"object",
                     "visible":true,
                     "width":0,
                     "x":1297.45889387145,
@@ -79,7 +79,7 @@
                     "point":true,
                     "properties":[
                            {
-                            "name":"id",
+                            "name":"objectType",
                             "type":"string",
                             "value":"chest"
                            },
@@ -89,7 +89,7 @@
                             "value":"test"
                            }],
                     "rotation":0,
-                    "type":"",
+                    "type":"object",
                     "visible":true,
                     "width":0,
                     "x":1280,
@@ -102,7 +102,7 @@
                     "point":true,
                     "properties":[
                            {
-                            "name":"id",
+                            "name":"objectType",
                             "type":"string",
                             "value":"load_door"
                            },
@@ -112,7 +112,7 @@
                             "value":"test_level"
                            }],
                     "rotation":0,
-                    "type":"",
+                    "type":"object",
                     "visible":true,
                     "width":0,
                     "x":1280,
@@ -125,7 +125,7 @@
                     "point":true,
                     "properties":[
                            {
-                            "name":"id",
+                            "name":"objectType",
                             "type":"string",
                             "value":"magic_shrine"
                            },
@@ -135,7 +135,7 @@
                             "value":"test_spell"
                            }],
                     "rotation":0,
-                    "type":"",
+                    "type":"object",
                     "visible":true,
                     "width":0,
                     "x":1280,

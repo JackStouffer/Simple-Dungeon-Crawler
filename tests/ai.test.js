@@ -2,7 +2,7 @@
 
 import { expect } from "chai";
 import { fake } from "sinon";
-import { Tile } from "../src/map";
+import { Tile, PatrolNode } from "../src/map";
 import globals from "../src/globals";
 import {
     createPassableCallback,
@@ -149,7 +149,7 @@ describe("ai", function () {
         it("should move in a random direction when in wander state", function () {
             const owner = { x: 1, y: 1, ai: new BasicMonsterAI(0) };
             owner.ai.setOwner(owner);
-            const command = owner.ai.act();
+            const command = owner.ai.act(globals.Game.map, globals.Game.gameObjects);
             command(owner);
             expect(owner.x === 1 && owner.y === 1).to.be.false;
         });
@@ -157,7 +157,7 @@ describe("ai", function () {
         it("should see the player and change states when player is in range", function () {
             const owner = { x: 2, y: 2, ai: new BasicMonsterAI(8) };
             owner.ai.setOwner(owner);
-            const command = owner.ai.act();
+            const command = owner.ai.act(globals.Game.map, globals.Game.gameObjects);
             command(owner);
             expect(owner.ai.state).to.be.equal("chase");
         });
@@ -173,7 +173,7 @@ describe("ai", function () {
             };
             owner.ai.setOwner(owner);
             owner.ai.state = "chase";
-            const command = owner.ai.act();
+            const command = owner.ai.act(globals.Game.map, globals.Game.gameObjects);
             command(owner);
             expect(owner.fighter.attack.calledOnce).to.be.true;
             expect(owner.fighter.attack.calledWith(globals.Game.player)).to.be.true;
@@ -181,18 +181,28 @@ describe("ai", function () {
     });
 
     describe("PatrollingMonsterAI", function () {
-        it("should move in a random direction when in patrol state", function () {
+        it("should move towards a pathNode when in patrol state", function () {
             const owner = { x: 0, y: 0, blocks: true, ai: new PatrollingMonsterAI(0) };
+            const nodes = new Map();
+            nodes.set(0, new PatrolNode("test", 1, 1, 1));
+            nodes.set(1, new PatrolNode("test", 0, 0, 0));
+
             owner.ai.setOwner(owner);
-            const command = owner.ai.act();
+            owner.ai.setPath("test");
+            const command = owner.ai.act(globals.Game.map, globals.Game.gameObjects, nodes);
             command(owner);
-            expect(owner.x === 0 && owner.y === 0).to.be.false;
+            expect(owner.x === 1 && owner.y === 1).to.be.true;
         });
 
         it("should see the player and change states when player is in range", function () {
             const owner = { x: 2, y: 2, blocks: true, ai: new PatrollingMonsterAI(8) };
+            const nodes = new Map();
+            nodes.set(0, new PatrolNode("test", 1, 1, 1));
+            nodes.set(1, new PatrolNode("test", 0, 0, 0));
+
             owner.ai.setOwner(owner);
-            const command = owner.ai.act();
+            owner.ai.setPath("test");
+            const command = owner.ai.act(globals.Game.map, globals.Game.gameObjects, nodes);
             command(owner);
             expect(owner.ai.state).to.be.equal("chase");
         });
@@ -209,7 +219,7 @@ describe("ai", function () {
             };
             owner.ai.setOwner(owner);
             owner.ai.state = "chase";
-            const command = owner.ai.act();
+            const command = owner.ai.act(globals.Game.map, globals.Game.gameObjects);
             command(owner);
             expect(owner.fighter.attack.calledOnce).to.be.true;
             expect(owner.fighter.attack.calledWith(globals.Game.player)).to.be.true;
@@ -230,7 +240,7 @@ describe("ai", function () {
             const confusedAI = new ConfusedAI(owner.ai, 1);
             confusedAI.setOwner(owner);
             owner.ai = confusedAI;
-            const command = owner.ai.act();
+            const command = owner.ai.act(globals.Game.map, globals.Game.gameObjects);
             command(owner);
             expect(owner.x === 1 && owner.y === 1).to.be.false;
         });
@@ -249,9 +259,9 @@ describe("ai", function () {
             confusedAI.setOwner(owner);
             owner.ai = confusedAI;
 
-            let command = owner.ai.act();
+            let command = owner.ai.act(globals.Game.map, globals.Game.gameObjects);
             command(owner);
-            command = owner.ai.act();
+            command = owner.ai.act(globals.Game.map, globals.Game.gameObjects);
 
             expect(owner.ai.constructor.name).to.be.equal("PatrollingMonsterAI");
         });
@@ -269,7 +279,7 @@ describe("ai", function () {
                 ai: new ChestAI("test", "purple")
             };
             owner.ai.setOwner(owner);
-            owner.ai.act();
+            owner.ai.act(globals.Game.map, globals.Game.gameObjects);
             expect(owner.graphics.bgColor).to.be.equal("purple");
         });
 
@@ -284,7 +294,7 @@ describe("ai", function () {
                 ai: new ChestAI("test", "purple")
             };
             owner.ai.setOwner(owner);
-            owner.ai.act();
+            owner.ai.act(globals.Game.map, globals.Game.gameObjects);
             expect(owner.graphics.bgColor).to.be.equal("test");
         });
     });
@@ -298,7 +308,7 @@ describe("ai", function () {
                 ai: new DroppedItemAI()
             };
             owner.ai.setOwner(owner);
-            owner.ai.act();
+            owner.ai.act(globals.Game.map, globals.Game.gameObjects);
             expect(globals.Game.removeObject.calledWith(owner)).to.be.true;
         });
 
@@ -310,7 +320,7 @@ describe("ai", function () {
                 ai: new DroppedItemAI()
             };
             owner.ai.setOwner(owner);
-            owner.ai.act();
+            owner.ai.act(globals.Game.map, globals.Game.gameObjects);
             expect(globals.Game.removeObject.calledOnce).to.be.false;
         });
     });

@@ -52,6 +52,29 @@ class Tile {
 }
 export { Tile };
 
+class PatrolNode {
+    constructor(pathName, x, y, next) {
+        this.pathName = pathName;
+        this.x = x;
+        this.y = y;
+        this.next = next;
+    }
+}
+export { PatrolNode };
+
+function findProperty(o, name) {
+    if (!o.properties || !o.properties.length) { return null; }
+
+    const property = o.properties.filter(prop => {
+        return prop.name === name;
+    });
+
+    if (property.length === 0) {
+        return null;
+    } else {
+        return property[0].value;
+    }
+}
 
 /**
  * Load a Tiled map using its name.
@@ -66,6 +89,7 @@ export function loadTiledMap(level) {
     const map = [];
     const objects = [];
     const volumes = [];
+    const pathNodes = new Map();
     let playerLocation = null;
 
     const tileLayer = get(sourceData.layers.filter(l => l.name === "Tile Layer"), "[0]");
@@ -99,52 +123,53 @@ export function loadTiledMap(level) {
     }
 
     objectLayer.objects.forEach(o => {
-        function findProperty(name) {
-            if (!o.properties || !o.properties.length) { return null; }
-
-            const property = o.properties.filter(prop => {
-                return prop.name === name;
-            });
-
-            if (property.length === 0) {
-                return null;
-            } else {
-                return property[0].value;
-            }
-        }
-
         if (o.point) {
-            let obj;
-            const id = findProperty("id"),
-                inventory = findProperty("inventory"),
-                levelName = findProperty("levelName"),
-                spellId = findProperty("spellId");
+            if (o.type === "object") {
+                const type = findProperty(o, "objectType"),
+                    inventory = findProperty(o, "inventory"),
+                    levelName = findProperty(o, "levelName"),
+                    spellId = findProperty(o, "spellId"),
+                    pathName = findProperty(o, "pathName");
 
-            if (!id) {
-                throw new Error(`No id for ${o.name}`);
-            }
+                if (!type) {
+                    throw new Error(`No id for ${o.name}`);
+                }
 
-            if (id === "player") {
-                playerLocation = [Math.floor(o.x / tileSize), Math.floor(o.y / tileSize)];
+                if (type === "player") {
+                    playerLocation = [Math.floor(o.x / tileSize), Math.floor(o.y / tileSize)];
+                } else {
+                    const obj = createObject(
+                        type,
+                        Math.floor(o.x / tileSize),
+                        Math.floor(o.y / tileSize),
+                    );
+
+                    if (inventory && obj.inventoryComponent) {
+                        inventory.split(",").forEach(i => obj.inventoryComponent.addItem(i));
+                    }
+
+                    if (levelName && obj.interactable && obj.interactable.setLevel) {
+                        obj.interactable.setLevel(levelName);
+                    }
+
+                    if (spellId && obj.interactable && obj.interactable.setSpell) {
+                        obj.interactable.setSpell(spellId);
+                    }
+
+                    if (pathName && obj.ai && obj.ai.setPath) {
+                        obj.ai.setPath(pathName);
+                    }
+
+                    objects.push(obj);
+                }
+            } else if (o.type === "path_node") {
+                const next = findProperty(o, "next"),
+                    pathName = findProperty(o, "pathName"),
+                    x = Math.floor(o.x / tileSize),
+                    y = Math.floor(o.y / tileSize);
+                pathNodes.set(o.id, new PatrolNode(pathName, x, y, next));
             } else {
-                obj = createObject(
-                    id,
-                    Math.floor(o.x / tileSize),
-                    Math.floor(o.y / tileSize),
-                );
-
-                if (inventory && obj.inventoryComponent) {
-                    inventory.split(",").forEach(i => obj.inventoryComponent.addItem(i));
-                }
-
-                if (levelName && obj.interactable && obj.interactable.setLevel) {
-                    obj.interactable.setLevel(levelName);
-                }
-
-                if (spellId && obj.interactable && obj.interactable.setSpell) {
-                    obj.interactable.setSpell(spellId);
-                }
-                objects.push(obj);
+                throw new Error(`Unrecognized object type ${o.type}`);
             }
         } else if (o.type === "Rectangle") {
             const x = Math.floor(o.x / tileSize);
@@ -160,7 +185,7 @@ export function loadTiledMap(level) {
         }
     });
 
-    return { map, playerLocation, objects, volumes };
+    return { map, playerLocation, objects, volumes, pathNodes };
 }
 
 /**
@@ -286,7 +311,7 @@ export function drawTile(display, tile, x, y) {
  * @param  {GameObject} b An object
  * @return {Number}       The distance
  */
-function distanceBetweenObjects(a, b) {
+export function distanceBetweenObjects(a, b) {
     const dx = b.x - a.x;
     const dy = b.y - a.y;
     return Math.sqrt(dx ** 2 + dy ** 2);

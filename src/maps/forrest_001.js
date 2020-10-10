@@ -40,7 +40,7 @@
          "offsety":2769.98583384405,
          "opacity":1,
          "type":"objectgroup",
-         "visible":true,
+         "visible":false,
          "x":0,
          "y":0
         }, 
@@ -68,12 +68,12 @@
                  "point":true,
                  "properties":[
                         {
-                         "name":"id",
+                         "name":"objectType",
                          "type":"string",
                          "value":"campfire"
                         }],
                  "rotation":0,
-                 "type":"",
+                 "type":"object",
                  "visible":true,
                  "width":0,
                  "x":1359.43345152199,
@@ -86,17 +86,17 @@
                  "point":true,
                  "properties":[
                         {
-                         "name":"id",
-                         "type":"string",
-                         "value":"crate"
-                        }, 
-                        {
                          "name":"inventory",
                          "type":"string",
                          "value":"health_potion_weak"
+                        }, 
+                        {
+                         "name":"objectType",
+                         "type":"string",
+                         "value":"crate"
                         }],
                  "rotation":0,
-                 "type":"",
+                 "type":"object",
                  "visible":true,
                  "width":0,
                  "x":1519.48935537457,
@@ -109,17 +109,17 @@
                  "point":true,
                  "properties":[
                         {
-                         "name":"id",
-                         "type":"string",
-                         "value":"crate"
-                        }, 
-                        {
                          "name":"inventory",
                          "type":"string",
                          "value":""
+                        }, 
+                        {
+                         "name":"objectType",
+                         "type":"string",
+                         "value":"crate"
                         }],
                  "rotation":0,
-                 "type":"",
+                 "type":"object",
                  "visible":true,
                  "width":0,
                  "x":1492.09888714889,
@@ -132,12 +132,12 @@
                  "point":true,
                  "properties":[
                         {
-                         "name":"id",
+                         "name":"objectType",
                          "type":"string",
                          "value":"goblin"
                         }],
                  "rotation":0,
-                 "type":"",
+                 "type":"object",
                  "visible":true,
                  "width":0,
                  "x":1443.79118357932,
@@ -150,12 +150,12 @@
                  "point":true,
                  "properties":[
                         {
-                         "name":"id",
+                         "name":"objectType",
                          "type":"string",
                          "value":"rat"
                         }],
                  "rotation":0,
-                 "type":"",
+                 "type":"object",
                  "visible":true,
                  "width":0,
                  "x":1245.83210514049,
@@ -168,12 +168,12 @@
                  "point":true,
                  "properties":[
                         {
-                         "name":"id",
+                         "name":"objectType",
                          "type":"string",
                          "value":"goblin"
                         }],
                  "rotation":0,
-                 "type":"",
+                 "type":"object",
                  "visible":true,
                  "width":0,
                  "x":496.566841292543,
@@ -186,17 +186,17 @@
                  "point":true,
                  "properties":[
                         {
-                         "name":"id",
-                         "type":"string",
-                         "value":"barrel"
-                        }, 
-                        {
                          "name":"inventory",
                          "type":"string",
                          "value":""
+                        }, 
+                        {
+                         "name":"objectType",
+                         "type":"string",
+                         "value":"barrel"
                         }],
                  "rotation":0,
-                 "type":"",
+                 "type":"object",
                  "visible":true,
                  "width":0,
                  "x":1105.27396337073,
@@ -209,17 +209,17 @@
                  "point":true,
                  "properties":[
                         {
-                         "name":"id",
-                         "type":"string",
-                         "value":"barrel"
-                        }, 
-                        {
                          "name":"inventory",
                          "type":"string",
                          "value":""
+                        }, 
+                        {
+                         "name":"objectType",
+                         "type":"string",
+                         "value":"barrel"
                         }],
                  "rotation":0,
-                 "type":"",
+                 "type":"object",
                  "visible":true,
                  "width":0,
                  "x":1104.24125747701,
@@ -232,12 +232,12 @@
                  "point":true,
                  "properties":[
                         {
-                         "name":"id",
+                         "name":"objectType",
                          "type":"string",
                          "value":"door"
                         }],
                  "rotation":0,
-                 "type":"",
+                 "type":"object",
                  "visible":true,
                  "width":0,
                  "x":558.804418453541,
@@ -250,17 +250,17 @@
                  "point":true,
                  "properties":[
                         {
-                         "name":"id",
-                         "type":"string",
-                         "value":"barrel"
-                        }, 
-                        {
                          "name":"inventory",
                          "type":"string",
                          "value":""
+                        }, 
+                        {
+                         "name":"objectType",
+                         "type":"string",
+                         "value":"barrel"
                         }],
                  "rotation":0,
-                 "type":"",
+                 "type":"object",
                  "visible":true,
                  "width":0,
                  "x":595.193249453778,
@@ -273,12 +273,12 @@
                  "point":true,
                  "properties":[
                         {
-                         "name":"id",
+                         "name":"objectType",
                          "type":"string",
                          "value":"dead_body"
                         }],
                  "rotation":0,
-                 "type":"",
+                 "type":"object",
                  "visible":true,
                  "width":0,
                  "x":656.219392752204,
@@ -291,12 +291,12 @@
                  "point":true,
                  "properties":[
                         {
-                         "name":"id",
+                         "name":"objectType",
                          "type":"string",
                          "value":"player"
                         }],
                  "rotation":0,
-                 "type":"",
+                 "type":"object",
                  "visible":true,
                  "width":0,
                  "x":13.8355111452728,
@@ -309,17 +309,17 @@
                  "point":true,
                  "properties":[
                         {
-                         "name":"id",
-                         "type":"string",
-                         "value":"load_door"
-                        }, 
-                        {
                          "name":"levelName",
                          "type":"string",
-                         "value":"forrest_002"
+                         "value":"durdwin_001"
+                        }, 
+                        {
+                         "name":"objectType",
+                         "type":"string",
+                         "value":"load_door"
                         }],
                  "rotation":0,
-                 "type":"",
+                 "type":"object",
                  "visible":true,
                  "width":0,
                  "x":1710.30519759869,
@@ -332,17 +332,17 @@
                  "point":true,
                  "properties":[
                         {
-                         "name":"id",
-                         "type":"string",
-                         "value":"chest"
-                        }, 
-                        {
                          "name":"inventory",
                          "type":"string",
                          "value":"confuse_scroll"
+                        }, 
+                        {
+                         "name":"objectType",
+                         "type":"string",
+                         "value":"chest"
                         }],
                  "rotation":0,
-                 "type":"",
+                 "type":"object",
                  "visible":true,
                  "width":0,
                  "x":1073.2833237161,
@@ -391,6 +391,121 @@
                  "width":64.1585486298727,
                  "x":1055.33871101891,
                  "y":768.394384098803
+                }, 
+                {
+                 "height":0,
+                 "id":25,
+                 "name":"Patrol Path",
+                 "point":true,
+                 "properties":[
+                        {
+                         "name":"next",
+                         "type":"object",
+                         "value":26
+                        }, 
+                        {
+                         "name":"pathName",
+                         "type":"string",
+                         "value":"forrest_path_01"
+                        }],
+                 "rotation":0,
+                 "type":"path_node",
+                 "visible":true,
+                 "width":0,
+                 "x":217.391304347826,
+                 "y":1366.930171278
+                }, 
+                {
+                 "height":0,
+                 "id":26,
+                 "name":"Patrol Path",
+                 "point":true,
+                 "properties":[
+                        {
+                         "name":"next",
+                         "type":"object",
+                         "value":29
+                        }, 
+                        {
+                         "name":"pathName",
+                         "type":"string",
+                         "value":"forrest_path_01"
+                        }],
+                 "rotation":0,
+                 "type":"path_node",
+                 "visible":true,
+                 "width":0,
+                 "x":177.075098814229,
+                 "y":1868.77470355731
+                }, 
+                {
+                 "height":0,
+                 "id":28,
+                 "name":"Goblin Brute",
+                 "point":true,
+                 "properties":[
+                        {
+                         "name":"objectType",
+                         "type":"string",
+                         "value":"goblin_brute"
+                        }, 
+                        {
+                         "name":"pathName",
+                         "type":"string",
+                         "value":"forrest_path_01"
+                        }],
+                 "rotation":0,
+                 "type":"object",
+                 "visible":true,
+                 "width":0,
+                 "x":448.648648648649,
+                 "y":1610.81081081081
+                }, 
+                {
+                 "height":0,
+                 "id":29,
+                 "name":"Patrol Path",
+                 "point":true,
+                 "properties":[
+                        {
+                         "name":"next",
+                         "type":"object",
+                         "value":30
+                        }, 
+                        {
+                         "name":"pathName",
+                         "type":"string",
+                         "value":"forrest_path_01"
+                        }],
+                 "rotation":0,
+                 "type":"path_node",
+                 "visible":true,
+                 "width":0,
+                 "x":956.098950243405,
+                 "y":2074.03948567639
+                }, 
+                {
+                 "height":0,
+                 "id":30,
+                 "name":"Patrol Path",
+                 "point":true,
+                 "properties":[
+                        {
+                         "name":"next",
+                         "type":"object",
+                         "value":25
+                        }, 
+                        {
+                         "name":"pathName",
+                         "type":"string",
+                         "value":"forrest_path_01"
+                        }],
+                 "rotation":0,
+                 "type":"path_node",
+                 "visible":true,
+                 "width":0,
+                 "x":1157.68463073852,
+                 "y":1388.88888888889
                 }],
          "opacity":1,
          "type":"objectgroup",
@@ -399,7 +514,7 @@
          "y":0
         }],
  "nextlayerid":5,
- "nextobjectid":25,
+ "nextobjectid":31,
  "orientation":"orthogonal",
  "renderorder":"right-down",
  "tiledversion":"1.4.2",

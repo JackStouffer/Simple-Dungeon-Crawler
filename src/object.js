@@ -135,11 +135,11 @@ class GameObject {
         return BASE_SPEED;
     }
 
-    act() {
+    act(map, gameObjects, pathNodes) {
         let acted = true;
 
         if (this.ai && typeof this.ai.act === "function") {
-            const command = this.ai.act();
+            const command = this.ai.act(map, gameObjects, pathNodes);
             if (command) {
                 acted = command(this);
             }

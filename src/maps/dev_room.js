@@ -43,12 +43,12 @@
                  "point":true,
                  "properties":[
                         {
-                         "name":"id",
+                         "name":"objectType",
                          "type":"string",
                          "value":"player"
                         }],
                  "rotation":0,
-                 "type":"",
+                 "type":"object",
                  "visible":true,
                  "width":0,
                  "x":880.250035462825,
@@ -61,12 +61,12 @@
                  "point":true,
                  "properties":[
                         {
-                         "name":"id",
+                         "name":"objectType",
                          "type":"string",
                          "value":"door"
                         }],
                  "rotation":0,
-                 "type":"",
+                 "type":"object",
                  "visible":true,
                  "width":0,
                  "x":1297.45889387145,
@@ -79,12 +79,12 @@
                  "point":true,
                  "properties":[
                         {
-                         "name":"id",
+                         "name":"objectType",
                          "type":"string",
                          "value":"water_sprite"
                         }],
                  "rotation":0,
-                 "type":"",
+                 "type":"object",
                  "visible":true,
                  "width":0,
                  "x":1297.45889387145,
@@ -97,17 +97,17 @@
                  "point":true,
                  "properties":[
                         {
-                         "name":"id",
-                         "type":"string",
-                         "value":"chest"
-                        }, 
-                        {
                          "name":"inventory",
                          "type":"string",
                          "value":"health_potion_weak,lightning_scroll_weak"
+                        }, 
+                        {
+                         "name":"objectType",
+                         "type":"string",
+                         "value":"chest"
                         }],
                  "rotation":0,
-                 "type":"",
+                 "type":"object",
                  "visible":true,
                  "width":0,
                  "x":1166.46397769314,
@@ -120,12 +120,12 @@
                  "point":true,
                  "properties":[
                         {
-                         "name":"id",
+                         "name":"objectType",
                          "type":"string",
                          "value":"lantern"
                         }],
                  "rotation":0,
-                 "type":"",
+                 "type":"object",
                  "visible":true,
                  "width":0,
                  "x":1139.76083707025,
@@ -138,17 +138,17 @@
                  "point":true,
                  "properties":[
                         {
-                         "name":"id",
-                         "type":"string",
-                         "value":"chest"
-                        }, 
-                        {
                          "name":"inventory",
                          "type":"string",
                          "value":"health_potion_weak,health_potion_weak"
+                        }, 
+                        {
+                         "name":"objectType",
+                         "type":"string",
+                         "value":"chest"
                         }],
                  "rotation":0,
-                 "type":"",
+                 "type":"object",
                  "visible":true,
                  "width":0,
                  "x":1038.86397608371,
@@ -161,7 +161,7 @@
                  "point":true,
                  "properties":[
                         {
-                         "name":"id",
+                         "name":"objectType",
                          "type":"string",
                          "value":"magic_shrine"
                         }, 
@@ -171,7 +171,7 @@
                          "value":"lightning_bolt"
                         }],
                  "rotation":0,
-                 "type":"",
+                 "type":"object",
                  "visible":true,
                  "width":0,
                  "x":1425.26158445441,
@@ -184,17 +184,17 @@
                  "point":true,
                  "properties":[
                         {
-                         "name":"id",
-                         "type":"string",
-                         "value":"crate"
-                        }, 
-                        {
                          "name":"inventory",
                          "type":"string",
                          "value":"health_potion_weak"
+                        }, 
+                        {
+                         "name":"objectType",
+                         "type":"string",
+                         "value":"crate"
                         }],
                  "rotation":0,
-                 "type":"",
+                 "type":"object",
                  "visible":true,
                  "width":0,
                  "x":1135.27653213752,
@@ -207,12 +207,12 @@
                  "point":true,
                  "properties":[
                         {
-                         "name":"id",
+                         "name":"objectType",
                          "type":"string",
                          "value":"door"
                         }],
                  "rotation":0,
-                 "type":"",
+                 "type":"object",
                  "visible":true,
                  "width":0,
                  "x":1039.61136023916,
@@ -225,12 +225,12 @@
                  "point":true,
                  "properties":[
                         {
-                         "name":"id",
+                         "name":"objectType",
                          "type":"string",
                          "value":"goblin_brute"
                         }],
                  "rotation":0,
-                 "type":"",
+                 "type":"object",
                  "visible":true,
                  "width":0,
                  "x":1043.34828101644,
@@ -243,17 +243,17 @@
                  "point":true,
                  "properties":[
                         {
-                         "name":"id",
-                         "type":"string",
-                         "value":"barrel"
-                        }, 
-                        {
                          "name":"inventory",
                          "type":"string",
                          "value":"health_potion"
+                        }, 
+                        {
+                         "name":"objectType",
+                         "type":"string",
+                         "value":"barrel"
                         }],
                  "rotation":0,
-                 "type":"",
+                 "type":"object",
                  "visible":true,
                  "width":0,
                  "x":1202.4730820996,
@@ -269,7 +269,7 @@
  "nextobjectid":12,
  "orientation":"orthogonal",
  "renderorder":"right-down",
- "tiledversion":"1.3.4",
+ "tiledversion":"1.4.2",
  "tileheight":32,
  "tilesets":[
         {
@@ -278,6 +278,6 @@
         }],
  "tilewidth":32,
  "type":"map",
- "version":1.2,
+ "version":1.4,
  "width":70
 });

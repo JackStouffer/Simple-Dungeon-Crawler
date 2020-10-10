@@ -97,6 +97,8 @@ class SimpleDungeonCrawler {
         this.scheduler = new Scheduler.Speed();
         this.gameObjects = [];
         this.map = [];
+        this.volumes = [];
+        this.pathNodes = [];
         this.totalTurns = 0;
 
         if (ENV === "TEST") {
@@ -142,6 +144,8 @@ class SimpleDungeonCrawler {
         this.gameObjects = [];
         this.totalTurns = 0;
         this.scheduler.clear();
+        this.scheduler.add(this.player);
+        this.gameCamera.follow(this.player);
 
         this.loadLevel("forrest_001");
 
@@ -271,11 +275,12 @@ class SimpleDungeonCrawler {
     }
 
     loadLevel(name) {
-        const { map, playerLocation, objects, volumes } = loadTiledMap(name);
+        const { map, playerLocation, objects, volumes, pathNodes } = loadTiledMap(name);
         this.map = map;
         objects.push(this.player);
         this.gameObjects = objects;
         this.volumes = volumes;
+        this.pathNodes = pathNodes;
 
         this.player.x = playerLocation[0];
         this.player.y = playerLocation[1];
@@ -389,10 +394,8 @@ class SimpleDungeonCrawler {
             if (actor === this.player) {
                 this.totalTurns++;
                 await this.handleInput();
-                actor.act();
-            } else {
-                actor.act();
             }
+            actor.act(this.map, this.gameObjects, this.pathNodes);
 
             if (this.player.fighter === null || this.player.fighter.hp <= 0) {
                 this.state = GameState.loseCinematic;
