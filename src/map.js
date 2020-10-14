@@ -90,16 +90,21 @@ export function loadTiledMap(level) {
     const objects = [];
     const volumes = [];
     const pathNodes = new Map();
+    const fallbackNodes = new Map();
     let playerLocation = null;
 
     const tileLayer = get(sourceData.layers.filter(l => l.name === "Tile Layer"), "[0]");
     const objectLayer = get(sourceData.layers.filter(l => l.name === "Object Layer"), "[0]");
+    const nodeLayer = get(sourceData.layers.filter(l => l.name === "Node Layer"), "[0]");
 
     if (!tileLayer) {
         throw new Error(`No tile layer in map ${level}`);
     }
     if (!objectLayer) {
         throw new Error(`No object layer in map ${level}`);
+    }
+    if (!nodeLayer) {
+        throw new Error(`No node layer in map ${level}`);
     }
 
     const translated = tileLayer.data.map(tile => {
@@ -162,12 +167,6 @@ export function loadTiledMap(level) {
 
                     objects.push(obj);
                 }
-            } else if (o.type === "path_node") {
-                const next = findProperty(o, "next"),
-                    pathName = findProperty(o, "pathName"),
-                    x = Math.floor(o.x / tileSize),
-                    y = Math.floor(o.y / tileSize);
-                pathNodes.set(o.id, new PatrolNode(pathName, x, y, next));
             } else {
                 throw new Error(`Unrecognized object type ${o.type}`);
             }
@@ -185,7 +184,22 @@ export function loadTiledMap(level) {
         }
     });
 
-    return { map, playerLocation, objects, volumes, pathNodes };
+    nodeLayer.objects.forEach(o => {
+        const x = Math.floor(o.x / tileSize),
+            y = Math.floor(o.y / tileSize);
+
+        if (o.type === "path_node") {
+            const next = findProperty(o, "next"),
+                pathName = findProperty(o, "pathName");
+            pathNodes.set(o.id, new PatrolNode(pathName, x, y, next));
+        } else if (o.type === "fallback_node") {
+            fallbackNodes.set(o.id, { x, y });
+        } else {
+            throw new Error(`Unrecognized object type ${o.type}`);
+        }
+    });
+
+    return { map, playerLocation, objects, volumes, pathNodes, fallbackNodes };
 }
 
 /**

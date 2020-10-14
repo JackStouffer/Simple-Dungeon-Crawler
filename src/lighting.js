@@ -2,7 +2,7 @@
 
 import { Color, Lighting, FOV } from "rot-js";
 
-import { createPassableSightCallback } from "./ai";
+import { createPassableSightCallback } from "./ai/components";
 
 function createReflectivityCallback(map) {
     return function (x, y) {

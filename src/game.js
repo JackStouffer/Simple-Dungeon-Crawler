@@ -411,7 +411,7 @@ class SimpleDungeonCrawler {
     hookMouseLook() {
         // break out the hook and unhook mouse look into their own functions
         // because other actions need to take over the mouse at some points
-        // and we don't want anything other than the Game object interacting
+        // and we don"t want anything other than the Game object interacting
         // with the canvas
         this.canvas.addEventListener("mousedown", mouseLook);
     }

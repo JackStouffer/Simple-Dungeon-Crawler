@@ -216,7 +216,8 @@ describe("object", function () {
                 expect(obj.inventoryComponent.getItems()).to.be.deep.equal([{
                     id: "health_potion_weak",
                     count: 1,
-                    displayName: "Weak Potion of Healing"
+                    displayName: "Weak Potion of Healing",
+                    type: "heal"
                 }]);
             });
 

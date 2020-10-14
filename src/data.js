@@ -9,13 +9,35 @@ import durdwin_001 from "./maps/durdwin_001";
 import dev_room from "./maps/dev_room";
 
 import {
+    resolveTargetPositionKnown,
+    resolveTargetInLOS,
+    resolveNextToTarget,
+    resolveEnoughManaForSpell,
+    resolveLowHealth,
+    resolveHasManaItem,
+    resolveHasHealingItem,
+    resolveInDangerousArea,
+    resolveTargetKilled,
+    resolveAfraid,
+    resolveCowering,
+    resolveAtFallbackPosition,
+    resolveHasArrows
+} from "./ai/goals";
+import {
+    patrolAction,
+    chaseAction,
+    useHealingItemAction,
+    useManaItemAction
+} from "./ai/actions";
+import {
     castHeal,
     castConfuse,
     castClairvoyance,
     castDamageSpell,
     castWildDamageSpell,
     castHaste,
-    castSlow
+    castSlow,
+    castIncreaseMana
 } from "./skills";
 import { createBurnEffect } from "./effects";
 
@@ -173,6 +195,125 @@ export const TileData = {
     }
 };
 Object.freeze(TileData);
+
+export const Goals = {
+    "targetPositionKnown": {
+        resolver: resolveTargetPositionKnown
+    },
+    "targetInLineOfSight": {
+        resolver: resolveTargetInLOS
+    },
+    "nextToTarget": {
+        resolver: resolveNextToTarget
+    },
+    "enoughManaForDamage": {
+        resolver: resolveEnoughManaForSpell("fireball")
+    },
+    "lowHealth": {
+        resolver: resolveLowHealth
+    },
+    "hasArrows": {
+        resolver: resolveHasArrows
+    },
+    "hasManaItem": {
+        resolver: resolveHasManaItem
+    },
+    "hasHealingItem": {
+        resolver: resolveHasHealingItem
+    },
+    "inDangerousArea": {
+        resolver: resolveInDangerousArea
+    },
+    "targetKilled": {
+        resolver: resolveTargetKilled
+    },
+    "afraid": {
+        resolver: resolveAfraid
+    },
+    "cowering": {
+        resolver: resolveCowering
+    },
+    "atFallbackPosition": {
+        resolver: resolveAtFallbackPosition
+    }
+};
+
+export const Actions = {
+    "wander": {
+        preconditions: { targetPositionKnown: false },
+        postconditions: { targetPositionKnown: true },
+        updateFunction: () => true
+    },
+    "guard": {
+        preconditions: { targetPositionKnown: false },
+        postconditions: { targetPositionKnown: true },
+        updateFunction: () => true
+    },
+    "patrol": {
+        preconditions: { targetPositionKnown: false },
+        postconditions: { targetPositionKnown: true },
+        updateFunction: patrolAction
+    },
+    "chase": {
+        preconditions: { targetPositionKnown: true, targetInLineOfSight: false },
+        postconditions: { targetInLineOfSight: true },
+        updateFunction: chaseAction
+    },
+    "useManaItem": {
+        preconditions: { enoughManaForDamage: false, hasManaItem: true },
+        postconditions: { enoughManaForDamage: true },
+        updateFunction: useManaItemAction
+    },
+    "castDamageSpell": {
+        preconditions: {
+            enoughManaForDamage: true,
+            targetInLineOfSight: true,
+            targetKilled: false
+        },
+        postconditions: { targetKilled: true },
+        updateFunction: () => true
+    },
+    "useHealingItem": {
+        preconditions: { lowHealth: true, hasHealingItem: true },
+        postconditions: { lowHealth: false },
+        updateFunction: useHealingItemAction
+    },
+    "castHealingSpell": {
+        preconditions: { lowHealth: true, enoughManaForDamage: true },
+        postconditions: { lowHealth: false },
+        updateFunction: () => true
+    },
+    "goToEnemy": {
+        preconditions: { targetPositionKnown: true, nextToTarget: false },
+        postconditions: { nextToTarget: true },
+        updateFunction: chaseAction
+    },
+    "meleeAttack": {
+        preconditions: { nextToTarget: true, targetKilled: false },
+        postconditions: { targetKilled: true },
+        updateFunction: chaseAction
+    },
+    "reposition": {
+        preconditions: { inDangerousArea: true },
+        postconditions: { inDangerousArea: false },
+        updateFunction: () => true
+    },
+    "runAway": {
+        preconditions: { afraid: true },
+        postconditions: { afraid: false },
+        updateFunction: () => true
+    },
+    "cower": {
+        preconditions: { afraid: false, cowering: false },
+        postconditions: { cowering: true },
+        updateFunction: () => true
+    },
+    "goToFallbackPosition": {
+        preconditions: { atFallbackPosition: false },
+        postconditions: { atFallbackPosition: true },
+        updateFunction: () => true
+    }
+};
 
 export const ObjectData = {
     "door": {
@@ -512,6 +653,51 @@ export const ObjectData = {
         inventoryPool: [],
         onDeath: "default"
     },
+    "bandit": {
+        name: "Bandit",
+        graphics: "basic_graphics",
+        ai: "planning_ai",
+        fighter: "basic_fighter",
+        speed: BASE_SPEED,
+        inventory: "basic_inventory",
+        interactable: null,
+        char: "b",
+        fgColor: "#deb887",
+        bgColor: "#c767ff",
+        blocks: true,
+        blocksSight: false,
+        level: 1,
+        experience: 0,
+        experienceGiven: 10,
+        maxHp: 30,
+        maxMana: 0,
+        strength: 2,
+        defense: 1,
+        sightRange: 7,
+        damageAffinity: {
+            [DamageType.physical]: Affinity.normal,
+            [DamageType.fire]: Affinity.strong,
+            [DamageType.electric]: Affinity.weak,
+            [DamageType.water]: Affinity.nullified,
+            [DamageType.nature]: Affinity.normal
+        },
+        actions: [
+            "patrol",
+            "chase",
+            "useManaItem",
+            "castDamageSpell",
+            "useHealingItem",
+            "castHealingSpell",
+            "goToEnemy",
+            "reposition",
+            "runAway",
+            "cower",
+            "goToFallbackPosition",
+            "meleeAttack"
+        ],
+        inventoryPool: [],
+        onDeath: "default"
+    },
 };
 
 if (ENV !== "TEST") {
@@ -522,20 +708,26 @@ export const ItemData = {
     "health_potion_weak": {
         displayName: "Weak Potion of Healing",
         value: 25,
-        type: "health",
+        type: "heal",
         useFunc: castHeal
     },
     "health_potion": {
         displayName: "Potion of Healing",
         value: 50,
-        type: "health",
+        type: "heal",
         useFunc: castHeal
     },
     "health_potion_strong": {
         displayName: "Strong Potion of Healing",
         value: 100,
-        type: "health",
+        type: "heal",
         useFunc: castHeal
+    },
+    "mana_potion_weak": {
+        displayName: "Weak Potion of Mana",
+        value: 25,
+        type: "add_mana",
+        useFunc: castIncreaseMana
     },
     "lightning_scroll_weak": {
         displayName: "Weak Scroll of Lightning",

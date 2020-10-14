@@ -4,14 +4,13 @@ import { RNG } from "rot-js";
 
 import globals from "./globals";
 import { ObjectData, BASE_SPEED } from "./data";
-import { BasicMonsterAI, PatrollingMonsterAI, ChestAI, DroppedItemAI } from "./ai";
+import { BasicMonsterAI, PatrollingMonsterAI, PlanningAI, ChestAI, DroppedItemAI } from "./ai/components";
 import { GiveItemsInteractable, GiveSpellInteractable, LoadLevelInteractable, DoorInteractable } from "./interactable";
 import { BasicInventory } from "./inventory";
 import { BasicGraphics, TransparencyGraphics, DrawAfterSeen } from "./graphics";
 import { ReflectivityLighting, PlayerLighting } from "./lighting";
 import { BasicFighter } from "./fighter";
 import { displayMessage } from "./ui";
-
 
 /**
  * Base class representing all objects in the game. Uses the
@@ -178,6 +177,9 @@ export function createObject(id, x=0, y=0) {
                 break;
             case "patrolling_monster_ai":
                 object.setAI(new PatrollingMonsterAI(data.sightRange));
+                break;
+            case "planning_ai":
+                object.setAI(new PlanningAI(data));
                 break;
             case "chest_ai":
                 object.setAI(new ChestAI(data.bgColor, data.emptyColor));

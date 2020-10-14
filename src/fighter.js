@@ -145,6 +145,12 @@ class BasicFighter {
         }
     }
 
+    /**
+     * Add hp to the fighter. Total fighter's hp is automatically
+     * clamped to the max effective hp.
+     * @param {Number} amount hp amount
+     * @returns {void}
+     */
     heal(amount) {
         const effectiveStats = this.getEffectiveStats();
         this.stats.hp += amount;
@@ -153,8 +159,28 @@ class BasicFighter {
         }
     }
 
+    /**
+     * Reduce the fighter's mana by a given amount. Resulting
+     * fighter mana is automatically clamped to a min of zero.
+     * @param {Number} cost The amount of mana to use
+     * @returns {void}
+     */
     useMana(cost) {
         this.stats.mana = Math.max(this.stats.mana - cost, 0);
+    }
+
+    /**
+     * Add mana to the fighter. Total fighter's mana is automatically
+     * clamped to the max effective mana.
+     * @param {Number} amount mana amount
+     * @returns {void}
+     */
+    addMana(amount) {
+        const effectiveStats = this.getEffectiveStats();
+        this.stats.mana += amount;
+        if (this.stats.mana > effectiveStats.maxMana) {
+            this.stats.mana = effectiveStats.maxMana;
+        }
     }
 
     /**

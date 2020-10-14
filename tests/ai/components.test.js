@@ -2,8 +2,8 @@
 
 import { expect } from "chai";
 import { fake } from "sinon";
-import { Tile, PatrolNode } from "../src/map";
-import globals from "../src/globals";
+import { Tile, PatrolNode } from "../../src/map";
+import globals from "../../src/globals";
 import {
     createPassableCallback,
     createPassableSightCallback,
@@ -13,7 +13,7 @@ import {
     ConfusedAI,
     ChestAI,
     DroppedItemAI
-} from "../src/ai";
+} from "../../src/ai/components";
 
 const emptySpaceData = [
     "empty",

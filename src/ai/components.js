@@ -5,11 +5,14 @@
 import { FOV, DIRS, RNG, Path } from "rot-js";
 import findKey from "lodash/findKey";
 import isEqual from "lodash/isEqual";
+import get from "lodash/get";
 
-import globals from "./globals";
-import { moveCommand } from "./commands";
-import { isBlocked, isSightBlocked, distanceBetweenObjects } from "./map";
-import { displayMessage } from "./ui";
+import globals from "../globals";
+import { Goals, Actions } from "../data";
+import { Planner, ActionList } from "./planner";
+import { moveCommand } from "../commands";
+import { isBlocked, isSightBlocked, distanceBetweenObjects } from "../map";
+import { displayMessage } from "../ui";
 
 /**
  * Creates a function which returns if an x and y coordinate
@@ -72,7 +75,7 @@ export function createVisibilityCallback(ai) {
  * @param {Number} targetY The target y coordinate
  * @returns {Object} The x and y coordinates
  */
-function getNextStepTowardsTarget(actor, targetX, targetY) {
+export function getNextStepTowardsTarget(actor, targetX, targetY) {
     const aStar = new Path.AStar(
         targetX,
         targetY,
@@ -105,11 +108,24 @@ function getNextStepTowardsTarget(actor, targetX, targetY) {
  * @param {Number} newY The new y coordinate
  * @return {Number} the ROT.js DIR
  */
-function newPositionToDirection(currentX, currentY, newX, newY) {
+export function newPositionToDirection(currentX, currentY, newX, newY) {
     return findKey(
         DIRS[8],
         function(o) { return isEqual(o, [newX - currentX, newY - currentY]); }
     );
+}
+
+function chaseStateUpdate(ai) {
+    const { x, y } = getNextStepTowardsTarget(
+        ai.owner,
+        globals.Game.player.x,
+        globals.Game.player.y
+    );
+    if (x === null || y === null) {
+        return null;
+    }
+
+    return moveCommand(newPositionToDirection(ai.owner.x, ai.owner.y, x, y), 8);
 }
 
 /**
@@ -154,16 +170,7 @@ class BasicMonsterAI {
             return moveCommand(dir, 8);
         // chase the player with A*
         } else if (this.state === "chase") {
-            const { x, y } = getNextStepTowardsTarget(
-                this.owner,
-                globals.Game.player.x,
-                globals.Game.player.y
-            );
-            if (x === null || y === null) {
-                return null;
-            }
-
-            return moveCommand(newPositionToDirection(this.owner.x, this.owner.y, x, y), 8);
+            return chaseStateUpdate(this);
         }
     }
 }
@@ -245,17 +252,125 @@ class PatrollingMonsterAI {
             return moveCommand(newPositionToDirection(this.owner.x, this.owner.y, x, y), 8);
         // chase the player with A*
         } else if (this.state === "chase") {
-            const { x, y } = getNextStepTowardsTarget(
-                this.owner,
-                globals.Game.player.x,
-                globals.Game.player.y
-            );
-            if (x === null || y === null) {
-                return null;
+            return chaseStateUpdate(this);
+        }
+    }
+}
+
+class PlanningAI {
+    constructor(data) {
+        this.owner = null;
+        this.target = globals.Game.player;
+        this.state = "wander";
+        // TODO: order received from superior
+        this.currentOrder = "attack";
+        this.fear = 0;
+        this.fearThreshold = 10;
+        this.lowHealthThreshold = .25;
+        this.sightRange = data.sightRange;
+        this.pathName = null;
+        this.patrolTarget = null;
+
+        this.previousWorldState = {};
+        this.currentAction = null;
+        this.goals = new Set();
+        const actionList = new ActionList();
+
+        for (let i = 0; i < data.actions.length; i++) {
+            const actionData = Actions[data.actions[i]];
+            const preconditions = Object.keys(actionData.preconditions);
+            const postconditions = Object.keys(actionData.postconditions);
+
+            // Get the needed list of goals from the pre and post conditions
+            // of the list of actions
+            for (let j = 0; j < preconditions.length; j++) {
+                this.goals.add(preconditions[j]);
+            }
+            for (let k = 0; k < postconditions.length; k++) {
+                this.goals.add(postconditions[k]);
             }
 
-            return moveCommand(newPositionToDirection(this.owner.x, this.owner.y, x, y), 8);
+            actionList.addCondition(data.actions[i], actionData.preconditions);
+            actionList.addReaction(data.actions[i], actionData.postconditions);
         }
+
+        this.planner = new Planner(...this.goals.values());
+        this.planner.setActionList(actionList);
+    }
+
+    setOwner(owner) {
+        this.owner = owner;
+    }
+
+    setPath(name) {
+        this.pathName = name;
+    }
+
+    generateWorldState() {
+        const state = {};
+
+        for (const goal of this.goals) {
+            const goalData = Goals[goal];
+            state[goal] = goalData.resolver(this);
+        }
+
+        return state;
+    }
+
+    /**
+     * Set the world state and the weights of the actions on the
+     * planner
+     */
+    getPlan() {
+        const worldState = this.generateWorldState();
+
+        if (isEqual(this.previousWorldState, worldState)) {
+            return this.currentAction;
+        }
+
+        this.planner.setStartState(worldState);
+
+        this.planner.getActionList().setWeight("goToEnemy", distanceBetweenObjects(this.owner, globals.Game.player));
+
+        // HOW TO GET IT TO USE BUFF ITEMS:
+        // attack weight = inverse of damage, so less damage done = more weight
+        // use buff item = constant weight
+        // Therefore, buffing makes sense IFF damage is low enough on the target
+        // This is also how the planner will always choose the best attack
+        // attacks with the best damage will have the lowest weight, barring things like travel time
+
+        const stateStack = [];
+        if (this.currentOrder === "attack") {
+            stateStack.push({ targetKilled: true });
+        }
+        if (worldState.lowHealth) {
+            stateStack.push({ lowHealth: false });
+        }
+        if (worldState.inDangerousArea) {
+            stateStack.push({ inDangerousArea: false });
+        }
+        if (this.currentOrder === "fallback" && this.goals.has("atFallbackPosition")) {
+            stateStack.push({ atFallbackPosition: true });
+        }
+        if (worldState.afraid) {
+            stateStack.push({ cowering: true });
+        }
+
+        do {
+            this.planner.setGoalState(stateStack.pop());
+            const plan = this.planner.calculate();
+            this.currentAction = get(plan, "['0'].name", null);
+        } while (stateStack.length && !this.currentAction);
+
+        this.previousWorldState = worldState;
+        return this.currentAction;
+    }
+
+    act(map, gameObjects, pathNodes) {
+        if (!this.owner.fighter) { throw new Error("Mage AI must have a fighter"); }
+        const plan = this.getPlan();
+        console.log("plan", plan);
+        return Actions[plan].updateFunction(this, map, gameObjects, pathNodes);
     }
 }
 
@@ -354,4 +469,4 @@ class DroppedItemAI {
     }
 }
 
-export { BasicMonsterAI, PatrollingMonsterAI, ConfusedAI, ChestAI, DroppedItemAI };
+export { BasicMonsterAI, PatrollingMonsterAI, PlanningAI, ConfusedAI, ChestAI, DroppedItemAI };

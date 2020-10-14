@@ -176,8 +176,8 @@
                  "type":"object",
                  "visible":true,
                  "width":0,
-                 "x":496.566841292543,
-                 "y":217.461803109063
+                 "x":806.429892890274,
+                 "y":151.062577766692
                 }, 
                 {
                  "height":0,
@@ -394,52 +394,6 @@
                 }, 
                 {
                  "height":0,
-                 "id":25,
-                 "name":"Patrol Path",
-                 "point":true,
-                 "properties":[
-                        {
-                         "name":"next",
-                         "type":"object",
-                         "value":26
-                        }, 
-                        {
-                         "name":"pathName",
-                         "type":"string",
-                         "value":"forrest_path_01"
-                        }],
-                 "rotation":0,
-                 "type":"path_node",
-                 "visible":true,
-                 "width":0,
-                 "x":217.391304347826,
-                 "y":1366.930171278
-                }, 
-                {
-                 "height":0,
-                 "id":26,
-                 "name":"Patrol Path",
-                 "point":true,
-                 "properties":[
-                        {
-                         "name":"next",
-                         "type":"object",
-                         "value":29
-                        }, 
-                        {
-                         "name":"pathName",
-                         "type":"string",
-                         "value":"forrest_path_01"
-                        }],
-                 "rotation":0,
-                 "type":"path_node",
-                 "visible":true,
-                 "width":0,
-                 "x":177.075098814229,
-                 "y":1868.77470355731
-                }, 
-                {
-                 "height":0,
                  "id":28,
                  "name":"Goblin Brute",
                  "point":true,
@@ -460,6 +414,73 @@
                  "width":0,
                  "x":448.648648648649,
                  "y":1610.81081081081
+                }, 
+                {
+                 "height":0,
+                 "id":31,
+                 "name":"Bandit",
+                 "point":true,
+                 "properties":[
+                        {
+                         "name":"fallbackPosition",
+                         "type":"object",
+                         "value":32
+                        }, 
+                        {
+                         "name":"inventory",
+                         "type":"string",
+                         "value":"health_potion_weak"
+                        }, 
+                        {
+                         "name":"objectType",
+                         "type":"string",
+                         "value":"bandit"
+                        }, 
+                        {
+                         "name":"pathName",
+                         "type":"string",
+                         "value":"forrest_path_02"
+                        }],
+                 "rotation":0,
+                 "type":"object",
+                 "visible":true,
+                 "width":0,
+                 "x":358.279153409877,
+                 "y":650.159081477383
+                }],
+         "opacity":1,
+         "type":"objectgroup",
+         "visible":true,
+         "x":0,
+         "y":0
+        }, 
+        {
+         "draworder":"topdown",
+         "id":5,
+         "name":"Node Layer",
+         "objects":[
+                {
+                 "height":0,
+                 "id":30,
+                 "name":"Patrol Path",
+                 "point":true,
+                 "properties":[
+                        {
+                         "name":"next",
+                         "type":"object",
+                         "value":25
+                        }, 
+                        {
+                         "name":"pathName",
+                         "type":"string",
+                         "value":"forrest_path_01"
+                        }],
+                 "rotation":0,
+                 "type":"path_node",
+                 "visible":true,
+                 "width":0,
+                 "x":1157.68463073852,
+                 "y":1388.88888888889
                 }, 
                 {
                  "height":0,
@@ -486,14 +507,14 @@
                 }, 
                 {
                  "height":0,
-                 "id":30,
+                 "id":26,
                  "name":"Patrol Path",
                  "point":true,
                  "properties":[
                         {
                          "name":"next",
                          "type":"object",
-                         "value":25
+                         "value":29
                         }, 
                         {
                          "name":"pathName",
@@ -504,8 +525,89 @@
                  "type":"path_node",
                  "visible":true,
                  "width":0,
-                 "x":1157.68463073852,
-                 "y":1388.88888888889
+                 "x":177.075098814229,
+                 "y":1868.77470355731
+                }, 
+                {
+                 "height":0,
+                 "id":25,
+                 "name":"Patrol Path",
+                 "point":true,
+                 "properties":[
+                        {
+                         "name":"next",
+                         "type":"object",
+                         "value":26
+                        }, 
+                        {
+                         "name":"pathName",
+                         "type":"string",
+                         "value":"forrest_path_01"
+                        }],
+                 "rotation":0,
+                 "type":"path_node",
+                 "visible":true,
+                 "width":0,
+                 "x":217.391304347826,
+                 "y":1366.930171278
+                }, 
+                {
+                 "height":0,
+                 "id":32,
+                 "name":"Fallback Position",
+                 "point":true,
+                 "rotation":0,
+                 "type":"fallback_node",
+                 "visible":true,
+                 "width":0,
+                 "x":338.912712685019,
+                 "y":1521.648914096
+                }, 
+                {
+                 "height":0,
+                 "id":33,
+                 "name":"Patrol Path",
+                 "point":true,
+                 "properties":[
+                        {
+                         "name":"next",
+                         "type":"object",
+                         "value":34
+                        }, 
+                        {
+                         "name":"pathName",
+                         "type":"string",
+                         "value":"forrest_path_02"
+                        }],
+                 "rotation":0,
+                 "type":"path_node",
+                 "visible":true,
+                 "width":0,
+                 "x":330.612809517222,
+                 "y":762.207774242634
+                }, 
+                {
+                 "height":0,
+                 "id":34,
+                 "name":"Patrol Path",
+                 "point":true,
+                 "properties":[
+                        {
+                         "name":"next",
+                         "type":"object",
+                         "value":33
+                        }, 
+                        {
+                         "name":"pathName",
+                         "type":"string",
+                         "value":"forrest_path_02"
+                        }],
+                 "rotation":0,
+                 "type":"path_node",
+                 "visible":true,
+                 "width":0,
+                 "x":323.696223544059,
+                 "y":489.694286899986
                 }],
          "opacity":1,
          "type":"objectgroup",
@@ -513,8 +615,8 @@
          "x":0,
          "y":0
         }],
- "nextlayerid":5,
- "nextobjectid":31,
+ "nextlayerid":6,
+ "nextobjectid":35,
  "orientation":"orthogonal",
  "renderorder":"right-down",
  "tiledversion":"1.4.2",

@@ -3,7 +3,7 @@
 import { RNG } from "rot-js";
 
 import globals from "./globals";
-import { ConfusedAI } from "./ai";
+import { ConfusedAI } from "./ai/components";
 import { createHasteEffect, createSlowEffect } from "./effects";
 import { getObjectsAtLocation, getRandomFighterWithinRange, setAllToExplored } from "./map";
 import { displayMessage } from "./ui";
@@ -65,6 +65,29 @@ export async function castHeal(item, user) {
     }
 
     user.fighter.heal(item.value);
+    return true;
+}
+
+/**
+ * Call the addMana function on the user's fighter instance. Calls
+ * the provided callback with true if the item was successfully used
+ * and false otherwise.
+ *
+ * @param {Object} item The item data
+ * @param {GameObject} user The object using the item
+ */
+export async function castIncreaseMana(item, user) {
+    if (user.fighter.mana >= user.fighter.maxMana) {
+        if (user === globals.Game.player) {
+            displayMessage("You are already at full mana.");
+        } else {
+            displayMessage(user.name + " tries and fails to take a mana potion");
+        }
+
+        return false;
+    }
+
+    user.fighter.addMana(item.value);
     return true;
 }
 

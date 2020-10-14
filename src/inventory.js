@@ -30,7 +30,13 @@ class BasicInventory {
      */
     getItems() {
         return [...this._inventory.keys()].map(e => {
-            return { id: e, displayName: ItemData[e].displayName, count: this._inventory.get(e) };
+            const data = ItemData[e];
+            return {
+                id: e,
+                displayName: data.displayName,
+                type: data.type,
+                count: this._inventory.get(e)
+            };
         });
     }
 

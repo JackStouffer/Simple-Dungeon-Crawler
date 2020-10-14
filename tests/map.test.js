@@ -103,14 +103,16 @@ describe("map", function () {
 
         it("should add inventory items to an object", function () {
             ItemData["test"] = {
-                displayName: "Test Item"
+                displayName: "Test Item",
+                type: "test"
             };
             const { objects } = loadTiledMap("test");
             expect(objects[1].type).to.be.equal("chest");
             expect(objects[1].inventoryComponent.getItems()).to.be.deep.equal([{
                 id: "test",
                 count: 1,
-                displayName: "Test Item"
+                displayName: "Test Item",
+                type: "test"
             }]);
         });
 
