@@ -175,88 +175,6 @@ class BasicMonsterAI {
     }
 }
 
-/**
- * More complex monster behavior with two states, chase and patrol.
- * The default state, patrol, chooses a random empty space in the
- * map and uses A* to go there.
- *
- * Uses a definable sight range to check if a target is in range.
- * If one is this switches to chase which uses A* to go towards
- * the target. Attacks the target when it's within one tile from it
- */
-class PatrollingMonsterAI {
-    constructor(sightRange) {
-        this.owner = null;
-        this.state = "patrol";
-        this.sightRange = sightRange;
-        this.pathName = null;
-        this.patrolTarget = null;
-    }
-
-    setOwner(owner) {
-        this.owner = owner;
-    }
-
-    setPath(name) {
-        this.pathName = name;
-    }
-
-    act(map, gameObjects, pathNodes) {
-        if (ENV === "DEV" && !this.pathName) {
-            throw new Error("pathName not set for PatrollingMonsterAI");
-        }
-
-        // choose a random spot open in the map and go there
-        if (this.state === "patrol") {
-            // compute the FOV to see if the player is sighted
-            const fov = new FOV.PreciseShadowcasting(createPassableSightCallback(this.owner));
-            fov.compute(
-                this.owner.x,
-                this.owner.y,
-                this.sightRange,
-                createVisibilityCallback(this)
-            );
-
-            // For the first node, find the closest node on the path
-            // to the current position, we can just follow the path
-            // after that
-            if (this.patrolTarget === null) {
-                const filterPred = (n) => { return n.pathName === this.pathName; };
-                const mapPred = (e) => {
-                    e.distance = distanceBetweenObjects(e, this.owner);
-                    return e;
-                };
-                const sortedNodes = [...pathNodes.values()]
-                    .filter(filterPred.bind(this))
-                    .map(mapPred.bind(this))
-                    .sort((a, b) => {
-                        return a.distance - b.distance;
-                    });
-
-                this.patrolTarget = sortedNodes[0];
-            }
-
-            let { x, y } = getNextStepTowardsTarget(
-                this.owner,
-                this.patrolTarget.x,
-                this.patrolTarget.y
-            );
-            if (x === null || y === null) {
-                this.patrolTarget = pathNodes.get(this.patrolTarget.next);
-                ({ x, y } = getNextStepTowardsTarget(
-                    this.owner,
-                    this.patrolTarget.x,
-                    this.patrolTarget.y
-                ));
-            }
-            return moveCommand(newPositionToDirection(this.owner.x, this.owner.y, x, y), 8);
-        // chase the player with A*
-        } else if (this.state === "chase") {
-            return chaseStateUpdate(this);
-        }
-    }
-}
-
 class PlanningAI {
     constructor(data) {
         this.owner = null;
@@ -267,17 +185,23 @@ class PlanningAI {
         this.fear = 0;
         this.fearThreshold = 10;
         this.lowHealthThreshold = .25;
+        this.lowManaThreshold = .25;
         this.sightRange = data.sightRange;
         this.pathName = null;
         this.patrolTarget = null;
+        this.fallbackPosition = null;
 
         this.previousWorldState = {};
         this.currentAction = null;
         this.goals = new Set();
+        this.actions = new Set(data.actions);
+    }
+
+    createPlanner() {
         const actionList = new ActionList();
 
-        for (let i = 0; i < data.actions.length; i++) {
-            const actionData = Actions[data.actions[i]];
+        for (const action of this.actions) {
+            const actionData = Actions[action];
             const preconditions = Object.keys(actionData.preconditions);
             const postconditions = Object.keys(actionData.postconditions);
 
@@ -290,8 +214,9 @@ class PlanningAI {
                 this.goals.add(postconditions[k]);
             }
 
-            actionList.addCondition(data.actions[i], actionData.preconditions);
-            actionList.addReaction(data.actions[i], actionData.postconditions);
+            actionList.addCondition(action, actionData.preconditions);
+            actionList.addReaction(action, actionData.postconditions);
+            actionList.setWeight(action, actionData.weight(this));
         }
 
         this.planner = new Planner(...this.goals.values());
@@ -300,10 +225,23 @@ class PlanningAI {
 
     setOwner(owner) {
         this.owner = owner;
+        if (owner !== null) {
+            this.createPlanner();
+        }
     }
 
-    setPath(name) {
+    setPatrolPath(name) {
         this.pathName = name;
+        this.actions.delete("wander");
+        this.actions.delete("guard");
+        this.actions.add("patrol");
+        this.createPlanner();
+    }
+
+    setFallbackPosition(nodeID) {
+        this.fallbackPosition = nodeID;
+        this.actions.add("goToFallbackPosition");
+        this.createPlanner();
     }
 
     generateWorldState() {
@@ -323,6 +261,7 @@ class PlanningAI {
      */
     getPlan() {
         const worldState = this.generateWorldState();
+        console.log(this.owner.name, worldState);
 
         if (isEqual(this.previousWorldState, worldState)) {
             return this.currentAction;
@@ -330,18 +269,12 @@ class PlanningAI {
 
         this.planner.setStartState(worldState);
 
-        this.planner.getActionList().setWeight("goToEnemy", distanceBetweenObjects(this.owner, globals.Game.player));
-
-        // HOW TO GET IT TO USE BUFF ITEMS:
-        // attack weight = inverse of damage, so less damage done = more weight
-        // use buff item = constant weight
-        // Therefore, buffing makes sense IFF damage is low enough on the target
-        // This is also how the planner will always choose the best attack
-        // attacks with the best damage will have the lowest weight, barring things like travel time
-
         const stateStack = [];
         if (this.currentOrder === "attack") {
             stateStack.push({ targetKilled: true });
+        }
+        if (worldState.lowMana) {
+            stateStack.push({ lowMana: false });
         }
         if (worldState.lowHealth) {
             stateStack.push({ lowHealth: false });
@@ -369,7 +302,7 @@ class PlanningAI {
     act(map, gameObjects, pathNodes) {
         if (!this.owner.fighter) { throw new Error("Mage AI must have a fighter"); }
         const plan = this.getPlan();
-        console.log("plan", plan);
+        console.log(this.owner.name, "plan", plan);
         return Actions[plan].updateFunction(this, map, gameObjects, pathNodes);
     }
 }
@@ -469,4 +402,4 @@ class DroppedItemAI {
     }
 }
 
-export { BasicMonsterAI, PatrollingMonsterAI, PlanningAI, ConfusedAI, ChestAI, DroppedItemAI };
+export { BasicMonsterAI, PlanningAI, ConfusedAI, ChestAI, DroppedItemAI };

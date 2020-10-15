@@ -128,7 +128,7 @@ export function useItemCommand(itemID) {
  * @param {String} spellID The id of the spell to use
  * @returns {Function} A command function which takes an object as a param
  */
-export function useSpellCommand(spellID) {
+export function useSpellCommand(spellID, target) {
     return async function (actor) {
         if (!actor.fighter.hasSpell(spellID)) { return false; }
 
@@ -138,7 +138,7 @@ export function useSpellCommand(spellID) {
             return false;
         }
 
-        const used = await details.useFunc(details, actor);
+        const used = await details.useFunc(details, actor, target);
         if (used) {
             actor.fighter.useMana(details.manaCost);
             return true;

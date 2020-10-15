@@ -9,7 +9,6 @@ import {
     createPassableSightCallback,
     createVisibilityCallback,
     BasicMonsterAI,
-    PatrollingMonsterAI,
     ConfusedAI,
     ChestAI,
     DroppedItemAI
@@ -180,58 +179,12 @@ describe("ai", function () {
         });
     });
 
-    describe("PatrollingMonsterAI", function () {
-        it("should move towards a pathNode when in patrol state", function () {
-            const owner = { x: 0, y: 0, blocks: true, ai: new PatrollingMonsterAI(0) };
-            const nodes = new Map();
-            nodes.set(0, new PatrolNode("test", 1, 1, 1));
-            nodes.set(1, new PatrolNode("test", 0, 0, 0));
-
-            owner.ai.setOwner(owner);
-            owner.ai.setPath("test");
-            const command = owner.ai.act(globals.Game.map, globals.Game.gameObjects, nodes);
-            command(owner);
-            expect(owner.x === 1 && owner.y === 1).to.be.true;
-        });
-
-        it("should see the player and change states when player is in range", function () {
-            const owner = { x: 2, y: 2, blocks: true, ai: new PatrollingMonsterAI(8) };
-            const nodes = new Map();
-            nodes.set(0, new PatrolNode("test", 1, 1, 1));
-            nodes.set(1, new PatrolNode("test", 0, 0, 0));
-
-            owner.ai.setOwner(owner);
-            owner.ai.setPath("test");
-            const command = owner.ai.act(globals.Game.map, globals.Game.gameObjects, nodes);
-            command(owner);
-            expect(owner.ai.state).to.be.equal("chase");
-        });
-
-        it("should attack the player when within one tile", function () {
-            const owner = {
-                x: 1,
-                y: 0,
-                blocks: true,
-                ai: new PatrollingMonsterAI(8),
-                fighter: {
-                    attack: fake()
-                }
-            };
-            owner.ai.setOwner(owner);
-            owner.ai.state = "chase";
-            const command = owner.ai.act(globals.Game.map, globals.Game.gameObjects);
-            command(owner);
-            expect(owner.fighter.attack.calledOnce).to.be.true;
-            expect(owner.fighter.attack.calledWith(globals.Game.player)).to.be.true;
-        });
-    });
-
     describe("ConfusedAI", function () {
         it("should move in a random direction", function () {
             const owner = {
                 x: 1,
                 y: 1,
-                ai: new PatrollingMonsterAI(8),
+                ai: new BasicMonsterAI(8),
                 fighter: {
                     attack: fake()
                 }
@@ -249,7 +202,7 @@ describe("ai", function () {
             const owner = {
                 x: 1,
                 y: 1,
-                ai: new PatrollingMonsterAI(8),
+                ai: new BasicMonsterAI(8),
                 fighter: {
                     attack: fake()
                 }
@@ -263,7 +216,7 @@ describe("ai", function () {
             command(owner);
             command = owner.ai.act(globals.Game.map, globals.Game.gameObjects);
 
-            expect(owner.ai.constructor.name).to.be.equal("PatrollingMonsterAI");
+            expect(owner.ai.constructor.name).to.be.equal("BasicMonsterAI");
         });
     });
 

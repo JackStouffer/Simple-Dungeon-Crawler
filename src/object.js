@@ -4,7 +4,7 @@ import { RNG } from "rot-js";
 
 import globals from "./globals";
 import { ObjectData, BASE_SPEED } from "./data";
-import { BasicMonsterAI, PatrollingMonsterAI, PlanningAI, ChestAI, DroppedItemAI } from "./ai/components";
+import { BasicMonsterAI, PlanningAI, ChestAI, DroppedItemAI } from "./ai/components";
 import { GiveItemsInteractable, GiveSpellInteractable, LoadLevelInteractable, DoorInteractable } from "./interactable";
 import { BasicInventory } from "./inventory";
 import { BasicGraphics, TransparencyGraphics, DrawAfterSeen } from "./graphics";
@@ -175,9 +175,6 @@ export function createObject(id, x=0, y=0) {
             case "basic_monster_ai":
                 object.setAI(new BasicMonsterAI(data.sightRange));
                 break;
-            case "patrolling_monster_ai":
-                object.setAI(new PatrollingMonsterAI(data.sightRange));
-                break;
             case "planning_ai":
                 object.setAI(new PlanningAI(data));
                 break;
@@ -248,6 +245,10 @@ export function createObject(id, x=0, y=0) {
                 break;
             default:
                 throw new Error(`Unhandled Fighter type ${data.fighter}`);
+        }
+
+        if (data.spells) {
+            data.spells.forEach(s => object.fighter.addSpellById(s));
         }
     }
 

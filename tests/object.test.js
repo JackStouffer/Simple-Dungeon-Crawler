@@ -74,14 +74,6 @@ describe("object", function () {
                 expect(obj.ai.owner).to.be.deep.equal(obj);
             });
 
-            it("should set the ai to the patrolling monster ai", function () {
-                ObjectData["test_object"].ai = "patrolling_monster_ai";
-                const obj = createObject("test_object");
-                expect(obj.ai.constructor.name).to.be.equal("PatrollingMonsterAI");
-                expect(obj.ai.sightRange).to.be.equal(ObjectData["test_object"].sightRange);
-                expect(obj.ai.owner).to.be.deep.equal(obj);
-            });
-
             it("should set the ai to the chest ai", function () {
                 ObjectData["test_object"].ai = "chest_ai";
                 ObjectData["test_object"].emptyColor = "black";

@@ -134,7 +134,8 @@ export function loadTiledMap(level) {
                     inventory = findProperty(o, "inventory"),
                     levelName = findProperty(o, "levelName"),
                     spellId = findProperty(o, "spellId"),
-                    pathName = findProperty(o, "pathName");
+                    pathName = findProperty(o, "pathName"),
+                    fallbackPosition = findProperty(o, "fallbackPosition");
 
                 if (!type) {
                     throw new Error(`No id for ${o.name}`);
@@ -161,8 +162,12 @@ export function loadTiledMap(level) {
                         obj.interactable.setSpell(spellId);
                     }
 
-                    if (pathName && obj.ai && obj.ai.setPath) {
-                        obj.ai.setPath(pathName);
+                    if (pathName && obj.ai && obj.ai.setPatrolPath) {
+                        obj.ai.setPatrolPath(pathName);
+                    }
+
+                    if (fallbackPosition && obj.ai && obj.ai.setFallbackPosition) {
+                        obj.ai.setFallbackPosition(fallbackPosition);
                     }
 
                     objects.push(obj);

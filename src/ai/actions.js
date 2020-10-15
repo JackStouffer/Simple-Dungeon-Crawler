@@ -1,16 +1,36 @@
 /* global ENV */
 
-import { FOV } from "rot-js";
+import { RNG, DIRS, FOV } from "rot-js";
 
-import { moveCommand, useItemCommand } from "../commands";
+import { moveCommand, useItemCommand, useSpellCommand } from "../commands";
 import {
     getNextStepTowardsTarget,
     createPassableSightCallback,
     createVisibilityCallback,
     newPositionToDirection
 } from "./components";
-import { distanceBetweenObjects } from "../map";
+import { distanceBetweenObjects, isBlocked } from "../map";
 import { displayMessage } from "../ui";
+
+export function wanderAction(ai, map, gameObjects) {
+    // compute the FOV to see if the player is sighted
+    const fov = new FOV.PreciseShadowcasting(createPassableSightCallback(ai.owner));
+    fov.compute(
+        ai.owner.x,
+        ai.owner.y,
+        ai.sightRange, createVisibilityCallback(ai)
+    );
+
+    let blocks, newX, newY, dir;
+    do {
+        dir = RNG.getItem([0, 1, 2, 3, 4, 5, 6, 7]);
+        newX = ai.owner.x + DIRS[8][dir][0];
+        newY = ai.owner.y + DIRS[8][dir][1];
+        ({ blocks } = isBlocked(map, gameObjects, newX, newY));
+    } while (blocks === true);
+
+    return moveCommand(dir, 8);
+}
 
 export function patrolAction(ai, map, gameObjects, pathNodes) {
     if (ENV === "DEV" && !ai.pathName) {
@@ -72,6 +92,10 @@ export function chaseAction(ai) {
     return moveCommand(newPositionToDirection(ai.owner.x, ai.owner.y, x, y), 8);
 }
 
+export function chaseWeight(ai) {
+    return distanceBetweenObjects(ai.owner, ai.target);
+}
+
 export function useHealingItemAction(ai) {
     const item = ai.owner.inventoryComponent
         .getItems()
@@ -88,4 +112,17 @@ export function useManaItemAction(ai) {
         .sort((a, b) => a.value - b.value)[0];
     displayMessage(`${ai.owner.name} used a ${item.displayName}`);
     return useItemCommand(item.id);
+}
+
+export function castSpellAction(spellID) {
+    return function (ai) {
+        if (ENV === "DEV") {
+            const spells = ai.owner.fighter.getKnownSpells().map(s => s.id);
+            console.log(spellID, ai.owner.fighter.getKnownSpells());
+            if (spells.indexOf(spellID) === -1) {
+                throw new Error(`${ai.owner.name} does not know spell ${spellID}`);
+            }
+        }
+        return useSpellCommand(spellID);
+    };
 }

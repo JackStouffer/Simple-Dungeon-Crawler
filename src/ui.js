@@ -209,6 +209,7 @@ class KeyBindingMenu {
     constructor() {
         this.state = "selection";
         this.currentSelection = 0;
+        this.allowedSelectionKeys = new Set(["ArrowDown", "ArrowUp", "Enter", "Escape"]);
     }
 
     resetState() {
@@ -262,9 +263,7 @@ class KeyBindingMenu {
 
     handleInput(key, keyCommands) {
         if (this.state === "selection") {
-            const allowedSelectionKeys = new Set(["ArrowDown", "ArrowUp", "Enter", "Escape"]);
-
-            if (!allowedSelectionKeys.has(key)) {
+            if (!this.allowedSelectionKeys.has(key)) {
                 return;
             }
 

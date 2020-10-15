@@ -17,13 +17,18 @@ export function resolveNextToTarget(ai) {
 export function resolveEnoughManaForSpell(spellID) {
     return function (ai) {
         const spellData = SpellData[spellID];
-        return ai.owner.fighter.getEffectiveStats().mana >= spellData.cost;
+        return ai.owner.fighter.getEffectiveStats().mana >= spellData.manaCost;
     };
 }
 
 export function resolveLowHealth(ai) {
     const stats = ai.owner.fighter.getEffectiveStats();
     return (stats.hp / stats.maxHp) <= ai.lowHealthThreshold;
+}
+
+export function resolveLowMana(ai) {
+    const stats = ai.owner.fighter.getEffectiveStats();
+    return (stats.mana / stats.maxMana) <= ai.lowManaThreshold;
 }
 
 export function resolveHasManaItem(ai) {

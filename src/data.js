@@ -3,6 +3,7 @@
 "use strict";
 
 import invert from "lodash/invert";
+import noop from "lodash/noop";
 
 import forrest_001 from "./maps/forrest_001";
 import durdwin_001 from "./maps/durdwin_001";
@@ -14,6 +15,7 @@ import {
     resolveNextToTarget,
     resolveEnoughManaForSpell,
     resolveLowHealth,
+    resolveLowMana,
     resolveHasManaItem,
     resolveHasHealingItem,
     resolveInDangerousArea,
@@ -24,10 +26,13 @@ import {
     resolveHasArrows
 } from "./ai/goals";
 import {
+    wanderAction,
     patrolAction,
     chaseAction,
+    chaseWeight,
     useHealingItemAction,
-    useManaItemAction
+    useManaItemAction,
+    castSpellAction
 } from "./ai/actions";
 import {
     castHeal,
@@ -195,125 +200,6 @@ export const TileData = {
     }
 };
 Object.freeze(TileData);
-
-export const Goals = {
-    "targetPositionKnown": {
-        resolver: resolveTargetPositionKnown
-    },
-    "targetInLineOfSight": {
-        resolver: resolveTargetInLOS
-    },
-    "nextToTarget": {
-        resolver: resolveNextToTarget
-    },
-    "enoughManaForDamage": {
-        resolver: resolveEnoughManaForSpell("fireball")
-    },
-    "lowHealth": {
-        resolver: resolveLowHealth
-    },
-    "hasArrows": {
-        resolver: resolveHasArrows
-    },
-    "hasManaItem": {
-        resolver: resolveHasManaItem
-    },
-    "hasHealingItem": {
-        resolver: resolveHasHealingItem
-    },
-    "inDangerousArea": {
-        resolver: resolveInDangerousArea
-    },
-    "targetKilled": {
-        resolver: resolveTargetKilled
-    },
-    "afraid": {
-        resolver: resolveAfraid
-    },
-    "cowering": {
-        resolver: resolveCowering
-    },
-    "atFallbackPosition": {
-        resolver: resolveAtFallbackPosition
-    }
-};
-
-export const Actions = {
-    "wander": {
-        preconditions: { targetPositionKnown: false },
-        postconditions: { targetPositionKnown: true },
-        updateFunction: () => true
-    },
-    "guard": {
-        preconditions: { targetPositionKnown: false },
-        postconditions: { targetPositionKnown: true },
-        updateFunction: () => true
-    },
-    "patrol": {
-        preconditions: { targetPositionKnown: false },
-        postconditions: { targetPositionKnown: true },
-        updateFunction: patrolAction
-    },
-    "chase": {
-        preconditions: { targetPositionKnown: true, targetInLineOfSight: false },
-        postconditions: { targetInLineOfSight: true },
-        updateFunction: chaseAction
-    },
-    "useManaItem": {
-        preconditions: { enoughManaForDamage: false, hasManaItem: true },
-        postconditions: { enoughManaForDamage: true },
-        updateFunction: useManaItemAction
-    },
-    "castDamageSpell": {
-        preconditions: {
-            enoughManaForDamage: true,
-            targetInLineOfSight: true,
-            targetKilled: false
-        },
-        postconditions: { targetKilled: true },
-        updateFunction: () => true
-    },
-    "useHealingItem": {
-        preconditions: { lowHealth: true, hasHealingItem: true },
-        postconditions: { lowHealth: false },
-        updateFunction: useHealingItemAction
-    },
-    "castHealingSpell": {
-        preconditions: { lowHealth: true, enoughManaForDamage: true },
-        postconditions: { lowHealth: false },
-        updateFunction: () => true
-    },
-    "goToEnemy": {
-        preconditions: { targetPositionKnown: true, nextToTarget: false },
-        postconditions: { nextToTarget: true },
-        updateFunction: chaseAction
-    },
-    "meleeAttack": {
-        preconditions: { nextToTarget: true, targetKilled: false },
-        postconditions: { targetKilled: true },
-        updateFunction: chaseAction
-    },
-    "reposition": {
-        preconditions: { inDangerousArea: true },
-        postconditions: { inDangerousArea: false },
-        updateFunction: () => true
-    },
-    "runAway": {
-        preconditions: { afraid: true },
-        postconditions: { afraid: false },
-        updateFunction: () => true
-    },
-    "cower": {
-        preconditions: { afraid: false, cowering: false },
-        postconditions: { cowering: true },
-        updateFunction: () => true
-    },
-    "goToFallbackPosition": {
-        preconditions: { atFallbackPosition: false },
-        postconditions: { atFallbackPosition: true },
-        updateFunction: () => true
-    }
-};
 
 export const ObjectData = {
     "door": {
@@ -561,7 +447,7 @@ export const ObjectData = {
     "goblin_brute": {
         name: "Goblin Brute",
         graphics: "basic_graphics",
-        ai: "patrolling_monster_ai",
+        ai: "planning_ai",
         fighter: "basic_fighter",
         speed: BASE_SPEED,
         inventory: "basic_inventory",
@@ -589,6 +475,14 @@ export const ObjectData = {
         inventoryPool: [
             ["health_potion_weak", 0.25],
             ["health_potion", 0.1]
+        ],
+        actions: [
+            "guard",
+            "chase",
+            "useHealingItem",
+            "goToEnemy",
+            "reposition",
+            "meleeAttack"
         ],
         onDeath: "default"
     },
@@ -662,8 +556,8 @@ export const ObjectData = {
         inventory: "basic_inventory",
         interactable: null,
         char: "b",
-        fgColor: "#deb887",
-        bgColor: "#c767ff",
+        fgColor: "white",
+        bgColor: "brown",
         blocks: true,
         blocksSight: false,
         level: 1,
@@ -676,33 +570,73 @@ export const ObjectData = {
         sightRange: 7,
         damageAffinity: {
             [DamageType.physical]: Affinity.normal,
-            [DamageType.fire]: Affinity.strong,
-            [DamageType.electric]: Affinity.weak,
-            [DamageType.water]: Affinity.nullified,
+            [DamageType.fire]: Affinity.normal,
+            [DamageType.electric]: Affinity.normal,
+            [DamageType.water]: Affinity.normal,
             [DamageType.nature]: Affinity.normal
         },
         actions: [
-            "patrol",
+            "guard",
             "chase",
-            "useManaItem",
-            "castDamageSpell",
             "useHealingItem",
-            "castHealingSpell",
             "goToEnemy",
             "reposition",
             "runAway",
             "cower",
-            "goToFallbackPosition",
+            "meleeAttack"
+        ],
+        inventoryPool: [
+            ["health_potion_weak", 0.25]
+        ],
+        onDeath: "default"
+    },
+    "bandit_mage": {
+        name: "Bandit Mage",
+        graphics: "basic_graphics",
+        ai: "planning_ai",
+        fighter: "basic_fighter",
+        speed: BASE_SPEED,
+        inventory: "basic_inventory",
+        interactable: null,
+        char: "b",
+        fgColor: "white",
+        bgColor: "blue",
+        blocks: true,
+        blocksSight: false,
+        level: 5,
+        experience: 0,
+        experienceGiven: 100,
+        maxHp: 30,
+        maxMana: 100,
+        strength: 2,
+        defense: 1,
+        sightRange: 7,
+        damageAffinity: {
+            [DamageType.physical]: Affinity.normal,
+            [DamageType.fire]: Affinity.normal,
+            [DamageType.electric]: Affinity.normal,
+            [DamageType.water]: Affinity.normal,
+            [DamageType.nature]: Affinity.normal
+        },
+        spells: [
+            "fireball",
+            "lesser_heal"
+        ],
+        actions: [
+            "wander",
+            "chase",
+            "useHealingItem",
+            "useManaItem",
+            "goToEnemy",
+            "reposition",
+            "runAway",
+            "cower",
             "meleeAttack"
         ],
         inventoryPool: [],
         onDeath: "default"
-    },
+    }
 };
-
-if (ENV !== "TEST") {
-    Object.freeze(ObjectData);
-}
 
 export const ItemData = {
     "health_potion_weak": {
@@ -933,6 +867,168 @@ export const SpellData = {
 
 if (ENV !== "TEST") {
     Object.freeze(SpellData);
+}
+
+export const Goals = {
+    "targetPositionKnown": {
+        resolver: resolveTargetPositionKnown
+    },
+    "targetInLineOfSight": {
+        resolver: resolveTargetInLOS
+    },
+    "nextToTarget": {
+        resolver: resolveNextToTarget
+    },
+    "lowMana": {
+        resolver: resolveLowMana
+    },
+    "lowHealth": {
+        resolver: resolveLowHealth
+    },
+    "hasArrows": {
+        resolver: resolveHasArrows
+    },
+    "hasManaItem": {
+        resolver: resolveHasManaItem
+    },
+    "hasHealingItem": {
+        resolver: resolveHasHealingItem
+    },
+    "inDangerousArea": {
+        resolver: resolveInDangerousArea
+    },
+    "targetKilled": {
+        resolver: resolveTargetKilled
+    },
+    "afraid": {
+        resolver: resolveAfraid
+    },
+    "cowering": {
+        resolver: resolveCowering
+    },
+    "atFallbackPosition": {
+        resolver: resolveAtFallbackPosition
+    }
+};
+
+export const Actions = {
+    "wander": {
+        preconditions: { targetPositionKnown: false },
+        postconditions: { targetPositionKnown: true },
+        updateFunction: wanderAction,
+        weight: () => 1
+    },
+    "guard": {
+        preconditions: { targetPositionKnown: false },
+        postconditions: { targetPositionKnown: true },
+        updateFunction: () => noop,
+        weight: () => 1
+    },
+    "patrol": {
+        preconditions: { targetPositionKnown: false },
+        postconditions: { targetPositionKnown: true },
+        updateFunction: patrolAction,
+        weight: () => 1
+    },
+    "chase": {
+        preconditions: { targetPositionKnown: true, targetInLineOfSight: false },
+        postconditions: { targetInLineOfSight: true },
+        updateFunction: chaseAction,
+        weight: () => 1
+    },
+    "useManaItem": {
+        preconditions: { lowMana: true, hasManaItem: true },
+        postconditions: { lowMana: false },
+        updateFunction: useManaItemAction,
+        weight: () => 1
+    },
+    "useHealingItem": {
+        preconditions: { lowHealth: true, hasHealingItem: true },
+        postconditions: { lowHealth: false },
+        updateFunction: useHealingItemAction,
+        weight: () => 1
+    },
+    "goToEnemy": {
+        preconditions: { targetPositionKnown: true, nextToTarget: false },
+        postconditions: { nextToTarget: true },
+        updateFunction: chaseAction,
+        weight: chaseWeight
+    },
+    "meleeAttack": {
+        preconditions: { nextToTarget: true, targetKilled: false },
+        postconditions: { targetKilled: true },
+        updateFunction: chaseAction,
+        weight: () => 1
+    },
+    "reposition": {
+        preconditions: { inDangerousArea: true },
+        postconditions: { inDangerousArea: false },
+        updateFunction: () => noop,
+        weight: () => 1
+    },
+    "runAway": {
+        preconditions: { afraid: true },
+        postconditions: { afraid: false },
+        updateFunction: () => noop,
+        weight: () => 1
+    },
+    "cower": {
+        preconditions: { afraid: false, cowering: false },
+        postconditions: { cowering: true },
+        updateFunction: () => noop,
+        weight: () => 1
+    },
+    "goToFallbackPosition": {
+        preconditions: { atFallbackPosition: false },
+        postconditions: { atFallbackPosition: true },
+        updateFunction: () => noop,
+        weight: () => 1
+    }
+};
+
+// Dynamically add spells to goals and actions
+for (const key in SpellData) {
+    const data = SpellData[key];
+    // capitalize the first letter
+    const goal = `enoughManaFor_${key}`;
+    const action = `castSpell_${key}`;
+    if (data.type === "damage") {
+        Goals[goal] = {
+            resolver: resolveEnoughManaForSpell(key)
+        };
+        Actions[action] = {
+            preconditions: {
+                [goal]: true,
+                targetInLineOfSight: true,
+                targetKilled: false
+            },
+            postconditions: { targetKilled: true },
+            updateFunction: castSpellAction(key),
+            weight: () => 1
+        };
+    } else if (data.type === "heal") {
+        Goals[goal] = {
+            resolver: resolveEnoughManaForSpell(key)
+        };
+        Actions[action] = {
+            preconditions: { lowHealth: true, [goal]: true },
+            postconditions: { lowHealth: false },
+            updateFunction: castSpellAction(key),
+            weight: () => 1
+        };
+    }
+}
+for (const objectID in ObjectData) {
+    const data = ObjectData[objectID];
+    if (data.spells) {
+        for (let i = 0; i < data.spells.length; i++) {
+            const spell = data.spells[i];
+            data.actions.push(`castSpell_${spell}`);
+        }
+    }
+}
+if (ENV !== "TEST") {
+    Object.freeze(ObjectData);
 }
 
 export const LevelData = {

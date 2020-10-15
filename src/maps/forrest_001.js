@@ -427,11 +427,6 @@
                          "value":32
                         }, 
                         {
-                         "name":"inventory",
-                         "type":"string",
-                         "value":"health_potion_weak"
-                        }, 
-                        {
                          "name":"objectType",
                          "type":"string",
                          "value":"bandit"
@@ -447,6 +442,34 @@
                  "width":0,
                  "x":358.279153409877,
                  "y":650.159081477383
+                }, 
+                {
+                 "height":0,
+                 "id":35,
+                 "name":"Bandit Mage",
+                 "point":true,
+                 "properties":[
+                        {
+                         "name":"fallbackPosition",
+                         "type":"object",
+                         "value":32
+                        }, 
+                        {
+                         "name":"inventory",
+                         "type":"string",
+                         "value":"mana_potion_weak"
+                        }, 
+                        {
+                         "name":"objectType",
+                         "type":"string",
+                         "value":"bandit_mage"
+                        }],
+                 "rotation":0,
+                 "type":"object",
+                 "visible":true,
+                 "width":0,
+                 "x":486.927652510721,
+                 "y":787.107483746023
                 }],
          "opacity":1,
          "type":"objectgroup",
@@ -616,7 +639,7 @@
          "y":0
         }],
  "nextlayerid":6,
- "nextobjectid":35,
+ "nextobjectid":36,
  "orientation":"orthogonal",
  "renderorder":"right-down",
  "tiledversion":"1.4.2",
