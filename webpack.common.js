@@ -1,12 +1,17 @@
 module.exports = {
-    entry: "./src/main.js",
+    entry: "./src/main.ts",
+    resolve: {
+        extensions: [".webpack.js", ".web.js", ".ts", ".js"]
+    },
     module: {
         rules: [
             {
-                test: require.resolve("./src/globals.js"),
-                loader: "expose-loader",
-                options: {
-                    exposes: ["globals"]
+                test: /\.ts$/,
+                use: {
+                    loader: "ts-loader",
+                    options: {
+                        transpileOnly: true
+                    }
                 }
             }
         ]
