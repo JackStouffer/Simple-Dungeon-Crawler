@@ -1,24 +1,27 @@
 /* global ENV */
+declare var ENV: any;
 
 import { RNG, DIRS, FOV } from "../rot/index";
 
-import { moveCommand, useItemCommand, useSpellCommand } from "../commands";
+import { AsyncCommand, Command, moveCommand, useItemCommand, useSpellCommand } from "../commands";
 import {
     getNextStepTowardsTarget,
     createPassableSightCallback,
     createVisibilityCallback,
-    newPositionToDirection
+    newPositionToDirection, AIComponent
 } from "./components";
-import { distanceBetweenObjects, isBlocked } from "../map";
+import { GameObject } from "../object";
+import { distanceBetweenObjects, GameMap, isBlocked, PathNode } from "../map";
 import { displayMessage } from "../ui";
 
-export function wanderAction(ai, map, gameObjects) {
+export function wanderAction(ai: AIComponent, map: GameMap, gameObjects: GameObject[]): Command {
     // compute the FOV to see if the player is sighted
     const fov = new FOV.PreciseShadowcasting(createPassableSightCallback(ai.owner));
     fov.compute(
         ai.owner.x,
         ai.owner.y,
-        ai.sightRange, createVisibilityCallback(ai)
+        ai.sightRange,
+        createVisibilityCallback(ai)
     );
 
     let blocks, newX, newY, dir;
@@ -32,7 +35,7 @@ export function wanderAction(ai, map, gameObjects) {
     return moveCommand(dir, 8);
 }
 
-export function patrolAction(ai, map, gameObjects, pathNodes) {
+export function patrolAction(ai: AIComponent, map: GameMap, gameObjects: GameObject[], pathNodes: Map<number, PathNode>): Command {
     if (ENV === "DEV" && !ai.pathName) {
         throw new Error("pathName not set for PatrollingMonsterAI");
     }
@@ -79,7 +82,7 @@ export function patrolAction(ai, map, gameObjects, pathNodes) {
     return moveCommand(newPositionToDirection(ai.owner.x, ai.owner.y, x, y), 8);
 }
 
-export function chaseAction(ai) {
+export function chaseAction(ai: AIComponent): Command {
     const { x, y } = getNextStepTowardsTarget(
         ai.owner,
         ai.target.x,
@@ -92,11 +95,11 @@ export function chaseAction(ai) {
     return moveCommand(newPositionToDirection(ai.owner.x, ai.owner.y, x, y), 8);
 }
 
-export function chaseWeight(ai) {
+export function chaseWeight(ai: AIComponent): number {
     return distanceBetweenObjects(ai.owner, ai.target);
 }
 
-export function useHealingItemAction(ai) {
+export function useHealingItemAction(ai: AIComponent): AsyncCommand {
     const item = ai.owner.inventoryComponent
         .getItems()
         .filter(i => i.type === "heal")
@@ -105,7 +108,7 @@ export function useHealingItemAction(ai) {
     return useItemCommand(item.id);
 }
 
-export function useManaItemAction(ai) {
+export function useManaItemAction(ai: AIComponent): AsyncCommand {
     const item = ai.owner.inventoryComponent
         .getItems()
         .filter(i => i.type === "add_mana")
@@ -114,8 +117,8 @@ export function useManaItemAction(ai) {
     return useItemCommand(item.id);
 }
 
-export function castSpellAction(spellID) {
-    return function (ai) {
+export function castSpellAction(spellID: string) {
+    return function (ai: AIComponent): Command | AsyncCommand {
         if (ENV === "DEV") {
             const spells = ai.owner.fighter.getKnownSpells().map(s => s.id);
             console.log(spellID, ai.owner.fighter.getKnownSpells());

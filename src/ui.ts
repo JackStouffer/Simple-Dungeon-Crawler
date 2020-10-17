@@ -1,5 +1,7 @@
 /* global ENV */
+declare var ENV: any;
 
+import { Display } from "./rot/index";
 import globals from "./globals";
 import {
     WIDTH,
@@ -9,9 +11,13 @@ import {
     LEVEL_UP_BASE,
     LEVEL_UP_FACTOR
 } from "./data";
+import { KeyCommand } from "./game";
 import { useItemCommand, useSpellCommand } from "./commands";
+import { GameObject } from "./object";
+import { InventoryItemDetails } from "./inventory";
+import { SpellFighterDetails } from "./fighter";
 
-export function drawUI(display, player) {
+export function drawUI(display: Display, player: GameObject) {
     for (let x = 0; x < WIDTH; x++) {
         for (let y = 0; y < UI_HEIGHT; y++) {
             display.draw(x, HEIGHT - (UI_HEIGHT - y), MAP_FILLED_SPACE, "blue", "blue");
@@ -27,7 +33,13 @@ export function drawUI(display, player) {
     display.drawText(54, HEIGHT - UI_HEIGHT, "%c{white}%b{blue}EXP: " + player.fighter.experience + "/" + (LEVEL_UP_BASE + player.fighter.level * LEVEL_UP_FACTOR));
 }
 
-export function displayMessage(text, type = "default") {
+export const enum MessageType {
+    Default,
+    Tutorial,
+    Critical
+}
+
+export function displayMessage(text: string, type: MessageType = MessageType.Default) {
     if (ENV === "TEST") { return; }
 
     const log = globals.document.getElementById("log");
@@ -36,9 +48,9 @@ export function displayMessage(text, type = "default") {
     const small = document.createElement("p");
     p.innerHTML = `${text}`;
 
-    if (type === "tutorial") {
+    if (type === MessageType.Tutorial) {
         el.className = "tutorial";
-    } else if (type === "critical") {
+    } else if (type === MessageType.Critical) {
         el.className = "critical";
         small.innerHTML = `<small>Turn: ${globals.Game.getTurnNumber()}</small>`;
     } else {
@@ -56,7 +68,10 @@ export function displayMessage(text, type = "default") {
     log.scrollTop = log.scrollHeight;
 }
 
-class InventoryMenu {
+export class InventoryMenu {
+    private currentSelection: number;
+    private allowedKeys: Set<string>;
+
     constructor() {
         this.currentSelection = 0;
         this.allowedKeys = new Set(["ArrowDown", "ArrowUp", "Enter"]);
@@ -66,7 +81,7 @@ class InventoryMenu {
         this.currentSelection = 0;
     }
 
-    draw(inventoryItems) {
+    draw(inventoryItems: InventoryItemDetails[]) {
         // add four for header
         const height = inventoryItems.length + UI_HEIGHT;
 
@@ -93,7 +108,7 @@ class InventoryMenu {
         }
     }
 
-    handleInput(key, inventoryItems) {
+    handleInput(key: string, inventoryItems: InventoryItemDetails[]) {
         if (!this.allowedKeys.has(key)) {
             return null;
         }
@@ -116,9 +131,11 @@ class InventoryMenu {
         return null;
     }
 }
-export { InventoryMenu };
 
-class SpellSelectionMenu {
+export class SpellSelectionMenu {
+    private currentSelection: number;
+    private allowedKeys: Set<string>;
+
     constructor() {
         this.currentSelection = 0;
         this.allowedKeys = new Set(["ArrowDown", "ArrowUp", "Enter"]);
@@ -128,7 +145,7 @@ class SpellSelectionMenu {
         this.currentSelection = 0;
     }
 
-    draw(spells) {
+    draw(spells: SpellFighterDetails[]) {
         // add four for header
         const height = spells.length + UI_HEIGHT;
 
@@ -178,7 +195,7 @@ class SpellSelectionMenu {
         }
     }
 
-    handleInput(key, spells) {
+    handleInput(key: string, spells: SpellFighterDetails[]) {
         if (!this.allowedKeys.has(key)) {
             return null;
         }
@@ -201,9 +218,12 @@ class SpellSelectionMenu {
         return null;
     }
 }
-export { SpellSelectionMenu };
 
-class KeyBindingMenu {
+export class KeyBindingMenu {
+    private state: "selection" | "change";
+    private currentSelection: number;
+    private allowedSelectionKeys: Set<string>;
+
     constructor() {
         this.state = "selection";
         this.currentSelection = 0;
@@ -215,7 +235,7 @@ class KeyBindingMenu {
         this.currentSelection = 0;
     }
 
-    draw(keyCommands) {
+    draw(keyCommands: KeyCommand[]) {
         // add one for header
         const height = keyCommands.length + UI_HEIGHT + 4;
         const width = WIDTH;
@@ -259,7 +279,7 @@ class KeyBindingMenu {
         }
     }
 
-    handleInput(key, keyCommands) {
+    handleInput(key: string, keyCommands: KeyCommand[]) {
         if (this.state === "selection") {
             if (!this.allowedSelectionKeys.has(key)) {
                 return;
@@ -291,4 +311,3 @@ class KeyBindingMenu {
         }
     }
 }
-export { KeyBindingMenu };

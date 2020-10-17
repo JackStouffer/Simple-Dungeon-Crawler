@@ -1,10 +1,11 @@
-import { displayMessage } from "./ui";
+import { displayMessage, MessageType } from "./ui";
 import { playPing } from "./audio";
 
 const hasMessageBeenShown = {
     movement: false,
     attack: false,
     inventory: false,
+    pickUpItem: false,
     spellMenu: false,
     spellTargeting: false,
     wildSpells: false
@@ -12,14 +13,14 @@ const hasMessageBeenShown = {
 
 export function explainMovement() {
     if (!hasMessageBeenShown.movement) {
-        displayMessage("Move with WASD and QEZC. Look at things with the mouse.", "tutorial");
+        displayMessage("Move with WASD and QEZC. Look at things with the mouse.", MessageType.Tutorial);
         hasMessageBeenShown.movement = true;
     }
 }
 
 export function explainAttacking() {
     if (!hasMessageBeenShown.attack) {
-        displayMessage("Move into an enemy's tile to attack", "tutorial");
+        displayMessage("Move into an enemy's tile to attack", MessageType.Tutorial);
         playPing();
         hasMessageBeenShown.attack = true;
     }
@@ -27,7 +28,7 @@ export function explainAttacking() {
 
 export function explainInventory() {
     if (!hasMessageBeenShown.inventory) {
-        displayMessage("Use i to open your inventory", "tutorial");
+        displayMessage("Use i to open your inventory", MessageType.Tutorial);
         playPing();
         hasMessageBeenShown.inventory = true;
     }
@@ -35,23 +36,23 @@ export function explainInventory() {
 
 export function explainSpellMenu() {
     if (!hasMessageBeenShown.spellMenu) {
-        displayMessage("Press m to open your spells", "tutorial");
+        displayMessage("Press m to open your spells", MessageType.Tutorial);
         playPing();
         hasMessageBeenShown.spellMenu = true;
     }
 }
 
 export function explainPickUpItem() {
-    if (!hasMessageBeenShown.spellMenu) {
-        displayMessage("Press g pick up items", "tutorial");
+    if (!hasMessageBeenShown.pickUpItem) {
+        displayMessage("Press g pick up items", MessageType.Tutorial);
         playPing();
-        hasMessageBeenShown.spellMenu = true;
+        hasMessageBeenShown.pickUpItem = true;
     }
 }
 
 export function explainSpellTargeting() {
     if (!hasMessageBeenShown.spellTargeting) {
-        displayMessage("Left click on an enemy to target it, click elsewhere to cancel", "tutorial");
+        displayMessage("Left click on an enemy to target it, click elsewhere to cancel", MessageType.Tutorial);
         playPing();
         hasMessageBeenShown.spellTargeting = true;
     }
@@ -59,7 +60,7 @@ export function explainSpellTargeting() {
 
 export function explainWildSpells() {
     if (!hasMessageBeenShown.wildSpells) {
-        displayMessage("Wild spells will randomly target an enemy within range. Use them carefully.", "tutorial");
+        displayMessage("Wild spells will randomly target an enemy within range. Use them carefully.", MessageType.Tutorial);
         playPing();
         hasMessageBeenShown.wildSpells = true;
     }

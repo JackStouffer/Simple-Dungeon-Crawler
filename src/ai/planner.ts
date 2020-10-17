@@ -26,9 +26,35 @@
  * SOFTWARE.
  */
 
-import reverse from "lodash/reverse";
+import { reverse } from "lodash";
 
-function setDifference(setA, setB) {
+export interface PlannerWorldState {
+    [key: string]: boolean | number
+};
+
+interface PlannerNode {
+    f: number;
+    g: number;
+    h: number;
+    id: number;
+    name: string;
+    p_id: number;
+    state: PlannerWorldState;
+}
+
+interface PlannerPath {
+    goal: PlannerWorldState;
+    actionNodes: { [key: string]: PlannerNode };
+    actions: { [key: string]: PlannerWorldState };
+    cList: { [key: number]: PlannerNode };
+    oList: { [key: number]: PlannerNode };
+    nodes: { [key: number]: PlannerNode };
+    nodeID: number;
+    reactions: { [key: string]: PlannerWorldState };
+    weightTable: { [key: string]: number };
+}
+
+function setDifference(setA: Set<string>, setB: Set<string>) {
     const difference = new Set(setA);
     for (const elem of setB) {
         difference.delete(elem);
@@ -36,7 +62,7 @@ function setDifference(setA, setB) {
     return difference;
 }
 
-function distanceToState(fromState, toState) {
+function distanceToState(fromState: PlannerWorldState, toState: PlannerWorldState) {
     const scoredKeys = new Set();
     let score = 0;
 
@@ -70,11 +96,10 @@ function distanceToState(fromState, toState) {
         }
     }
 
-    // console.log("fromState, toState", fromState, toState, score);
     return score;
 }
 
-function conditionsAreMet(fromState, toState) {
+function conditionsAreMet(fromState: PlannerWorldState, toState: PlannerWorldState) {
     for (const key in toState) {
         const value = toState[key];
 
@@ -90,7 +115,7 @@ function conditionsAreMet(fromState, toState) {
     return true;
 }
 
-function nodeInList(node, nodeList) {
+function nodeInList(node: PlannerNode, nodeList: { [key: number]: PlannerNode }) {
     const values = Object.values(nodeList);
     for (let i = 0; i < values.length; i++) {
         const nextNode = values[i];
@@ -101,7 +126,7 @@ function nodeInList(node, nodeList) {
     return false;
 }
 
-function createNode(path, state, name="") {
+function createNode(path: PlannerPath, state: PlannerWorldState, name: string = "") {
     path["nodeID"] += 1;
     path["nodes"][path["nodeID"]] = {
         "state": state,
@@ -116,8 +141,14 @@ function createNode(path, state, name="") {
     return path["nodes"][path["nodeID"]];
 }
 
-function aStar(startState, goalState, actions, reactions, weightTable) {
-    const path = {
+function aStar(
+    startState: PlannerWorldState,
+    goalState: PlannerWorldState,
+    actions: { [key: string]: PlannerWorldState },
+    reactions: { [key: string]: PlannerWorldState },
+    weightTable: { [key: string]: number }
+) {
+    const path: PlannerPath = {
         "nodes": {},
         "nodeID": 0,
         "goal": goalState,
@@ -142,14 +173,14 @@ function aStar(startState, goalState, actions, reactions, weightTable) {
     return walkPath(path);
 }
 
-function walkPath(path) {
+function walkPath(path: PlannerPath) {
     let node = null;
     const cList = path["cList"];
     const oList = path["oList"];
 
     while (Object.keys(oList).length > 0) {
         // Find lowest node
-        const lowest = {"node": null, "f": 9000000};
+        const lowest: { [key: string]: number } = {"node": null, "f": 9000000};
 
         const values = Object.values(oList);
         for (let i = 0; i < values.length; i++) {
@@ -223,6 +254,7 @@ function walkPath(path) {
             const inCList = nodeInList(nextNode, cList);
 
             if (inOList && gCost < nextNode["g"]) {
+                // @ts-ignore
                 delete oList[nextNode];
             }
 
@@ -244,9 +276,13 @@ function walkPath(path) {
     return [];
 }
 
-
 class Planner {
-    constructor(...keys) {
+    values: PlannerWorldState;
+    startState: PlannerWorldState;
+    goalState: PlannerWorldState;
+    actionList: ActionList;
+
+    constructor(...keys: string[]) {
         this.startState = null;
         this.goalState = null;
         this.actionList = null;
@@ -289,7 +325,7 @@ class Planner {
         this.goalState = this.state(keywordArgs);
     }
 
-    setActionList(actionList) {
+    setActionList(actionList: ActionList) {
         this.actionList = actionList;
     }
 
@@ -298,12 +334,12 @@ class Planner {
     }
 
     calculate() {
-        const actions = {};
+        const actions: ActionList["conditions"] = {};
         for (const key in this.actionList.conditions) {
             actions[key] = Object.assign({}, this.actionList.conditions[key]);
         }
 
-        const reactions = {};
+        const reactions: ActionList["reactions"] = {};
         for (const key in this.actionList.reactions) {
             reactions[key] = Object.assign({}, this.actionList.reactions[key]);
         }
@@ -319,13 +355,17 @@ class Planner {
 }
 
 class ActionList {
+    conditions: { [key: string]: PlannerWorldState };
+    reactions: { [key: string]: PlannerWorldState };
+    weights: { [key: string]: number };
+
     constructor() {
         this.conditions = {};
         this.reactions = {};
         this.weights = {};
     }
 
-    addCondition(key, keywordArgs = {}) {
+    addCondition(key: string, keywordArgs = {}) {
         if (!(key in this.weights)) {
             this.weights[key] = 1;
         }
@@ -335,10 +375,10 @@ class ActionList {
             return;
         }
 
-        this.conditions[key].update(keywordArgs);
+        Object.assign(this.conditions[key], keywordArgs);
     }
 
-    addReaction(key, keywordArgs = {}) {
+    addReaction(key: string, keywordArgs = {}) {
         if (!(key in this.conditions)) {
             throw new Error(`Trying to add reaction "${key}" without matching condition.`);
         }
@@ -348,10 +388,10 @@ class ActionList {
             return;
         }
 
-        this.reactions[key].update(keywordArgs);
+        Object.assign(this.reactions[key], keywordArgs);
     }
 
-    setWeight(key, value) {
+    setWeight(key: string, value: number) {
         if (!(key in this.conditions)) {
             throw new Error(`Trying to set weight "${key}" without matching condition.`);
         }

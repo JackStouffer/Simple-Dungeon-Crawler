@@ -1,14 +1,16 @@
 import { RNG } from "./rot/index";
+import { SpeedActor } from "./rot/scheduler/speed";
 
 import globals from "./globals";
-import { ObjectData, BASE_SPEED } from "./data";
-import { BasicMonsterAI, PlanningAI, ChestAI, DroppedItemAI } from "./ai/components";
-import { GiveItemsInteractable, GiveSpellInteractable, LoadLevelInteractable, DoorInteractable } from "./interactable";
-import { BasicInventory } from "./inventory";
-import { BasicGraphics, TransparencyGraphics, DrawAfterSeen } from "./graphics";
-import { ReflectivityLighting, PlayerLighting } from "./lighting";
-import { BasicFighter } from "./fighter";
+import { ObjectData, BASE_SPEED, DeathType } from "./data";
+import { BasicMonsterAI, PlanningAI, ChestAI, DroppedItemAI, AIComponent } from "./ai/components";
+import { GiveItemsInteractable, GiveSpellInteractable, LoadLevelInteractable, DoorInteractable, InteractableComponent } from "./interactable";
+import { BasicInventory, InventoryComponent } from "./inventory";
+import { BasicGraphics, TransparencyGraphics, DrawAfterSeen, GraphicsComponent } from "./graphics";
+import { LightingComponent, ReflectivityLighting, PlayerLighting } from "./lighting";
+import { BasicFighter, FighterComponent } from "./fighter";
 import { displayMessage } from "./ui";
+import { GameMap, PathNode } from "./map";
 
 /**
  * Base class representing all objects in the game. Uses the
@@ -18,8 +20,21 @@ import { displayMessage } from "./ui";
  *
  * The act method is the method called by the engine every turn.
  */
-class GameObject {
-    constructor(type, x, y, name, blocks=false, blocksSight=false) {
+class GameObject implements SpeedActor {
+    readonly type: string;
+    name: string;
+    x: number;
+    y: number;
+    blocks: boolean;
+    blocksSight: boolean;
+    ai: AIComponent;
+    graphics: GraphicsComponent;
+    lighting: LightingComponent;
+    fighter: FighterComponent & SpeedActor;
+    inventoryComponent: InventoryComponent;
+    interactable: InteractableComponent;
+
+    constructor(type: string, x: number, y: number, name: string, blocks=false, blocksSight=false) {
         this.type = type;
         this.x = x;
         this.y = y;
@@ -35,7 +50,7 @@ class GameObject {
         this.interactable = null;
     }
 
-    setGraphics(graphics) {
+    setGraphics(graphics: GraphicsComponent) {
         if (graphics === null && this.graphics !== null) {
             this.graphics.setOwner(null);
             this.graphics = null;
@@ -50,7 +65,7 @@ class GameObject {
         this.graphics = graphics;
     }
 
-    setLighting(lighting) {
+    setLighting(lighting: LightingComponent) {
         if (lighting === null && this.lighting !== null) {
             this.lighting.setOwner(null);
             this.lighting = null;
@@ -65,7 +80,7 @@ class GameObject {
         this.lighting = lighting;
     }
 
-    setFighter(fighter) {
+    setFighter(fighter: FighterComponent & SpeedActor) {
         if (fighter === null && this.fighter !== null) {
             this.fighter.setOwner(null);
             this.fighter = null;
@@ -80,7 +95,7 @@ class GameObject {
         this.fighter = fighter;
     }
 
-    setAI(ai) {
+    setAI(ai: AIComponent) {
         if (ai === null && this.ai !== null) {
             this.ai.setOwner(null);
             this.ai = null;
@@ -95,7 +110,7 @@ class GameObject {
         this.ai = ai;
     }
 
-    setInventory(inventoryComponent) {
+    setInventory(inventoryComponent: InventoryComponent) {
         if (inventoryComponent === null && this.inventoryComponent !== null) {
             this.inventoryComponent.setOwner(null);
             this.inventoryComponent = null;
@@ -110,7 +125,7 @@ class GameObject {
         this.inventoryComponent = inventoryComponent;
     }
 
-    setInteractable(interactable) {
+    setInteractable(interactable: InteractableComponent) {
         if (interactable === null && this.interactable !== null) {
             this.interactable.setOwner(null);
             this.interactable = null;
@@ -132,12 +147,14 @@ class GameObject {
         return BASE_SPEED;
     }
 
-    act(map, gameObjects, pathNodes) {
+    act(map: GameMap, gameObjects: GameObject[], pathNodes: PathNode[]) {
         let acted = true;
 
         if (this.ai && typeof this.ai.act === "function") {
             const command = this.ai.act(map, gameObjects, pathNodes);
             if (command) {
+                // FIX ME
+                // @ts-ignore
                 acted = command(this);
             }
         }
@@ -156,7 +173,7 @@ export { GameObject };
  * @param  {String} id     The object id
  * @return {GameObject}    A GameObject with the components and params given in the data
  */
-export function createObject(id, x=0, y=0) {
+export function createObject(id: string, x=0, y=0) {
     if (!(id in ObjectData)) { throw new Error(`${id} is not valid object id`); }
 
     const data = ObjectData[id];
@@ -224,10 +241,10 @@ export function createObject(id, x=0, y=0) {
         let callback;
 
         switch (data.onDeath) {
-            case "default":
+            case DeathType.Default:
                 callback = enemyDeathCallback;
                 break;
-            case "remove_from_world":
+            case DeathType.RemoveFromWorld:
                 callback = removeDeathCallback;
                 break;
             default:
@@ -261,8 +278,8 @@ export function createObject(id, x=0, y=0) {
 
         if (data.inventoryPool) {
             for (let i = 0; i < data.inventoryPool.length; i++) {
-                if (RNG.getUniform() <= data.inventoryPool[i][1]) {
-                    object.inventoryComponent.addItem(data.inventoryPool[i][0]);
+                if (RNG.getUniform() <= data.inventoryPool[i].probability) {
+                    object.inventoryComponent.addItem(data.inventoryPool[i].itemID);
                 }
             }
         }
@@ -298,7 +315,7 @@ export function createObject(id, x=0, y=0) {
  * @param  {GameObject} target    The GameObject that was killed
  * @return {void}
  */
-export function enemyDeathCallback(target) {
+export function enemyDeathCallback(target: GameObject): void {
     displayMessage(target.name + " has been killed");
 
     target.name = `Remains of a ${target.name}`;
@@ -324,7 +341,7 @@ export function enemyDeathCallback(target) {
  * @param  {GameObject} target    The GameObject that was killed
  * @return {void}
  */
-export function removeDeathCallback(target) {
+export function removeDeathCallback(target: GameObject): void {
     if (target.inventoryComponent.getItems().length > 0) {
         globals.gameEventEmitter.emit("tutorial.pickUpItem");
 

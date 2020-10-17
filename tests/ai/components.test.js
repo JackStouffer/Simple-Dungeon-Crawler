@@ -2,7 +2,7 @@
 
 import { expect } from "chai";
 import { fake } from "sinon";
-import { Tile, PatrolNode } from "../../src/map";
+import { Tile } from "../../src/map";
 import globals from "../../src/globals";
 import {
     createPassableCallback,

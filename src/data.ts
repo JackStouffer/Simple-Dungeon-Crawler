@@ -1,11 +1,12 @@
 /* global ENV */
 
-"use strict";
+declare var ENV: any;
 
-import { invert, noop } from "lodash";
-
+// @ts-ignore
 import * as forrest_001 from "./maps/forrest_001";
+// @ts-ignore
 import * as durdwin_001 from "./maps/durdwin_001";
+// @ts-ignore
 import * as dev_room from "./maps/dev_room";
 
 import {
@@ -44,7 +45,9 @@ import {
     castIncreaseMana
 } from "./skills";
 import { createBurnEffect } from "./effects";
-import isNil from "lodash/isNil";
+import { AIComponent } from "./ai/components";
+import { GameObject } from "./object";
+import { AsyncCommand, Command } from "./commands";
 
 export const WIDTH = 70;
 export const HEIGHT = 45;
@@ -75,30 +78,42 @@ export const LEVEL_UP_FACTOR = 150;
  * Water: weak to electric
  * Nature: weak to fire
  */
-export const DamageType = {
-    physical: 1,
-    fire: 2,
-    electric: 3,
-    water: 4,
-    nature: 5
+export enum DamageType {
+    physical = 1,
+    fire = 2,
+    electric = 3,
+    water = 4,
+    nature = 5
 };
-Object.freeze(DamageType);
-
-export const DamageTypeNames = invert(DamageType);
-Object.freeze(DamageTypeNames);
 
 /**
  * Damage affinity damage multiplier
  */
-export const Affinity = {
-    weak: 2,
-    normal: 1,
-    strong: 0.5,
-    nullified: 0
+export const enum Affinity {
+    weak = 2,
+    normal = 1,
+    strong = 0.5,
+    nullified = 0
 };
-Object.freeze(Affinity);
 
-export const TileData = {
+export const enum DeathType {
+    Default,
+    RemoveFromWorld
+}
+
+export interface TileDataDetails {
+    name: string;
+    char: string;
+    fgColor: string;
+    bgColor: string;
+    fgColorExplored: string;
+    bgColorExplored: string;
+    blocks: boolean;
+    blocksSight: boolean;
+    reflectivity: number;
+}
+
+export const TileData: { [key: number]: TileDataDetails } = {
     780: {
         name: "Gravestone",
         char: "\u07E1",
@@ -201,7 +216,52 @@ export const TileData = {
 };
 Object.freeze(TileData);
 
-export const ObjectData = {
+export interface DamageAffinityMap {
+    [DamageType.physical]: number;
+    [DamageType.fire]: number;
+    [DamageType.electric]: number;
+    [DamageType.water]: number;
+    [DamageType.nature]: number;
+}
+
+export interface InventoryPoolProbabilities {
+    itemID: string;
+    probability: number;
+}
+
+export interface ObjectDataDetails {
+    name: string;
+    ai?: string;
+    char: string;
+    fgColor: string;
+    blocks: boolean
+    blocksSight: boolean;
+    inventory?: string;
+    fighter?: string;
+    graphics?: string;
+    interactable?: string;
+    lighting?: string;
+    lightingColor?: string;
+    lightingRange?: number;
+    bgColor?: string;
+    speed?: number;
+    emptyColor?: string;
+    level?: number;
+    experience?: number;
+    experienceGiven?: number;
+    sightRange?: number;
+    maxHp?: number;
+    maxMana?: number;
+    strength?: number;
+    defense?: number;
+    onDeath?: DeathType;
+    damageAffinity?: DamageAffinityMap;
+    inventoryPool?: InventoryPoolProbabilities[];
+    actions?: string[];
+    spells?: string[];
+}
+
+export const ObjectData: { [key: string]: ObjectDataDetails } = {
     "door": {
         name: "Door",
         graphics: "basic_graphics",
@@ -274,7 +334,7 @@ export const ObjectData = {
         maxHp: 5,
         strength: 0,
         defense: 0,
-        onDeath: "remove_from_world",
+        onDeath: DeathType.RemoveFromWorld,
         damageAffinity: {
             [DamageType.physical]: Affinity.normal,
             [DamageType.fire]: Affinity.weak,
@@ -302,7 +362,7 @@ export const ObjectData = {
         maxHp: 3,
         strength: 0,
         defense: 0,
-        onDeath: "remove_from_world",
+        onDeath: DeathType.RemoveFromWorld,
         damageAffinity: {
             [DamageType.physical]: Affinity.normal,
             [DamageType.fire]: Affinity.weak,
@@ -410,7 +470,7 @@ export const ObjectData = {
             [DamageType.water]: Affinity.normal,
             [DamageType.nature]: Affinity.normal
         },
-        onDeath: "default"
+        onDeath: DeathType.Default
     },
     "goblin": {
         name: "Goblin",
@@ -440,9 +500,12 @@ export const ObjectData = {
             [DamageType.nature]: Affinity.normal
         },
         inventoryPool: [
-            ["health_potion_weak", 0.25]
+            {
+                itemID: "health_potion_weak",
+                probability: 0.25
+            }
         ],
-        onDeath: "default"
+        onDeath: DeathType.Default
     },
     "goblin_brute": {
         name: "Goblin Brute",
@@ -473,8 +536,14 @@ export const ObjectData = {
             [DamageType.nature]: Affinity.normal
         },
         inventoryPool: [
-            ["health_potion_weak", 0.25],
-            ["health_potion", 0.1]
+            {
+                itemID: "health_potion_weak",
+                probability: 0.25
+            },
+            {
+                itemID: "health_potion",
+                probability: 0.1
+            }
         ],
         actions: [
             "guard",
@@ -484,7 +553,7 @@ export const ObjectData = {
             "reposition",
             "meleeAttack"
         ],
-        onDeath: "default"
+        onDeath: DeathType.Default
     },
     "rat": {
         name: "Rat",
@@ -514,7 +583,7 @@ export const ObjectData = {
             [DamageType.nature]: Affinity.normal
         },
         inventoryPool: [],
-        onDeath: "default"
+        onDeath: DeathType.Default
     },
     "water_sprite": {
         name: "Water Sprite",
@@ -545,7 +614,7 @@ export const ObjectData = {
             [DamageType.nature]: Affinity.normal
         },
         inventoryPool: [],
-        onDeath: "default"
+        onDeath: DeathType.Default
     },
     "bandit": {
         name: "Bandit",
@@ -586,9 +655,12 @@ export const ObjectData = {
             "meleeAttack"
         ],
         inventoryPool: [
-            ["health_potion_weak", 0.25]
+            {
+                itemID: "health_potion_weak",
+                probability: 0.25
+            }
         ],
-        onDeath: "default"
+        onDeath: DeathType.Default
     },
     "bandit_mage": {
         name: "Bandit Mage",
@@ -634,11 +706,21 @@ export const ObjectData = {
             "meleeAttack"
         ],
         inventoryPool: [],
-        onDeath: "default"
+        onDeath: DeathType.Default
     }
 };
 
-export const ItemData = {
+export interface ItemDataDetails {
+    displayName: string,
+    type: "heal" | "add_mana" | "damage_scroll" | "wild_damage_scroll" | "clairvoyance_scroll" | "confuse_scroll" | "haste" | "slow",
+    value?: number,
+    damageType?: DamageType;
+    statusEffectFunc?: any;
+
+    useFunc: (details: ItemDataDetails, actor: GameObject) => Promise<boolean>;
+}
+
+export const ItemData: { [key: string]: ItemDataDetails } = {
     "health_potion_weak": {
         displayName: "Weak Potion of Healing",
         value: 25,
@@ -782,7 +864,18 @@ if (ENV !== "TEST") {
     Object.freeze(ItemData);
 }
 
-export const SpellData = {
+export interface SpellDataDetails {
+    displayName: string;
+    manaCost: number;
+    type: "damage" | "wild" | "effect" | "passive" | "heal";
+    value?: number;
+    damageType?: DamageType;
+
+    useFunc: (details: SpellDataDetails, actor: GameObject) => Promise<boolean>;
+    statusEffectFunc?: any;
+}
+
+export const SpellData: { [key: string]: SpellDataDetails } = {
     "lightning_bolt": {
         displayName: "Lightning Bolt",
         manaCost: 50,
@@ -805,7 +898,8 @@ export const SpellData = {
         value: 20,
         type: "damage",
         damageType: DamageType.fire,
-        useFunc: castDamageSpell
+        useFunc: castDamageSpell,
+        statusEffectFunc: createBurnEffect
     },
     "wild_fireball": {
         displayName: "Wild Fireball",
@@ -869,7 +963,11 @@ if (ENV !== "TEST") {
     Object.freeze(SpellData);
 }
 
-export const Goals = {
+export interface GoalDataDetails {
+    resolver: (ai: AIComponent) => boolean
+}
+
+export const GoalData: { [key: string]: GoalDataDetails } = {
     "targetPositionKnown": {
         resolver: resolveTargetPositionKnown
     },
@@ -911,7 +1009,14 @@ export const Goals = {
     }
 };
 
-export const Actions = {
+export interface Action {
+    preconditions: { [key: string]: boolean },
+    postconditions: { [key: string]: boolean }
+    updateFunction: (ai: AIComponent, map: any, gameObjects: GameObject[], pathNodes: any) => Command | AsyncCommand,
+    weight: (ai: AIComponent) => number
+}
+
+export const ActionData: { [key: string]: Action } = {
     "wander": {
         preconditions: { targetPositionKnown: false },
         postconditions: { targetPositionKnown: true },
@@ -921,7 +1026,7 @@ export const Actions = {
     "guard": {
         preconditions: { targetPositionKnown: false },
         postconditions: { targetPositionKnown: true },
-        updateFunction: () => noop,
+        updateFunction: () => { return () => true; },
         weight: () => 1
     },
     "patrol": {
@@ -963,40 +1068,40 @@ export const Actions = {
     "reposition": {
         preconditions: { inDangerousArea: true },
         postconditions: { inDangerousArea: false },
-        updateFunction: () => noop,
+        updateFunction: () => { return () => true; },
         weight: () => 1
     },
     "runAway": {
         preconditions: { afraid: true },
         postconditions: { afraid: false },
-        updateFunction: () => noop,
+        updateFunction: () => { return () => true; },
         weight: () => 1
     },
     "cower": {
         preconditions: { afraid: false, cowering: false },
         postconditions: { cowering: true },
-        updateFunction: () => noop,
+        updateFunction: () => { return () => true; },
         weight: () => 1
     },
     "goToFallbackPosition": {
         preconditions: { atFallbackPosition: false },
         postconditions: { atFallbackPosition: true },
-        updateFunction: () => noop,
+        updateFunction: () => { return () => true; },
         weight: () => 1
     }
 };
 
 // Dynamically add spells to goals and actions
 for (const key in SpellData) {
-    const data = SpellData[key];
+    const data: SpellDataDetails = SpellData[key];
     // capitalize the first letter
     const goal = `enoughManaFor_${key}`;
     const action = `castSpell_${key}`;
     if (data.type === "damage") {
-        Goals[goal] = {
+        GoalData[goal] = {
             resolver: resolveEnoughManaForSpell(key)
         };
-        Actions[action] = {
+        ActionData[action] = {
             preconditions: {
                 [goal]: true,
                 targetInLineOfSight: true,
@@ -1007,10 +1112,10 @@ for (const key in SpellData) {
             weight: () => 1
         };
     } else if (data.type === "heal") {
-        Goals[goal] = {
+        GoalData[goal] = {
             resolver: resolveEnoughManaForSpell(key)
         };
-        Actions[action] = {
+        ActionData[action] = {
             preconditions: { lowHealth: true, [goal]: true },
             postconditions: { lowHealth: false },
             updateFunction: castSpellAction(key),
@@ -1031,26 +1136,24 @@ if (ENV !== "TEST") {
     Object.freeze(ObjectData);
 }
 
-export const LevelData = {
+export const LevelData: { [key: string]: any } = {
     forrest_001,
     durdwin_001,
     dev_room
 };
 
+export type LevelName = keyof typeof LevelData;
+
 if (ENV !== "TEST") {
     Object.freeze(LevelData);
 }
 
-export const GameState = {
-    gameplay: 1,
-    openingCinematic: 2,
-    winCinematic: 3,
-    loseCinematic: 4,
-    pauseMenu: 5,
-    inventoryMenu: 6,
-    spellMenu: 7
+export const enum GameState {
+    Gameplay,
+    OpeningCinematic,
+    WinCinematic,
+    LoseCinematic,
+    PauseMenu,
+    InventoryMenu,
+    SpellMenu
 };
-
-if (ENV !== "TEST") {
-    Object.freeze(GameState);
-}

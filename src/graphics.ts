@@ -1,23 +1,41 @@
-import { getObjectsAtLocation } from "./map";
+import Display from "./rot/display/display";
+
+import { GameMap, getObjectsAtLocation } from "./map";
+import { GameObject } from "./object";
+import { Camera } from "./camera";
+
+export interface GraphicsComponent {
+    char: string;
+    fgColor: string;
+    bgColor: string;
+    owner: GameObject;
+    setOwner: (owner: GameObject) => void;
+    draw: (display: Display, camera: Camera, map: GameMap, objects: GameObject[]) => void;
+}
 
 /**
  * Graphics component which simply draws the character with the fore
  * and background color at the owner's x and y coordinates if the tile
  * it's on is visible.
  */
-class BasicGraphics {
-    constructor(char, fgColor, bgColor) {
+export class BasicGraphics implements GraphicsComponent {
+    char: string;
+    fgColor: string;
+    bgColor: string;
+    owner: GameObject;
+
+    constructor(char: string, fgColor: string, bgColor: string) {
         this.char = char;
         this.fgColor = fgColor;
         this.bgColor = bgColor;
         this.owner = null;
     }
 
-    setOwner(owner) {
+    setOwner(owner: GameObject) {
         this.owner = owner;
     }
 
-    draw(display, camera, map) {
+    draw(display: Display, camera: Camera, map: GameMap) {
         if (this.owner && map[this.owner.y][this.owner.x].isVisibleAndLit()) {
             const { x, y } = camera.worldToScreen(this.owner.x, this.owner.y);
             display.draw(x, y, this.char, this.fgColor, this.bgColor);
@@ -29,14 +47,19 @@ class BasicGraphics {
  * Graphics component which handles the odd behavior with ROT.js and
  * transparent backgrounds
  */
-class TransparencyGraphics {
-    constructor(char, fgColor) {
+export class TransparencyGraphics implements GraphicsComponent {
+    char: string;
+    fgColor: string;
+    bgColor: string;
+    owner: GameObject;
+
+    constructor(char: string, fgColor: string) {
         this.char = char;
         this.fgColor = fgColor;
         this.owner = null;
     }
 
-    setOwner(owner) {
+    setOwner(owner: GameObject) {
         this.owner = owner;
     }
 
@@ -51,7 +74,7 @@ class TransparencyGraphics {
      * @param {Array} map The map 2D array
      * @param {Array} objects An array of GameObjects
      */
-    draw(display, camera, map, objects) {
+    draw(display: Display, camera: Camera, map: GameMap, objects: GameObject[]) {
         if (this.owner && map[this.owner.y][this.owner.x].isVisibleAndLit()) {
             let bgColor = map[this.owner.y][this.owner.x].lightingColor;
             const objectsAtLocation = getObjectsAtLocation(objects, this.owner.x, this.owner.y);
@@ -84,23 +107,27 @@ class TransparencyGraphics {
  * Graphics component will always draw the object if the tile it's on has been explored,
  * regardless of its visibility
  */
-class DrawAfterSeen {
-    constructor(char, fgColor, bgColor) {
+export class DrawAfterSeen implements GraphicsComponent {
+    char: string;
+    fgColor: string;
+    bgColor: string;
+    owner: GameObject;
+
+    constructor(char: string, fgColor: string, bgColor: string) {
         this.char = char;
         this.fgColor = fgColor;
         this.bgColor = bgColor;
         this.owner = null;
     }
 
-    setOwner(owner) {
+    setOwner(owner: GameObject) {
         this.owner = owner;
     }
 
-    draw(display, camera, map) {
+    draw(display: Display, camera: Camera, map: GameMap) {
         if (this.owner && map[this.owner.y][this.owner.x].explored) {
             const { x, y } = camera.worldToScreen(this.owner.x, this.owner.y);
             display.draw(x, y, this.char, this.fgColor, this.bgColor);
         }
     }
 }
-export { BasicGraphics, TransparencyGraphics, DrawAfterSeen };

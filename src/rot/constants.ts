@@ -32,7 +32,7 @@ export let DEFAULT_WIDTH = 80;
 /** Default height for display and map generators */
 export let DEFAULT_HEIGHT = 25;
 
-export const DIRS = {
+export const DIRS: { [key: number]: number[][] } = {
 	4: [[0, -1], [1, 0], [0, 1], [-1, 0]],
 	8: [[0, -1], [1, -1], [1, 0], [1, 1], [0, 1], [-1, 1], [-1, 0], [-1, -1]],
 	6: [[-1, -1], [1, -1], [2, 0], [1, 1], [-1, 1], [-2, 0]]

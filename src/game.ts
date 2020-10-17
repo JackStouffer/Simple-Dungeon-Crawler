@@ -1,9 +1,10 @@
 /* global ENV */
 
-"use strict";
+declare var ENV: any;
 
 import { EventEmitter } from "events";
 import { Display, Scheduler } from "./rot/index";
+import { default as SpeedScheduler } from "./rot/scheduler/speed";
 
 import globals from "./globals";
 import {
@@ -23,20 +24,21 @@ import {
     playBoxBreak
 } from "./audio";
 import { Camera } from "./camera";
-import { createObject } from "./object";
+import { createObject, GameObject } from "./object";
 import {
     moveCommand,
     openInventoryCommand,
     openSpellsCommand,
-    getItemCommand
+    getItemCommand, Command, AsyncCommand
 } from "./commands";
-import { WIDTH, HEIGHT, GameState } from "./data";
+import { WIDTH, HEIGHT, GameState, LevelName } from "./data";
 import {
+    GameMap,
     drawMap,
     getObjectsAtLocation,
     resetVisibility,
     loadTiledMap,
-    findVolumeCollision
+    findVolumeCollision, PathNode
 } from "./map";
 import {
     drawUI,
@@ -55,6 +57,7 @@ import {
     explainPickUpItem
 } from "./tutorials";
 import { readKey } from "./util";
+import { Volume } from "./volume";
 
 globals.gameEventEmitter = new EventEmitter();
 
@@ -65,7 +68,7 @@ globals.gameEventEmitter = new EventEmitter();
  * @param {Event} e The JS event object
  * @returns {void}
  */
-export function mouseLook(e) {
+export function mouseLook(e: MouseEvent): void {
     const [x, y] = globals.Game.display.eventToPosition(e);
     const target = getObjectsAtLocation(globals.Game.gameObjects, x, y)[0];
     const tile = globals.Game.map[y][x];
@@ -88,17 +91,39 @@ export function mouseLook(e) {
     }
 }
 
+export interface KeyCommand {
+    key: string;
+    description: string;
+    command: Command;
+}
+
 class SimpleDungeonCrawler {
+    state: GameState;
+    canvas: HTMLElement;
+    display: Display;
+    player: GameObject;
+    scheduler: SpeedScheduler;
+    gameObjects: GameObject[];
+    map: GameMap;
+    volumes: Volume[];
+    pathNodes: Map<number, PathNode>;
+    totalTurns: number;
+    keyCommands: KeyCommand[];
+    keyBindingMenu: KeyBindingMenu;
+    inventoryMenu: InventoryMenu;
+    spellSelectionMenu: SpellSelectionMenu;
+    gameCamera: Camera;
+
     constructor() {
-        this.state = GameState.openingCinematic;
+        this.state = GameState.OpeningCinematic;
         this.canvas = null;
         this.display = null;
         this.player = null;
-        this.scheduler = new Scheduler.Speed();
+        this.scheduler = new SpeedScheduler();
         this.gameObjects = [];
         this.map = [];
         this.volumes = [];
-        this.pathNodes = [];
+        this.pathNodes = new Map();
         this.totalTurns = 0;
 
         if (ENV === "TEST") {
@@ -144,7 +169,7 @@ class SimpleDungeonCrawler {
         this.gameObjects = [];
         this.totalTurns = 0;
         this.scheduler.clear();
-        this.scheduler.add(this.player);
+        this.scheduler.add(this.player, true);
         this.gameCamera.follow(this.player);
 
         this.loadLevel("forrest_001");
@@ -194,7 +219,7 @@ class SimpleDungeonCrawler {
         globals.gameEventEmitter.on("tutorial.wildSpells", explainWildSpells);
 
         this.player = createObject("player", 1, 1);
-        this.scheduler.add(this.player);
+        this.scheduler.add(this.player, true);
         this.gameCamera.follow(this.player);
 
         globals.gameEventEmitter.emit("tutorial.start");
@@ -204,7 +229,7 @@ class SimpleDungeonCrawler {
 
     render() {
         switch (this.state) {
-            case GameState.gameplay:
+            case GameState.Gameplay:
                 this.display.clear();
                 this.gameCamera.update(this.map);
 
@@ -239,16 +264,16 @@ class SimpleDungeonCrawler {
 
                 drawUI(this.display, this.player);
                 break;
-            case GameState.pauseMenu:
+            case GameState.PauseMenu:
                 this.keyBindingMenu.draw(this.keyCommands);
                 break;
-            case GameState.inventoryMenu:
+            case GameState.InventoryMenu:
                 this.inventoryMenu.draw(this.player.inventoryComponent.getItems());
                 break;
-            case GameState.spellMenu:
+            case GameState.SpellMenu:
                 this.spellSelectionMenu.draw(this.player.fighter.getKnownSpells());
                 break;
-            case GameState.openingCinematic:
+            case GameState.OpeningCinematic:
                 this.display.clear();
                 this.display.drawText(WIDTH - (WIDTH - 7), 12, "%c{white}Your country is being overrun by the forces of darkness");
                 this.display.drawText(WIDTH - (WIDTH - 8), 15, "%c{white}Tales tell of a weapon of great power lost in the");
@@ -258,12 +283,12 @@ class SimpleDungeonCrawler {
                 this.display.drawText(WIDTH - (WIDTH - 16), 21, "%c{white}You have volunteered to retrieve it");
                 this.display.drawText(WIDTH - (WIDTH - 24), 27, "%c{white}Press [enter] to start");
                 break;
-            case GameState.loseCinematic:
+            case GameState.LoseCinematic:
                 this.display.clear();
                 this.display.drawText(WIDTH - (WIDTH - 5), 12, "%c{white}You have died, and the last hope of your people dies with you");
                 this.display.drawText(WIDTH - (WIDTH - 18), 24, "%c{white}Press [enter] to restart the game");
                 break;
-            case GameState.winCinematic:
+            case GameState.WinCinematic:
                 this.display.clear();
                 this.display.drawText(WIDTH - (WIDTH - 12), 12, "%c{white}You have reached the bottom and have retrieved");
                 this.display.drawText(WIDTH - (WIDTH - 16), 13, "%c{white}the fabled weapon and saved your people");
@@ -274,7 +299,7 @@ class SimpleDungeonCrawler {
         }
     }
 
-    loadLevel(name) {
+    loadLevel(name: LevelName) {
         const { map, playerLocation, objects, volumes, pathNodes } = loadTiledMap(name);
         this.map = map;
         objects.push(this.player);
@@ -292,17 +317,17 @@ class SimpleDungeonCrawler {
     }
 
     async handleInput() {
-        let acted;
+        let acted: boolean;
         do {
             this.render();
 
-            const e = await readKey();
+            const e: KeyboardEvent = await readKey();
             e.preventDefault();
 
-            if (this.state === GameState.gameplay) {
+            if (this.state === GameState.Gameplay) {
                 if (e.key === "Escape") {
                     globals.gameEventEmitter.emit("ui.openKeybinding");
-                    this.state = GameState.pauseMenu;
+                    this.state = GameState.PauseMenu;
                     continue;
                 }
 
@@ -313,20 +338,20 @@ class SimpleDungeonCrawler {
 
                 const command = this.keyCommands.filter(c => c.key === e.key)[0].command;
                 acted = command(this.player);
-            } else if (this.state === GameState.pauseMenu) {
+            } else if (this.state === GameState.PauseMenu) {
                 if (e.key === "Escape") {
                     globals.gameEventEmitter.emit("ui.closeKeybinding");
-                    this.state = GameState.gameplay;
+                    this.state = GameState.Gameplay;
                     this.keyBindingMenu.resetState();
                     this.render();
                     continue;
                 }
 
                 this.keyBindingMenu.handleInput(e.key, this.keyCommands);
-            } else if (this.state === GameState.inventoryMenu) {
+            } else if (this.state === GameState.InventoryMenu) {
                 if (e.key === "Escape") {
                     globals.gameEventEmitter.emit("ui.closeInventory");
-                    this.state = GameState.gameplay;
+                    this.state = GameState.Gameplay;
                     this.inventoryMenu.resetState();
                     this.render();
                     continue;
@@ -338,17 +363,17 @@ class SimpleDungeonCrawler {
                 );
 
                 if (command) {
-                    this.state = GameState.gameplay;
+                    this.state = GameState.Gameplay;
                     this.render();
                     acted = await command(this.player);
                     if (!acted) {
-                        this.state = GameState.inventoryMenu;
+                        this.state = GameState.InventoryMenu;
                     }
                 }
-            } else if (this.state === GameState.spellMenu) {
+            } else if (this.state === GameState.SpellMenu) {
                 if (e.key === "Escape") {
                     globals.gameEventEmitter.emit("ui.closeSpells");
-                    this.state = GameState.gameplay;
+                    this.state = GameState.Gameplay;
                     this.spellSelectionMenu.resetState();
                     this.render();
                     continue;
@@ -360,28 +385,28 @@ class SimpleDungeonCrawler {
                 );
 
                 if (command) {
-                    this.state = GameState.gameplay;
+                    this.state = GameState.Gameplay;
                     this.render();
                     acted = await command(this.player);
                     if (!acted) {
-                        this.state = GameState.spellMenu;
+                        this.state = GameState.SpellMenu;
                     }
                 }
-            } else if (this.state === GameState.openingCinematic) {
+            } else if (this.state === GameState.OpeningCinematic) {
                 if (e.key === "Enter") {
                     this.hookMouseLook();
                     this.loadLevel("forrest_001");
-                    this.state = GameState.gameplay;
+                    this.state = GameState.Gameplay;
                 }
-            } else if (this.state === GameState.winCinematic) {
+            } else if (this.state === GameState.WinCinematic) {
                 if (e.key === "Enter") {
                     this.reset();
-                    this.state = GameState.gameplay;
+                    this.state = GameState.Gameplay;
                 }
-            } else if (this.state === GameState.loseCinematic) {
+            } else if (this.state === GameState.LoseCinematic) {
                 if (e.key === "Enter") {
                     this.reset();
-                    this.state = GameState.gameplay;
+                    this.state = GameState.Gameplay;
                 }
             }
         } while (!acted);
@@ -397,13 +422,13 @@ class SimpleDungeonCrawler {
             }
             actor.act(this.map, this.gameObjects, this.pathNodes);
 
-            if (this.player.fighter === null || this.player.fighter.hp <= 0) {
-                this.state = GameState.loseCinematic;
+            if (this.player.fighter === null || this.player.fighter.getEffectiveStats().hp <= 0) {
+                this.state = GameState.LoseCinematic;
             }
 
             const volumes = findVolumeCollision(this.volumes, actor);
             if (volumes.length) {
-                volumes.forEach(v => v.enter(actor));
+                volumes.forEach((v: Volume) => v.enter(actor));
             }
         }
     }
@@ -420,7 +445,7 @@ class SimpleDungeonCrawler {
         this.canvas.removeEventListener("mousedown", mouseLook);
     }
 
-    addObject(object) {
+    addObject(object: GameObject) {
         this.gameObjects.push(object);
         this.scheduler.add(this.gameObjects[this.gameObjects.length - 1], true);
     }
@@ -430,7 +455,7 @@ class SimpleDungeonCrawler {
      * @param  {GameObject} object The object to remove
      * @return {void}
      */
-    removeObject(object) {
+    removeObject(object: GameObject) {
         // could use an object pool or a linked list to speed up this operation
         // but that seems overkill for this
         this.gameObjects.splice(this.gameObjects.indexOf(object), 1);

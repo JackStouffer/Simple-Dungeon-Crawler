@@ -1,15 +1,36 @@
 import globals from "./globals";
 import { ItemData } from "./data";
+import { GameObject } from "./object";
+
+export interface InventoryItemDetails {
+    id: string;
+    displayName: string;
+    type: string;
+    count: number;
+    value?: number;
+}
+
+export interface InventoryComponent {
+    owner: GameObject;
+    setOwner: (owner: GameObject) => void;
+    getItems: () => InventoryItemDetails[];
+    addItem: (id: string, count?: number) => boolean;
+    useItem: (id: string) => void;
+    hasItem: (id: string) => boolean;
+}
 
 /**
  * Inventory component. Holds items and their counts.
  */
-class BasicInventory {
+export class BasicInventory implements InventoryComponent {
+    owner: GameObject;
+    private inventory: Map<string, number>;
+
     constructor() {
         this.owner = null;
         // Uses the Map in order to make sure the
         // key order is consistent across browsers
-        this._inventory = new Map();
+        this.inventory = new Map();
     }
 
     /**
@@ -17,7 +38,7 @@ class BasicInventory {
      * @param {GameObject} owner The component owner
      * @returns {void}
      */
-    setOwner(owner) {
+    setOwner(owner: GameObject) {
         this.owner = owner;
     }
 
@@ -26,14 +47,15 @@ class BasicInventory {
      * of the item in the inventory.
      * @returns {Array} An array of objects
      */
-    getItems() {
-        return [...this._inventory.keys()].map(e => {
+    getItems(): InventoryItemDetails[] {
+        return [...this.inventory.keys()].map(e => {
             const data = ItemData[e];
             return {
                 id: e,
                 displayName: data.displayName,
                 type: data.type,
-                count: this._inventory.get(e)
+                count: this.inventory.get(e),
+                value: data.value
             };
         });
     }
@@ -43,8 +65,8 @@ class BasicInventory {
      * @param {String} id Item ID
      * @returns {Boolean} Has item
      */
-    hasItem(id) {
-        return this._inventory.has(id);
+    hasItem(id: string): boolean {
+        return this.inventory.has(id);
     }
 
     /**
@@ -54,19 +76,19 @@ class BasicInventory {
      * @param {Number} count The number of the item to add
      * @returns {Boolean} If the item was successfully added
      */
-    addItem(id, count=1) {
+    addItem(id: string, count=1): boolean {
         if (!(id in ItemData)) { throw new Error(`${id} is not a valid item id`); }
 
         if (this.hasItem(id)) {
-            const newValue = this._inventory.get(id) + count;
+            const newValue = this.inventory.get(id) + count;
 
             if (newValue === 100) {
                 return false;
             }
 
-            this._inventory.set(id, newValue);
+            this.inventory.set(id, newValue);
         } else {
-            this._inventory.set(id, count);
+            this.inventory.set(id, count);
         }
 
         if (this.owner === globals.Game.player) {
@@ -87,16 +109,15 @@ class BasicInventory {
      * @param {String} id Item ID
      * @returns {void}
      */
-    useItem(id) {
+    useItem(id: string): void {
         if (!this.hasItem(id)) {
             throw new Error(`Item ${id} not in inventory`);
         }
 
-        this._inventory.set(id, this._inventory.get(id) - 1);
+        this.inventory.set(id, this.inventory.get(id) - 1);
 
-        if (this._inventory.get(id) === 0) {
-            this._inventory.delete(id);
+        if (this.inventory.get(id) === 0) {
+            this.inventory.delete(id);
         }
     }
 }
-export { BasicInventory };

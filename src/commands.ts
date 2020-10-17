@@ -4,6 +4,10 @@ import globals from "./globals";
 import { SpellData, ItemData, GameState } from "./data";
 import { isBlocked } from "./map";
 import { displayMessage } from "./ui";
+import { GameObject } from "./object";
+
+export type Command = (actor: GameObject) => boolean;
+export type AsyncCommand = (actor: GameObject) => Promise<boolean>;
 
 /**
  * Create a move function for a specified GameObject. The function
@@ -16,11 +20,11 @@ import { displayMessage } from "./ui";
  * @param {Number} topology Either four directions or eight
  * @returns {Function} A function to move the game object, it returns true when moved, false otherwise
  */
-export function moveCommand(direction, topology) {
-    return function(actor) {
-        const dir = DIRS[topology][direction];
-        const newX = actor.x + dir[0];
-        const newY = actor.y + dir[1];
+export function moveCommand(direction: number, topology: number): Command {
+    return function(actor: GameObject) {
+        const dir: number[] = DIRS[topology][direction];
+        const newX: number = actor.x + dir[0];
+        const newY: number = actor.y + dir[1];
         const { object, blocks } = isBlocked(
             globals.Game.map,
             globals.Game.gameObjects,
@@ -58,9 +62,9 @@ export function moveCommand(direction, topology) {
  * @param {GameObject} actor The game object to manipulate
  * @returns {Function} A function which returns true if an object was picked up, false otherwise
  */
-export function getItemCommand() {
+export function getItemCommand(): Command {
     return function(actor) {
-        const items = globals.Game.gameObjects.filter(item => {
+        const items = globals.Game.gameObjects.filter((item: GameObject) => {
             return item.type === "dropped_item" && item.x === actor.x && item.y === actor.y;
         });
 
@@ -78,10 +82,10 @@ export function getItemCommand() {
  * Generates a function to put the game into the inventory_menu state.
  * @return {Function} A function which always returns false
  */
-export function openInventoryCommand() {
+export function openInventoryCommand(): Command {
     return function() {
         globals.gameEventEmitter.emit("ui.openInventory");
-        globals.Game.state = GameState.inventoryMenu;
+        globals.Game.state = GameState.InventoryMenu;
         return false;
     };
 }
@@ -90,10 +94,10 @@ export function openInventoryCommand() {
  * Generate a function which puts the game into spell_menu state.
  * @returns {Function} A function which always returns false
  */
-export function openSpellsCommand() {
+export function openSpellsCommand(): Command {
     return function() {
         globals.gameEventEmitter.emit("ui.openSpells");
-        globals.Game.state = GameState.spellMenu;
+        globals.Game.state = GameState.SpellMenu;
         return false;
     };
 }
@@ -104,7 +108,7 @@ export function openSpellsCommand() {
  * @param {String} itemID The id of the item to use
  * @returns {Function} A command function which takes an object as a param
  */
-export function useItemCommand(itemID) {
+export function useItemCommand(itemID: string): AsyncCommand {
     return async function (actor) {
         if (!actor.inventoryComponent.hasItem(itemID)) { return false; }
 
@@ -126,8 +130,8 @@ export function useItemCommand(itemID) {
  * @param {String} spellID The id of the spell to use
  * @returns {Function} A command function which takes an object as a param
  */
-export function useSpellCommand(spellID, target) {
-    return async function (actor) {
+export function useSpellCommand(spellID: string): AsyncCommand {
+    return async function (actor: GameObject) {
         if (!actor.fighter.hasSpell(spellID)) { return false; }
 
         const details = SpellData[spellID];
@@ -136,7 +140,7 @@ export function useSpellCommand(spellID, target) {
             return false;
         }
 
-        const used = await details.useFunc(details, actor, target);
+        const used = await details.useFunc(details, actor);
         if (used) {
             actor.fighter.useMana(details.manaCost);
             return true;

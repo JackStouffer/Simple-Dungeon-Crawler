@@ -1,25 +1,82 @@
 /* global ENV */
+declare var ENV: any;
 
-import { RNG } from "./rot/index";
+import { RNG, SpeedActor } from "./rot/index";
 
 import globals from "./globals";
 import {
     LEVEL_UP_BASE,
     LEVEL_UP_FACTOR,
     DamageType,
-    DamageTypeNames,
     SpellData,
     ObjectData
 } from "./data";
-import { displayMessage } from "./ui";
+import { displayMessage, MessageType } from "./ui";
 import { cloneDeep } from "lodash";
+import { GameObject } from "./object";
+import { StatisticEffect, StatusEffect } from "./effects";
+
+export interface FighterComponent {
+    owner: GameObject;
+    experience?: number;
+    level?: number;
+
+    setOwner: (owner: GameObject) => void;
+    act: () => void;
+    attack: (target: GameObject) => void;
+    getEffectiveStats: () => FighterStats;
+    heal?: (hp: number) => void;
+    takeDamage?: (damage: number, critical: boolean, damageType: any) => boolean;
+    addSpellById?: (id: string) => boolean;
+    useMana?: (mana: number) => void;
+    addMana?: (mana: number) => void;
+    hasSpell?: (spell: string) => boolean;
+    getKnownSpells?: () => SpellFighterDetails[];
+    getStatusEffects?: () => StatusEffect[];
+    addStatusEffect?: (effect: StatusEffect) => void;
+    getStatisticEffects?: () => StatisticEffect[];
+    addStatisticEffect?: (effect: StatisticEffect) => void;
+}
+
+export interface FighterStats {
+    hp: number;
+    maxHp: number;
+    mana: number;
+    maxMana: number;
+    strength: number;
+    defense: number;
+    speed: number;
+    ailmentSusceptibility: number;
+    [index: string]: number;
+}
+
+export interface SpellFighterDetails {
+    id: string;
+    displayName: string;
+    manaCost: number;
+    value: number;
+    type: string;
+}
 
 /**
  * Component which controls the combat information and interaction
  * between different fighters
  */
-class BasicFighter {
-    constructor(data, deathCallback=null) {
+class BasicFighter implements FighterComponent, SpeedActor {
+    owner: GameObject;
+    private stats: FighterStats;
+    private deathCallback: (target: GameObject) => void;
+    experience: number;
+    experienceGiven: number;
+    level: number;
+    criticalChance: number;
+    criticalDamageMultiplier: number;
+    statusEffects: StatusEffect[];
+    statisticEffects: StatisticEffect[];
+    damageAffinity: any;
+    knownSpells: Set<string>;
+
+    constructor(data: any, deathCallback: (target: GameObject) => void = null) {
         this.stats = {
             hp: data.maxHp,
             maxHp: data.maxHp,
@@ -27,7 +84,8 @@ class BasicFighter {
             maxMana: data.maxMana,
             strength: data.strength,
             defense: data.defense,
-            speed: data.speed
+            speed: data.speed,
+            ailmentSusceptibility: data.ailmentSusceptibility
         };
 
         this.deathCallback = deathCallback;
@@ -42,13 +100,12 @@ class BasicFighter {
 
         this.statusEffects = [];
         this.statisticEffects = [];
-        this.ailmentSusceptibility = data.ailmentSusceptibility;
         this.damageAffinity = data.damageAffinity;
 
         this.knownSpells = new Set();
     }
 
-    setOwner(owner) {
+    setOwner(owner: GameObject) {
         this.owner = owner;
     }
 
@@ -95,7 +152,7 @@ class BasicFighter {
      * @param {Number} damage The amount of damage
      * @returns {Boolean} Did the attack kill the target
      */
-    takeDamage(damage, critical, damageType) {
+    takeDamage(damage: number, critical: boolean, damageType: DamageType): boolean {
         const effectiveStats = this.getEffectiveStats();
         damage = damage * this.damageAffinity[damageType];
         damage = Math.max(1, damage - effectiveStats.defense);
@@ -105,9 +162,9 @@ class BasicFighter {
         }
 
         if (critical) {
-            displayMessage(`CRITICAL! ${this.owner.name} takes ${damage} of ${DamageTypeNames[damageType]} damage.`, "critical");
+            displayMessage(`CRITICAL! ${this.owner.name} takes ${damage} of ${DamageType[damageType]} damage.`, MessageType.Critical);
         } else {
-            displayMessage(`${this.owner.name} takes ${damage} ${DamageTypeNames[damageType]} damage.`);
+            displayMessage(`${this.owner.name} takes ${damage} ${DamageType[damageType]} damage.`);
         }
 
         if (this.stats.hp <= 0) {
@@ -121,7 +178,7 @@ class BasicFighter {
         return false;
     }
 
-    attack(target) {
+    attack(target: GameObject): void {
         if (!target.fighter) { return; }
 
         const effectiveStats = this.getEffectiveStats();
@@ -149,7 +206,7 @@ class BasicFighter {
      * @param {Number} amount hp amount
      * @returns {void}
      */
-    heal(amount) {
+    heal(amount: number): void {
         const effectiveStats = this.getEffectiveStats();
         this.stats.hp += amount;
         if (this.stats.hp > effectiveStats.maxHp) {
@@ -163,7 +220,7 @@ class BasicFighter {
      * @param {Number} cost The amount of mana to use
      * @returns {void}
      */
-    useMana(cost) {
+    useMana(cost: number) {
         this.stats.mana = Math.max(this.stats.mana - cost, 0);
     }
 
@@ -173,7 +230,7 @@ class BasicFighter {
      * @param {Number} amount mana amount
      * @returns {void}
      */
-    addMana(amount) {
+    addMana(amount: number) {
         const effectiveStats = this.getEffectiveStats();
         this.stats.mana += amount;
         if (this.stats.mana > effectiveStats.maxMana) {
@@ -186,7 +243,7 @@ class BasicFighter {
      * of the statistic effects.
      * @returns {Object} An object containing the stats
      */
-    getEffectiveStats() {
+    getEffectiveStats(): FighterStats {
         if (this.statisticEffects.length === 0) { return this.stats; }
 
         let newStats = this.stats;
@@ -218,26 +275,26 @@ class BasicFighter {
         return newStats;
     }
 
-    addStatusEffect(effect) {
+    addStatusEffect(effect: StatusEffect) {
         if (ENV === "DEV" && effect.constructor.name !== "StatusEffect") {
             throw new Error("effect must be of type StatusEffect");
         }
         this.statusEffects.push(effect);
     }
 
-    getStatusEffects() {
+    getStatusEffects(): StatusEffect[] {
         // Copy the array because JS doesn't have const references
         return cloneDeep(this.statusEffects);
     }
 
-    addStatisticEffect(effect) {
+    addStatisticEffect(effect: StatisticEffect) {
         if (ENV === "DEV" && effect.constructor.name !== "StatisticEffect") {
             throw new Error("effect must be of type StatisticEffect");
         }
         this.statisticEffects.push(effect);
     }
 
-    getStatisticEffects() {
+    getStatisticEffects(): StatisticEffect[] {
         // Copy the array because JS doesn't have const references
         return cloneDeep(this.statisticEffects);
     }
@@ -248,7 +305,7 @@ class BasicFighter {
      * @param {String} id A spell id
      * @returns {Boolean} If the spell was successfully learned
      */
-    addSpellById(id) {
+    addSpellById(id: string): boolean {
         if (!(id in SpellData)) { throw new Error(`${id} is not a valid spell id`); }
         if (this.knownSpells.has(id)) { return false; }
 
@@ -264,7 +321,7 @@ class BasicFighter {
         return true;
     }
 
-    getKnownSpells() {
+    getKnownSpells(): SpellFighterDetails[] {
         return [...this.knownSpells].map(s => {
             return {
                 id: s,
@@ -276,11 +333,11 @@ class BasicFighter {
         });
     }
 
-    hasSpell(spellID) {
+    hasSpell(spellID: string) {
         return this.knownSpells.has(spellID);
     }
 
-    getSpeed() {
+    getSpeed(): number {
         return this.getEffectiveStats().speed;
     }
 }

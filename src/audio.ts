@@ -1,19 +1,23 @@
 /* global ENV */
 
+declare var ENV: any;
+
 import { Howl } from "howler";
 
-const sounds = {};
+const sounds: { [key: string]: Howl } = {};
 
-const levelThemes = {
+const levelThemes: { [key: string]: string } = {
     "forrest_001": "forrestTheme",
-    "forrest_002": "forrestTheme",
-    "forrest_003": "forrestTheme",
-    "forrest_004": "forrestTheme",
     "durdwin_001": "caveTheme"
 };
 
+interface SoundChannel {
+    id: number,
+    sound: Howl
+}
+
 const musicVolume = 0.8;
-const musicChannel = {
+const musicChannel: SoundChannel = {
     id: null,
     sound: null
 };
@@ -202,7 +206,7 @@ export function playBoxBreak() {
     sounds.boxBreaking.play();
 }
 
-export function playLevelTheme(levelName) {
+export function playLevelTheme(levelName: string) {
     if (ENV === "TEST") {
         return;
     }

@@ -22,6 +22,9 @@
   },
   "homepage": "https://github.com/JackStouffer/Simple-Dungeon-Crawler#readme",
   "devDependencies": {
+    "@types/howler": "^2.2.1",
+    "@types/html-webpack-plugin": "^3.2.3",
+    "@types/lodash": "^4.14.162",
     "chai": "^4.2.0",
     "eslint": "^7.7.0",
     "expose-loader": "^1.0.0",

@@ -1,9 +1,21 @@
-import { Color, Lighting, FOV } from "./rot/index";
+import { Lighting, FOV } from "./rot/index";
+import { Color, toRGB, add, fromString } from "./rot/color";
 
 import { createPassableSightCallback } from "./ai/components";
+import { GameObject } from "./object";
+import { GameMap } from "./map";
 
-function createReflectivityCallback(map) {
-    return function (x, y) {
+export interface LightingComponent {
+    color: string;
+    range: number;
+    owner: GameObject;
+
+    setOwner: (owner: GameObject) => void;
+    compute: (map: any) => void;
+}
+
+function createReflectivityCallback(map: GameMap) {
+    return function (x: number, y: number) {
         if (x < 0 || y < 0 || y >= map.length || x >= map[y].length) {
             return 0;
         }
@@ -14,24 +26,28 @@ function createReflectivityCallback(map) {
 /**
  * Component
  */
-class ReflectivityLighting {
-    constructor(color, range) {
+class ReflectivityLighting implements LightingComponent {
+    color: string;
+    range: number;
+    owner: GameObject;
+
+    constructor(color: string, range: number) {
         this.color = color;
         this.range = range;
     }
 
-    setOwner(owner) {
+    setOwner(owner: GameObject) {
         this.owner = owner;
     }
 
-    compute(map) {
-        function lightingCallback(x, y, color) {
+    compute(map: GameMap) {
+        function lightingCallback(x: number, y: number, color: Color) {
             if (x < 0 || y < 0 || y >= map.length || x >= map[y].length) {
                 return;
             }
-            map[y][x].lightingColor = Color.toRGB(
-                Color.add(
-                    Color.fromString(map[y][x].lightingColor),
+            map[y][x].lightingColor = toRGB(
+                add(
+                    fromString(map[y][x].lightingColor),
                     color
                 )
             );
@@ -54,24 +70,28 @@ class ReflectivityLighting {
 /**
  * Component
  */
-class PlayerLighting {
-    constructor(color, range) {
+class PlayerLighting implements LightingComponent {
+    color: string;
+    range: number;
+    owner: GameObject;
+
+    constructor(color: string, range: number) {
         this.color = color;
         this.range = range;
     }
 
-    setOwner(owner) {
+    setOwner(owner: GameObject) {
         this.owner = owner;
     }
 
-    compute(map) {
-        function lightingCallback(x, y, color) {
+    compute(map: GameMap) {
+        function lightingCallback(x: number, y: number, color: Color) {
             if (x < 0 || y < 0 || y >= map.length || x >= map[y].length) {
                 return;
             }
-            map[y][x].lightingColor = Color.toRGB(
-                Color.add(
-                    Color.fromString(map[y][x].lightingColor),
+            map[y][x].lightingColor = toRGB(
+                add(
+                    fromString(map[y][x].lightingColor),
                     color
                 )
             );

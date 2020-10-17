@@ -206,7 +206,7 @@ describe("player", function () {
             };
             const func = openInventoryCommand();
             func(owner);
-            expect(globals.Game.state).to.be.equal(GameState.inventoryMenu);
+            expect(globals.Game.state).to.be.equal(GameState.InventoryMenu);
         });
     });
 

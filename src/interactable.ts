@@ -1,21 +1,32 @@
 import globals from "./globals";
 import { ItemData, SpellData } from "./data";
 import { displayMessage } from "./ui";
+import { GameObject } from "./object";
+
+export interface InteractableComponent {
+    owner: GameObject;
+    setOwner: (owner: GameObject) => void;
+    interact: (user: GameObject) => void;
+    setLevel?: (name: string) => void;
+    setSpell?: (name: string) => void;
+}
 
 /**
  * Component gives all the items in the inventory of the GameObject
  * to the user when interacted with
  */
-class GiveItemsInteractable {
+export class GiveItemsInteractable implements InteractableComponent {
+    owner: GameObject;
+
     constructor() {
         this.owner = null;
     }
 
-    setOwner(owner) {
+    setOwner(owner: GameObject) {
         this.owner = owner;
     }
 
-    interact(user) {
+    interact(user: GameObject) {
         if (this.owner.inventoryComponent && user.inventoryComponent) {
             const items = this.owner.inventoryComponent.getItems();
             if (items.length > 0) {
@@ -41,21 +52,24 @@ class GiveItemsInteractable {
 /**
  * Interaction component that adds a spell to the user's spell list
  */
-class GiveSpellInteractable {
+export class GiveSpellInteractable implements InteractableComponent {
+    owner: GameObject;
+    spellId: string;
+
     constructor() {
         this.owner = null;
         this.spellId = null;
     }
 
-    setOwner(owner) {
+    setOwner(owner: GameObject): void {
         this.owner = owner;
     }
 
-    setSpell(id) {
+    setSpell(id: string): void {
         this.spellId = id;
     }
 
-    interact(user) {
+    interact(user: GameObject): void {
         if (!user.fighter) { return; }
 
         if (!this.spellId) {
@@ -80,17 +94,14 @@ class GiveSpellInteractable {
  * Interaction component removes owner to give the appearance of opening
  * when interacting
  */
-class DoorInteractable {
+export class DoorInteractable implements InteractableComponent {
+    owner: GameObject;
+
     constructor() {
         this.owner = null;
-        this.levelName = null;
     }
 
-    setLevel(name) {
-        this.levelName = name;
-    }
-
-    setOwner(owner) {
+    setOwner(owner: GameObject) {
         this.owner = owner;
     }
 
@@ -103,21 +114,24 @@ class DoorInteractable {
 /**
  * Interaction component that calls Game.nextLevel when interacted with
  */
-class LoadLevelInteractable {
+export class LoadLevelInteractable implements InteractableComponent {
+    owner: GameObject;
+    levelName: string;
+
     constructor() {
         this.owner = null;
         this.levelName = null;
     }
 
-    setLevel(name) {
+    setLevel(name: string) {
         this.levelName = name;
     }
 
-    setOwner(owner) {
+    setOwner(owner: GameObject) {
         this.owner = owner;
     }
 
-    interact() {
+    interact(): void {
         if (!this.levelName) {
             throw new Error("No level name has been set for load");
         }
@@ -128,4 +142,3 @@ class LoadLevelInteractable {
         }
     }
 }
-export { GiveItemsInteractable, GiveSpellInteractable, DoorInteractable, LoadLevelInteractable };

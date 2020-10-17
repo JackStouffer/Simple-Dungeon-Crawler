@@ -1,1 +1,2 @@
-export default {};
+const globals: any = {};
+export default globals;

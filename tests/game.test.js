@@ -36,7 +36,7 @@ describe("game", function () {
         describe("handleInput", function () {
             it("should call a command when its key is pressed", async function () {
                 globals.Game.keyCommands = [{ key: "w", description: "Move Up", command: fake.returns(true) }];
-                globals.Game.state = GameState.gameplay;
+                globals.Game.state = GameState.Gameplay;
                 globals.window.addEventListener = function (_, cb) {
                     return cb({ key: "w", preventDefault: fake() });
                 };
@@ -45,17 +45,17 @@ describe("game", function () {
                 expect(globals.Game.keyCommands[0].command.calledOnce).to.be.true;
             });
 
-            it("should go into pauseMenu state when escape is pressed when in gameplay", async function () {
+            it("should go into PauseMenu state when escape is pressed when in gameplay", async function () {
                 let calls = 0;
                 globals.Game.keyCommands = [{ key: "w", description: "Move Up", command: fake.returns(true) }];
-                globals.Game.state = GameState.gameplay;
+                globals.Game.state = GameState.Gameplay;
                 globals.window.addEventListener = function (_, cb) {
                     if (calls === 0) {
                         calls++;
                         return cb({ key: "Escape", preventDefault: fake() });
                     } else if (calls === 1) {
                         calls++;
-                        expect(globals.Game.state).to.be.equal(GameState.pauseMenu);
+                        expect(globals.Game.state).to.be.equal(GameState.PauseMenu);
                         return cb({ key: "Escape", preventDefault: fake() });
                     } else if (calls === 2) {
                         calls++;
@@ -64,13 +64,13 @@ describe("game", function () {
                 };
 
                 await globals.Game.handleInput();
-                expect(globals.Game.state).to.be.equal(GameState.gameplay);
+                expect(globals.Game.state).to.be.equal(GameState.Gameplay);
             });
 
             it("should go back to gameplay state when escape is pressed when in inventoryMenu", async function () {
                 let calls = 0;
                 globals.Game.keyCommands = [{ key: "w", description: "Move Up", command: fake.returns(true) }];
-                globals.Game.state = GameState.inventoryMenu;
+                globals.Game.state = GameState.InventoryMenu;
                 globals.Game.canvas = { addEventListener: fake() };
                 globals.window.addEventListener = function (_, cb) {
                     if (calls === 0) {
@@ -82,7 +82,7 @@ describe("game", function () {
                 };
 
                 await globals.Game.handleInput();
-                expect(globals.Game.state).to.be.equal(GameState.gameplay);
+                expect(globals.Game.state).to.be.equal(GameState.Gameplay);
             });
 
             it("should return to gameplay when the inventory ui returns a command", async function () {
@@ -91,13 +91,13 @@ describe("game", function () {
                     draw: fake(),
                     handleInput: function () { return command; }
                 };
-                globals.Game.state = GameState.inventoryMenu;
+                globals.Game.state = GameState.InventoryMenu;
                 globals.window.addEventListener = function (_, cb) {
                     return cb({ key: "w", preventDefault: fake() });
                 };
 
                 await globals.Game.handleInput();
-                expect(globals.Game.state).to.be.equal(GameState.gameplay);
+                expect(globals.Game.state).to.be.equal(GameState.Gameplay);
                 expect(command.calledOnce).to.be.true;
             });
 
@@ -115,7 +115,7 @@ describe("game", function () {
                 };
 
                 await globals.Game.handleInput();
-                expect(globals.Game.state).to.be.equal(GameState.gameplay);
+                expect(globals.Game.state).to.be.equal(GameState.Gameplay);
             });
 
             it("should return to gameplay when the spell ui returns a command", async function () {
@@ -130,14 +130,14 @@ describe("game", function () {
                 };
 
                 await globals.Game.handleInput();
-                expect(globals.Game.state).to.be.equal(GameState.gameplay);
+                expect(globals.Game.state).to.be.equal(GameState.Gameplay);
                 expect(command.calledOnce).to.be.true;
             });
 
             it("should go to gameplay state when enter is pressed when in openingCinematic state", async function () {
                 let calls = 0;
                 globals.Game.keyCommands = [{ key: "w", description: "Move Up", command: fake.returns(true) }];
-                globals.Game.state = GameState.openingCinematic;
+                globals.Game.state = GameState.OpeningCinematic;
                 globals.Game.canvas = { addEventListener: fake() };
                 globals.window.addEventListener = function (_, cb) {
                     if (calls === 0) {
@@ -149,13 +149,13 @@ describe("game", function () {
                 };
 
                 await globals.Game.handleInput();
-                expect(globals.Game.state).to.be.equal(GameState.gameplay);
+                expect(globals.Game.state).to.be.equal(GameState.Gameplay);
             });
 
             it("should go to gameplay state when enter is pressed when in loseCinematic state", async function () {
                 let calls = 0;
                 globals.Game.keyCommands = [{ key: "w", description: "Move Up", command: fake.returns(true) }];
-                globals.Game.state = GameState.loseCinematic;
+                globals.Game.state = GameState.LoseCinematic;
                 globals.window.addEventListener = function (_, cb) {
                     if (calls === 0) {
                         calls++;
@@ -166,13 +166,13 @@ describe("game", function () {
                 };
 
                 await globals.Game.handleInput();
-                expect(globals.Game.state).to.be.equal(GameState.gameplay);
+                expect(globals.Game.state).to.be.equal(GameState.Gameplay);
             });
 
             it("should go to gameplay state when enter is pressed when in winCinematic state", async function () {
                 let calls = 0;
                 globals.Game.keyCommands = [{ key: "w", description: "Move Up", command: fake.returns(true) }];
-                globals.Game.state = GameState.winCinematic;
+                globals.Game.state = GameState.WinCinematic;
                 globals.window.addEventListener = function (_, cb) {
                     if (calls === 0) {
                         calls++;
@@ -183,7 +183,7 @@ describe("game", function () {
                 };
 
                 await globals.Game.handleInput();
-                expect(globals.Game.state).to.be.equal(GameState.gameplay);
+                expect(globals.Game.state).to.be.equal(GameState.Gameplay);
             });
         });
     });

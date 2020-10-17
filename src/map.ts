@@ -1,4 +1,4 @@
-import { RNG } from "./rot/index";
+import { Display, RNG } from "./rot/index";
 import { isNil, get } from "lodash";
 
 import {
@@ -7,23 +7,37 @@ import {
     COLOR_DARK_GROUND,
     COLOR_INVISIBLE_GROUND,
     LevelData,
-    TileData, WIDTH, HEIGHT
+    TileData, WIDTH, HEIGHT, LevelName
 } from "./data";
-import { createObject } from "./object";
-import { TriggerVolume } from "./volume";
+import { createObject, GameObject } from "./object";
+import { TriggerVolume, Volume } from "./volume";
+import { Camera } from "./camera";
 
-class Tile {
+export class Tile {
+    name: string;
+    char: string;
+    fgColor: string;
+    bgColor: string;
+    fgColorExplored: string;
+    bgColorExplored: string;
+    blocks: boolean;
+    blocksSight: boolean;
+    visible: boolean;
+    explored: boolean;
+    reflectivity: number;
+    lightingColor: string;
+
     constructor(
-        name,
-        char,
-        fgColor,
-        bgColor,
-        fgColorExplored,
-        bgColorExplored,
-        blocks,
-        blocksSight,
-        visible = false,
-        explored = false
+        name: string,
+        char: string,
+        fgColor: string,
+        bgColor: string,
+        fgColorExplored: string,
+        bgColorExplored: string,
+        blocks: boolean,
+        blocksSight: boolean,
+        visible: boolean = false,
+        explored : boolean= false
     ) {
         this.name = name;
         this.char = char;
@@ -43,26 +57,30 @@ class Tile {
      * Is the tile visible and is lit by non-ambient light
      * @returns {Boolean} Is visible and lit
      */
-    isVisibleAndLit() {
+    isVisibleAndLit(): boolean {
         return this.visible && this.lightingColor !== COLOR_AMBIENT_LIGHT;
     }
 }
-export { Tile };
 
-class PatrolNode {
-    constructor(pathName, x, y, next) {
+export class PathNode {
+    pathName: string;
+    x: number;
+    y: number;
+    next: number;
+    distance: number;
+
+    constructor(pathName: string, x: number, y: number, next: number) {
         this.pathName = pathName;
         this.x = x;
         this.y = y;
         this.next = next;
     }
 }
-export { PatrolNode };
 
-function findProperty(o, name) {
+function findProperty(o: any, name: string) {
     if (!o.properties || !o.properties.length) { return null; }
 
-    const property = o.properties.filter(prop => {
+    const property = o.properties.filter((prop: any) => {
         return prop.name === name;
     });
 
@@ -73,26 +91,28 @@ function findProperty(o, name) {
     }
 }
 
+export type GameMap = Tile[][];
+
 /**
  * Load a Tiled map using its name.
  * @param {String} level The name of the level
  * @returns {Object}     The map 2d array, player location, and game objects array
  */
-export function loadTiledMap(level) {
+export function loadTiledMap(level: LevelName) {
     if (!(level in LevelData)) { throw new Error(`${level} is not a valid level`); }
 
     const sourceData = LevelData[level];
-    const tileSize = sourceData.tileheight;
-    const map = [];
-    const objects = [];
-    const volumes = [];
-    const pathNodes = new Map();
+    const tileSize: number = sourceData.tileheight;
+    const map: GameMap = [];
+    const objects: GameObject[] = [];
+    const volumes: Volume[] = [];
+    const pathNodes: Map<number, PathNode> = new Map();
     const fallbackNodes = new Map();
-    let playerLocation = null;
+    let playerLocation: number[] = null;
 
-    const tileLayer = get(sourceData.layers.filter(l => l.name === "Tile Layer"), "[0]");
-    const objectLayer = get(sourceData.layers.filter(l => l.name === "Object Layer"), "[0]");
-    const nodeLayer = get(sourceData.layers.filter(l => l.name === "Node Layer"), "[0]");
+    const tileLayer = get(sourceData.layers.filter((l: any) => l.name === "Tile Layer"), "[0]");
+    const objectLayer = get(sourceData.layers.filter((l: any) => l.name === "Object Layer"), "[0]");
+    const nodeLayer = get(sourceData.layers.filter((l: any) => l.name === "Node Layer"), "[0]");
 
     if (!tileLayer) {
         throw new Error(`No tile layer in map ${level}`);
@@ -104,7 +124,7 @@ export function loadTiledMap(level) {
         throw new Error(`No node layer in map ${level}`);
     }
 
-    const translated = tileLayer.data.map(tile => {
+    const translated = tileLayer.data.map((tile: any) => {
         if (!(tile in TileData)) { throw new Error(`${tile} is not valid tile`); }
 
         const data = TileData[tile];
@@ -124,7 +144,7 @@ export function loadTiledMap(level) {
         map.push(translated.slice(i, i + sourceData.width));
     }
 
-    objectLayer.objects.forEach(o => {
+    objectLayer.objects.forEach((o: any) => {
         if (o.point) {
             if (o.type === "object") {
                 const type = findProperty(o, "objectType"),
@@ -148,7 +168,7 @@ export function loadTiledMap(level) {
                     );
 
                     if (inventory && obj.inventoryComponent) {
-                        inventory.split(",").forEach(i => obj.inventoryComponent.addItem(i));
+                        inventory.split(",").forEach((i: string) => obj.inventoryComponent.addItem(i));
                     }
 
                     if (levelName && obj.interactable && obj.interactable.setLevel) {
@@ -177,23 +197,23 @@ export function loadTiledMap(level) {
             const y = Math.floor(o.y / tileSize);
             const width = Math.ceil(o.width / tileSize);
             const height = Math.ceil(o.height / tileSize);
-            const type = findProperty("type");
+            const type = findProperty(o, "type");
 
             if (type === "trigger_volume") {
-                const event = findProperty("event");
+                const event = findProperty(o, "event");
                 volumes.push(new TriggerVolume(x, y, width, height, event));
             }
         }
     });
 
-    nodeLayer.objects.forEach(o => {
+    nodeLayer.objects.forEach((o: any) => {
         const x = Math.floor(o.x / tileSize),
             y = Math.floor(o.y / tileSize);
 
         if (o.type === "path_node") {
             const next = findProperty(o, "next"),
                 pathName = findProperty(o, "pathName");
-            pathNodes.set(o.id, new PatrolNode(pathName, x, y, next));
+            pathNodes.set(o.id, new PathNode(pathName, x, y, next));
         } else if (o.type === "fallback_node") {
             fallbackNodes.set(o.id, { x, y });
         } else {
@@ -212,7 +232,7 @@ export function loadTiledMap(level) {
  * @param {Array} objects An array of GameObjects
  * @returns {Object}      The x and y coordinates
  */
-export function findEmptySpace(map, objects) {
+export function findEmptySpace(map: GameMap, objects: GameObject[]) {
     let x = 0, y = 0;
     let blocks = true;
     while (blocks) {
@@ -230,7 +250,7 @@ export function findEmptySpace(map, objects) {
  * @param {Number} y The y coordinate
  * @returns {Array} An array of GameObjects
  */
-export function getObjectsAtLocation(objects, x, y) {
+export function getObjectsAtLocation(objects: GameObject[], x: number, y: number): GameObject[] {
     return objects.filter(object => object.x === x && object.y === y);
 }
 
@@ -242,7 +262,7 @@ export function getObjectsAtLocation(objects, x, y) {
  * @param {Number} x The x coordinate to check
  * @param {Number} y The y coordinate to check
  */
-export function isBlocked(map, objects, x, y) {
+export function isBlocked(map: GameMap, objects: GameObject[], x: number, y: number) {
     if (!Array.isArray(map) || map.length === 0 || !Array.isArray(map[0])) { throw new Error("Bad map data"); }
 
     if (x < 0 || y < 0 || x >= map[0].length || y >= map.length || map[y][x].blocks) {
@@ -263,7 +283,7 @@ export function isBlocked(map, objects, x, y) {
  * @param {Number} y The y coordinate to check
  * @returns {Boolean} Does the spot block sight
  */
-export function isSightBlocked(map, objects, x, y) {
+export function isSightBlocked(map: GameMap, objects: GameObject[], x: number, y: number) {
     if (!Array.isArray(map) || map.length === 0 || !Array.isArray(map[0])) { throw new Error("Bad map data"); }
 
     if (x < 0 || y < 0 || x >= map[0].length || y >= map.length || map[y][x].blocksSight) {
@@ -287,7 +307,7 @@ export function isSightBlocked(map, objects, x, y) {
  * @param {Number} x The x coordinate
  * @param {Number} y The y coordinate
  */
-export function drawTile(display, tile, x, y) {
+export function drawTile(display: Display, tile: Tile, x: number, y: number) {
     if (x > WIDTH || x < 0 || y > HEIGHT || y < 0) {
         return;
     }
@@ -321,13 +341,18 @@ export function drawTile(display, tile, x, y) {
     display.draw(x, y, tile.char, fgColor, bgColor);
 }
 
+interface Point {
+    x: number;
+    y: number;
+}
+
 /**
  * Find the distance between two GameObjects
- * @param  {GameObject} a An object
- * @param  {GameObject} b An object
+ * @param  {Point} a An object
+ * @param  {Point} b An object
  * @return {Number}       The distance
  */
-export function distanceBetweenObjects(a, b) {
+export function distanceBetweenObjects(a: Point, b: Point) {
     const dx = b.x - a.x;
     const dy = b.y - a.y;
     return Math.sqrt(dx ** 2 + dy ** 2);
@@ -343,7 +368,7 @@ export function distanceBetweenObjects(a, b) {
  * @param  {Number}     maxDistance  The max allowed distance before giving up
  * @return {GameObject}              The closest actor
  */
-export function getRandomFighterWithinRange(map, actors, origin, maxDistance) {
+export function getRandomFighterWithinRange(map: GameMap, actors: GameObject[], origin: GameObject, maxDistance: number): GameObject {
     const possibleActors = actors
         .filter(a => !isNil(a.fighter))
         .filter(a => !isNil(a.ai))
@@ -358,7 +383,7 @@ export function getRandomFighterWithinRange(map, actors, origin, maxDistance) {
  * @param  {Array} map  An array of arrays of Tiles
  * @return {void}
  */
-export function resetVisibility(map) {
+export function resetVisibility(map: GameMap): void {
     for (let y = 0; y < map.length; y++) {
         for (let x = 0; x < map[y].length; x++) {
             map[y][x].visible = false;
@@ -372,7 +397,7 @@ export function resetVisibility(map) {
  * @param  {Array} map  An array of arrays of Tiles
  * @return {void}
  */
-export function setAllToExplored(map) {
+export function setAllToExplored(map: GameMap): void {
     for (let y = 0; y < map.length; y++) {
         for (let x = 0; x < map[y].length; x++) {
             map[y][x].explored = true;
@@ -387,7 +412,7 @@ export function setAllToExplored(map) {
  * @param  {Array}   map     An array of arrays of Tiles
  * @return {void}
  */
-export function drawMap(display, camera, map) {
+export function drawMap(display: Display, camera: Camera, map: GameMap) {
     for (let y = 0; y < map.length; y++) {
         for (let x = 0; x < map[y].length; x++) {
             const { x: screenX, y: screenY } = camera.worldToScreen(x, y);
@@ -404,7 +429,7 @@ export function drawMap(display, camera, map) {
  * @param {GameObject} object A game object
  * @returns {Array} An array of volumes
  */
-export function findVolumeCollision(volumes, object) {
+export function findVolumeCollision(volumes: Volume[], object: GameObject) {
     return volumes.filter(v => {
         if (v.x < object.x &&
             v.x + v.width > object.x &&

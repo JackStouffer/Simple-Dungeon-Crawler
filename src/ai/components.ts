@@ -1,14 +1,31 @@
 import { FOV, DIRS, RNG, Path } from "../rot/index";
-import findKey from "lodash/findKey";
-import isEqual from "lodash/isEqual";
-import get from "lodash/get";
+import { findKey, isEqual, get } from "lodash";
 
 import globals from "../globals";
-import { Goals, Actions } from "../data";
-import { Planner, ActionList } from "./planner";
-import { moveCommand } from "../commands";
-import { isBlocked, isSightBlocked, distanceBetweenObjects } from "../map";
+import { GoalData, ActionData, ObjectDataDetails } from "../data";
+import { Planner, ActionList, PlannerWorldState } from "./planner";
+import { AsyncCommand, Command, moveCommand } from "../commands";
+import { GameMap, isBlocked, isSightBlocked, PathNode } from "../map";
+import { GameObject } from "../object";
 import { displayMessage } from "../ui";
+
+export interface AIComponent {
+    owner: GameObject;
+    sightRange?: number;
+    state?: string;
+    target?: GameObject;
+    pathName?: string;
+    patrolTarget?: PathNode;
+    fear?: number;
+    fearThreshold?: number;
+    lowHealthThreshold?: number;
+    lowManaThreshold?: number;
+
+    setOwner: (owner: GameObject) => void;
+    act: (map: GameMap, gameObjects: GameObject[], pathNodes: PathNode[]) => Command | AsyncCommand;
+    setPatrolPath?: (name: string) => void;
+    setFallbackPosition?: (name: number) => void;
+}
 
 /**
  * Creates a function which returns if an x and y coordinate
@@ -17,8 +34,8 @@ import { displayMessage } from "../ui";
  * @param  {GameObject} owner The game object to be used with this function
  * @return {Function}         the callback
  */
-export function createPassableCallback(owner) {
-    return function(x, y) {
+export function createPassableCallback(owner: GameObject): (x: number, y: number) => boolean {
+    return function(x: number, y: number) {
         // own space is passable
         if (owner.x === x && owner.y === y) {
             return true;
@@ -35,8 +52,8 @@ export function createPassableCallback(owner) {
  * @param  {GameObject} owner The game object to be used with this function
  * @return {Function}         the callback
  */
-export function createPassableSightCallback(owner) {
-    return function(x, y) {
+export function createPassableSightCallback(owner: GameObject): (x: number, y: number) => boolean {
+    return function(x: number, y: number) {
         // own space is passable
         if (owner.x === x && owner.y === y) {
             return true;
@@ -53,8 +70,8 @@ export function createPassableSightCallback(owner) {
  * @param  {GameObject} owner The game object to be used with this function
  * @return {Function}         the callback
  */
-export function createVisibilityCallback(ai) {
-    return function(x, y, r, visibility) {
+export function createVisibilityCallback(ai: AIComponent) {
+    return function(x:number, y:number, r: number, visibility: number) {
         if (x === globals.Game.player.x && y === globals.Game.player.y && visibility > 0) {
             displayMessage(ai.owner.name + " saw you");
             ai.state = "chase";
@@ -71,7 +88,7 @@ export function createVisibilityCallback(ai) {
  * @param {Number} targetY The target y coordinate
  * @returns {Object} The x and y coordinates
  */
-export function getNextStepTowardsTarget(actor, targetX, targetY) {
+export function getNextStepTowardsTarget(actor: GameObject, targetX: number, targetY: number) {
     const aStar = new Path.AStar(
         targetX,
         targetY,
@@ -79,8 +96,8 @@ export function getNextStepTowardsTarget(actor, targetX, targetY) {
         { topology: 8 }
     );
 
-    const path = [];
-    function pathCallback(x, y) {
+    const path: number[][] = [];
+    function pathCallback(x: number, y: number) {
         path.push([x, y]);
     }
     aStar.compute(actor.x, actor.y, pathCallback);
@@ -104,14 +121,15 @@ export function getNextStepTowardsTarget(actor, targetX, targetY) {
  * @param {Number} newY The new y coordinate
  * @return {Number} the ROT.js DIR
  */
-export function newPositionToDirection(currentX, currentY, newX, newY) {
-    return findKey(
+export function newPositionToDirection(currentX: number, currentY: number, newX: number, newY: number): number {
+    const key = findKey(
         DIRS[8],
         function(o) { return isEqual(o, [newX - currentX, newY - currentY]); }
     );
+    return Number.parseInt(key, 10);
 }
 
-function chaseStateUpdate(ai) {
+function chaseStateUpdate(ai: AIComponent) {
     const { x, y } = getNextStepTowardsTarget(
         ai.owner,
         globals.Game.player.x,
@@ -133,18 +151,22 @@ function chaseStateUpdate(ai) {
  * If one is this switches to chase which uses A* to go towards
  * the target. Attacks the target when it's within one tile from it
  */
-class BasicMonsterAI {
-    constructor(sightRange) {
+export class BasicMonsterAI implements AIComponent {
+    owner: GameObject;
+    state: string;
+    sightRange: number;
+
+    constructor(sightRange: number) {
         this.owner = null;
         this.state = "wander";
         this.sightRange = sightRange;
     }
 
-    setOwner(owner) {
+    setOwner(owner: GameObject) {
         this.owner = owner;
     }
 
-    act(map, gameObjects) {
+    act(map: GameMap, gameObjects: GameObject[]): Command {
         // wander in random directions
         if (this.state === "wander") {
             // compute the FOV to see if the player is sighted
@@ -152,7 +174,8 @@ class BasicMonsterAI {
             fov.compute(
                 this.owner.x,
                 this.owner.y,
-                this.sightRange, createVisibilityCallback(this)
+                this.sightRange,
+                createVisibilityCallback(this)
             );
 
             let blocks, newX, newY, dir;
@@ -171,8 +194,26 @@ class BasicMonsterAI {
     }
 }
 
-class PlanningAI {
-    constructor(data) {
+export class PlanningAI implements AIComponent {
+    owner: GameObject;
+    target: GameObject;
+    state: string;
+    sightRange: number;
+    currentOrder: string;
+    fear: number;
+    fearThreshold: number;
+    lowHealthThreshold: number;
+    lowManaThreshold: number;
+    pathName: string;
+    patrolTarget: any;
+    fallbackPosition: any;
+    previousWorldState: PlannerWorldState;
+    currentAction: string;
+    goals: Set<string>;
+    actions: Set<string>;
+    planner: Planner;
+
+    constructor(data: ObjectDataDetails) {
         this.owner = null;
         this.target = globals.Game.player;
         this.state = "wander";
@@ -197,7 +238,7 @@ class PlanningAI {
         const actionList = new ActionList();
 
         for (const action of this.actions) {
-            const actionData = Actions[action];
+            const actionData = ActionData[action];
             const preconditions = Object.keys(actionData.preconditions);
             const postconditions = Object.keys(actionData.postconditions);
 
@@ -212,21 +253,21 @@ class PlanningAI {
 
             actionList.addCondition(action, actionData.preconditions);
             actionList.addReaction(action, actionData.postconditions);
-            actionList.setWeight(action, actionData.weight(this));
+            actionList.setWeight(action, actionData.weight(this as AIComponent));
         }
 
         this.planner = new Planner(...this.goals.values());
         this.planner.setActionList(actionList);
     }
 
-    setOwner(owner) {
+    setOwner(owner: GameObject) {
         this.owner = owner;
         if (owner !== null) {
             this.createPlanner();
         }
     }
 
-    setPatrolPath(name) {
+    setPatrolPath(name: string) {
         this.pathName = name;
         this.actions.delete("wander");
         this.actions.delete("guard");
@@ -234,18 +275,18 @@ class PlanningAI {
         this.createPlanner();
     }
 
-    setFallbackPosition(nodeID) {
+    setFallbackPosition(nodeID: number) {
         this.fallbackPosition = nodeID;
         this.actions.add("goToFallbackPosition");
         this.createPlanner();
     }
 
-    generateWorldState() {
-        const state = {};
+    generateWorldState(): PlannerWorldState {
+        const state: PlannerWorldState = {};
 
         for (const goal of this.goals) {
-            const goalData = Goals[goal];
-            state[goal] = goalData.resolver(this);
+            const goalData = GoalData[goal];
+            state[goal] = goalData.resolver(this as AIComponent);
         }
 
         return state;
@@ -295,11 +336,11 @@ class PlanningAI {
         return this.currentAction;
     }
 
-    act(map, gameObjects, pathNodes) {
+    act(map: GameMap, gameObjects: GameObject[], pathNodes: PathNode[]): Command | AsyncCommand {
         if (!this.owner.fighter) { throw new Error("Mage AI must have a fighter"); }
         const plan = this.getPlan();
         console.log(this.owner.name, "plan", plan);
-        return Actions[plan].updateFunction(this, map, gameObjects, pathNodes);
+        return ActionData[plan].updateFunction(this as AIComponent, map, gameObjects, pathNodes);
     }
 }
 
@@ -309,14 +350,18 @@ class PlanningAI {
  * calls. Then, replaces itself on the owner with the previous
  * AI component on the owner.
  */
-class ConfusedAI {
-    constructor(currentAI, turns) {
+export class ConfusedAI implements AIComponent {
+    owner: GameObject;
+    oldAI: AIComponent;
+    turns: number;
+
+    constructor(currentAI: AIComponent, turns: number) {
         this.owner = null;
         this.oldAI = currentAI;
         this.turns = turns;
     }
 
-    setOwner(owner) {
+    setOwner(owner: GameObject) {
         this.owner = owner;
     }
 
@@ -349,18 +394,22 @@ class ConfusedAI {
  * AI which changes the background color of the object when the inventory
  * component is empty
  */
-class ChestAI {
-    constructor(bgColor, emptyColor) {
+export class ChestAI implements AIComponent {
+    owner: GameObject;
+    bgColor: string;
+    emptyColor: string;
+
+    constructor(bgColor: string, emptyColor: string) {
         this.owner = null;
         this.bgColor = bgColor;
         this.emptyColor = emptyColor;
     }
 
-    setOwner(owner) {
+    setOwner(owner: GameObject) {
         this.owner = owner;
     }
 
-    act() {
+    act(): Command {
         if (this.owner && this.owner.inventoryComponent) {
             if (this.owner.inventoryComponent.getItems().length === 0) {
                 this.owner.graphics.bgColor = this.emptyColor;
@@ -377,16 +426,18 @@ class ChestAI {
 /**
  * AI which removes the owner from the game when the inventory is empty
  */
-class DroppedItemAI {
+export class DroppedItemAI implements AIComponent {
+    owner: GameObject;
+
     constructor() {
         this.owner = null;
     }
 
-    setOwner(owner) {
+    setOwner(owner: GameObject) {
         this.owner = owner;
     }
 
-    act() {
+    act(): Command {
         if (this.owner && this.owner.inventoryComponent) {
             if (this.owner.inventoryComponent.getItems().length === 0) {
                 globals.Game.removeObject(this.owner);
@@ -397,5 +448,3 @@ class DroppedItemAI {
         return null;
     }
 }
-
-export { BasicMonsterAI, PlanningAI, ConfusedAI, ChestAI, DroppedItemAI };

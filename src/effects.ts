@@ -1,8 +1,12 @@
-import cloneDeep from "lodash/cloneDeep";
+import { cloneDeep } from "lodash";
 import { DamageType } from "./data";
+import { FighterStats } from "./fighter";
 
 import globals from "./globals";
+import { GameObject } from "./object";
 import { displayMessage } from "./ui";
+
+export type EffectActCallback = (owner: GameObject) => void;
 
 /**
  * Implements effects to Fighters that have a different effect
@@ -14,7 +18,13 @@ import { displayMessage } from "./ui";
  * be a reduction of a Fighter's base strength by 5 for 10 turns,
  * as each turn is a reduction from say 10 -> 5.
  */
-class StatusEffect {
+export class StatusEffect {
+    owner: GameObject;
+    name: string;
+    turns: number;
+    actCallback: EffectActCallback;
+    endCallback: EffectActCallback;
+
     /**
      * Create a new StatusEffect
      * @param {GameObject} owner The game object this effect is on
@@ -23,7 +33,7 @@ class StatusEffect {
      * @param {Function} actCallback The function to call every turn, called with owner
      * @param {Function} endCallback The function to call when the effect ends, called with owner
      */
-    constructor(owner, name, turns, actCallback = null, endCallback = null) {
+    constructor(owner: GameObject, name: string, turns: number, actCallback: EffectActCallback = null, endCallback: EffectActCallback = null) {
         this.owner = owner;
         this.name = name;
         this.turns = turns;
@@ -44,12 +54,23 @@ class StatusEffect {
     }
 }
 
+export interface StatisticEffectModifier {
+    stat: string;
+    type: "multiply" | "add";
+    value: number;
+}
+
 /**
  * Implements a constant effect to a Fighter's base stats, such as increased
  * speed or strength for a specified number of turns.
  */
-class StatisticEffect {
-    constructor(owner, name, turns, modifier) {
+export class StatisticEffect {
+    owner: GameObject;
+    name: string;
+    turns: number;
+    modifier: StatisticEffectModifier;
+
+    constructor(owner: GameObject, name: string, turns: number, modifier: StatisticEffectModifier) {
         this.owner = owner;
         this.name = name;
         this.turns = turns;
@@ -60,7 +81,7 @@ class StatisticEffect {
         this.turns--;
     }
 
-    modifyStats(stats) {
+    modifyStats(stats: FighterStats) {
         // don't want to accidentally modify the actor's base stats
         const copiedStats = cloneDeep(stats);
 
@@ -79,8 +100,6 @@ class StatisticEffect {
     }
 }
 
-export { StatusEffect, StatisticEffect };
-
 /**
  * Create an StatusEffect of applying damage over time
  * @param  {GameObject} victim     Who to apply the effect to
@@ -88,8 +107,8 @@ export { StatusEffect, StatisticEffect };
  * @param  {Number} turns          The number of turns to last
  * @returns {StatusEffect}                The resulting effect object
  */
-export function createBurnEffect(victim, damage, turns) {
-    function act(owner) {
+export function createBurnEffect(victim: GameObject, damage: number, turns: number): StatusEffect {
+    function act(owner: GameObject) {
         if (owner.fighter) {
             owner.fighter.takeDamage(damage, false, DamageType.fire);
         }
@@ -111,7 +130,7 @@ export function createBurnEffect(victim, damage, turns) {
  * @param  {Number} turns The number of turns to last
  * @returns {StatusEffect} The resulting effect object
  */
-export function createHasteEffect(user, turns) {
+export function createHasteEffect(user: GameObject, turns: number): StatisticEffect {
     if (!user.fighter) { throw new Error("user of createHasteEffect must have a fighter"); }
     return new StatisticEffect(user, "Haste", turns, { stat: "speed", type: "multiply", value: 2 });
 }
@@ -123,7 +142,7 @@ export function createHasteEffect(user, turns) {
  * @param  {Number} turns The number of turns to last
  * @returns {StatusEffect} The resulting effect object
  */
-export function createSlowEffect(victim, turns) {
+export function createSlowEffect(victim: GameObject, turns: number): StatisticEffect {
     if (!victim.fighter) { throw new Error("user of createHasteEffect must have a fighter"); }
     return new StatisticEffect(victim, "Slow", turns, { stat: "speed", type: "multiply", value: 0.5 });
 }
