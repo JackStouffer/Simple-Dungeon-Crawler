@@ -1,6 +1,4 @@
-/* global ENV */
-
-declare var ENV: any;
+declare const ENV: string;
 
 import { Howl } from "howler";
 

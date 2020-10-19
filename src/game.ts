@@ -1,9 +1,7 @@
-/* global ENV */
-
-declare var ENV: any;
+declare const ENV: string;
 
 import { EventEmitter } from "events";
-import { Display, Scheduler } from "./rot/index";
+import { Display } from "./rot/index";
 import { default as SpeedScheduler } from "./rot/scheduler/speed";
 
 import globals from "./globals";
@@ -29,7 +27,8 @@ import {
     moveCommand,
     openInventoryCommand,
     openSpellsCommand,
-    getItemCommand, Command, AsyncCommand
+    getItemCommand,
+    Command
 } from "./commands";
 import { WIDTH, HEIGHT, GameState, LevelName } from "./data";
 import {
@@ -38,7 +37,8 @@ import {
     getObjectsAtLocation,
     resetVisibility,
     loadTiledMap,
-    findVolumeCollision, PathNode
+    findVolumeCollision,
+    PathNode
 } from "./map";
 import {
     drawUI,
@@ -97,7 +97,7 @@ export interface KeyCommand {
     command: Command;
 }
 
-class SimpleDungeonCrawler {
+export class SimpleDungeonCrawler {
     state: GameState;
     canvas: HTMLElement;
     display: Display;
@@ -466,4 +466,3 @@ class SimpleDungeonCrawler {
         return this.totalTurns;
     }
 }
-export { SimpleDungeonCrawler };

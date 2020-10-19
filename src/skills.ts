@@ -120,7 +120,10 @@ export async function castDamageSpell(item: SpellDataDetails | ItemDataDetails):
     return true;
 }
 
-export async function castWildDamageSpell(item: SpellDataDetails | ItemDataDetails, user: GameObject) {
+export async function castWildDamageSpell(
+    item: SpellDataDetails | ItemDataDetails,
+    user: GameObject
+) {
     let target;
     do {
         target = getRandomFighterWithinRange(globals.Game.map, globals.Game.gameObjects, user, 16);
@@ -178,7 +181,10 @@ export async function castClairvoyance(): Promise<boolean> {
  * @param {Object} item The item data
  * @param {GameObject} user The object using the item
  */
-export async function castHaste(item: ItemDataDetails | SpellDataDetails, user: GameObject): Promise<boolean> {
+export async function castHaste(
+    item: ItemDataDetails | SpellDataDetails,
+    user: GameObject
+): Promise<boolean> {
     if (!user.fighter) { throw new Error("user of castHaste must have a fighter"); }
 
     const effects = user.fighter.getStatisticEffects();

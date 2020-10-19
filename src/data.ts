@@ -1,6 +1,4 @@
-/* global ENV */
-
-declare var ENV: any;
+declare const ENV: string;
 
 // @ts-ignore
 import * as forrest_001 from "./maps/forrest_001";
@@ -48,6 +46,7 @@ import { createBurnEffect } from "./effects";
 import { AIComponent } from "./ai/components";
 import { GameObject } from "./object";
 import { AsyncCommand, Command } from "./commands";
+import { PathNode } from "./map";
 
 export const WIDTH = 70;
 export const HEIGHT = 45;
@@ -79,26 +78,36 @@ export const LEVEL_UP_FACTOR = 150;
  * Nature: weak to fire
  */
 export enum DamageType {
-    physical = 1,
-    fire = 2,
-    electric = 3,
-    water = 4,
-    nature = 5
-};
+    physical,
+    fire,
+    electric,
+    water,
+    nature
+}
 
 /**
  * Damage affinity damage multiplier
  */
-export const enum Affinity {
+export enum Affinity {
     weak = 2,
     normal = 1,
     strong = 0.5,
     nullified = 0
-};
+}
 
-export const enum DeathType {
+export enum DeathType {
     Default,
     RemoveFromWorld
+}
+
+export enum GameState {
+    Gameplay,
+    OpeningCinematic,
+    WinCinematic,
+    LoseCinematic,
+    PauseMenu,
+    InventoryMenu,
+    SpellMenu
 }
 
 export interface TileDataDetails {
@@ -1012,7 +1021,12 @@ export const GoalData: { [key: string]: GoalDataDetails } = {
 export interface Action {
     preconditions: { [key: string]: boolean },
     postconditions: { [key: string]: boolean }
-    updateFunction: (ai: AIComponent, map: any, gameObjects: GameObject[], pathNodes: any) => Command | AsyncCommand,
+    updateFunction: (
+        ai: AIComponent,
+        map: any,
+        gameObjects: GameObject[],
+        pathNodes: Map<number, PathNode>
+    ) => Command | AsyncCommand,
     weight: (ai: AIComponent) => number
 }
 
@@ -1147,13 +1161,3 @@ export type LevelName = keyof typeof LevelData;
 if (ENV !== "TEST") {
     Object.freeze(LevelData);
 }
-
-export const enum GameState {
-    Gameplay,
-    OpeningCinematic,
-    WinCinematic,
-    LoseCinematic,
-    PauseMenu,
-    InventoryMenu,
-    SpellMenu
-};

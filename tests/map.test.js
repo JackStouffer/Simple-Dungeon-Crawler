@@ -104,7 +104,8 @@ describe("map", function () {
         it("should add inventory items to an object", function () {
             ItemData["test"] = {
                 displayName: "Test Item",
-                type: "test"
+                type: "test",
+                value: 10
             };
             const { objects } = loadTiledMap("test");
             expect(objects[1].type).to.be.equal("chest");
@@ -112,7 +113,8 @@ describe("map", function () {
                 id: "test",
                 count: 1,
                 displayName: "Test Item",
-                type: "test"
+                type: "test",
+                value: 10
             }]);
         });
 

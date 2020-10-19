@@ -222,7 +222,7 @@ describe("player", function () {
             };
             const func = openSpellsCommand();
             func(owner);
-            expect(globals.Game.state).to.be.equal(GameState.spellMenu);
+            expect(globals.Game.state).to.be.equal(GameState.SpellMenu);
         });
     });
 

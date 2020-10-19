@@ -1,5 +1,4 @@
-/* global ENV */
-declare var ENV: any;
+declare const ENV: any;
 
 import { RNG, SpeedActor } from "./rot/index";
 

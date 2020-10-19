@@ -33,7 +33,12 @@ export class StatusEffect {
      * @param {Function} actCallback The function to call every turn, called with owner
      * @param {Function} endCallback The function to call when the effect ends, called with owner
      */
-    constructor(owner: GameObject, name: string, turns: number, actCallback: EffectActCallback = null, endCallback: EffectActCallback = null) {
+    constructor(
+        owner: GameObject,
+        name: string,
+        turns: number,
+        actCallback: EffectActCallback = null,
+        endCallback: EffectActCallback = null) {
         this.owner = owner;
         this.name = name;
         this.turns = turns;

@@ -6,7 +6,7 @@ import globals from "../src/globals";
 import { createObject } from "../src/object";
 import { BasicFighter } from "../src/fighter";
 import { StatisticEffect, StatusEffect } from "../src/effects";
-import { DamageType, SpellData, Affinity, ObjectData } from "../src/data";
+import { DamageType, SpellData, Affinity, ObjectData, DeathType } from "../src/data";
 
 globals.Game = {
     player: null,
@@ -66,7 +66,7 @@ describe("fighter", function () {
                     [DamageType.nature]: Affinity.normal
                 },
                 inventoryPool: [],
-                onDeath: "default"
+                onDeath: DeathType.Default
             };
         });
 
@@ -311,6 +311,7 @@ describe("fighter", function () {
                 const fighter = new BasicFighter(data);
                 const stats = fighter.getEffectiveStats();
                 expect(stats).to.be.deep.equal({
+                    ailmentSusceptibility: 0,
                     hp: 10,
                     maxHp: 10,
                     mana: 10,
@@ -333,6 +334,7 @@ describe("fighter", function () {
 
                 const stats = fighter.getEffectiveStats();
                 expect(stats).to.be.deep.equal({
+                    ailmentSusceptibility: 0,
                     hp: 10,
                     maxHp: 10,
                     mana: 10,
@@ -373,6 +375,7 @@ describe("fighter", function () {
 
                 const stats = fighter.getEffectiveStats();
                 expect(stats).to.be.deep.equal({
+                    ailmentSusceptibility: 0,
                     hp: 10,
                     maxHp: 20,
                     mana: 10,
@@ -396,6 +399,7 @@ describe("fighter", function () {
                 const stats = fighter.getEffectiveStats();
                 expect(fighter.stats.hp).to.be.equal(5);
                 expect(stats).to.be.deep.equal({
+                    ailmentSusceptibility: 0,
                     hp: 5,
                     maxHp: 5,
                     mana: 10,
@@ -418,6 +422,7 @@ describe("fighter", function () {
 
                 let stats = fighter.getEffectiveStats();
                 expect(stats).to.be.deep.equal({
+                    ailmentSusceptibility: 0,
                     hp: 5,
                     maxHp: 5,
                     mana: 10,
@@ -431,6 +436,7 @@ describe("fighter", function () {
                 stats = fighter.getEffectiveStats();
                 expect(fighter.stats.hp).to.be.equal(5);
                 expect(stats).to.be.deep.equal({
+                    ailmentSusceptibility: 0,
                     hp: 5,
                     maxHp: 10,
                     mana: 10,
@@ -454,6 +460,7 @@ describe("fighter", function () {
                 const stats = fighter.getEffectiveStats();
                 expect(fighter.stats.mana).to.be.equal(5);
                 expect(stats).to.be.deep.equal({
+                    ailmentSusceptibility: 0,
                     hp: 10,
                     maxHp: 10,
                     mana: 5,
@@ -476,6 +483,7 @@ describe("fighter", function () {
 
                 let stats = fighter.getEffectiveStats();
                 expect(stats).to.be.deep.equal({
+                    ailmentSusceptibility: 0,
                     hp: 10,
                     maxHp: 10,
                     mana: 5,
@@ -489,6 +497,7 @@ describe("fighter", function () {
                 stats = fighter.getEffectiveStats();
                 expect(fighter.stats.mana).to.be.equal(5);
                 expect(stats).to.be.deep.equal({
+                    ailmentSusceptibility: 0,
                     hp: 10,
                     maxHp: 10,
                     mana: 5,

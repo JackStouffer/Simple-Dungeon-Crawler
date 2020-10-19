@@ -39,7 +39,10 @@ describe("skills", function () {
                     addStatusEffect: fake(),
                     getStatusEffects: fake.returns([]),
                     addStatisticEffect: fake(),
-                    getSpeed: fake.returns(1)
+                    getSpeed: fake.returns(1),
+                    getEffectiveStats: fake.returns({
+                        ailmentSusceptibility: 1
+                    })
                 },
                 ai: { type: "testai" },
                 x: 0,
@@ -52,9 +55,11 @@ describe("skills", function () {
         it("should heal the user with it's data value", async function () {
             const user = {
                 fighter: {
-                    hp: 0,
-                    maxHp: 10,
-                    heal: fake()
+                    heal: fake(),
+                    getEffectiveStats: fake.returns({
+                        hp: 0,
+                        maxHp: 10,
+                    })
                 }
             };
 
@@ -69,9 +74,11 @@ describe("skills", function () {
         it("should damage the target and return true to the callback when enemy is selected", async function () {
             const user = {
                 fighter: {
-                    hp: 0,
-                    maxHp: 10,
-                    heal: fake()
+                    heal: fake(),
+                    getEffectiveStats: fake.returns({
+                        hp: 0,
+                        maxHp: 10,
+                    })
                 }
             };
 
@@ -90,12 +97,13 @@ describe("skills", function () {
         it("should add a status effect", async function () {
             const user = {
                 fighter: {
-                    hp: 0,
-                    maxHp: 10,
-                    heal: fake()
+                    heal: fake(),
+                    getEffectiveStats: fake.returns({
+                        hp: 0,
+                        maxHp: 10
+                    })
                 }
             };
-            globals.Game.gameObjects[0].fighter.ailmentSusceptibility = 1;
             const statusEffectFunc = fake.returns({ name: "test" });
 
             const used = await castDamageSpell(
@@ -110,9 +118,11 @@ describe("skills", function () {
         it("should not damage the target and return false to the callback when no enemy is found", async function () {
             const user = {
                 fighter: {
-                    hp: 0,
-                    maxHp: 10,
-                    heal: fake()
+                    heal: fake(),
+                    getEffectiveStats: fake.returns({
+                        hp: 0,
+                        maxHp: 10,
+                    })
                 }
             };
             globals.Game.gameObjects = [];
@@ -126,9 +136,11 @@ describe("skills", function () {
         it("should damage the target and return true to the callback", async function () {
             const user = {
                 fighter: {
-                    hp: 0,
-                    maxHp: 10,
-                    heal: fake()
+                    heal: fake(),
+                    getEffectiveStats: fake.returns({
+                        hp: 0,
+                        maxHp: 10,
+                    })
                 },
                 x: 0,
                 y: 0
@@ -160,14 +172,15 @@ describe("skills", function () {
         it("should add a status effect", async function () {
             const user = {
                 fighter: {
-                    hp: 0,
-                    maxHp: 10,
-                    heal: fake()
+                    heal: fake(),
+                    getEffectiveStats: fake.returns({
+                        hp: 0,
+                        maxHp: 10,
+                    })
                 },
                 x: 0,
                 y: 0
             };
-            globals.Game.gameObjects[0].fighter.ailmentSusceptibility = 1;
             const statusEffectFunc = fake.returns({ name: "test" });
 
             const used = await castWildDamageSpell(
@@ -182,9 +195,11 @@ describe("skills", function () {
         it("should not damage the target and return false to the callback when no enemy is found", async function () {
             const user = {
                 fighter: {
-                    hp: 0,
-                    maxHp: 10,
-                    heal: fake()
+                    heal: fake(),
+                    getEffectiveStats: fake.returns({
+                        hp: 0,
+                        maxHp: 10,
+                    })
                 },
                 x: 0,
                 y: 0

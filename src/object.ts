@@ -147,7 +147,7 @@ class GameObject implements SpeedActor {
         return BASE_SPEED;
     }
 
-    act(map: GameMap, gameObjects: GameObject[], pathNodes: PathNode[]) {
+    act(map: GameMap, gameObjects: GameObject[], pathNodes: Map<number, PathNode>) {
         let acted = true;
 
         if (this.ai && typeof this.ai.act === "function") {

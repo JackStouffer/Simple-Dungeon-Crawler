@@ -104,7 +104,7 @@ describe("game", function () {
             it("should go back to gameplay state when escape is pressed when in spellMenu", async function () {
                 let calls = 0;
                 globals.Game.keyCommands = [{ key: "w", description: "Move Up", command: fake.returns(true) }];
-                globals.Game.state = GameState.spellMenu;
+                globals.Game.state = GameState.SpellMenu;
                 globals.window.addEventListener = function (_, cb) {
                     if (calls === 0) {
                         calls++;
@@ -124,7 +124,7 @@ describe("game", function () {
                     draw: fake(),
                     handleInput: function () { return command; }
                 };
-                globals.Game.state = GameState.spellMenu;
+                globals.Game.state = GameState.SpellMenu;
                 globals.window.addEventListener = function (_, cb) {
                     return cb({ key: "w", preventDefault: fake() });
                 };

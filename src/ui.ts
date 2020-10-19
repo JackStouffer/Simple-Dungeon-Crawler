@@ -1,5 +1,4 @@
-/* global ENV */
-declare var ENV: any;
+declare const ENV: string;
 
 import { Display } from "./rot/index";
 import globals from "./globals";

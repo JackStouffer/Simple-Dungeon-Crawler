@@ -4,7 +4,7 @@ import { expect } from "chai";
 import { fake } from "sinon";
 
 import globals from "../src/globals";
-import { ObjectData, DamageType, Affinity } from "../src/data";
+import { ObjectData, DamageType, Affinity, DeathType } from "../src/data";
 import { GameObject, createObject, enemyDeathCallback, removeDeathCallback } from "../src/object";
 
 describe("object", function () {
@@ -56,7 +56,7 @@ describe("object", function () {
                 inventoryPool: [
                     ["health_potion_weak", 0.25]
                 ],
-                onDeath: "default"
+                onDeath: DeathType.Default
             };
         });
 
@@ -155,14 +155,14 @@ describe("object", function () {
 
         describe("fighter", function () {
             it("should set the death callback to enemyDeathCallback", function () {
-                ObjectData["test_object"].onDeath = "default";
+                ObjectData["test_object"].onDeath = DeathType.Default;
                 ObjectData["test_object"].fighter = "basic_fighter";
                 const obj = createObject("test_object");
                 expect(obj.fighter.deathCallback.name).to.be.equal("enemyDeathCallback");
             });
 
             it("should set the death callback to removeDeathCallback", function () {
-                ObjectData["test_object"].onDeath = "remove_from_world";
+                ObjectData["test_object"].onDeath = DeathType.RemoveFromWorld;
                 ObjectData["test_object"].fighter = "basic_fighter";
                 const obj = createObject("test_object");
                 expect(obj.fighter.deathCallback.name).to.be.equal("removeDeathCallback");
@@ -175,7 +175,7 @@ describe("object", function () {
             });
 
             it("should set the fighter to basic fighter", function () {
-                ObjectData["test_object"].onDeath = "default";
+                ObjectData["test_object"].onDeath = DeathType.Default;
                 ObjectData["test_object"].fighter = "basic_fighter";
                 const obj = createObject("test_object");
                 expect(obj.fighter.constructor.name).to.be.equal("BasicFighter");
@@ -202,14 +202,18 @@ describe("object", function () {
 
             it("should populate the inventory with items from the pool", function () {
                 ObjectData["test_object"].inventoryPool = [
-                    ["health_potion_weak", 1]
+                    {
+                        itemID: "health_potion_weak",
+                        probability: 1
+                    }
                 ];
                 const obj = createObject("test_object");
                 expect(obj.inventoryComponent.getItems()).to.be.deep.equal([{
                     id: "health_potion_weak",
                     count: 1,
                     displayName: "Weak Potion of Healing",
-                    type: "heal"
+                    type: "heal",
+                    value: 25
                 }]);
             });
 

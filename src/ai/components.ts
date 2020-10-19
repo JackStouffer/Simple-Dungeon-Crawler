@@ -22,7 +22,11 @@ export interface AIComponent {
     lowManaThreshold?: number;
 
     setOwner: (owner: GameObject) => void;
-    act: (map: GameMap, gameObjects: GameObject[], pathNodes: PathNode[]) => Command | AsyncCommand;
+    act: (
+        map: GameMap,
+        gameObjects: GameObject[],
+        pathNodes: Map<number, PathNode>
+    ) => Command | AsyncCommand;
     setPatrolPath?: (name: string) => void;
     setFallbackPosition?: (name: number) => void;
 }
@@ -121,7 +125,12 @@ export function getNextStepTowardsTarget(actor: GameObject, targetX: number, tar
  * @param {Number} newY The new y coordinate
  * @return {Number} the ROT.js DIR
  */
-export function newPositionToDirection(currentX: number, currentY: number, newX: number, newY: number): number {
+export function newPositionToDirection(
+    currentX: number,
+    currentY: number,
+    newX: number,
+    newY: number
+): number {
     const key = findKey(
         DIRS[8],
         function(o) { return isEqual(o, [newX - currentX, newY - currentY]); }
@@ -298,7 +307,6 @@ export class PlanningAI implements AIComponent {
      */
     getPlan() {
         const worldState = this.generateWorldState();
-        console.log(this.owner.name, worldState);
 
         if (isEqual(this.previousWorldState, worldState)) {
             return this.currentAction;
@@ -336,11 +344,14 @@ export class PlanningAI implements AIComponent {
         return this.currentAction;
     }
 
-    act(map: GameMap, gameObjects: GameObject[], pathNodes: PathNode[]): Command | AsyncCommand {
+    act(
+        map: GameMap,
+        gameObjects: GameObject[],
+        pathNodes: Map<number, PathNode>
+    ): Command | AsyncCommand {
         if (!this.owner.fighter) { throw new Error("Mage AI must have a fighter"); }
         const plan = this.getPlan();
-        console.log(this.owner.name, "plan", plan);
-        return ActionData[plan].updateFunction(this as AIComponent, map, gameObjects, pathNodes);
+        return ActionData[plan].updateFunction(this, map, gameObjects, pathNodes);
     }
 }
 

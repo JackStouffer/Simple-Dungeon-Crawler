@@ -368,7 +368,12 @@ export function distanceBetweenObjects(a: Point, b: Point) {
  * @param  {Number}     maxDistance  The max allowed distance before giving up
  * @return {GameObject}              The closest actor
  */
-export function getRandomFighterWithinRange(map: GameMap, actors: GameObject[], origin: GameObject, maxDistance: number): GameObject {
+export function getRandomFighterWithinRange(
+    map: GameMap,
+    actors: GameObject[],
+    origin: GameObject,
+    maxDistance: number
+): GameObject {
     const possibleActors = actors
         .filter(a => !isNil(a.fighter))
         .filter(a => !isNil(a.ai))
