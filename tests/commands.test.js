@@ -227,12 +227,12 @@ describe("player", function () {
     });
 
     describe("useItemCommand", function () {
-        it("should return false if the fighter does have that item", async function () {
+        it("should return false if the fighter does have that item", function () {
             ItemData["item"] = {
                 displayName: "Test",
                 value: 10,
                 type: "health",
-                useFunc: fake.returns(Promise.resolve(false))
+                useFunc: fake.returns(false)
             };
             const owner = {
                 inventoryComponent: {
@@ -240,18 +240,17 @@ describe("player", function () {
                 }
             };
 
-            const func = useItemCommand("item");
-            const ret = await func(owner);
+            const ret = useItemCommand("item")(owner);
             expect(ret).to.be.false;
             expect(ItemData["item"].useFunc.calledOnce).to.be.false;
         });
 
-        it("should return false if useFunc does", async function () {
+        it("should return false if useFunc does", function () {
             ItemData["item"] = {
                 displayName: "Test",
                 value: 10,
                 type: "health",
-                useFunc: fake.returns(Promise.resolve(false))
+                useFunc: fake.returns(false)
             };
             const owner = {
                 inventoryComponent: {
@@ -260,19 +259,18 @@ describe("player", function () {
                 }
             };
 
-            const func = useItemCommand("item");
-            const ret = await func(owner);
+            const ret = useItemCommand("item")(owner);
             expect(ret).to.be.false;
             expect(owner.inventoryComponent.useItem.calledOnce).to.be.false;
             expect(ItemData["item"].useFunc.calledOnce).to.be.true;
         });
 
-        it("should return true and use the item", async function () {
+        it("should return true and use the item", function () {
             ItemData["item"] = {
                 displayName: "Test",
                 value: 10,
                 type: "health",
-                useFunc: fake.returns(Promise.resolve(true))
+                useFunc: fake.returns(true)
             };
             const owner = {
                 inventoryComponent: {
@@ -281,8 +279,7 @@ describe("player", function () {
                 }
             };
 
-            const func = useItemCommand("item");
-            const ret = await func(owner);
+            const ret = useItemCommand("item")(owner);
             expect(ret).to.be.true;
             expect(owner.inventoryComponent.useItem.calledOnce).to.be.true;
             expect(ItemData["item"].useFunc.calledOnce).to.be.true;
@@ -290,7 +287,7 @@ describe("player", function () {
     });
 
     describe("useSpellCommand", function () {
-        it("should return false if the fighter does not know the spell", async function () {
+        it("should return false if the fighter does not know the spell", function () {
             SpellData["spell"] = {
                 displayName: "Test Spell",
                 type: "damage",
@@ -303,12 +300,11 @@ describe("player", function () {
                 }
             };
 
-            const func = useSpellCommand("spell");
-            const ret = await func(owner);
+            const ret = useSpellCommand("spell")(owner);
             expect(ret).to.be.false;
         });
 
-        it("should return false if the fighter does not have enough mana", async function () {
+        it("should return false if the fighter does not have enough mana", function () {
             SpellData["spell"] = {
                 displayName: "Test Spell",
                 type: "damage",
@@ -324,19 +320,18 @@ describe("player", function () {
                 }
             };
 
-            const func = useSpellCommand("spell");
-            const ret = await func(owner);
+            const ret = useSpellCommand("spell")(owner);
             expect(ret).to.be.false;
             expect(owner.fighter.getEffectiveStats.calledOnce).to.be.true;
         });
 
-        it("should return false if useFunc does", async function () {
+        it("should return false if useFunc does", function () {
             SpellData["spell"] = {
                 displayName: "Test Spell",
                 type: "damage",
                 value: 10,
                 manaCost: 20,
-                useFunc: fake.returns(Promise.resolve(false))
+                useFunc: fake.returns(false)
             };
             const owner = {
                 fighter: {
@@ -348,21 +343,20 @@ describe("player", function () {
                 }
             };
 
-            const func = useSpellCommand("spell");
-            const ret = await func(owner);
+            const ret = useSpellCommand("spell")(owner);
             expect(ret).to.be.false;
             expect(owner.fighter.getEffectiveStats.calledOnce).to.be.true;
             expect(owner.fighter.useMana.calledWith(20)).to.be.false;
             expect(SpellData["spell"].useFunc.calledOnce).to.be.true;
         });
 
-        it("should return true and use mana", async function () {
+        it("should return true and use mana", function () {
             SpellData["spell"] = {
                 displayName: "Test Spell",
                 type: "damage",
                 value: 10,
                 manaCost: 20,
-                useFunc: fake.returns(Promise.resolve(true))
+                useFunc: fake.returns(true)
             };
             const owner = {
                 fighter: {
@@ -374,8 +368,7 @@ describe("player", function () {
                 }
             };
 
-            const func = useSpellCommand("spell");
-            const ret = await func(owner);
+            const ret = useSpellCommand("spell")(owner);
             expect(ret).to.be.true;
             expect(owner.fighter.getEffectiveStats.calledOnce).to.be.true;
             expect(owner.fighter.useMana.calledWith(20)).to.be.true;

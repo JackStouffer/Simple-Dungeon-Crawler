@@ -90,14 +90,14 @@ describe("ui", function () {
             expect(menu.currentSelection).to.be.equal(0);
         });
 
-        it("should return a command when pressing enter", function () {
+        it("should return item details when pressing enter", function () {
             const menu = new InventoryMenu();
             const items = [
                 { id: "test" },
                 { id: "test2" }
             ];
-            const func = menu.handleInput("Enter", items);
-            expect(typeof func).to.be.equal("function");
+            const item = menu.handleInput("Enter", items);
+            expect(item).to.be.deep.equal({ id: "test" });
         });
     });
 
@@ -133,14 +133,14 @@ describe("ui", function () {
             expect(menu.currentSelection).to.be.equal(0);
         });
 
-        it("should return a command when pressing enter", function () {
+        it("should return spell details when pressing enter", function () {
             const menu = new SpellSelectionMenu();
             const spells = [
                 { id: "test" },
                 { id: "test2" }
             ];
-            const func = menu.handleInput("Enter", spells);
-            expect(typeof func).to.be.equal("function");
+            const spell = menu.handleInput("Enter", spells);
+            expect(spell).to.be.deep.equal({ id: "test" });
         });
     });
 });

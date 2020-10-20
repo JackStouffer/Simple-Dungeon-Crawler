@@ -130,7 +130,7 @@ describe("fighter", function () {
                 const fighter = new BasicFighter(data);
                 fighter.setOwner(owner);
 
-                fighter.takeDamage(5, false, DamageType.physical);
+                fighter.takeDamage(5, false, DamageType.Physical);
                 expect(fighter.stats.hp).to.be.equal(6);
             });
 
@@ -140,7 +140,7 @@ describe("fighter", function () {
                 fighter.setOwner(owner);
 
                 fighter.stats.defense = 1000;
-                fighter.takeDamage(1, false, DamageType.physical);
+                fighter.takeDamage(1, false, DamageType.Physical);
                 expect(fighter.stats.hp).to.be.equal(9);
             });
 
@@ -150,7 +150,7 @@ describe("fighter", function () {
                 const fighter = new BasicFighter(data, deathCallback);
                 fighter.setOwner(owner);
 
-                fighter.takeDamage(100, false, DamageType.physical);
+                fighter.takeDamage(100, false, DamageType.Physical);
                 expect(deathCallback.calledOnce).to.be.true;
             });
         });

@@ -4,7 +4,7 @@ import { expect } from "chai";
 import { fake } from "sinon";
 
 import globals from "../src/globals";
-import { ObjectData, DamageType, Affinity, DeathType } from "../src/data";
+import { ObjectData, DamageType, Affinity, DeathType, ItemType } from "../src/data";
 import { GameObject, createObject, enemyDeathCallback, removeDeathCallback } from "../src/object";
 
 describe("object", function () {
@@ -212,7 +212,7 @@ describe("object", function () {
                     id: "health_potion_weak",
                     count: 1,
                     displayName: "Weak Potion of Healing",
-                    type: "heal",
+                    type: ItemType.HealSelf,
                     value: 25
                 }]);
             });

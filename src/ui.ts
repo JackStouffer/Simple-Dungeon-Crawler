@@ -12,7 +12,6 @@ import {
     SpellType
 } from "./data";
 import { KeyCommand } from "./game";
-import { useSpellCommand } from "./commands";
 import { GameObject } from "./object";
 import { InventoryItemDetails } from "./inventory";
 import { SpellFighterDetails } from "./fighter";
