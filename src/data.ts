@@ -45,7 +45,7 @@ import {
 import { createBurnEffect } from "./effects";
 import { AIComponent } from "./ai/components";
 import { GameObject } from "./object";
-import { AsyncCommand, Command } from "./commands";
+import { Command } from "./commands";
 import { PathNode } from "./map";
 
 export const WIDTH = 70;
@@ -78,11 +78,11 @@ export const LEVEL_UP_FACTOR = 150;
  * Nature: weak to fire
  */
 export enum DamageType {
-    physical,
-    fire,
-    electric,
-    water,
-    nature
+    Physical,
+    Fire,
+    Electric,
+    Water,
+    Nature
 }
 
 /**
@@ -102,12 +102,32 @@ export enum DeathType {
 
 export enum GameState {
     Gameplay,
+    Target,
     OpeningCinematic,
     WinCinematic,
     LoseCinematic,
     PauseMenu,
     InventoryMenu,
     SpellMenu
+}
+
+export enum ItemType {
+    HealSelf,
+    AddManaSelf,
+    DamageScroll,
+    WildDamageScroll,
+    ClairvoyanceScroll,
+    ConfuseScroll,
+    HasteSelf,
+    SlowOther
+}
+
+export enum SpellType {
+    DamageOther,
+    WildDamage,
+    Effect,
+    Passive,
+    HealSelf
 }
 
 export interface TileDataDetails {
@@ -226,11 +246,11 @@ export const TileData: { [key: number]: TileDataDetails } = {
 Object.freeze(TileData);
 
 export interface DamageAffinityMap {
-    [DamageType.physical]: number;
-    [DamageType.fire]: number;
-    [DamageType.electric]: number;
-    [DamageType.water]: number;
-    [DamageType.nature]: number;
+    [DamageType.Physical]: Affinity;
+    [DamageType.Fire]: Affinity;
+    [DamageType.Electric]: Affinity;
+    [DamageType.Water]: Affinity;
+    [DamageType.Nature]: Affinity;
 }
 
 export interface InventoryPoolProbabilities {
@@ -345,11 +365,11 @@ export const ObjectData: { [key: string]: ObjectDataDetails } = {
         defense: 0,
         onDeath: DeathType.RemoveFromWorld,
         damageAffinity: {
-            [DamageType.physical]: Affinity.normal,
-            [DamageType.fire]: Affinity.weak,
-            [DamageType.electric]: Affinity.normal,
-            [DamageType.water]: Affinity.normal,
-            [DamageType.nature]: Affinity.normal
+            [DamageType.Physical]: Affinity.normal,
+            [DamageType.Fire]: Affinity.weak,
+            [DamageType.Electric]: Affinity.normal,
+            [DamageType.Water]: Affinity.normal,
+            [DamageType.Nature]: Affinity.normal
         }
     },
     "barrel": {
@@ -373,11 +393,11 @@ export const ObjectData: { [key: string]: ObjectDataDetails } = {
         defense: 0,
         onDeath: DeathType.RemoveFromWorld,
         damageAffinity: {
-            [DamageType.physical]: Affinity.normal,
-            [DamageType.fire]: Affinity.weak,
-            [DamageType.electric]: Affinity.normal,
-            [DamageType.water]: Affinity.normal,
-            [DamageType.nature]: Affinity.normal
+            [DamageType.Physical]: Affinity.normal,
+            [DamageType.Fire]: Affinity.weak,
+            [DamageType.Electric]: Affinity.normal,
+            [DamageType.Water]: Affinity.normal,
+            [DamageType.Nature]: Affinity.normal
         }
     },
     "dead_body": {
@@ -473,11 +493,11 @@ export const ObjectData: { [key: string]: ObjectDataDetails } = {
         strength: 3,
         defense: 1,
         damageAffinity: {
-            [DamageType.physical]: Affinity.normal,
-            [DamageType.fire]: Affinity.normal,
-            [DamageType.electric]: Affinity.normal,
-            [DamageType.water]: Affinity.normal,
-            [DamageType.nature]: Affinity.normal
+            [DamageType.Physical]: Affinity.normal,
+            [DamageType.Fire]: Affinity.normal,
+            [DamageType.Electric]: Affinity.normal,
+            [DamageType.Water]: Affinity.normal,
+            [DamageType.Nature]: Affinity.normal
         },
         onDeath: DeathType.Default
     },
@@ -502,11 +522,11 @@ export const ObjectData: { [key: string]: ObjectDataDetails } = {
         defense: 1,
         sightRange: 7,
         damageAffinity: {
-            [DamageType.physical]: Affinity.normal,
-            [DamageType.fire]: Affinity.normal,
-            [DamageType.electric]: Affinity.normal,
-            [DamageType.water]: Affinity.normal,
-            [DamageType.nature]: Affinity.normal
+            [DamageType.Physical]: Affinity.normal,
+            [DamageType.Fire]: Affinity.normal,
+            [DamageType.Electric]: Affinity.normal,
+            [DamageType.Water]: Affinity.normal,
+            [DamageType.Nature]: Affinity.normal
         },
         inventoryPool: [
             {
@@ -538,11 +558,11 @@ export const ObjectData: { [key: string]: ObjectDataDetails } = {
         defense: 4,
         sightRange: 7,
         damageAffinity: {
-            [DamageType.physical]: Affinity.normal,
-            [DamageType.fire]: Affinity.normal,
-            [DamageType.electric]: Affinity.normal,
-            [DamageType.water]: Affinity.normal,
-            [DamageType.nature]: Affinity.normal
+            [DamageType.Physical]: Affinity.normal,
+            [DamageType.Fire]: Affinity.normal,
+            [DamageType.Electric]: Affinity.normal,
+            [DamageType.Water]: Affinity.normal,
+            [DamageType.Nature]: Affinity.normal
         },
         inventoryPool: [
             {
@@ -585,11 +605,11 @@ export const ObjectData: { [key: string]: ObjectDataDetails } = {
         defense: 1,
         sightRange: 7,
         damageAffinity: {
-            [DamageType.physical]: Affinity.normal,
-            [DamageType.fire]: Affinity.normal,
-            [DamageType.electric]: Affinity.normal,
-            [DamageType.water]: Affinity.normal,
-            [DamageType.nature]: Affinity.normal
+            [DamageType.Physical]: Affinity.normal,
+            [DamageType.Fire]: Affinity.normal,
+            [DamageType.Electric]: Affinity.normal,
+            [DamageType.Water]: Affinity.normal,
+            [DamageType.Nature]: Affinity.normal
         },
         inventoryPool: [],
         onDeath: DeathType.Default
@@ -616,11 +636,11 @@ export const ObjectData: { [key: string]: ObjectDataDetails } = {
         defense: 1,
         sightRange: 7,
         damageAffinity: {
-            [DamageType.physical]: Affinity.normal,
-            [DamageType.fire]: Affinity.strong,
-            [DamageType.electric]: Affinity.weak,
-            [DamageType.water]: Affinity.nullified,
-            [DamageType.nature]: Affinity.normal
+            [DamageType.Physical]: Affinity.normal,
+            [DamageType.Fire]: Affinity.strong,
+            [DamageType.Electric]: Affinity.weak,
+            [DamageType.Water]: Affinity.nullified,
+            [DamageType.Nature]: Affinity.normal
         },
         inventoryPool: [],
         onDeath: DeathType.Default
@@ -647,11 +667,11 @@ export const ObjectData: { [key: string]: ObjectDataDetails } = {
         defense: 1,
         sightRange: 7,
         damageAffinity: {
-            [DamageType.physical]: Affinity.normal,
-            [DamageType.fire]: Affinity.normal,
-            [DamageType.electric]: Affinity.normal,
-            [DamageType.water]: Affinity.normal,
-            [DamageType.nature]: Affinity.normal
+            [DamageType.Physical]: Affinity.normal,
+            [DamageType.Fire]: Affinity.normal,
+            [DamageType.Electric]: Affinity.normal,
+            [DamageType.Water]: Affinity.normal,
+            [DamageType.Nature]: Affinity.normal
         },
         actions: [
             "guard",
@@ -693,11 +713,11 @@ export const ObjectData: { [key: string]: ObjectDataDetails } = {
         defense: 1,
         sightRange: 7,
         damageAffinity: {
-            [DamageType.physical]: Affinity.normal,
-            [DamageType.fire]: Affinity.normal,
-            [DamageType.electric]: Affinity.normal,
-            [DamageType.water]: Affinity.normal,
-            [DamageType.nature]: Affinity.normal
+            [DamageType.Physical]: Affinity.normal,
+            [DamageType.Fire]: Affinity.normal,
+            [DamageType.Electric]: Affinity.normal,
+            [DamageType.Water]: Affinity.normal,
+            [DamageType.Nature]: Affinity.normal
         },
         spells: [
             "fireball",
@@ -721,150 +741,150 @@ export const ObjectData: { [key: string]: ObjectDataDetails } = {
 
 export interface ItemDataDetails {
     displayName: string,
-    type: "heal" | "add_mana" | "damage_scroll" | "wild_damage_scroll" | "clairvoyance_scroll" | "confuse_scroll" | "haste" | "slow",
+    type: ItemType,
     value?: number,
     damageType?: DamageType;
     statusEffectFunc?: any;
 
-    useFunc: (details: ItemDataDetails, actor: GameObject) => Promise<boolean>;
+    useFunc: (details: ItemDataDetails, user: GameObject, target?: GameObject) => boolean;
 }
 
 export const ItemData: { [key: string]: ItemDataDetails } = {
     "health_potion_weak": {
         displayName: "Weak Potion of Healing",
         value: 25,
-        type: "heal",
+        type: ItemType.HealSelf,
         useFunc: castHeal
     },
     "health_potion": {
         displayName: "Potion of Healing",
         value: 50,
-        type: "heal",
+        type: ItemType.HealSelf,
         useFunc: castHeal
     },
     "health_potion_strong": {
         displayName: "Strong Potion of Healing",
         value: 100,
-        type: "heal",
+        type: ItemType.HealSelf,
         useFunc: castHeal
     },
     "mana_potion_weak": {
         displayName: "Weak Potion of Mana",
         value: 25,
-        type: "add_mana",
+        type: ItemType.AddManaSelf,
         useFunc: castIncreaseMana
     },
     "lightning_scroll_weak": {
         displayName: "Weak Scroll of Lightning",
         value: 20,
-        type: "damage_scroll",
+        type: ItemType.DamageScroll,
         useFunc: castDamageSpell,
-        damageType: DamageType.electric
+        damageType: DamageType.Electric
     },
     "lightning_scroll": {
         displayName: "Scroll of Lightning",
         value: 50,
-        type: "damage_scroll",
+        type: ItemType.DamageScroll,
         useFunc: castDamageSpell,
-        damageType: DamageType.electric
+        damageType: DamageType.Electric
     },
     "lightning_scroll_strong": {
         displayName: "Strong Scroll of Lightning",
         value: 100,
-        type: "damage_scroll",
+        type: ItemType.DamageScroll,
         useFunc: castDamageSpell,
-        damageType: DamageType.electric
+        damageType: DamageType.Electric
     },
     "fireball_scroll_weak": {
         displayName: "Weak Scroll of Fire",
         value: 20,
-        type: "damage_scroll",
+        type: ItemType.DamageScroll,
         useFunc: castDamageSpell,
-        damageType: DamageType.fire,
+        damageType: DamageType.Fire,
         statusEffectFunc: createBurnEffect
     },
     "fireball_scroll": {
         displayName: "Scroll of Fire",
         value: 50,
-        type: "damage_scroll",
+        type: ItemType.DamageScroll,
         useFunc: castDamageSpell,
-        damageType: DamageType.fire,
+        damageType: DamageType.Fire,
         statusEffectFunc: createBurnEffect
     },
     "fireball_scroll_strong": {
         displayName: "Strong Scroll of Fire",
         value: 100,
-        type: "damage_scroll",
+        type: ItemType.DamageScroll,
         useFunc: castDamageSpell,
-        damageType: DamageType.fire,
+        damageType: DamageType.Fire,
         statusEffectFunc: createBurnEffect
     },
     "lightning_scroll_weak_wild": {
         displayName: "Weak Scroll of Wild Lightning",
         value: 50,
-        type: "wild_damage_scroll",
+        type: ItemType.WildDamageScroll,
         useFunc: castWildDamageSpell,
-        damageType: DamageType.electric
+        damageType: DamageType.Electric
     },
     "lightning_scroll_wild": {
         displayName: "Scroll of Wild Lightning",
         value: 100,
-        type: "wild_damage_scroll",
+        type: ItemType.WildDamageScroll,
         useFunc: castWildDamageSpell,
-        damageType: DamageType.electric
+        damageType: DamageType.Electric
     },
     "lightning_scroll_strong_wild": {
         displayName: "Strong Scroll of Wild Lightning",
         value: 150,
-        type: "wild_damage_scroll",
+        type: ItemType.WildDamageScroll,
         useFunc: castWildDamageSpell,
-        damageType: DamageType.electric
+        damageType: DamageType.Electric
     },
     "fireball_scroll_weak_wild": {
         displayName: "Weak Scroll of Wild Fire",
         value: 50,
-        type: "wild_damage_scroll",
+        type: ItemType.WildDamageScroll,
         useFunc: castWildDamageSpell,
-        damageType: DamageType.fire,
+        damageType: DamageType.Fire,
         statusEffectFunc: createBurnEffect
     },
     "fireball_scroll_wild": {
         displayName: "Scroll of Wild Fire",
         value: 100,
-        type: "wild_damage_scroll",
+        type: ItemType.WildDamageScroll,
         useFunc: castWildDamageSpell,
-        damageType: DamageType.fire,
+        damageType: DamageType.Fire,
         statusEffectFunc: createBurnEffect
     },
     "fireball_scroll_strong_wild": {
         displayName: "Strong Scroll of Wild Fire",
         value: 150,
-        type: "wild_damage_scroll",
+        type: ItemType.WildDamageScroll,
         useFunc: castWildDamageSpell,
-        damageType: DamageType.fire,
+        damageType: DamageType.Fire,
         statusEffectFunc: createBurnEffect
     },
     "confuse_scroll": {
         displayName: "Scroll of Confuse Enemy",
         value: 8,
-        type: "confuse_scroll",
+        type: ItemType.ConfuseScroll,
         useFunc: castConfuse
     },
     "clairvoyance_scroll": {
         displayName: "Scroll of Clairvoyance",
-        type: "clairvoyance_scroll",
+        type: ItemType.ClairvoyanceScroll,
         useFunc: castClairvoyance
     },
     "haste_potion_weak": {
         displayName: "Weak Potion of Haste",
         value: 5,
-        type: "haste",
+        type: ItemType.HasteSelf,
         useFunc: castHaste
     },
     "slow_poison_weak": {
         displayName: "Weak Poison of Slow",
         value: 5,
-        type: "slow",
+        type: ItemType.SlowOther,
         useFunc: castSlow
     }
 };
@@ -876,12 +896,12 @@ if (ENV !== "TEST") {
 export interface SpellDataDetails {
     displayName: string;
     manaCost: number;
-    type: "damage" | "wild" | "effect" | "passive" | "heal";
+    type: SpellType;
     value?: number;
     damageType?: DamageType;
-
-    useFunc: (details: SpellDataDetails, actor: GameObject) => Promise<boolean>;
     statusEffectFunc?: any;
+
+    useFunc: (details: SpellDataDetails, user: GameObject, target?: GameObject) => boolean;
 }
 
 export const SpellData: { [key: string]: SpellDataDetails } = {
@@ -889,24 +909,24 @@ export const SpellData: { [key: string]: SpellDataDetails } = {
         displayName: "Lightning Bolt",
         manaCost: 50,
         value: 20,
-        type: "damage",
-        damageType: DamageType.electric,
+        type: SpellType.DamageOther,
+        damageType: DamageType.Electric,
         useFunc: castDamageSpell
     },
     "wild_lightning_bolt": {
         displayName: "Lightning Bolt",
         manaCost: 60,
         value: 30,
-        type: "wild",
-        damageType: DamageType.electric,
+        type: SpellType.WildDamage,
+        damageType: DamageType.Electric,
         useFunc: castWildDamageSpell
     },
     "fireball": {
         displayName: "Fireball",
         manaCost: 50,
         value: 20,
-        type: "damage",
-        damageType: DamageType.fire,
+        type: SpellType.DamageOther,
+        damageType: DamageType.Fire,
         useFunc: castDamageSpell,
         statusEffectFunc: createBurnEffect
     },
@@ -914,56 +934,56 @@ export const SpellData: { [key: string]: SpellDataDetails } = {
         displayName: "Wild Fireball",
         manaCost: 60,
         value: 30,
-        type: "wild",
-        damageType: DamageType.fire,
+        type: SpellType.WildDamage,
+        damageType: DamageType.Fire,
         useFunc: castWildDamageSpell
     },
     "confuse": {
         displayName: "Confuse",
         manaCost: 50,
         value: 8,
-        type: "effect",
+        type: SpellType.Effect,
         useFunc: castConfuse
     },
     "clairvoyance": {
         displayName: "Clairvoyance",
         manaCost: 50,
-        type: "passive",
+        type: SpellType.Passive,
         useFunc: castClairvoyance
     },
     "lesser_heal": {
         displayName: "Lesser Heal",
         manaCost: 50,
         value: 25,
-        type: "heal",
+        type: SpellType.HealSelf,
         useFunc: castHeal
     },
     "heal": {
         displayName: "Heal",
         manaCost: 50,
         value: 50,
-        type: "heal",
+        type: SpellType.HealSelf,
         useFunc: castHeal
     },
     "greater_heal": {
         displayName: "Greater Heal",
         manaCost: 50,
         value: 100,
-        type: "heal",
+        type: SpellType.HealSelf,
         useFunc: castHeal
     },
     "lesser_haste": {
         displayName: "Lesser Haste",
         manaCost: 100,
         value: 6,
-        type: "effect",
+        type: SpellType.Effect,
         useFunc: castHaste
     },
     "lesser_slow": {
         displayName: "Lesser Slow",
         manaCost: 100,
         value: 6,
-        type: "effect",
+        type: SpellType.Effect,
         useFunc: castSlow
     }
 };
@@ -1026,7 +1046,7 @@ export interface Action {
         map: any,
         gameObjects: GameObject[],
         pathNodes: Map<number, PathNode>
-    ) => Command | AsyncCommand,
+    ) => Command,
     weight: (ai: AIComponent) => number
 }
 
@@ -1111,7 +1131,7 @@ for (const key in SpellData) {
     // capitalize the first letter
     const goal = `enoughManaFor_${key}`;
     const action = `castSpell_${key}`;
-    if (data.type === "damage") {
+    if (data.type === SpellType.DamageOther) {
         GoalData[goal] = {
             resolver: resolveEnoughManaForSpell(key)
         };
@@ -1125,7 +1145,7 @@ for (const key in SpellData) {
             updateFunction: castSpellAction(key),
             weight: () => 1
         };
-    } else if (data.type === "heal") {
+    } else if (data.type === SpellType.HealSelf) {
         GoalData[goal] = {
             resolver: resolveEnoughManaForSpell(key)
         };

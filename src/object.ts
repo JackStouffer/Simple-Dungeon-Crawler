@@ -4,9 +4,20 @@ import { SpeedActor } from "./rot/scheduler/speed";
 import globals from "./globals";
 import { ObjectData, BASE_SPEED, DeathType } from "./data";
 import { BasicMonsterAI, PlanningAI, ChestAI, DroppedItemAI, AIComponent } from "./ai/components";
-import { GiveItemsInteractable, GiveSpellInteractable, LoadLevelInteractable, DoorInteractable, InteractableComponent } from "./interactable";
+import {
+    GiveItemsInteractable,
+    GiveSpellInteractable,
+    LoadLevelInteractable,
+    DoorInteractable,
+    InteractableComponent
+} from "./interactable";
 import { BasicInventory, InventoryComponent } from "./inventory";
-import { BasicGraphics, TransparencyGraphics, DrawAfterSeen, GraphicsComponent } from "./graphics";
+import {
+    BasicGraphics,
+    TransparencyGraphics,
+    DrawAfterSeen,
+    GraphicsComponent
+} from "./graphics";
 import { LightingComponent, ReflectivityLighting, PlayerLighting } from "./lighting";
 import { BasicFighter, FighterComponent } from "./fighter";
 import { displayMessage } from "./ui";

@@ -31,11 +31,11 @@ describe("fighter", function () {
                 ailmentSusceptibility: 0,
                 criticalChance: 0,
                 damageAffinity: {
-                    [DamageType.physical]: Affinity.normal,
-                    [DamageType.fire]: Affinity.normal,
-                    [DamageType.electric]: Affinity.normal,
-                    [DamageType.water]: Affinity.normal,
-                    [DamageType.nature]: Affinity.normal
+                    [DamageType.Physical]: Affinity.normal,
+                    [DamageType.Fire]: Affinity.normal,
+                    [DamageType.Electric]: Affinity.normal,
+                    [DamageType.Water]: Affinity.normal,
+                    [DamageType.Nature]: Affinity.normal
                 }
             };
             ObjectData["enemy"] = {
@@ -59,11 +59,11 @@ describe("fighter", function () {
                 defense: 1,
                 sightRange: 7,
                 damageAffinity: {
-                    [DamageType.physical]: Affinity.normal,
-                    [DamageType.fire]: Affinity.normal,
-                    [DamageType.electric]: Affinity.normal,
-                    [DamageType.water]: Affinity.normal,
-                    [DamageType.nature]: Affinity.normal
+                    [DamageType.Physical]: Affinity.normal,
+                    [DamageType.Fire]: Affinity.normal,
+                    [DamageType.Electric]: Affinity.normal,
+                    [DamageType.Water]: Affinity.normal,
+                    [DamageType.Nature]: Affinity.normal
                 },
                 inventoryPool: [],
                 onDeath: DeathType.Default

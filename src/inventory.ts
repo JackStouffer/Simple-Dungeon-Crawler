@@ -1,11 +1,11 @@
 import globals from "./globals";
-import { ItemData } from "./data";
+import { ItemData, ItemType } from "./data";
 import { GameObject } from "./object";
 
 export interface InventoryItemDetails {
     id: string;
     displayName: string;
-    type: string;
+    type: ItemType;
     count: number;
     value?: number;
 }
@@ -76,7 +76,7 @@ export class BasicInventory implements InventoryComponent {
      * @param {Number} count The number of the item to add
      * @returns {Boolean} If the item was successfully added
      */
-    addItem(id: string, count=1): boolean {
+    addItem(id: string, count = 1): boolean {
         if (!(id in ItemData)) { throw new Error(`${id} is not a valid item id`); }
 
         if (this.hasItem(id)) {
@@ -94,7 +94,7 @@ export class BasicInventory implements InventoryComponent {
         if (this.owner === globals.Game.player) {
             globals.gameEventEmitter.emit("tutorial.inventory");
 
-            if (ItemData[id].type === "wild_damage_scroll") {
+            if (ItemData[id].type === ItemType.WildDamageScroll) {
                 globals.gameEventEmitter.emit("tutorial.wildSpells");
             }
         }

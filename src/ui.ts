@@ -8,13 +8,15 @@ import {
     UI_HEIGHT,
     MAP_FILLED_SPACE,
     LEVEL_UP_BASE,
-    LEVEL_UP_FACTOR
+    LEVEL_UP_FACTOR,
+    SpellType
 } from "./data";
 import { KeyCommand } from "./game";
-import { useItemCommand, useSpellCommand } from "./commands";
+import { useSpellCommand } from "./commands";
 import { GameObject } from "./object";
 import { InventoryItemDetails } from "./inventory";
 import { SpellFighterDetails } from "./fighter";
+import { assertUnreachable } from "./util";
 
 export function drawUI(display: Display, player: GameObject) {
     for (let x = 0; x < WIDTH; x++) {
@@ -107,14 +109,14 @@ export class InventoryMenu {
         }
     }
 
-    handleInput(key: string, inventoryItems: InventoryItemDetails[]) {
+    handleInput(key: string, inventoryItems: InventoryItemDetails[]): InventoryItemDetails {
         if (!this.allowedKeys.has(key)) {
             return null;
         }
 
         if (key === "Enter") {
             globals.gameEventEmitter.emit("ui.select");
-            return useItemCommand(inventoryItems[this.currentSelection].id);
+            return inventoryItems[this.currentSelection];
         }
 
         if (key === "ArrowUp" && this.currentSelection > 0) {
@@ -174,19 +176,20 @@ export class SpellSelectionMenu {
 
             let infoString = "%c{white}%b{black}";
             switch (spell.type) {
-                case "damage":
+                case SpellType.DamageOther:
+                case SpellType.WildDamage:
                     infoString += `dmg: ${spell.value}`;
                     break;
-                case "wild":
-                    infoString += `dmg: ${spell.value}`;
-                    break;
-                case "effect":
+                case SpellType.Effect:
                     infoString += `turns: ${spell.value}`;
                     break;
-                case "heal":
+                case SpellType.HealSelf:
                     infoString += `health: ${spell.value}`;
                     break;
-                default: break;
+                case SpellType.Passive:
+                    break;
+                default:
+                    assertUnreachable(spell.type);
             }
             globals.Game.display.drawText(25, i + 3, infoString);
 
@@ -194,14 +197,14 @@ export class SpellSelectionMenu {
         }
     }
 
-    handleInput(key: string, spells: SpellFighterDetails[]) {
+    handleInput(key: string, spells: SpellFighterDetails[]): SpellFighterDetails {
         if (!this.allowedKeys.has(key)) {
             return null;
         }
 
         if (key === "Enter") {
             globals.gameEventEmitter.emit("ui.select");
-            return useSpellCommand(spells[this.currentSelection].id);
+            return spells[this.currentSelection];
         }
 
         if (key === "ArrowUp" && this.currentSelection > 0) {

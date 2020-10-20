@@ -115,7 +115,7 @@ export class StatisticEffect {
 export function createBurnEffect(victim: GameObject, damage: number, turns: number): StatusEffect {
     function act(owner: GameObject) {
         if (owner.fighter) {
-            owner.fighter.takeDamage(damage, false, DamageType.fire);
+            owner.fighter.takeDamage(damage, false, DamageType.Fire);
         }
 
         if (owner === globals.Game.player) {

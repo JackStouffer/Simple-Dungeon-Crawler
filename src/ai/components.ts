@@ -4,7 +4,7 @@ import { findKey, isEqual, get } from "lodash";
 import globals from "../globals";
 import { GoalData, ActionData, ObjectDataDetails } from "../data";
 import { Planner, ActionList, PlannerWorldState } from "./planner";
-import { AsyncCommand, Command, moveCommand } from "../commands";
+import { Command, moveCommand } from "../commands";
 import { GameMap, isBlocked, isSightBlocked, PathNode } from "../map";
 import { GameObject } from "../object";
 import { displayMessage } from "../ui";
@@ -26,7 +26,7 @@ export interface AIComponent {
         map: GameMap,
         gameObjects: GameObject[],
         pathNodes: Map<number, PathNode>
-    ) => Command | AsyncCommand;
+    ) => Command;
     setPatrolPath?: (name: string) => void;
     setFallbackPosition?: (name: number) => void;
 }
@@ -348,7 +348,7 @@ export class PlanningAI implements AIComponent {
         map: GameMap,
         gameObjects: GameObject[],
         pathNodes: Map<number, PathNode>
-    ): Command | AsyncCommand {
+    ): Command {
         if (!this.owner.fighter) { throw new Error("Mage AI must have a fighter"); }
         const plan = this.getPlan();
         return ActionData[plan].updateFunction(this, map, gameObjects, pathNodes);
@@ -421,7 +421,7 @@ export class ChestAI implements AIComponent {
     }
 
     act(): Command {
-        if (this.owner && this.owner.inventoryComponent) {
+        if (this?.owner?.inventoryComponent) {
             if (this.owner.inventoryComponent.getItems().length === 0) {
                 this.owner.graphics.bgColor = this.emptyColor;
             } else {
@@ -449,7 +449,7 @@ export class DroppedItemAI implements AIComponent {
     }
 
     act(): Command {
-        if (this.owner && this.owner.inventoryComponent) {
+        if (this?.owner?.inventoryComponent) {
             if (this.owner.inventoryComponent.getItems().length === 0) {
                 globals.Game.removeObject(this.owner);
             }

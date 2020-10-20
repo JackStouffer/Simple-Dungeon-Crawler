@@ -1,9 +1,8 @@
-/* global ENV */
-declare var ENV: any;
+declare const ENV: string;
 
 import { RNG, DIRS, FOV } from "../rot/index";
 
-import { AsyncCommand, Command, moveCommand, useItemCommand, useSpellCommand } from "../commands";
+import { Command, moveCommand, useItemCommand, useSpellCommand } from "../commands";
 import {
     getNextStepTowardsTarget,
     createPassableSightCallback,
@@ -13,6 +12,7 @@ import {
 import { GameObject } from "../object";
 import { distanceBetweenObjects, GameMap, isBlocked, PathNode } from "../map";
 import { displayMessage } from "../ui";
+import { ItemType } from "../data";
 
 export function wanderAction(ai: AIComponent, map: GameMap, gameObjects: GameObject[]): Command {
     // compute the FOV to see if the player is sighted
@@ -35,7 +35,12 @@ export function wanderAction(ai: AIComponent, map: GameMap, gameObjects: GameObj
     return moveCommand(dir, 8);
 }
 
-export function patrolAction(ai: AIComponent, map: GameMap, gameObjects: GameObject[], pathNodes: Map<number, PathNode>): Command {
+export function patrolAction(
+    ai: AIComponent,
+    map: GameMap,
+    gameObjects: GameObject[],
+    pathNodes: Map<number, PathNode>
+): Command {
     if (ENV === "DEV" && !ai.pathName) {
         throw new Error("pathName not set for PatrollingMonsterAI");
     }
@@ -99,33 +104,32 @@ export function chaseWeight(ai: AIComponent): number {
     return distanceBetweenObjects(ai.owner, ai.target);
 }
 
-export function useHealingItemAction(ai: AIComponent): AsyncCommand {
+export function useHealingItemAction(ai: AIComponent): Command {
     const item = ai.owner.inventoryComponent
         .getItems()
-        .filter(i => i.type === "heal")
+        .filter(i => i.type === ItemType.HealSelf)
         .sort((a, b) => a.value - b.value)[0];
     displayMessage(`${ai.owner.name} used a ${item.displayName}`);
     return useItemCommand(item.id);
 }
 
-export function useManaItemAction(ai: AIComponent): AsyncCommand {
+export function useManaItemAction(ai: AIComponent): Command {
     const item = ai.owner.inventoryComponent
         .getItems()
-        .filter(i => i.type === "add_mana")
+        .filter(i => i.type === ItemType.AddManaSelf)
         .sort((a, b) => a.value - b.value)[0];
     displayMessage(`${ai.owner.name} used a ${item.displayName}`);
     return useItemCommand(item.id);
 }
 
 export function castSpellAction(spellID: string) {
-    return function (ai: AIComponent): Command | AsyncCommand {
+    return function (ai: AIComponent): Command {
         if (ENV === "DEV") {
             const spells = ai.owner.fighter.getKnownSpells().map(s => s.id);
-            console.log(spellID, ai.owner.fighter.getKnownSpells());
             if (spells.indexOf(spellID) === -1) {
                 throw new Error(`${ai.owner.name} does not know spell ${spellID}`);
             }
         }
-        return useSpellCommand(spellID);
+        return useSpellCommand(spellID, ai.target);
     };
 }

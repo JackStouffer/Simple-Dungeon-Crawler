@@ -8,7 +8,8 @@ import {
     LEVEL_UP_FACTOR,
     DamageType,
     SpellData,
-    ObjectData
+    ObjectData,
+    SpellType
 } from "./data";
 import { displayMessage, MessageType } from "./ui";
 import { cloneDeep } from "lodash";
@@ -54,7 +55,7 @@ export interface SpellFighterDetails {
     displayName: string;
     manaCost: number;
     value: number;
-    type: string;
+    type: SpellType;
 }
 
 /**
@@ -190,7 +191,7 @@ class BasicFighter implements FighterComponent, SpeedActor {
         }
 
         if (damage > 0) {
-            const killed = target.fighter.takeDamage(damage, critical, DamageType.physical);
+            const killed = target.fighter.takeDamage(damage, critical, DamageType.Physical);
             if (killed) {
                 this.experience += ObjectData[target.type].experienceGiven;
             }
@@ -311,7 +312,7 @@ class BasicFighter implements FighterComponent, SpeedActor {
         if (this.owner === globals.Game.player) {
             globals.gameEventEmitter.emit("tutorial.spellMenu");
 
-            if (SpellData[id].type === "wild") {
+            if (SpellData[id].type === SpellType.WildDamage) {
                 globals.gameEventEmitter.emit("tutorial.wildSpells");
             }
         }

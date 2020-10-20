@@ -4,6 +4,10 @@
 
 _In Development_
 
+* Technical
+  * Convert project to Typescript
+  * Fixed bugs that were using fighter's stats without calling `getEffectiveStats`
+
 ## Version 8
 
 _October 10, 2020_

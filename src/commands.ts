@@ -7,7 +7,6 @@ import { displayMessage } from "./ui";
 import { GameObject } from "./object";
 
 export type Command = (actor: GameObject) => boolean;
-export type AsyncCommand = (actor: GameObject) => Promise<boolean>;
 
 /**
  * Create a move function for a specified GameObject. The function
@@ -21,7 +20,7 @@ export type AsyncCommand = (actor: GameObject) => Promise<boolean>;
  * @returns {Function} A function to move the game object, it returns true when moved, false otherwise
  */
 export function moveCommand(direction: number, topology: number): Command {
-    return function(actor: GameObject) {
+    return function(actor: GameObject): boolean {
         const dir: number[] = DIRS[topology][direction];
         const newX: number = actor.x + dir[0];
         const newY: number = actor.y + dir[1];
@@ -63,7 +62,7 @@ export function moveCommand(direction: number, topology: number): Command {
  * @returns {Function} A function which returns true if an object was picked up, false otherwise
  */
 export function getItemCommand(): Command {
-    return function(actor) {
+    return function(actor): boolean {
         const items = globals.Game.gameObjects.filter((item: GameObject) => {
             return item.type === "dropped_item" && item.x === actor.x && item.y === actor.y;
         });
@@ -83,7 +82,7 @@ export function getItemCommand(): Command {
  * @return {Function} A function which always returns false
  */
 export function openInventoryCommand(): Command {
-    return function() {
+    return function(): boolean {
         globals.gameEventEmitter.emit("ui.openInventory");
         globals.Game.state = GameState.InventoryMenu;
         return false;
@@ -95,7 +94,7 @@ export function openInventoryCommand(): Command {
  * @returns {Function} A function which always returns false
  */
 export function openSpellsCommand(): Command {
-    return function() {
+    return function(): boolean {
         globals.gameEventEmitter.emit("ui.openSpells");
         globals.Game.state = GameState.SpellMenu;
         return false;
@@ -108,12 +107,12 @@ export function openSpellsCommand(): Command {
  * @param {String} itemID The id of the item to use
  * @returns {Function} A command function which takes an object as a param
  */
-export function useItemCommand(itemID: string): AsyncCommand {
-    return async function (actor) {
+export function useItemCommand(itemID: string, target: GameObject = null): Command {
+    return function (actor: GameObject): boolean {
         if (!actor.inventoryComponent.hasItem(itemID)) { return false; }
 
         const itemDetails = ItemData[itemID];
-        const used = await itemDetails.useFunc(itemDetails, actor);
+        const used = itemDetails.useFunc(itemDetails, actor, target);
 
         if (used) {
             actor.inventoryComponent.useItem(itemID);
@@ -130,8 +129,8 @@ export function useItemCommand(itemID: string): AsyncCommand {
  * @param {String} spellID The id of the spell to use
  * @returns {Function} A command function which takes an object as a param
  */
-export function useSpellCommand(spellID: string): AsyncCommand {
-    return async function (actor: GameObject) {
+export function useSpellCommand(spellID: string, target?: GameObject): Command {
+    return function (actor: GameObject): boolean {
         if (!actor.fighter.hasSpell(spellID)) { return false; }
 
         const details = SpellData[spellID];
@@ -140,7 +139,7 @@ export function useSpellCommand(spellID: string): AsyncCommand {
             return false;
         }
 
-        const used = await details.useFunc(details, actor);
+        const used = details.useFunc(details, actor, target);
         if (used) {
             actor.fighter.useMana(details.manaCost);
             return true;

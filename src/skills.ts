@@ -3,47 +3,11 @@ import { RNG } from "./rot/index";
 import globals from "./globals";
 import { ConfusedAI } from "./ai/components";
 import { createHasteEffect, createSlowEffect } from "./effects";
-import { getObjectsAtLocation, getRandomFighterWithinRange, setAllToExplored } from "./map";
+import { getRandomFighterWithinRange, setAllToExplored } from "./map";
 import { displayMessage } from "./ui";
-import { randomIntFromInterval, readMouse } from "./util";
+import { randomIntFromInterval } from "./util";
 import { ItemDataDetails, SpellDataDetails } from "./data";
 import { GameObject } from "./object";
-
-/**
- * Unhook the mouse look functionality and then listen for a mouse
- * input. If it's a left click on an object with a fighter component,
- * then re-hook the mouse look function and pass the target to the
- * callback cb.
- * @return {void}
- */
-export async function mouseTarget(): Promise<GameObject> {
-    globals.Game.unhookMouseLook();
-    globals.Game.render();
-
-    let e;
-    do {
-        e = await readMouse();
-    } while (!e || e.button !== 0);
-
-    globals.Game.hookMouseLook();
-    const pos = globals.Game.display.eventToPosition(e);
-
-    let target;
-    const objects = getObjectsAtLocation(globals.Game.gameObjects, pos[0], pos[1]);
-
-    for (let i = 0; i < objects.length; i++) {
-        if (objects[i].fighter) {
-            target = objects[i];
-            break;
-        }
-    }
-
-    if (target && target.fighter) {
-        return target;
-    } else {
-        return null;
-    }
-}
 
 /**
  * Call the heal function on the user's fighter instance. Calls
@@ -53,7 +17,7 @@ export async function mouseTarget(): Promise<GameObject> {
  * @param {Object} item The item data
  * @param {GameObject} user The object using the item
  */
-export async function castHeal(item: ItemDataDetails | SpellDataDetails, user: GameObject) {
+export function castHeal(item: ItemDataDetails | SpellDataDetails, user: GameObject) {
     const stats = user.fighter.getEffectiveStats();
     if (stats.hp >= stats.maxHp) {
         if (user === globals.Game.player) {
@@ -77,7 +41,10 @@ export async function castHeal(item: ItemDataDetails | SpellDataDetails, user: G
  * @param {Object} item The item data
  * @param {GameObject} user The object using the item
  */
-export async function castIncreaseMana(item: ItemDataDetails | SpellDataDetails, user: GameObject) {
+export function castIncreaseMana(
+    item: ItemDataDetails | SpellDataDetails,
+    user: GameObject
+): boolean {
     const stats = user.fighter.getEffectiveStats();
     if (stats.mana >= stats.maxMana) {
         if (user === globals.Game.player) {
@@ -93,15 +60,11 @@ export async function castIncreaseMana(item: ItemDataDetails | SpellDataDetails,
     return true;
 }
 
-export async function castDamageSpell(item: SpellDataDetails | ItemDataDetails): Promise<boolean> {
-    globals.gameEventEmitter.emit("tutorial.spellTargeting");
-    const target = await mouseTarget();
-
-    if (target === null) {
-        displayMessage("Canceled casting");
-        return false;
-    }
-
+export function castDamageSpell(
+    item: SpellDataDetails | ItemDataDetails,
+    user: GameObject,
+    target: GameObject
+): boolean {
     target.fighter.takeDamage(item.value, false, item.damageType);
 
     // Check for the fighter again because it could have died already
@@ -120,10 +83,10 @@ export async function castDamageSpell(item: SpellDataDetails | ItemDataDetails):
     return true;
 }
 
-export async function castWildDamageSpell(
+export function castWildDamageSpell(
     item: SpellDataDetails | ItemDataDetails,
     user: GameObject
-) {
+): boolean {
     let target;
     do {
         target = getRandomFighterWithinRange(globals.Game.map, globals.Game.gameObjects, user, 16);
@@ -154,13 +117,11 @@ export async function castWildDamageSpell(
     return true;
 }
 
-export async function castConfuse(item: ItemDataDetails | SpellDataDetails): Promise<boolean> {
-    globals.gameEventEmitter.emit("tutorial.spellTargeting");
-    const target = await mouseTarget();
-    if (target === null) {
-        return false;
-    }
-
+export function castConfuse(
+    item: SpellDataDetails | ItemDataDetails,
+    user: GameObject,
+    target: GameObject
+): boolean {
     displayMessage(target.name + " is now confused");
     const oldAI = target.ai;
     target.ai = new ConfusedAI(oldAI, item.value);
@@ -168,7 +129,7 @@ export async function castConfuse(item: ItemDataDetails | SpellDataDetails): Pro
     return true;
 }
 
-export async function castClairvoyance(): Promise<boolean> {
+export function castClairvoyance(): boolean {
     displayMessage("You have been granted Clairvoyance");
     setAllToExplored(globals.Game.map);
     return true;
@@ -181,10 +142,10 @@ export async function castClairvoyance(): Promise<boolean> {
  * @param {Object} item The item data
  * @param {GameObject} user The object using the item
  */
-export async function castHaste(
+export function castHaste(
     item: ItemDataDetails | SpellDataDetails,
     user: GameObject
-): Promise<boolean> {
+): boolean {
     if (!user.fighter) { throw new Error("user of castHaste must have a fighter"); }
 
     const effects = user.fighter.getStatisticEffects();
@@ -203,13 +164,11 @@ export async function castHaste(
  * @param {Object} item The item data
  * @param {GameObject} user The object using the item
  */
-export async function castSlow(item: ItemDataDetails | SpellDataDetails): Promise<boolean> {
-    const target = await mouseTarget();
-    if (target === null) {
-        displayMessage("Canceled casting");
-        return false;
-    }
-
+export function castSlow(
+    item: SpellDataDetails | ItemDataDetails,
+    user: GameObject,
+    target: GameObject
+): boolean {
     const statusEffects = target.fighter.getStatusEffects();
     if (statusEffects.filter(e => e.name === "Slow").length > 0) {
         displayMessage(`${target.name} is already slowed`);

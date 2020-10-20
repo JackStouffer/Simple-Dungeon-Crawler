@@ -18,7 +18,8 @@
         "semi": ["error", "always"],
         "default-case": "error",
         "eqeqeq": "error",
-        "brace-style": ["error", "1tbs", { "allowSingleLine": true }],
+        "brace-style": "off",
+        "@typescript-eslint/brace-style": ["error", "1tbs", { "allowSingleLine": true }],
         "eol-last": ["error", "always"],
         "func-style": ["error", "declaration"],
         "no-inner-declarations": "off",
@@ -50,6 +51,22 @@
             "ignoreStrings": true,
             "ignoreComments": true,
             "ignoreTemplateLiterals": true
-        }]
+        }],
+        "@typescript-eslint/naming-convention": [
+            "error",
+            {
+                "selector": "variable",
+                "format": ["camelCase", "PascalCase", "UPPER_CASE"]
+            },
+            {
+                "selector": "function",
+                "format": ["camelCase"]
+            },
+            {
+                "selector": "typeLike",
+                "format": ["PascalCase"]
+            }
+        ],
+        "@typescript-eslint/prefer-optional-chain": "error"
     }
 }

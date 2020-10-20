@@ -1,4 +1,4 @@
-import { SpellData } from "../data";
+import { ItemType, SpellData } from "../data";
 import { distanceBetweenObjects } from "../map";
 import { AIComponent } from "./components";
 
@@ -39,7 +39,7 @@ export function resolveHasManaItem(ai: AIComponent) {
 
     const manaItems = ai.owner.inventoryComponent
         .getItems()
-        .filter(i => i.type === "add_mana");
+        .filter(i => i.type === ItemType.AddManaSelf);
     return manaItems.length > 0;
 }
 
@@ -50,7 +50,7 @@ export function resolveHasHealingItem(ai: AIComponent) {
 
     const manaItems = ai.owner.inventoryComponent
         .getItems()
-        .filter(i => i.type === "heal");
+        .filter(i => i.type === ItemType.HealSelf);
     return manaItems.length > 0;
 }
 

@@ -28,9 +28,11 @@ import {
     openInventoryCommand,
     openSpellsCommand,
     getItemCommand,
-    Command
+    useItemCommand,
+    Command,
+    useSpellCommand
 } from "./commands";
-import { WIDTH, HEIGHT, GameState, LevelName } from "./data";
+import { WIDTH, HEIGHT, GameState, LevelName, ItemType, SpellType } from "./data";
 import {
     GameMap,
     drawMap,
@@ -56,8 +58,10 @@ import {
     explainSpellMenu,
     explainPickUpItem
 } from "./tutorials";
-import { readKey } from "./util";
+import { readKey, readMouse, assertUnreachable } from "./util";
 import { Volume } from "./volume";
+import { SpellFighterDetails } from "./fighter";
+import { InventoryItemDetails } from "./inventory";
 
 globals.gameEventEmitter = new EventEmitter();
 
@@ -78,16 +82,52 @@ export function mouseLook(e: MouseEvent): void {
         return;
     }
 
-    if (target && target.name && target.ai && target.ai.state) {
+    if (target?.name && target.ai && target.ai.state) {
         if (target.ai.state === "wander") {
             displayMessage("A " + target.name + ", it hasn't seen you.");
         } else {
             displayMessage("A " + target.name);
         }
-    } else if (target && target.name) {
+    } else if (target?.name) {
         displayMessage(target.name);
     } else if (!target) {
         displayMessage(tile.name);
+    }
+}
+
+/**
+ * Unhook the mouse look functionality and then listen for a mouse
+ * input. If it's a left click on an object with a fighter component,
+ * then re-hook the mouse look function and pass the target to the
+ * callback cb.
+ * @return {void}
+ */
+export async function mouseTarget(): Promise<GameObject> {
+    globals.Game.unhookMouseLook();
+    globals.Game.render();
+
+    let e;
+    do {
+        e = await readMouse();
+    } while (!e || e.button !== 0);
+
+    globals.Game.hookMouseLook();
+    const pos = globals.Game.display.eventToPosition(e);
+
+    let target;
+    const objects = getObjectsAtLocation(globals.Game.gameObjects, pos[0], pos[1]);
+
+    for (let i = 0; i < objects.length; i++) {
+        if (objects[i].fighter) {
+            target = objects[i];
+            break;
+        }
+    }
+
+    if (target?.fighter) {
+        return target;
+    } else {
+        return null;
     }
 }
 
@@ -113,6 +153,8 @@ export class SimpleDungeonCrawler {
     inventoryMenu: InventoryMenu;
     spellSelectionMenu: SpellSelectionMenu;
     gameCamera: Camera;
+    itemForTarget: InventoryItemDetails;
+    spellForTarget: SpellFighterDetails;
 
     constructor() {
         this.state = GameState.OpeningCinematic;
@@ -125,6 +167,7 @@ export class SimpleDungeonCrawler {
         this.volumes = [];
         this.pathNodes = new Map();
         this.totalTurns = 0;
+        this.itemForTarget = null;
 
         if (ENV === "TEST") {
             this.display = null;
@@ -230,6 +273,7 @@ export class SimpleDungeonCrawler {
     render() {
         switch (this.state) {
             case GameState.Gameplay:
+            case GameState.Target:
                 this.display.clear();
                 this.gameCamera.update(this.map);
 
@@ -316,15 +360,15 @@ export class SimpleDungeonCrawler {
         globals.gameEventEmitter.emit("level.loaded", name);
     }
 
-    async handleInput() {
-        let acted: boolean;
+    async handleInput(): Promise<void> {
+        let acted: boolean = false;
         do {
             this.render();
 
-            const e: KeyboardEvent = await readKey();
-            e.preventDefault();
-
             if (this.state === GameState.Gameplay) {
+                const e: KeyboardEvent = await readKey();
+                e.preventDefault();
+
                 if (e.key === "Escape") {
                     globals.gameEventEmitter.emit("ui.openKeybinding");
                     this.state = GameState.PauseMenu;
@@ -338,7 +382,33 @@ export class SimpleDungeonCrawler {
 
                 const command = this.keyCommands.filter(c => c.key === e.key)[0].command;
                 acted = command(this.player);
+            } else if (this.state === GameState.Target) {
+                globals.gameEventEmitter.emit("tutorial.spellTargeting");
+                const target: GameObject = await mouseTarget();
+                if (!target) {
+                    displayMessage("Canceled casting");
+                    this.itemForTarget = null;
+
+                    if (this.itemForTarget !== null) {
+                        this.state = GameState.InventoryMenu;
+                    } else if (this.spellForTarget !== null) {
+                        this.state = GameState.SpellMenu;
+                    }
+                }
+
+                let command: Command = null;
+                if (this.itemForTarget !== null) {
+                    command = useItemCommand(this.itemForTarget.id, target);
+                } else if (this.spellForTarget !== null) {
+                    command = useSpellCommand(this.spellForTarget.id, target);
+                }
+
+                acted = command(this.player);
+                this.state = GameState.Gameplay;
             } else if (this.state === GameState.PauseMenu) {
+                const e: KeyboardEvent = await readKey();
+                e.preventDefault();
+
                 if (e.key === "Escape") {
                     globals.gameEventEmitter.emit("ui.closeKeybinding");
                     this.state = GameState.Gameplay;
@@ -349,6 +419,9 @@ export class SimpleDungeonCrawler {
 
                 this.keyBindingMenu.handleInput(e.key, this.keyCommands);
             } else if (this.state === GameState.InventoryMenu) {
+                const e: KeyboardEvent = await readKey();
+                e.preventDefault();
+
                 if (e.key === "Escape") {
                     globals.gameEventEmitter.emit("ui.closeInventory");
                     this.state = GameState.Gameplay;
@@ -357,20 +430,43 @@ export class SimpleDungeonCrawler {
                     continue;
                 }
 
-                const command = this.inventoryMenu.handleInput(
+                const item: InventoryItemDetails = this.inventoryMenu.handleInput(
                     e.key,
                     this.player.inventoryComponent.getItems()
                 );
 
-                if (command) {
-                    this.state = GameState.Gameplay;
-                    this.render();
-                    acted = await command(this.player);
-                    if (!acted) {
-                        this.state = GameState.InventoryMenu;
+                if (item) {
+                    let command: Command = null;
+
+                    switch (item.type) {
+                        case ItemType.HealSelf:
+                        case ItemType.AddManaSelf:
+                        case ItemType.ClairvoyanceScroll:
+                        case ItemType.ConfuseScroll:
+                        case ItemType.HasteSelf:
+                        case ItemType.WildDamageScroll:
+                            command = useItemCommand(item.id);
+                            this.state = GameState.Gameplay;
+                            this.render();
+                            acted = command(this.player);
+                            if (!acted) {
+                                this.state = GameState.SpellMenu;
+                            }
+                            break;
+                        // Items that need to be targeted
+                        case ItemType.DamageScroll:
+                        case ItemType.SlowOther:
+                            this.itemForTarget = item;
+                            this.state = GameState.Target;
+                            break;
+                        default:
+                            assertUnreachable(item.type);
                     }
                 }
             } else if (this.state === GameState.SpellMenu) {
+                const e: KeyboardEvent = await readKey();
+                e.preventDefault();
+
                 if (e.key === "Escape") {
                     globals.gameEventEmitter.emit("ui.closeSpells");
                     this.state = GameState.Gameplay;
@@ -379,31 +475,53 @@ export class SimpleDungeonCrawler {
                     continue;
                 }
 
-                const command = this.spellSelectionMenu.handleInput(
+                const spell: SpellFighterDetails = this.spellSelectionMenu.handleInput(
                     e.key,
                     this.player.fighter.getKnownSpells()
                 );
 
-                if (command) {
-                    this.state = GameState.Gameplay;
-                    this.render();
-                    acted = await command(this.player);
-                    if (!acted) {
-                        this.state = GameState.SpellMenu;
+                if (spell) {
+                    switch (spell.type) {
+                        case SpellType.Effect:
+                        case SpellType.HealSelf:
+                        case SpellType.Passive:
+                        case SpellType.WildDamage:
+                            this.state = GameState.Gameplay;
+                            this.render();
+                            acted = useSpellCommand(spell.id)(this.player);
+                            if (!acted) {
+                                this.state = GameState.SpellMenu;
+                            }
+                            break;
+                        case SpellType.DamageOther:
+                            this.spellForTarget = spell;
+                            this.state = GameState.Target;
+                            break;
+                        default:
+                            assertUnreachable(spell.type);
                     }
                 }
             } else if (this.state === GameState.OpeningCinematic) {
+                const e: KeyboardEvent = await readKey();
+                e.preventDefault();
+
                 if (e.key === "Enter") {
                     this.hookMouseLook();
                     this.loadLevel("forrest_001");
                     this.state = GameState.Gameplay;
                 }
             } else if (this.state === GameState.WinCinematic) {
+                const e: KeyboardEvent = await readKey();
+                e.preventDefault();
+
                 if (e.key === "Enter") {
                     this.reset();
                     this.state = GameState.Gameplay;
                 }
             } else if (this.state === GameState.LoseCinematic) {
+                const e: KeyboardEvent = await readKey();
+                e.preventDefault();
+
                 if (e.key === "Enter") {
                     this.reset();
                     this.state = GameState.Gameplay;

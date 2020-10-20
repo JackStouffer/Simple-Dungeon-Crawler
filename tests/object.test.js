@@ -47,11 +47,11 @@ describe("object", function () {
                 defense: 1,
                 sightRange: 7,
                 damageAffinity: {
-                    [DamageType.physical]: Affinity.normal,
-                    [DamageType.fire]: Affinity.normal,
-                    [DamageType.electric]: Affinity.normal,
-                    [DamageType.water]: Affinity.normal,
-                    [DamageType.nature]: Affinity.normal
+                    [DamageType.Physical]: Affinity.normal,
+                    [DamageType.Fire]: Affinity.normal,
+                    [DamageType.Electric]: Affinity.normal,
+                    [DamageType.Water]: Affinity.normal,
+                    [DamageType.Nature]: Affinity.normal
                 },
                 inventoryPool: [
                     ["health_potion_weak", 0.25]

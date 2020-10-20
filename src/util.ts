@@ -31,3 +31,8 @@ export async function readMouse(): Promise<MouseEvent> {
         globals.Game.canvas.addEventListener("mousedown", resolve, { once: true });
     });
 }
+
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+export function assertUnreachable(_x: never): never {
+    throw new Error("Should be unreachable");
+}
