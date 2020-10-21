@@ -41,7 +41,8 @@ import {
     resetVisibility,
     loadTiledMap,
     findVolumeCollision,
-    PathNode
+    PathNode,
+    setAllToExplored
 } from "./map";
 import {
     drawUI,
@@ -128,21 +129,26 @@ export interface KeyCommand {
 
 export class SimpleDungeonCrawler {
     state: GameState;
+    totalTurns: number;
     canvas: HTMLElement;
     display: Display;
+    gameCamera: Camera;
+    processAI: boolean;
+    isLightingEnabled: boolean;
+
+    scheduler: SpeedScheduler;
     player: GameObject;
     currentActor: GameObject;
-    scheduler: SpeedScheduler;
     gameObjects: GameObject[];
     map: GameMap;
     volumes: Volume[];
     pathNodes: Map<number, PathNode>;
-    totalTurns: number;
+
     keyCommands: KeyCommand[];
     keyBindingMenu: KeyBindingMenu;
     inventoryMenu: InventoryMenu;
     spellSelectionMenu: SpellSelectionMenu;
-    gameCamera: Camera;
+
     itemForTarget: InventoryItemDetails;
     spellForTarget: SpellFighterDetails;
 
@@ -159,6 +165,9 @@ export class SimpleDungeonCrawler {
         this.pathNodes = new Map();
         this.totalTurns = 0;
         this.itemForTarget = null;
+
+        this.processAI = true;
+        this.isLightingEnabled = true;
 
         if (ENV === "TEST") {
             this.display = null;
@@ -270,10 +279,14 @@ export class SimpleDungeonCrawler {
                 this.display.clear();
                 this.gameCamera.update(this.map);
 
-                resetVisibility(this.map);
-                this.gameObjects
-                    .filter(o => o.lighting && typeof o.lighting.compute === "function")
-                    .forEach(o => o.lighting.compute(this.map));
+                if (this.isLightingEnabled) {
+                    resetVisibility(this.map);
+                    this.gameObjects
+                        .filter(o => o.lighting && typeof o.lighting.compute === "function")
+                        .forEach(o => o.lighting.compute(this.map));
+                } else {
+                    setAllToExplored(this.map, true, true);
+                }
 
                 drawMap(this.display, this.gameCamera, this.map);
 
@@ -517,15 +530,17 @@ export class SimpleDungeonCrawler {
                 volumes.forEach((v: Volume) => v.enter(this.player));
             }
 
-            do {
-                this.currentActor = this.scheduler.next();
-                this.currentActor.act(this.map, this.gameObjects, this.pathNodes);
+            if (this.processAI) {
+                do {
+                    this.currentActor = this.scheduler.next();
+                    this.currentActor.act(this.map, this.gameObjects, this.pathNodes);
 
-                const volumes = findVolumeCollision(this.volumes, this.currentActor);
-                if (volumes.length) {
-                    volumes.forEach((v: Volume) => v.enter(this.currentActor));
-                }
-            } while (this.currentActor !== this.player);
+                    const volumes = findVolumeCollision(this.volumes, this.currentActor);
+                    if (volumes.length) {
+                        volumes.forEach((v: Volume) => v.enter(this.currentActor));
+                    }
+                } while (this.currentActor !== this.player);
+            }
         }
 
         if (this.player.fighter === null || this.player.fighter.getEffectiveStats().hp <= 0) {
