@@ -37,7 +37,6 @@ export default abstract class Canvas extends Backend {
         this._ctx = document.createElement("canvas").getContext("2d") as CanvasRenderingContext2D;
     }
 
-    schedule(cb: () => void) { requestAnimationFrame(cb); }
     getContainer() { return this._ctx.canvas; }
 
     setOptions(opts: DisplayOptions) {

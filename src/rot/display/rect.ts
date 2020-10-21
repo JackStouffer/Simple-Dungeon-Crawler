@@ -39,7 +39,7 @@ export default class Rect extends Canvas {
     _canvasCache: {[key:string]: HTMLCanvasElement};
     _options!: DisplayOptions;
 
-    static cache = false;
+    static cache = true;
 
     constructor() {
         super();

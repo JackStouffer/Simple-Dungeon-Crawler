@@ -338,7 +338,9 @@ export function drawTile(display: Display, tile: Tile, x: number, y: number) {
         }
     }
 
-    display.draw(x, y, tile.char, fgColor, bgColor);
+    if (!(fgColor === "black" && bgColor === "black")) {
+        display.draw(x, y, tile.char, fgColor, bgColor);
+    }
 }
 
 interface Point {
@@ -350,9 +352,9 @@ interface Point {
  * Find the distance between two GameObjects
  * @param  {Point} a An object
  * @param  {Point} b An object
- * @return {Number}       The distance
+ * @return {number}       The distance
  */
-export function distanceBetweenObjects(a: Point, b: Point) {
+export function distanceBetweenObjects(a: Point, b: Point): number {
     const dx = b.x - a.x;
     const dy = b.y - a.y;
     return Math.sqrt(dx ** 2 + dy ** 2);

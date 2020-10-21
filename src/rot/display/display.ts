@@ -88,9 +88,6 @@ export default class Display {
         options = Object.assign({}, DEFAULT_OPTIONS, options);
         this.setOptions(options);
         this.DEBUG = this.DEBUG.bind(this);
-
-        this._tick = this._tick.bind(this);
-        this._backend.schedule(this._tick);
     }
 
     /**
@@ -290,9 +287,7 @@ export default class Display {
     /**
      * Timer tick: update dirty parts
      */
-    _tick() {
-        this._backend.schedule(this._tick);
-
+    drawWithCache() {
         if (!this._dirty) { return; }
 
         if (this._dirty === true) { // draw all

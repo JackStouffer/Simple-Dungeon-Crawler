@@ -33,6 +33,7 @@ import {
     useSpellCommand
 } from "./commands";
 import { WIDTH, HEIGHT, GameState, LevelName, ItemType, SpellType } from "./data";
+import input from "./input";
 import {
     GameMap,
     drawMap,
@@ -58,7 +59,7 @@ import {
     explainSpellMenu,
     explainPickUpItem
 } from "./tutorials";
-import { readKey, readMouse, assertUnreachable } from "./util";
+import { assertUnreachable } from "./util";
 import { Volume } from "./volume";
 import { SpellFighterDetails } from "./fighter";
 import { InventoryItemDetails } from "./inventory";
@@ -102,20 +103,12 @@ export function mouseLook(e: MouseEvent): void {
  * callback cb.
  * @return {void}
  */
-export async function mouseTarget(): Promise<GameObject> {
-    globals.Game.unhookMouseLook();
-    globals.Game.render();
-
-    let e;
-    do {
-        e = await readMouse();
-    } while (!e || e.button !== 0);
-
-    globals.Game.hookMouseLook();
+export function mouseTarget(e: MouseEvent, gameObjects: GameObject[], camera: Camera): GameObject {
     const pos = globals.Game.display.eventToPosition(e);
 
-    let target;
-    const objects = getObjectsAtLocation(globals.Game.gameObjects, pos[0], pos[1]);
+    const { x, y } = camera.screenToWorld(pos[0], pos[1]);
+    let target = null;
+    const objects = getObjectsAtLocation(globals.Game.gameObjects, x, y);
 
     for (let i = 0; i < objects.length; i++) {
         if (objects[i].fighter) {
@@ -124,11 +117,7 @@ export async function mouseTarget(): Promise<GameObject> {
         }
     }
 
-    if (target?.fighter) {
-        return target;
-    } else {
-        return null;
-    }
+    return target;
 }
 
 export interface KeyCommand {
@@ -142,6 +131,7 @@ export class SimpleDungeonCrawler {
     canvas: HTMLElement;
     display: Display;
     player: GameObject;
+    currentActor: GameObject;
     scheduler: SpeedScheduler;
     gameObjects: GameObject[];
     map: GameMap;
@@ -161,6 +151,7 @@ export class SimpleDungeonCrawler {
         this.canvas = null;
         this.display = null;
         this.player = null;
+        this.currentActor = null;
         this.scheduler = new SpeedScheduler();
         this.gameObjects = [];
         this.map = [];
@@ -176,7 +167,7 @@ export class SimpleDungeonCrawler {
             this.display = new Display({
                 width: WIDTH,
                 height: HEIGHT,
-                fontSize: 13,
+                fontSize: 14,
                 forceSquareRatio: true
             });
             this.canvas = this.display.getContainer();
@@ -200,13 +191,15 @@ export class SimpleDungeonCrawler {
             { key: "m", description: "Spells", command: openSpellsCommand() }
         ];
 
+        input.init();
+
         this.keyBindingMenu = new KeyBindingMenu();
         this.inventoryMenu = new InventoryMenu();
         this.spellSelectionMenu = new SpellSelectionMenu();
         this.gameCamera = new Camera();
     }
 
-    reset() {
+    reset(): void {
         this.player = createObject("player", 1, 1);
         this.map = [];
         this.gameObjects = [];
@@ -223,7 +216,7 @@ export class SimpleDungeonCrawler {
         }
     }
 
-    async startGameplay() {
+    async startGameplay(): Promise<void> {
         this.display.drawText(WIDTH - (WIDTH - 28), 22, "%c{white}Loading Sounds");
 
         try {
@@ -270,7 +263,7 @@ export class SimpleDungeonCrawler {
         this.mainLoop();
     }
 
-    render() {
+    render(): void {
         switch (this.state) {
             case GameState.Gameplay:
             case GameState.Target:
@@ -319,31 +312,25 @@ export class SimpleDungeonCrawler {
                 break;
             case GameState.OpeningCinematic:
                 this.display.clear();
-                this.display.drawText(WIDTH - (WIDTH - 7), 12, "%c{white}Your country is being overrun by the forces of darkness");
-                this.display.drawText(WIDTH - (WIDTH - 8), 15, "%c{white}Tales tell of a weapon of great power lost in the");
-                this.display.drawText(WIDTH - (WIDTH - 4), 16, "%c{white}lands beyond the dwarf stronghold Durdwin, under the Red Hills.");
-                this.display.drawText(WIDTH - (WIDTH - 17), 18, "%c{white}None who have entered have returned");
-                this.display.drawText(WIDTH - (WIDTH - 14), 20, "%c{white}It is the last hope of a desperate people");
-                this.display.drawText(WIDTH - (WIDTH - 16), 21, "%c{white}You have volunteered to retrieve it");
-                this.display.drawText(WIDTH - (WIDTH - 24), 27, "%c{white}Press [enter] to start");
+                this.display.drawText(WIDTH - (WIDTH - 18), 15, "%c{white}Press [enter] to start");
                 break;
             case GameState.LoseCinematic:
                 this.display.clear();
-                this.display.drawText(WIDTH - (WIDTH - 5), 12, "%c{white}You have died, and the last hope of your people dies with you");
-                this.display.drawText(WIDTH - (WIDTH - 18), 24, "%c{white}Press [enter] to restart the game");
+                this.display.drawText(WIDTH - (WIDTH - 23), 12, "%c{white}You have died");
+                this.display.drawText(WIDTH - (WIDTH - 18), 15, "%c{white}Press [enter] to start");
                 break;
             case GameState.WinCinematic:
                 this.display.clear();
-                this.display.drawText(WIDTH - (WIDTH - 12), 12, "%c{white}You have reached the bottom and have retrieved");
-                this.display.drawText(WIDTH - (WIDTH - 16), 13, "%c{white}the fabled weapon and saved your people");
-                this.display.drawText(WIDTH - (WIDTH - 18), 24, "%c{white}Press [enter] to restart the game");
+                this.display.drawText(WIDTH - (WIDTH - 18), 15, "%c{white}Press [enter] to restart the game");
                 break;
             default:
-                throw new Error(`Unknown state ${this.state}`);
+                assertUnreachable(this.state);
         }
+
+        this.display.drawWithCache();
     }
 
-    loadLevel(name: LevelName) {
+    loadLevel(name: LevelName): void {
         const { map, playerLocation, objects, volumes, pathNodes } = loadTiledMap(name);
         this.map = map;
         objects.push(this.player);
@@ -360,195 +347,192 @@ export class SimpleDungeonCrawler {
         globals.gameEventEmitter.emit("level.loaded", name);
     }
 
-    async handleInput(): Promise<void> {
+    handleInput(): boolean {
         let acted: boolean = false;
-        do {
-            this.render();
 
-            if (this.state === GameState.Gameplay) {
-                const e: KeyboardEvent = await readKey();
-                e.preventDefault();
+        if (this.state === GameState.Gameplay) {
+            if (input.isDown("Escape")) {
+                globals.gameEventEmitter.emit("ui.openKeybinding");
+                this.state = GameState.PauseMenu;
+                return acted;
+            }
 
-                if (e.key === "Escape") {
-                    globals.gameEventEmitter.emit("ui.openKeybinding");
-                    this.state = GameState.PauseMenu;
-                    continue;
+            for (let i = 0; i < this.keyCommands.length; i++) {
+                const keyCommand = this.keyCommands[i];
+                if (input.isDown(keyCommand.key)) {
+                    acted = keyCommand.command(this.player);
+                    return acted;
                 }
+            }
+        } else if (this.state === GameState.Target) {
+            globals.gameEventEmitter.emit("tutorial.spellTargeting");
 
-                if (this.keyCommands.map(c => c.key).indexOf(e.key) === -1) {
-                    acted = false;
-                    continue;
-                }
+            const e: MouseEvent = input.getMouseEvent();
+            if (!e) {
+                return acted;
+            }
 
-                const command = this.keyCommands.filter(c => c.key === e.key)[0].command;
-                acted = command(this.player);
-            } else if (this.state === GameState.Target) {
-                globals.gameEventEmitter.emit("tutorial.spellTargeting");
-                const target: GameObject = await mouseTarget();
-                if (!target) {
-                    displayMessage("Canceled casting");
-                    this.itemForTarget = null;
+            const target: GameObject = mouseTarget(
+                e,
+                this.gameObjects,
+                this.gameCamera
+            );
+            if (!target) {
+                displayMessage("Canceled casting");
+                this.itemForTarget = null;
 
-                    if (this.itemForTarget !== null) {
-                        this.state = GameState.InventoryMenu;
-                    } else if (this.spellForTarget !== null) {
-                        this.state = GameState.SpellMenu;
-                    }
-                }
-
-                let command: Command = null;
                 if (this.itemForTarget !== null) {
-                    command = useItemCommand(this.itemForTarget.id, target);
-                } else if (this.spellForTarget !== null) {
-                    command = useSpellCommand(this.spellForTarget.id, target);
-                }
-
-                acted = command(this.player);
-                this.state = GameState.Gameplay;
-            } else if (this.state === GameState.PauseMenu) {
-                const e: KeyboardEvent = await readKey();
-                e.preventDefault();
-
-                if (e.key === "Escape") {
-                    globals.gameEventEmitter.emit("ui.closeKeybinding");
-                    this.state = GameState.Gameplay;
-                    this.keyBindingMenu.resetState();
-                    this.render();
-                    continue;
-                }
-
-                this.keyBindingMenu.handleInput(e.key, this.keyCommands);
-            } else if (this.state === GameState.InventoryMenu) {
-                const e: KeyboardEvent = await readKey();
-                e.preventDefault();
-
-                if (e.key === "Escape") {
-                    globals.gameEventEmitter.emit("ui.closeInventory");
-                    this.state = GameState.Gameplay;
-                    this.inventoryMenu.resetState();
-                    this.render();
-                    continue;
-                }
-
-                const item: InventoryItemDetails = this.inventoryMenu.handleInput(
-                    e.key,
-                    this.player.inventoryComponent.getItems()
-                );
-
-                if (item) {
-                    let command: Command = null;
-
-                    switch (item.type) {
-                        case ItemType.HealSelf:
-                        case ItemType.AddManaSelf:
-                        case ItemType.ClairvoyanceScroll:
-                        case ItemType.ConfuseScroll:
-                        case ItemType.HasteSelf:
-                        case ItemType.WildDamageScroll:
-                            command = useItemCommand(item.id);
-                            this.state = GameState.Gameplay;
-                            this.render();
-                            acted = command(this.player);
-                            if (!acted) {
-                                this.state = GameState.SpellMenu;
-                            }
-                            break;
-                        // Items that need to be targeted
-                        case ItemType.DamageScroll:
-                        case ItemType.SlowOther:
-                            this.itemForTarget = item;
-                            this.state = GameState.Target;
-                            break;
-                        default:
-                            assertUnreachable(item.type);
-                    }
-                }
-            } else if (this.state === GameState.SpellMenu) {
-                const e: KeyboardEvent = await readKey();
-                e.preventDefault();
-
-                if (e.key === "Escape") {
-                    globals.gameEventEmitter.emit("ui.closeSpells");
-                    this.state = GameState.Gameplay;
-                    this.spellSelectionMenu.resetState();
-                    this.render();
-                    continue;
-                }
-
-                const spell: SpellFighterDetails = this.spellSelectionMenu.handleInput(
-                    e.key,
-                    this.player.fighter.getKnownSpells()
-                );
-
-                if (spell) {
-                    switch (spell.type) {
-                        case SpellType.Effect:
-                        case SpellType.HealSelf:
-                        case SpellType.Passive:
-                        case SpellType.WildDamage:
-                            this.state = GameState.Gameplay;
-                            this.render();
-                            acted = useSpellCommand(spell.id)(this.player);
-                            if (!acted) {
-                                this.state = GameState.SpellMenu;
-                            }
-                            break;
-                        case SpellType.DamageOther:
-                            this.spellForTarget = spell;
-                            this.state = GameState.Target;
-                            break;
-                        default:
-                            assertUnreachable(spell.type);
-                    }
-                }
-            } else if (this.state === GameState.OpeningCinematic) {
-                const e: KeyboardEvent = await readKey();
-                e.preventDefault();
-
-                if (e.key === "Enter") {
                     this.hookMouseLook();
-                    this.loadLevel("forrest_001");
-                    this.state = GameState.Gameplay;
+                    this.state = GameState.InventoryMenu;
+                } else if (this.spellForTarget !== null) {
+                    this.hookMouseLook();
+                    this.state = GameState.SpellMenu;
                 }
-            } else if (this.state === GameState.WinCinematic) {
-                const e: KeyboardEvent = await readKey();
-                e.preventDefault();
-
-                if (e.key === "Enter") {
-                    this.reset();
-                    this.state = GameState.Gameplay;
-                }
-            } else if (this.state === GameState.LoseCinematic) {
-                const e: KeyboardEvent = await readKey();
-                e.preventDefault();
-
-                if (e.key === "Enter") {
-                    this.reset();
-                    this.state = GameState.Gameplay;
-                }
-            }
-        } while (!acted);
-    }
-
-    async mainLoop() {
-        while (true) {
-            const actor = this.scheduler.next();
-
-            if (actor === this.player) {
-                this.totalTurns++;
-                await this.handleInput();
-            }
-            actor.act(this.map, this.gameObjects, this.pathNodes);
-
-            if (this.player.fighter === null || this.player.fighter.getEffectiveStats().hp <= 0) {
-                this.state = GameState.LoseCinematic;
+                return acted;
             }
 
-            const volumes = findVolumeCollision(this.volumes, actor);
-            if (volumes.length) {
-                volumes.forEach((v: Volume) => v.enter(actor));
+            let command: Command = null;
+            if (this.itemForTarget !== null) {
+                command = useItemCommand(this.itemForTarget.id, target);
+            } else if (this.spellForTarget !== null) {
+                command = useSpellCommand(this.spellForTarget.id, target);
+            }
+
+            acted = command(this.player);
+            this.hookMouseLook();
+            this.state = GameState.Gameplay;
+        } else if (this.state === GameState.PauseMenu) {
+            if (input.isDown("Escape")) {
+                globals.gameEventEmitter.emit("ui.closeKeybinding");
+                this.state = GameState.Gameplay;
+                this.keyBindingMenu.resetState();
+                return acted;
+            }
+
+            this.keyBindingMenu.handleInput(this.keyCommands);
+        } else if (this.state === GameState.InventoryMenu) {
+            if (input.isDown("Escape")) {
+                globals.gameEventEmitter.emit("ui.closeInventory");
+                this.state = GameState.Gameplay;
+                this.inventoryMenu.resetState();
+                return acted;
+            }
+
+            const item: InventoryItemDetails = this.inventoryMenu.handleInput(
+                this.player.inventoryComponent.getItems()
+            );
+
+            if (item) {
+                let command: Command = null;
+
+                switch (item.type) {
+                    case ItemType.HealSelf:
+                    case ItemType.AddManaSelf:
+                    case ItemType.ClairvoyanceScroll:
+                    case ItemType.ConfuseScroll:
+                    case ItemType.HasteSelf:
+                    case ItemType.WildDamageScroll:
+                        command = useItemCommand(item.id);
+                        this.state = GameState.Gameplay;
+                        acted = command(this.player);
+                        if (!acted) {
+                            this.state = GameState.SpellMenu;
+                        }
+                        break;
+                    // Items that need to be targeted
+                    case ItemType.DamageScroll:
+                    case ItemType.SlowOther:
+                        this.itemForTarget = item;
+                        this.unhookMouseLook();
+                        this.state = GameState.Target;
+                        break;
+                    default:
+                        assertUnreachable(item.type);
+                }
+            }
+        } else if (this.state === GameState.SpellMenu) {
+            if (input.isDown("Escape")) {
+                globals.gameEventEmitter.emit("ui.closeSpells");
+                this.state = GameState.Gameplay;
+                this.spellSelectionMenu.resetState();
+                return acted;
+            }
+
+            const spell: SpellFighterDetails = this.spellSelectionMenu.handleInput(
+                this.player.fighter.getKnownSpells()
+            );
+
+            if (spell) {
+                switch (spell.type) {
+                    case SpellType.Effect:
+                    case SpellType.HealSelf:
+                    case SpellType.Passive:
+                    case SpellType.WildDamage:
+                        this.state = GameState.Gameplay;
+                        acted = useSpellCommand(spell.id)(this.player);
+                        if (!acted) {
+                            this.state = GameState.SpellMenu;
+                        }
+                        break;
+                    case SpellType.DamageOther:
+                        this.spellForTarget = spell;
+                        this.unhookMouseLook();
+                        this.state = GameState.Target;
+                        break;
+                    default:
+                        assertUnreachable(spell.type);
+                }
+            }
+        } else if (this.state === GameState.OpeningCinematic) {
+            if (input.isDown("Enter")) {
+                this.hookMouseLook();
+                this.loadLevel("forrest_001");
+                this.state = GameState.Gameplay;
+            }
+        } else if (this.state === GameState.WinCinematic) {
+            if (input.isDown("Enter")) {
+                this.reset();
+                this.state = GameState.Gameplay;
+            }
+        } else if (this.state === GameState.LoseCinematic) {
+            if (input.isDown("Enter")) {
+                this.reset();
+                this.state = GameState.Gameplay;
             }
         }
+
+        return acted;
+    }
+
+    mainLoop(): void {
+        globals.window.animationFrameID = window.requestAnimationFrame(this.mainLoop.bind(this));
+        this.render();
+
+        const acted = this.handleInput();
+        if (acted === true) {
+            this.totalTurns++;
+
+            const volumes = findVolumeCollision(this.volumes, this.player);
+            if (volumes.length) {
+                volumes.forEach((v: Volume) => v.enter(this.player));
+            }
+
+            do {
+                this.currentActor = this.scheduler.next();
+                this.currentActor.act(this.map, this.gameObjects, this.pathNodes);
+
+                const volumes = findVolumeCollision(this.volumes, this.currentActor);
+                if (volumes.length) {
+                    volumes.forEach((v: Volume) => v.enter(this.currentActor));
+                }
+            } while (this.currentActor !== this.player);
+        }
+
+        if (this.player.fighter === null || this.player.fighter.getEffectiveStats().hp <= 0) {
+            this.state = GameState.LoseCinematic;
+        }
+
+        input.clearInputs();
     }
 
     hookMouseLook() {
@@ -563,7 +547,7 @@ export class SimpleDungeonCrawler {
         this.canvas.removeEventListener("mousedown", mouseLook);
     }
 
-    addObject(object: GameObject) {
+    addObject(object: GameObject): void {
         this.gameObjects.push(object);
         this.scheduler.add(this.gameObjects[this.gameObjects.length - 1], true);
     }
@@ -573,14 +557,14 @@ export class SimpleDungeonCrawler {
      * @param  {GameObject} object The object to remove
      * @return {void}
      */
-    removeObject(object: GameObject) {
+    removeObject(object: GameObject): void {
         // could use an object pool or a linked list to speed up this operation
         // but that seems overkill for this
         this.gameObjects.splice(this.gameObjects.indexOf(object), 1);
         this.scheduler.remove(object);
     }
 
-    getTurnNumber() {
+    getTurnNumber(): number {
         return this.totalTurns;
     }
 }

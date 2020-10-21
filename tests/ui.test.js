@@ -1,10 +1,15 @@
-/* global describe, it */
+/* global describe, it, afterEach */
 
 import { expect } from "chai";
 
+import input from "../src/input";
 import { KeyBindingMenu, InventoryMenu, SpellSelectionMenu } from "../src/ui";
 
 describe("ui", function () {
+    afterEach(function () {
+        input.clearInputs();
+    });
+
     describe("KeyBindingMenu", function () {
         it("should do nothing when a bad key is pressed", function () {
             const menu = new KeyBindingMenu();
@@ -12,7 +17,8 @@ describe("ui", function () {
                 { key: "w" },
                 { key: "d" }
             ];
-            menu.handleInput("d", commands);
+            input.press("d");
+            menu.handleInput(commands);
             expect(menu.currentSelection).to.be.equal(0);
         });
 
@@ -22,7 +28,8 @@ describe("ui", function () {
                 { key: "w" },
                 { key: "d" }
             ];
-            menu.handleInput("ArrowDown", commands);
+            input.press("ArrowDown");
+            menu.handleInput(commands);
             expect(menu.currentSelection).to.be.equal(1);
         });
 
@@ -33,7 +40,8 @@ describe("ui", function () {
                 { key: "w" },
                 { key: "d" }
             ];
-            menu.handleInput("ArrowUp", commands);
+            input.press("ArrowUp");
+            menu.handleInput(commands);
             expect(menu.currentSelection).to.be.equal(0);
         });
 
@@ -43,7 +51,8 @@ describe("ui", function () {
                 { key: "w" },
                 { key: "d" }
             ];
-            menu.handleInput("Enter", commands);
+            input.press("Enter");
+            menu.handleInput(commands);
             expect(menu.state).to.be.equal("change");
         });
 
@@ -52,8 +61,11 @@ describe("ui", function () {
             const commands = [
                 { key: "w" }
             ];
-            menu.handleInput("Enter", commands);
-            menu.handleInput("d", commands);
+            input.press("Enter");
+            menu.handleInput(commands);
+            input.clearInputs();
+            input.press("d");
+            menu.handleInput(commands);
             expect(commands[0].key).to.be.equal("d");
         });
     });
@@ -65,7 +77,8 @@ describe("ui", function () {
                 { id: "test" },
                 { id: "test2" }
             ];
-            menu.handleInput("d", items);
+            input.press("j");
+            menu.handleInput(items);
             expect(menu.currentSelection).to.be.equal(0);
         });
 
@@ -75,7 +88,8 @@ describe("ui", function () {
                 { id: "test" },
                 { id: "test2" }
             ];
-            menu.handleInput("ArrowDown", items);
+            input.press("ArrowDown");
+            menu.handleInput(items);
             expect(menu.currentSelection).to.be.equal(1);
         });
 
@@ -86,7 +100,8 @@ describe("ui", function () {
                 { id: "test" },
                 { id: "test2" }
             ];
-            menu.handleInput("ArrowUp", items);
+            input.press("ArrowUp");
+            menu.handleInput(items);
             expect(menu.currentSelection).to.be.equal(0);
         });
 
@@ -96,7 +111,8 @@ describe("ui", function () {
                 { id: "test" },
                 { id: "test2" }
             ];
-            const item = menu.handleInput("Enter", items);
+            input.press("Enter");
+            const item = menu.handleInput(items);
             expect(item).to.be.deep.equal({ id: "test" });
         });
     });
@@ -108,7 +124,8 @@ describe("ui", function () {
                 { id: "test" },
                 { id: "test2" }
             ];
-            menu.handleInput("d", spells);
+            input.press("d");
+            menu.handleInput(spells);
             expect(menu.currentSelection).to.be.equal(0);
         });
 
@@ -118,7 +135,8 @@ describe("ui", function () {
                 { id: "test" },
                 { id: "test2" }
             ];
-            menu.handleInput("ArrowDown", spells);
+            input.press("ArrowDown");
+            menu.handleInput(spells);
             expect(menu.currentSelection).to.be.equal(1);
         });
 
@@ -129,7 +147,8 @@ describe("ui", function () {
                 { id: "test" },
                 { id: "test2" }
             ];
-            menu.handleInput("ArrowUp", spells);
+            input.press("ArrowUp");
+            menu.handleInput(spells);
             expect(menu.currentSelection).to.be.equal(0);
         });
 
@@ -139,7 +158,8 @@ describe("ui", function () {
                 { id: "test" },
                 { id: "test2" }
             ];
-            const spell = menu.handleInput("Enter", spells);
+            input.press("Enter");
+            const spell = menu.handleInput(spells);
             expect(spell).to.be.deep.equal({ id: "test" });
         });
     });

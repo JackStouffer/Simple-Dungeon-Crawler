@@ -66,8 +66,6 @@ export default class Term extends Backend {
         this._lastColor = "";
     }
 
-    schedule(cb: ()=>void) { setTimeout(cb, 1000/60); }
-
     setOptions(options: DisplayOptions) {
         super.setOptions(options);
         const size = [options.width, options.height];

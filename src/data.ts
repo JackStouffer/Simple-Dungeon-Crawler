@@ -48,8 +48,8 @@ import { GameObject } from "./object";
 import { Command } from "./commands";
 import { PathNode } from "./map";
 
-export const WIDTH = 70;
-export const HEIGHT = 45;
+export const WIDTH = 58;
+export const HEIGHT = 38;
 export const UI_HEIGHT = 6;
 export const WORLD_WIDTH = WIDTH;
 export const WORLD_HEIGHT = HEIGHT - UI_HEIGHT - 1;

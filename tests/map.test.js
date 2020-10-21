@@ -10,11 +10,10 @@ import {
     isSightBlocked,
     drawTile,
     getRandomFighterWithinRange,
-    drawMap
+    drawMap,
+    setAllToExplored
 } from "../src/map";
 import {
-    COLOR_INVISIBLE_GROUND,
-    COLOR_INVISIBLE_WALL,
     COLOR_DARK_GROUND,
     LevelData,
     TileData,
@@ -39,8 +38,8 @@ describe("map", function () {
         "",
         "grey",
         "grey",
-        "black",
-        "black",
+        "brown",
+        "brown",
         true,
         true
     ];
@@ -184,16 +183,16 @@ describe("map", function () {
     });
 
     describe("drawTile", function () {
-        it("should draw a non-blocking tile invisible when it's not visible or explored", function () {
+        it("should not draw a non-blocking tile when it's invisible", function () {
             const tile = new Tile(...emptySpaceData);
             drawTile(display, tile, 0, 0);
-            expect(display.draw.calledWith(0, 0, "", COLOR_INVISIBLE_GROUND, COLOR_INVISIBLE_GROUND)).to.be.true;
+            expect(display.draw.calledOnce).to.be.false;
         });
 
-        it("should draw a blocking tile invisible when it's not visible or explored", function () {
+        it("should not draw a blocking tile when it's invisible", function () {
             const tile = new Tile(...filledSpaceData);
             drawTile(display, tile, 0, 0);
-            expect(display.draw.calledWith(0, 0, "", COLOR_INVISIBLE_WALL, COLOR_INVISIBLE_WALL)).to.be.true;
+            expect(display.draw.calledOnce).to.be.false;
         });
 
         it("should draw a non-blocking tile as dark when it's explored but not visible", function () {
@@ -207,7 +206,7 @@ describe("map", function () {
             const tile = new Tile(...filledSpaceData);
             tile.explored = true;
             drawTile(display, tile, 0, 0);
-            expect(display.draw.calledWith(0, 0, "", "black", "black")).to.be.true;
+            expect(display.draw.calledWith(0, 0, "", "brown", "brown")).to.be.true;
         });
 
         it("should draw a non-blocking tile with the light color when visible", function () {
@@ -262,6 +261,7 @@ describe("map", function () {
                     return { x, y };
                 }
             };
+            setAllToExplored(map);
             drawMap(display, camera, map);
             expect(display.draw.callCount).to.be.equal(9);
         });

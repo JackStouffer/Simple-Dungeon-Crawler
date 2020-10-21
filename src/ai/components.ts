@@ -4,7 +4,7 @@ import { findKey, isEqual, get } from "lodash";
 import globals from "../globals";
 import { GoalData, ActionData, ObjectDataDetails } from "../data";
 import { Planner, ActionList, PlannerWorldState } from "./planner";
-import { Command, moveCommand } from "../commands";
+import { Command, moveCommand, noOpCommand } from "../commands";
 import { GameMap, isBlocked, isSightBlocked, PathNode } from "../map";
 import { GameObject } from "../object";
 import { displayMessage } from "../ui";
@@ -351,7 +351,11 @@ export class PlanningAI implements AIComponent {
     ): Command {
         if (!this.owner.fighter) { throw new Error("Mage AI must have a fighter"); }
         const plan = this.getPlan();
-        return ActionData[plan].updateFunction(this, map, gameObjects, pathNodes);
+        if (plan) {
+            return ActionData[plan].updateFunction(this, map, gameObjects, pathNodes);
+        } else {
+            return noOpCommand();
+        }
     }
 }
 

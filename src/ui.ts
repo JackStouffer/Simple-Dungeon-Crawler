@@ -12,6 +12,7 @@ import {
     SpellType
 } from "./data";
 import { KeyCommand } from "./game";
+import input from "./input";
 import { GameObject } from "./object";
 import { InventoryItemDetails } from "./inventory";
 import { SpellFighterDetails } from "./fighter";
@@ -30,7 +31,7 @@ export function drawUI(display: Display, player: GameObject) {
     display.drawText(14, HEIGHT - UI_HEIGHT, "%c{white}%b{blue}Mana: " + stats.mana + "/" + stats.maxMana);
     display.drawText(30, HEIGHT - UI_HEIGHT, "%c{white}%b{blue}STR: " + stats.strength);
     display.drawText(38, HEIGHT - UI_HEIGHT, "%c{white}%b{blue}DEF: " + stats.defense);
-    display.drawText(54, HEIGHT - UI_HEIGHT, "%c{white}%b{blue}EXP: " + player.fighter.experience + "/" + (LEVEL_UP_BASE + player.fighter.level * LEVEL_UP_FACTOR));
+    display.drawText(46, HEIGHT - UI_HEIGHT, "%c{white}%b{blue}EXP: " + player.fighter.experience + "/" + (LEVEL_UP_BASE + player.fighter.level * LEVEL_UP_FACTOR));
 }
 
 export const enum MessageType {
@@ -108,22 +109,18 @@ export class InventoryMenu {
         }
     }
 
-    handleInput(key: string, inventoryItems: InventoryItemDetails[]): InventoryItemDetails {
-        if (!this.allowedKeys.has(key)) {
-            return null;
-        }
-
-        if (key === "Enter") {
+    handleInput(inventoryItems: InventoryItemDetails[]): InventoryItemDetails {
+        if (input.isDown("Enter")) {
             globals.gameEventEmitter.emit("ui.select");
             return inventoryItems[this.currentSelection];
         }
 
-        if (key === "ArrowUp" && this.currentSelection > 0) {
+        if (input.isDown("ArrowUp") && this.currentSelection > 0) {
             globals.gameEventEmitter.emit("ui.cursorMove");
             this.currentSelection--;
         }
 
-        if (key === "ArrowDown" && this.currentSelection < inventoryItems.length - 1) {
+        if (input.isDown("ArrowDown") && this.currentSelection < inventoryItems.length - 1) {
             globals.gameEventEmitter.emit("ui.cursorMove");
             this.currentSelection++;
         }
@@ -196,22 +193,18 @@ export class SpellSelectionMenu {
         }
     }
 
-    handleInput(key: string, spells: SpellFighterDetails[]): SpellFighterDetails {
-        if (!this.allowedKeys.has(key)) {
-            return null;
-        }
-
-        if (key === "Enter") {
+    handleInput(spells: SpellFighterDetails[]): SpellFighterDetails {
+        if (input.isDown("Enter")) {
             globals.gameEventEmitter.emit("ui.select");
             return spells[this.currentSelection];
         }
 
-        if (key === "ArrowUp" && this.currentSelection > 0) {
+        if (input.isDown("ArrowUp") && this.currentSelection > 0) {
             globals.gameEventEmitter.emit("ui.cursorMove");
             this.currentSelection--;
         }
 
-        if (key === "ArrowDown" && this.currentSelection < spells.length - 1) {
+        if (input.isDown("ArrowDown") && this.currentSelection < spells.length - 1) {
             globals.gameEventEmitter.emit("ui.cursorMove");
             this.currentSelection++;
         }
@@ -280,35 +273,35 @@ export class KeyBindingMenu {
         }
     }
 
-    handleInput(key: string, keyCommands: KeyCommand[]) {
+    handleInput(keyCommands: KeyCommand[]) {
         if (this.state === "selection") {
-            if (!this.allowedSelectionKeys.has(key)) {
-                return;
-            }
-
-            if (key === "Escape") {
+            if (input.isDown("Escape")) {
                 globals.gameEventEmitter.emit("ui.select");
                 return;
             }
 
-            if (key === "ArrowUp" && this.currentSelection > 0) {
+            if (input.isDown("ArrowUp") && this.currentSelection > 0) {
                 globals.gameEventEmitter.emit("ui.cursorMove");
                 this.currentSelection--;
             }
 
-            if (key === "ArrowDown" && this.currentSelection < keyCommands.length - 1) {
+            if (input.isDown("ArrowDown") && this.currentSelection < keyCommands.length - 1) {
                 globals.gameEventEmitter.emit("ui.cursorMove");
                 this.currentSelection++;
             }
 
-            if (key === "Enter") {
+            if (input.isDown("Enter")) {
                 globals.gameEventEmitter.emit("ui.select");
                 this.state = "change";
             }
         } else if (this.state === "change") {
             globals.gameEventEmitter.emit("ui.select");
-            keyCommands[this.currentSelection].key = key;
-            this.state = "selection";
+
+            const key: string = input.getFirstKeyPressed();
+            if (key) {
+                keyCommands[this.currentSelection].key = key;
+                this.state = "selection";
+            }
         }
     }
 }

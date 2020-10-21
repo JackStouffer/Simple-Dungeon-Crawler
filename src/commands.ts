@@ -8,6 +8,12 @@ import { GameObject } from "./object";
 
 export type Command = (actor: GameObject) => boolean;
 
+export function noOpCommand() {
+    return function (): boolean {
+        return true;
+    };
+}
+
 /**
  * Create a move function for a specified GameObject. The function
  * checks if the moved to space contains a blocking object or tile.

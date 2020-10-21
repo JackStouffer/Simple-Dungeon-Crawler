@@ -53,7 +53,6 @@ export default class TileGL extends Backend {
         }
     }
 
-    schedule(cb: () => void) { requestAnimationFrame(cb); }
     getContainer() { return this._gl.canvas as HTMLCanvasElement; }
 
     setOptions(opts: DisplayOptions) {
