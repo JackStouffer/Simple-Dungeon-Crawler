@@ -4,8 +4,13 @@
 
 _In Development_
 
+* Gameplay
+  * AI now uses Goal Oriented Action Planning for decision making
 * Technical
   * Convert project to Typescript
+  * Modify game loop to remove async/await code to more align with a traditional infinite loop
+    * Got the game running at 60fps
+    * Added input handling code per-frame
   * Fixed bugs that were using fighter's stats without calling `getEffectiveStats`
 
 ## Version 8

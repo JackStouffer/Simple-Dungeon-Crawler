@@ -299,8 +299,8 @@
                  "type":"object",
                  "visible":true,
                  "width":0,
-                 "x":13.8355111452728,
-                 "y":625.672559569562
+                 "x":15.2188283399055,
+                 "y":603.539484455439
                 }, 
                 {
                  "height":0,
@@ -394,29 +394,6 @@
                 }, 
                 {
                  "height":0,
-                 "id":28,
-                 "name":"Goblin Brute",
-                 "point":true,
-                 "properties":[
-                        {
-                         "name":"objectType",
-                         "type":"string",
-                         "value":"goblin_brute"
-                        }, 
-                        {
-                         "name":"pathName",
-                         "type":"string",
-                         "value":"forrest_path_01"
-                        }],
-                 "rotation":0,
-                 "type":"object",
-                 "visible":true,
-                 "width":0,
-                 "x":448.648648648649,
-                 "y":1610.81081081081
-                }, 
-                {
-                 "height":0,
                  "id":31,
                  "name":"Bandit",
                  "point":true,
@@ -434,14 +411,14 @@
                         {
                          "name":"pathName",
                          "type":"string",
-                         "value":"forrest_path_02"
+                         "value":"forrest_path_01"
                         }],
                  "rotation":0,
                  "type":"object",
                  "visible":true,
                  "width":0,
-                 "x":358.279153409877,
-                 "y":650.159081477383
+                 "x":304.373875692173,
+                 "y":1398.22503366288
                 }, 
                 {
                  "height":0,
@@ -463,13 +440,46 @@
                          "name":"objectType",
                          "type":"string",
                          "value":"bandit_mage"
+                        }, 
+                        {
+                         "name":"pathName",
+                         "type":"string",
+                         "value":"forrest_path_01"
                         }],
                  "rotation":0,
                  "type":"object",
                  "visible":true,
                  "width":0,
-                 "x":672.292156591507,
-                 "y":1113.57034167935
+                 "x":337.672052694903,
+                 "y":1399.66714135481
+                }, 
+                {
+                 "height":0,
+                 "id":36,
+                 "name":"Bandit",
+                 "point":true,
+                 "properties":[
+                        {
+                         "name":"fallbackPosition",
+                         "type":"object",
+                         "value":32
+                        }, 
+                        {
+                         "name":"objectType",
+                         "type":"string",
+                         "value":"bandit"
+                        }, 
+                        {
+                         "name":"pathName",
+                         "type":"string",
+                         "value":"forrest_path_01"
+                        }],
+                 "rotation":0,
+                 "type":"object",
+                 "visible":true,
+                 "width":0,
+                 "x":303.835220653339,
+                 "y":1431.56717461205
                 }],
          "opacity":1,
          "type":"objectgroup",
@@ -585,52 +595,6 @@
                  "width":0,
                  "x":338.912712685019,
                  "y":1521.648914096
-                }, 
-                {
-                 "height":0,
-                 "id":33,
-                 "name":"Patrol Path",
-                 "point":true,
-                 "properties":[
-                        {
-                         "name":"next",
-                         "type":"object",
-                         "value":34
-                        }, 
-                        {
-                         "name":"pathName",
-                         "type":"string",
-                         "value":"forrest_path_02"
-                        }],
-                 "rotation":0,
-                 "type":"path_node",
-                 "visible":true,
-                 "width":0,
-                 "x":330.612809517222,
-                 "y":762.207774242634
-                }, 
-                {
-                 "height":0,
-                 "id":34,
-                 "name":"Patrol Path",
-                 "point":true,
-                 "properties":[
-                        {
-                         "name":"next",
-                         "type":"object",
-                         "value":33
-                        }, 
-                        {
-                         "name":"pathName",
-                         "type":"string",
-                         "value":"forrest_path_02"
-                        }],
-                 "rotation":0,
-                 "type":"path_node",
-                 "visible":true,
-                 "width":0,
-                 "x":323.696223544059,
-                 "y":489.694286899986
                 }],
          "opacity":1,
          "type":"objectgroup",
@@ -639,7 +603,7 @@
          "y":0
         }],
  "nextlayerid":6,
- "nextobjectid":36,
+ "nextobjectid":37,
  "orientation":"orthogonal",
  "renderorder":"right-down",
  "tiledversion":"1.4.2",

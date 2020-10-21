@@ -1,20 +1,19 @@
 import { Lighting, FOV } from "./rot/index";
 import { Color, toRGB, add, fromString } from "./rot/color";
+import { ReflectivityCallback } from "./rot/lighting";
 
 import { createPassableSightCallback } from "./ai/components";
 import { GameObject } from "./object";
 import { GameMap } from "./map";
 
 export interface LightingComponent {
-    color: string;
-    range: number;
     owner: GameObject;
 
     setOwner: (owner: GameObject) => void;
     compute: (map: any) => void;
 }
 
-function createReflectivityCallback(map: GameMap) {
+function createReflectivityCallback(map: GameMap): ReflectivityCallback {
     return function (x: number, y: number) {
         if (x < 0 || y < 0 || y >= map.length || x >= map[y].length) {
             return 0;
@@ -26,9 +25,9 @@ function createReflectivityCallback(map: GameMap) {
 /**
  * Component
  */
-class ReflectivityLighting implements LightingComponent {
-    color: string;
-    range: number;
+export class ReflectivityLighting implements LightingComponent {
+    private color: string;
+    private range: number;
     owner: GameObject;
 
     constructor(color: string, range: number) {
@@ -70,9 +69,9 @@ class ReflectivityLighting implements LightingComponent {
 /**
  * Component
  */
-class PlayerLighting implements LightingComponent {
-    color: string;
-    range: number;
+export class PlayerLighting implements LightingComponent {
+    private color: string;
+    private range: number;
     owner: GameObject;
 
     constructor(color: string, range: number) {
@@ -120,4 +119,3 @@ class PlayerLighting implements LightingComponent {
         lighting.compute(lightingCallback);
     }
 }
-export { ReflectivityLighting, PlayerLighting };

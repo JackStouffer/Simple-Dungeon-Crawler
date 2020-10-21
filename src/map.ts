@@ -77,7 +77,7 @@ export class PathNode {
     }
 }
 
-function findProperty(o: any, name: string) {
+function findProperty(o: any, name: string): any {
     if (!o.properties || !o.properties.length) { return null; }
 
     const property = o.properties.filter((prop: any) => {
@@ -404,10 +404,20 @@ export function resetVisibility(map: GameMap): void {
  * @param  {Array} map  An array of arrays of Tiles
  * @return {void}
  */
-export function setAllToExplored(map: GameMap): void {
+export function setAllToExplored(
+    map: GameMap,
+    visible: boolean = false,
+    lit: boolean = false
+): void {
     for (let y = 0; y < map.length; y++) {
         for (let x = 0; x < map[y].length; x++) {
             map[y][x].explored = true;
+            if (visible) {
+                map[y][x].visible = true;
+            }
+            if (lit) {
+                map[y][x].lightingColor = "white";
+            }
         }
     }
 }

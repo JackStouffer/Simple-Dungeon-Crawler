@@ -272,6 +272,9 @@ export class SimpleDungeonCrawler {
         this.mainLoop();
     }
 
+    /**
+     * Draw the game world to the canvas
+     */
     render(): void {
         switch (this.state) {
             case GameState.Gameplay:
@@ -343,6 +346,10 @@ export class SimpleDungeonCrawler {
         this.display.drawWithCache();
     }
 
+    /**
+     * Load a tiled map into the game world
+     * @param name {string} the name of the level to load
+     */
     loadLevel(name: LevelName): void {
         const { map, playerLocation, objects, volumes, pathNodes } = loadTiledMap(name);
         this.map = map;
@@ -360,6 +367,9 @@ export class SimpleDungeonCrawler {
         globals.gameEventEmitter.emit("level.loaded", name);
     }
 
+    /**
+     * Read the current inputs and act on them according to the game state
+     */
     handleInput(): boolean {
         let acted: boolean = false;
 

@@ -1,4 +1,5 @@
 import { FOV, DIRS, RNG, Path } from "../rot/index";
+import { PassableCallback } from "../rot/path/path";
 import { findKey, isEqual, get } from "lodash";
 
 import globals from "../globals";
@@ -38,7 +39,7 @@ export interface AIComponent {
  * @param  {GameObject} owner The game object to be used with this function
  * @return {Function}         the callback
  */
-export function createPassableCallback(owner: GameObject): (x: number, y: number) => boolean {
+export function createPassableCallback(owner: GameObject): PassableCallback {
     return function(x: number, y: number) {
         // own space is passable
         if (owner.x === x && owner.y === y) {
@@ -56,7 +57,7 @@ export function createPassableCallback(owner: GameObject): (x: number, y: number
  * @param  {GameObject} owner The game object to be used with this function
  * @return {Function}         the callback
  */
-export function createPassableSightCallback(owner: GameObject): (x: number, y: number) => boolean {
+export function createPassableSightCallback(owner: GameObject): PassableCallback {
     return function(x: number, y: number) {
         // own space is passable
         if (owner.x === x && owner.y === y) {
@@ -92,7 +93,11 @@ export function createVisibilityCallback(ai: AIComponent) {
  * @param {Number} targetY The target y coordinate
  * @returns {Object} The x and y coordinates
  */
-export function getNextStepTowardsTarget(actor: GameObject, targetX: number, targetY: number) {
+export function getNextStepTowardsTarget(
+    actor: GameObject,
+    targetX: number,
+    targetY: number
+): { x: number, y: number } {
     const aStar = new Path.AStar(
         targetX,
         targetY,
@@ -138,7 +143,7 @@ export function newPositionToDirection(
     return Number.parseInt(key, 10);
 }
 
-function chaseStateUpdate(ai: AIComponent) {
+function chaseStateUpdate(ai: AIComponent): Command {
     const { x, y } = getNextStepTowardsTarget(
         ai.owner,
         globals.Game.player.x,

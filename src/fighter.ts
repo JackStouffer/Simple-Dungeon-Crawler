@@ -1,5 +1,3 @@
-declare const ENV: any;
-
 import { RNG, SpeedActor } from "./rot/index";
 
 import globals from "./globals";
@@ -64,17 +62,18 @@ export interface SpellFighterDetails {
  */
 class BasicFighter implements FighterComponent, SpeedActor {
     owner: GameObject;
-    private stats: FighterStats;
-    private deathCallback: (target: GameObject) => void;
     experience: number;
     experienceGiven: number;
     level: number;
-    criticalChance: number;
-    criticalDamageMultiplier: number;
-    statusEffects: StatusEffect[];
-    statisticEffects: StatisticEffect[];
-    damageAffinity: any;
-    knownSpells: Set<string>;
+
+    private stats: FighterStats;
+    private deathCallback: (target: GameObject) => void;
+    private criticalChance: number;
+    private criticalDamageMultiplier: number;
+    private statusEffects: StatusEffect[];
+    private statisticEffects: StatisticEffect[];
+    private damageAffinity: any;
+    private knownSpells: Set<string>;
 
     constructor(data: any, deathCallback: (target: GameObject) => void = null) {
         this.stats = {
@@ -109,6 +108,10 @@ class BasicFighter implements FighterComponent, SpeedActor {
         this.owner = owner;
     }
 
+    /**
+     * Check experience to see if the fighter should level up and
+     * run effects.
+     */
     act() {
         const effectiveStats = this.getEffectiveStats();
 
@@ -178,6 +181,11 @@ class BasicFighter implements FighterComponent, SpeedActor {
         return false;
     }
 
+    /**
+     * Have this fighter attack another game object. Adds experience
+     * if the target was killed.
+     * @param target the object to attack
+     */
     attack(target: GameObject): void {
         if (!target.fighter) { return; }
 
@@ -220,7 +228,7 @@ class BasicFighter implements FighterComponent, SpeedActor {
      * @param {Number} cost The amount of mana to use
      * @returns {void}
      */
-    useMana(cost: number) {
+    useMana(cost: number): void {
         this.stats.mana = Math.max(this.stats.mana - cost, 0);
     }
 
@@ -230,7 +238,7 @@ class BasicFighter implements FighterComponent, SpeedActor {
      * @param {Number} amount mana amount
      * @returns {void}
      */
-    addMana(amount: number) {
+    addMana(amount: number): void {
         const effectiveStats = this.getEffectiveStats();
         this.stats.mana += amount;
         if (this.stats.mana > effectiveStats.maxMana) {
@@ -276,9 +284,6 @@ class BasicFighter implements FighterComponent, SpeedActor {
     }
 
     addStatusEffect(effect: StatusEffect) {
-        if (ENV === "DEV" && effect.constructor.name !== "StatusEffect") {
-            throw new Error("effect must be of type StatusEffect");
-        }
         this.statusEffects.push(effect);
     }
 
@@ -288,9 +293,6 @@ class BasicFighter implements FighterComponent, SpeedActor {
     }
 
     addStatisticEffect(effect: StatisticEffect) {
-        if (ENV === "DEV" && effect.constructor.name !== "StatisticEffect") {
-            throw new Error("effect must be of type StatisticEffect");
-        }
         this.statisticEffects.push(effect);
     }
 

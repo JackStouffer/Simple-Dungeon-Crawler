@@ -20,10 +20,10 @@ export type EffectActCallback = (owner: GameObject) => void;
  */
 export class StatusEffect {
     owner: GameObject;
-    name: string;
+    readonly name: string;
     turns: number;
-    actCallback: EffectActCallback;
-    endCallback: EffectActCallback;
+    private actCallback: EffectActCallback;
+    private endCallback: EffectActCallback;
 
     /**
      * Create a new StatusEffect
@@ -73,7 +73,7 @@ export class StatisticEffect {
     owner: GameObject;
     name: string;
     turns: number;
-    modifier: StatisticEffectModifier;
+    private modifier: StatisticEffectModifier;
 
     constructor(owner: GameObject, name: string, turns: number, modifier: StatisticEffectModifier) {
         this.owner = owner;

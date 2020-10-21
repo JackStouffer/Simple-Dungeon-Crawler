@@ -8,6 +8,9 @@ import { GameObject } from "./object";
 
 export type Command = (actor: GameObject) => boolean;
 
+/**
+ * Command that does nothing. Useful for passing a turn
+ */
 export function noOpCommand() {
     return function (): boolean {
         return true;

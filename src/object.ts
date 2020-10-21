@@ -31,7 +31,7 @@ import { GameMap, PathNode } from "./map";
  *
  * The act method is the method called by the engine every turn.
  */
-class GameObject implements SpeedActor {
+export class GameObject implements SpeedActor {
     readonly type: string;
     name: string;
     x: number;
@@ -61,7 +61,11 @@ class GameObject implements SpeedActor {
         this.interactable = null;
     }
 
-    setGraphics(graphics: GraphicsComponent) {
+    /**
+     * Give this object graphics
+     * @param ai {GraphicsComponent} The graphic component instance
+     */
+    setGraphics(graphics: GraphicsComponent): void {
         if (graphics === null && this.graphics !== null) {
             this.graphics.setOwner(null);
             this.graphics = null;
@@ -76,7 +80,11 @@ class GameObject implements SpeedActor {
         this.graphics = graphics;
     }
 
-    setLighting(lighting: LightingComponent) {
+    /**
+     * Give this object lighting
+     * @param ai {LightingComponent} The lighting component instance
+     */
+    setLighting(lighting: LightingComponent): void {
         if (lighting === null && this.lighting !== null) {
             this.lighting.setOwner(null);
             this.lighting = null;
@@ -91,7 +99,11 @@ class GameObject implements SpeedActor {
         this.lighting = lighting;
     }
 
-    setFighter(fighter: FighterComponent & SpeedActor) {
+    /**
+     * Give this object an fighter
+     * @param ai {FighterComponent} The fighter instance
+     */
+    setFighter(fighter: FighterComponent & SpeedActor): void {
         if (fighter === null && this.fighter !== null) {
             this.fighter.setOwner(null);
             this.fighter = null;
@@ -106,7 +118,11 @@ class GameObject implements SpeedActor {
         this.fighter = fighter;
     }
 
-    setAI(ai: AIComponent) {
+    /**
+     * Give this object an AI
+     * @param ai {AIComponent} The AI instance
+     */
+    setAI(ai: AIComponent): void {
         if (ai === null && this.ai !== null) {
             this.ai.setOwner(null);
             this.ai = null;
@@ -121,7 +137,11 @@ class GameObject implements SpeedActor {
         this.ai = ai;
     }
 
-    setInventory(inventoryComponent: InventoryComponent) {
+    /**
+     * Give this object inventory
+     * @param ai {InventoryComponent} The inventory component instance
+     */
+    setInventory(inventoryComponent: InventoryComponent): void {
         if (inventoryComponent === null && this.inventoryComponent !== null) {
             this.inventoryComponent.setOwner(null);
             this.inventoryComponent = null;
@@ -136,7 +156,11 @@ class GameObject implements SpeedActor {
         this.inventoryComponent = inventoryComponent;
     }
 
-    setInteractable(interactable: InteractableComponent) {
+    /**
+     * Give this object interaction
+     * @param ai {InteractableComponent} The interactable component instance
+     */
+    setInteractable(interactable: InteractableComponent): void {
         if (interactable === null && this.interactable !== null) {
             this.interactable.setOwner(null);
             this.interactable = null;
@@ -151,40 +175,47 @@ class GameObject implements SpeedActor {
         this.interactable = interactable;
     }
 
-    getSpeed() {
+    /**
+     * @returns {number} The actor's speed
+     */
+    getSpeed(): number {
         if (this.fighter) {
             return this.fighter.getSpeed();
         }
         return BASE_SPEED;
     }
 
-    act(map: GameMap, gameObjects: GameObject[], pathNodes: Map<number, PathNode>) {
-        let acted = true;
+    /**
+     * Run the commands from the AI and run the fighter's act function
+     * @param map the world map
+     * @param gameObjects list of current game objects
+     * @param pathNodes map of nodes by id
+     * @returns {boolean} did the object use up their turn
+     */
+    act(map: GameMap, gameObjects: GameObject[], pathNodes: Map<number, PathNode>): boolean {
+        let acted: boolean = true;
 
-        if (this.ai && typeof this.ai.act === "function") {
+        if (this.ai) {
             const command = this.ai.act(map, gameObjects, pathNodes);
             if (command) {
-                // FIX ME
-                // @ts-ignore
                 acted = command(this);
             }
         }
 
-        if (this.fighter && typeof this.fighter.act === "function") {
+        if (this.fighter) {
             this.fighter.act();
         }
 
         return acted;
     }
 }
-export { GameObject };
 
 /**
  * Use an id to grab object data and create a new GameObject
  * @param  {String} id     The object id
  * @return {GameObject}    A GameObject with the components and params given in the data
  */
-export function createObject(id: string, x=0, y=0) {
+export function createObject(id: string, x: number = 0, y: number = 0): GameObject {
     if (!(id in ObjectData)) { throw new Error(`${id} is not valid object id`); }
 
     const data = ObjectData[id];
