@@ -29,7 +29,7 @@ describe("object", function () {
             ObjectData["test_object"] = {
                 name: "Test Object",
                 graphics: "basic_graphics",
-                ai: "basic_monster_ai",
+                ai: null,
                 fighter: "basic_fighter",
                 inventory: "basic_inventory",
                 interactable: null,
@@ -53,6 +53,12 @@ describe("object", function () {
                     [DamageType.Water]: Affinity.normal,
                     [DamageType.Nature]: Affinity.normal
                 },
+                actions: [
+                    "wander",
+                    "chase",
+                    "goToEnemy",
+                    "meleeAttack"
+                ],
                 inventoryPool: [
                     ["health_potion_weak", 0.25]
                 ],
@@ -66,14 +72,6 @@ describe("object", function () {
         });
 
         describe("ai", function () {
-            it("should set the ai to the basic monster ai", function () {
-                ObjectData["test_object"].ai = "basic_monster_ai";
-                const obj = createObject("test_object");
-                expect(obj.ai.constructor.name).to.be.equal("BasicMonsterAI");
-                expect(obj.ai.sightRange).to.be.equal(ObjectData["test_object"].sightRange);
-                expect(obj.ai.owner).to.be.deep.equal(obj);
-            });
-
             it("should set the ai to the chest ai", function () {
                 ObjectData["test_object"].ai = "chest_ai";
                 ObjectData["test_object"].emptyColor = "black";

@@ -3,7 +3,7 @@ import { SpeedActor } from "./rot/scheduler/speed";
 
 import globals from "./globals";
 import { ObjectData, BASE_SPEED, DeathType } from "./data";
-import { BasicMonsterAI, PlanningAI, ChestAI, DroppedItemAI, AIComponent } from "./ai/components";
+import { PlanningAI, ChestAI, DroppedItemAI, AIComponent } from "./ai/components";
 import {
     GiveItemsInteractable,
     GiveSpellInteractable,
@@ -229,9 +229,6 @@ export function createObject(id: string, x: number = 0, y: number = 0): GameObje
 
     if (data.ai) {
         switch (data.ai) {
-            case "basic_monster_ai":
-                object.setAI(new BasicMonsterAI(data.sightRange));
-                break;
             case "planning_ai":
                 object.setAI(new PlanningAI(data));
                 break;
@@ -367,7 +364,7 @@ export function enemyDeathCallback(target: GameObject): void {
     target.setAI(null);
     target.setInteractable(null);
 
-    if (target.inventoryComponent.getItems().length > 0) {
+    if (target.inventoryComponent?.getItems().length > 0) {
         const item = createObject("dropped_item", target.x, target.y);
         item.inventoryComponent = target.inventoryComponent;
         globals.Game.addObject(item);

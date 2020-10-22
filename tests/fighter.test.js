@@ -41,7 +41,7 @@ describe("fighter", function () {
             ObjectData["enemy"] = {
                 name: "Test Enemy",
                 graphics: "transparency_graphics",
-                ai: "basic_monster_ai",
+                ai: null,
                 fighter: "basic_fighter",
                 speed: 10,
                 inventory: "basic_inventory",

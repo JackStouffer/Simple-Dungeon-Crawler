@@ -63,7 +63,7 @@
                            {
                             "name":"objectType",
                             "type":"string",
-                            "value":"goblin"
+                            "value":"test"
                            }],
                     "rotation":0,
                     "type":"object",

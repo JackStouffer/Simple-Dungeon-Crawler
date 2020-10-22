@@ -504,7 +504,7 @@ export const ObjectData: { [key: string]: ObjectDataDetails } = {
     "goblin": {
         name: "Goblin",
         graphics: "transparency_graphics",
-        ai: "basic_monster_ai",
+        ai: "planning_ai",
         fighter: "basic_fighter",
         speed: BASE_SPEED,
         inventory: "basic_inventory",
@@ -528,6 +528,12 @@ export const ObjectData: { [key: string]: ObjectDataDetails } = {
             [DamageType.Water]: Affinity.normal,
             [DamageType.Nature]: Affinity.normal
         },
+        actions: [
+            "wander",
+            "chase",
+            "goToEnemy",
+            "meleeAttack"
+        ],
         inventoryPool: [
             {
                 itemID: "health_potion_weak",
@@ -587,7 +593,7 @@ export const ObjectData: { [key: string]: ObjectDataDetails } = {
     "rat": {
         name: "Rat",
         graphics: "transparency_graphics",
-        ai: "basic_monster_ai",
+        ai: "planning_ai",
         fighter: "basic_fighter",
         speed: BASE_SPEED,
         inventory: "basic_inventory",
@@ -611,13 +617,19 @@ export const ObjectData: { [key: string]: ObjectDataDetails } = {
             [DamageType.Water]: Affinity.normal,
             [DamageType.Nature]: Affinity.normal
         },
+        actions: [
+            "wander",
+            "chase",
+            "goToEnemy",
+            "meleeAttack"
+        ],
         inventoryPool: [],
         onDeath: DeathType.Default
     },
     "water_sprite": {
         name: "Water Sprite",
         graphics: "basic_graphics",
-        ai: "basic_monster_ai",
+        ai: "planning_ai",
         fighter: "basic_fighter",
         speed: BASE_SPEED,
         inventory: "basic_inventory",
@@ -642,6 +654,12 @@ export const ObjectData: { [key: string]: ObjectDataDetails } = {
             [DamageType.Water]: Affinity.nullified,
             [DamageType.Nature]: Affinity.normal
         },
+        actions: [
+            "wander",
+            "chase",
+            "goToEnemy",
+            "meleeAttack"
+        ],
         inventoryPool: [],
         onDeath: DeathType.Default
     },

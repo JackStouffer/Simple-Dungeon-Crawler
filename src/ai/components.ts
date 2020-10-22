@@ -1,4 +1,4 @@
-import { FOV, DIRS, RNG, Path } from "../rot/index";
+import { DIRS, RNG, Path } from "../rot/index";
 import { PassableCallback } from "../rot/path/path";
 import { findKey, isEqual, get } from "lodash";
 
@@ -141,71 +141,6 @@ export function newPositionToDirection(
         function(o) { return isEqual(o, [newX - currentX, newY - currentY]); }
     );
     return Number.parseInt(key, 10);
-}
-
-function chaseStateUpdate(ai: AIComponent): Command {
-    const { x, y } = getNextStepTowardsTarget(
-        ai.owner,
-        globals.Game.player.x,
-        globals.Game.player.y
-    );
-    if (x === null || y === null) {
-        return null;
-    }
-
-    return moveCommand(newPositionToDirection(ai.owner.x, ai.owner.y, x, y), 8);
-}
-
-/**
- * Basic monster behavior designed for dumb mobs. Only two states:
- * chase and wander. Default state is wander, which just chooses
- * a random direction and sees if it's empty, then moves if it is.
- *
- * Uses a definable sight range to check if a target is in range.
- * If one is this switches to chase which uses A* to go towards
- * the target. Attacks the target when it's within one tile from it
- */
-export class BasicMonsterAI implements AIComponent {
-    owner: GameObject;
-    state: string;
-    sightRange: number;
-
-    constructor(sightRange: number) {
-        this.owner = null;
-        this.state = "wander";
-        this.sightRange = sightRange;
-    }
-
-    setOwner(owner: GameObject) {
-        this.owner = owner;
-    }
-
-    act(map: GameMap, gameObjects: GameObject[]): Command {
-        // wander in random directions
-        if (this.state === "wander") {
-            // compute the FOV to see if the player is sighted
-            const fov = new FOV.PreciseShadowcasting(createPassableSightCallback(this.owner));
-            fov.compute(
-                this.owner.x,
-                this.owner.y,
-                this.sightRange,
-                createVisibilityCallback(this)
-            );
-
-            let blocks, newX, newY, dir;
-            do {
-                dir = RNG.getItem([0, 1, 2, 3, 4, 5, 6, 7]);
-                newX = this.owner.x + DIRS[8][dir][0];
-                newY = this.owner.y + DIRS[8][dir][1];
-                ({ blocks } = isBlocked(map, gameObjects, newX, newY));
-            } while (blocks === true);
-
-            return moveCommand(dir, 8);
-        // chase the player with A*
-        } else if (this.state === "chase") {
-            return chaseStateUpdate(this);
-        }
-    }
 }
 
 export class PlanningAI implements AIComponent {

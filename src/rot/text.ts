@@ -60,6 +60,9 @@ export function measure(str: string, maxWidth: number) {
                 lineWidth = 0;
                 break;
 
+            case TYPE_FG:
+            case TYPE_BG:
+                break;
             default:
                 throw new Error("unknown token type");
         }
@@ -193,6 +196,9 @@ function breakLines(tokens: any[], maxWidth: number) {
                     lastTextToken.value = arr.join("");
                 }
                 lastTextToken = null;
+                break;
+            case TYPE_FG:
+            case TYPE_BG:
                 break;
             default:
                 throw new Error("Unknown token type");

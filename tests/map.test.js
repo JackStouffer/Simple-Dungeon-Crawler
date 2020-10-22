@@ -1,4 +1,4 @@
-/* global describe, beforeEach, it */
+/* global describe, before, beforeEach, it */
 
 import { expect } from "chai";
 import { fake } from "sinon";
@@ -17,7 +17,11 @@ import {
     COLOR_DARK_GROUND,
     LevelData,
     TileData,
-    ItemData
+    ItemData,
+    ObjectData,
+    DeathType,
+    DamageType,
+    Affinity
 } from "../src/data";
 import testMap from "./test-data/map";
 
@@ -48,6 +52,28 @@ describe("map", function () {
     ItemData["test"] = {
         displayName: "test"
     };
+
+    before(function () {
+        ObjectData["test"] = {
+            name: "test",
+            char: "a",
+            fgColor: "white",
+            blocks: "white",
+            blocksSight: true,
+            fighter: "basic_fighter",
+            onDeath: DeathType.Default,
+            maxHp: 100,
+            strength: 0,
+            defense: 0,
+            damageAffinity: {
+                [DamageType.Physical]: Affinity.normal,
+                [DamageType.Fire]: Affinity.weak,
+                [DamageType.Electric]: Affinity.normal,
+                [DamageType.Water]: Affinity.normal,
+                [DamageType.Nature]: Affinity.normal
+            }
+        };
+    });
 
     beforeEach(function () {
         map = [
@@ -95,7 +121,7 @@ describe("map", function () {
 
         it("should load a game object correctly", function () {
             const { objects } = loadTiledMap("test");
-            expect(objects[0].type).to.be.equal("goblin");
+            expect(objects[0].type).to.be.equal("test");
             expect(objects[0].x).to.be.equal(40);
             expect(objects[0].y).to.be.equal(15);
         });

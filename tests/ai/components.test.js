@@ -8,10 +8,10 @@ import {
     createPassableCallback,
     createPassableSightCallback,
     createVisibilityCallback,
-    BasicMonsterAI,
     ConfusedAI,
     ChestAI,
-    DroppedItemAI
+    DroppedItemAI,
+    PlanningAI
 } from "../../src/ai/components";
 
 const emptySpaceData = [
@@ -144,47 +144,12 @@ describe("ai", function () {
         });
     });
 
-    describe("BasicMonsterAI", function () {
-        it("should move in a random direction when in wander state", function () {
-            const owner = { x: 1, y: 1, ai: new BasicMonsterAI(0) };
-            owner.ai.setOwner(owner);
-            const command = owner.ai.act(globals.Game.map, globals.Game.gameObjects);
-            command(owner);
-            expect(owner.x === 1 && owner.y === 1).to.be.false;
-        });
-
-        it("should see the player and change states when player is in range", function () {
-            const owner = { x: 2, y: 2, ai: new BasicMonsterAI(8) };
-            owner.ai.setOwner(owner);
-            const command = owner.ai.act(globals.Game.map, globals.Game.gameObjects);
-            command(owner);
-            expect(owner.ai.state).to.be.equal("chase");
-        });
-
-        it("should attack the player when within one tile", function () {
-            const owner = {
-                x: 1,
-                y: 0,
-                ai: new BasicMonsterAI(8),
-                fighter: {
-                    attack: fake()
-                }
-            };
-            owner.ai.setOwner(owner);
-            owner.ai.state = "chase";
-            const command = owner.ai.act(globals.Game.map, globals.Game.gameObjects);
-            command(owner);
-            expect(owner.fighter.attack.calledOnce).to.be.true;
-            expect(owner.fighter.attack.calledWith(globals.Game.player)).to.be.true;
-        });
-    });
-
     describe("ConfusedAI", function () {
         it("should move in a random direction", function () {
             const owner = {
                 x: 1,
                 y: 1,
-                ai: new BasicMonsterAI(8),
+                ai: new PlanningAI(8),
                 fighter: {
                     attack: fake()
                 }
@@ -202,7 +167,7 @@ describe("ai", function () {
             const owner = {
                 x: 1,
                 y: 1,
-                ai: new BasicMonsterAI(8),
+                ai: new PlanningAI(8),
                 fighter: {
                     attack: fake()
                 }
@@ -216,7 +181,7 @@ describe("ai", function () {
             command(owner);
             command = owner.ai.act(globals.Game.map, globals.Game.gameObjects);
 
-            expect(owner.ai.constructor.name).to.be.equal("BasicMonsterAI");
+            expect(owner.ai.constructor.name).to.be.equal("PlanningAI");
         });
     });
 
