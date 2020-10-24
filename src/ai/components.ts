@@ -113,6 +113,7 @@ export class PlanningAI implements AIComponent {
     private goals: Set<string>;
     private actions: Set<string>;
     private planner: Planner;
+    private turnsWithTargetOutOfSight: number;
 
     knowsTargetPosition: boolean;
     hasTargetInSight: boolean;
@@ -132,6 +133,7 @@ export class PlanningAI implements AIComponent {
         this.pathName = null;
         this.patrolTarget = null;
         this.fallbackPosition = null;
+        this.turnsWithTargetOutOfSight = 0;
 
         this.knowsTargetPosition = false;
         this.hasTargetInSight = false;
@@ -222,6 +224,18 @@ export class PlanningAI implements AIComponent {
      */
     getPlan() {
         const worldState = this.generateWorldState();
+
+        // Lose knowledge of the target's position if the target
+        // is out of sight for seven turns
+        if (!worldState.targetInLineOfSight && this.knowsTargetPosition) {
+            this.turnsWithTargetOutOfSight++;
+        }
+        if (this.turnsWithTargetOutOfSight === 7) {
+            this.knowsTargetPosition = false;
+            this.turnsWithTargetOutOfSight = 0;
+            worldState.targetPositionKnown = false;
+            displayMessage(`${this.owner.name} lost track of you`);
+        }
 
         if (isEqual(this.previousWorldState, worldState)) {
             return this.currentAction;
