@@ -167,8 +167,8 @@ export function loadTiledMap(level: LevelName) {
                         Math.floor(o.y / tileSize),
                     );
 
-                    if (inventory && obj.inventoryComponent) {
-                        inventory.split(",").forEach((i: string) => obj.inventoryComponent.addItem(i));
+                    if (inventory && obj.inventory) {
+                        inventory.split(",").forEach((i: string) => obj.inventory.addItem(i));
                     }
 
                     if (levelName && obj.interactable && obj.interactable.setLevel) {

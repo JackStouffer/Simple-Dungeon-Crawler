@@ -42,7 +42,7 @@ export class GameObject implements SpeedActor {
     graphics: GraphicsComponent;
     lighting: LightingComponent;
     fighter: FighterComponent & SpeedActor;
-    inventoryComponent: InventoryComponent;
+    inventory: InventoryComponent;
     interactable: InteractableComponent;
 
     constructor(type: string, x: number, y: number, name: string, blocks=false, blocksSight=false) {
@@ -57,7 +57,7 @@ export class GameObject implements SpeedActor {
         this.lighting = null;
         this.fighter = null;
         this.ai = null;
-        this.inventoryComponent = null;
+        this.inventory = null;
         this.interactable = null;
     }
 
@@ -141,19 +141,19 @@ export class GameObject implements SpeedActor {
      * Give this object inventory
      * @param ai {InventoryComponent} The inventory component instance
      */
-    setInventory(inventoryComponent: InventoryComponent): void {
-        if (inventoryComponent === null && this.inventoryComponent !== null) {
-            this.inventoryComponent.setOwner(null);
-            this.inventoryComponent = null;
+    setInventory(inventory: InventoryComponent): void {
+        if (inventory === null && this.inventory !== null) {
+            this.inventory.setOwner(null);
+            this.inventory = null;
             return;
         }
 
-        if (inventoryComponent === null && this.inventoryComponent === null) {
+        if (inventory === null && this.inventory === null) {
             return;
         }
 
-        inventoryComponent.setOwner(this);
-        this.inventoryComponent = inventoryComponent;
+        inventory.setOwner(this);
+        this.inventory = inventory;
     }
 
     /**
@@ -318,7 +318,7 @@ export function createObject(id: string, x: number = 0, y: number = 0): GameObje
         if (data.inventoryPool) {
             for (let i = 0; i < data.inventoryPool.length; i++) {
                 if (RNG.getUniform() <= data.inventoryPool[i].probability) {
-                    object.inventoryComponent.addItem(data.inventoryPool[i].itemID);
+                    object.inventory.addItem(data.inventoryPool[i].itemID);
                 }
             }
         }
@@ -364,13 +364,13 @@ export function enemyDeathCallback(target: GameObject): void {
     target.setAI(null);
     target.setInteractable(null);
 
-    if (target.inventoryComponent?.getItems().length > 0) {
+    if (target.inventory?.getItems().length > 0) {
         const item = createObject("dropped_item", target.x, target.y);
-        item.inventoryComponent = target.inventoryComponent;
+        item.inventory = target.inventory;
         globals.Game.addObject(item);
     }
 
-    target.inventoryComponent = null;
+    target.inventory = null;
 }
 
 /**
@@ -381,11 +381,11 @@ export function enemyDeathCallback(target: GameObject): void {
  * @return {void}
  */
 export function removeDeathCallback(target: GameObject): void {
-    if (target.inventoryComponent.getItems().length > 0) {
+    if (target.inventory.getItems().length > 0) {
         globals.gameEventEmitter.emit("tutorial.pickUpItem");
 
         const item = createObject("dropped_item", target.x, target.y);
-        item.inventoryComponent = target.inventoryComponent;
+        item.inventory = target.inventory;
         globals.Game.addObject(item);
     }
 

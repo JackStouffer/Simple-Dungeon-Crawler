@@ -134,7 +134,7 @@ describe("map", function () {
             };
             const { objects } = loadTiledMap("test");
             expect(objects[1].type).to.be.equal("chest");
-            expect(objects[1].inventoryComponent.getItems()).to.be.deep.equal([{
+            expect(objects[1].inventory.getItems()).to.be.deep.equal([{
                 id: "test",
                 count: 1,
                 displayName: "Test Item",

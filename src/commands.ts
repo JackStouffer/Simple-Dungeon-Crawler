@@ -118,13 +118,13 @@ export function openSpellsCommand(): Command {
  */
 export function useItemCommand(itemID: string, target: GameObject = null): Command {
     return function (actor: GameObject): boolean {
-        if (!actor.inventoryComponent.hasItem(itemID)) { return false; }
+        if (!actor.inventory.hasItem(itemID)) { return false; }
 
         const itemDetails = ItemData[itemID];
         const used = itemDetails.useFunc(itemDetails, actor, target);
 
         if (used) {
-            actor.inventoryComponent.useItem(itemID);
+            actor.inventory.useItem(itemID);
             return true;
         }
 

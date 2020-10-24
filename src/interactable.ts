@@ -27,14 +27,14 @@ export class GiveItemsInteractable implements InteractableComponent {
     }
 
     interact(user: GameObject) {
-        if (this.owner.inventoryComponent && user.inventoryComponent) {
-            const items = this.owner.inventoryComponent.getItems();
+        if (this.owner.inventory && user.inventory) {
+            const items = this.owner.inventory.getItems();
             if (items.length > 0) {
                 for (let i = 0; i < items.length; i++) {
                     const item = items[i];
                     displayMessage("Found a " + ItemData[item.id].displayName);
-                    user.inventoryComponent.addItem(item.id, item.count);
-                    this.owner.inventoryComponent.useItem(item.id);
+                    user.inventory.addItem(item.id, item.count);
+                    this.owner.inventory.useItem(item.id);
                 }
 
                 if (user === globals.Game.player && this.owner.type === "chest") {
@@ -44,7 +44,7 @@ export class GiveItemsInteractable implements InteractableComponent {
                 displayMessage("Empty");
             }
         } else {
-            throw new Error(`Missing inventoryComponent on ${this.owner} or ${user}`);
+            throw new Error(`Missing inventory on ${this.owner} or ${user}`);
         }
     }
 }

@@ -317,7 +317,7 @@ export class SimpleDungeonCrawler {
                 this.keyBindingMenu.draw(this.keyCommands);
                 break;
             case GameState.InventoryMenu:
-                this.inventoryMenu.draw(this.player.inventoryComponent.getItems());
+                this.inventoryMenu.draw(this.player.inventory.getItems());
                 break;
             case GameState.SpellMenu:
                 this.spellSelectionMenu.draw(this.player.fighter.getKnownSpells());
@@ -438,7 +438,7 @@ export class SimpleDungeonCrawler {
             }
 
             const item: InventoryItemDetails = this.inventoryMenu.handleInput(
-                this.player.inventoryComponent.getItems()
+                this.player.inventory.getItems()
             );
 
             if (item) {
@@ -448,7 +448,6 @@ export class SimpleDungeonCrawler {
                     case ItemType.HealSelf:
                     case ItemType.AddManaSelf:
                     case ItemType.ClairvoyanceScroll:
-                    case ItemType.ConfuseScroll:
                     case ItemType.HasteSelf:
                     case ItemType.WildDamageScroll:
                         command = useItemCommand(item.id);
@@ -461,6 +460,7 @@ export class SimpleDungeonCrawler {
                     // Items that need to be targeted
                     case ItemType.DamageScroll:
                     case ItemType.SlowOther:
+                    case ItemType.ConfuseScroll:
                         this.itemForTarget = item;
                         this.unhookMouseLook();
                         this.state = GameState.Target;

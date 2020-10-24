@@ -6,7 +6,7 @@ import { ItemData, SpellData } from "./data";
  */
 export function giveAllItems(): void {
     for (const key in ItemData) {
-        globals.Game.player.inventoryComponent.addItem(key);
+        globals.Game.player.inventory.addItem(key);
     }
 }
 

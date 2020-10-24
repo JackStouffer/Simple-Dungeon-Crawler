@@ -32,7 +32,7 @@ describe("game", function () {
                     useMana: fake()
                 },
                 lighting: { compute: fake() },
-                inventoryComponent: {
+                inventory: {
                     getItems: fake.returns([]),
                     hasItem: fake.returns(true),
                     useItem: fake()

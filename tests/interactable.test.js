@@ -20,7 +20,7 @@ describe("interactable", function () {
             ItemData["test2"] = { displayName: "test2" };
 
             const owner = {
-                inventoryComponent: {
+                inventory: {
                     getIDsAndCounts: fake.returns([{ id: "test1", count: 1 }, { id: "test2", count: 1 }]),
                     useItem: fake()
                 },
@@ -36,7 +36,7 @@ describe("interactable", function () {
             ItemData["test2"] = { displayName: "test2" };
 
             const owner = {
-                inventoryComponent: {
+                inventory: {
                     getItems: fake.returns([{ id: "test1", count: 1 }, { id: "test2", count: 1 }]),
                     useItem: fake()
                 },
@@ -44,13 +44,13 @@ describe("interactable", function () {
             };
             owner.interactable.setOwner(owner);
             const user = {
-                inventoryComponent: {
+                inventory: {
                     addItem: fake()
                 }
             };
             owner.interactable.interact(user);
 
-            expect(user.inventoryComponent.addItem.callCount).to.be.equal(2);
+            expect(user.inventory.addItem.callCount).to.be.equal(2);
         });
     });
 

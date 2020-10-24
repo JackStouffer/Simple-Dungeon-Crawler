@@ -380,14 +380,14 @@ export class ChestAI implements AIComponent {
     }
 
     act(): Command {
-        if (this?.owner?.inventoryComponent) {
-            if (this.owner.inventoryComponent.getItems().length === 0) {
+        if (this?.owner?.inventory) {
+            if (this.owner.inventory.getItems().length === 0) {
                 this.owner.graphics.bgColor = this.emptyColor;
             } else {
                 this.owner.graphics.bgColor = this.bgColor;
             }
         } else {
-            throw new Error("Missing inventoryComponent for ChestAI");
+            throw new Error("Missing inventory for ChestAI");
         }
         return null;
     }
@@ -412,12 +412,12 @@ export class DroppedItemAI implements AIComponent {
     }
 
     act(): Command {
-        if (this?.owner?.inventoryComponent) {
-            if (this.owner.inventoryComponent.getItems().length === 0) {
+        if (this?.owner?.inventory) {
+            if (this.owner.inventory.getItems().length === 0) {
                 globals.Game.removeObject(this.owner);
             }
         } else {
-            throw new Error("Missing inventoryComponent for DroppedItemAI");
+            throw new Error("Missing inventory for DroppedItemAI");
         }
         return null;
     }

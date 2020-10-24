@@ -156,7 +156,7 @@ export function chaseWeight(ai: AIComponent): number {
 }
 
 export function useHealingItemAction(ai: AIComponent): Command {
-    const item = ai.owner.inventoryComponent
+    const item = ai.owner.inventory
         .getItems()
         .filter(i => i.type === ItemType.HealSelf)
         .sort((a, b) => a.value - b.value)[0];
@@ -165,7 +165,7 @@ export function useHealingItemAction(ai: AIComponent): Command {
 }
 
 export function useManaItemAction(ai: AIComponent): Command {
-    const item = ai.owner.inventoryComponent
+    const item = ai.owner.inventory
         .getItems()
         .filter(i => i.type === ItemType.AddManaSelf)
         .sort((a, b) => a.value - b.value)[0];

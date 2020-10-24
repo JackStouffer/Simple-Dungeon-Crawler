@@ -6,6 +6,12 @@ _In Development_
 
 * Gameplay
   * AI now uses Goal Oriented Action Planning for decision making
+    * Enemies will use health potions or spells if they're low health
+    * Enemies will use mana potions if they're low mana
+    * Enemies will attack with spells if they know them
+    * Enemies will try to regain sight of the player if they lose them
+  * Added bandits
+  * Added bandit mages that attack with spells
 * Technical
   * Convert project to Typescript
   * Modify game loop to remove async/await code to more align with a traditional infinite loop

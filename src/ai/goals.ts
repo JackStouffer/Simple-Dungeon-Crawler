@@ -32,22 +32,22 @@ export function resolveLowMana(ai: AIComponent) {
 }
 
 export function resolveHasManaItem(ai: AIComponent) {
-    if (!ai.owner.inventoryComponent) {
+    if (!ai.owner.inventory) {
         return false;
     }
 
-    const manaItems = ai.owner.inventoryComponent
+    const manaItems = ai.owner.inventory
         .getItems()
         .filter(i => i.type === ItemType.AddManaSelf);
     return manaItems.length > 0;
 }
 
 export function resolveHasHealingItem(ai: AIComponent): boolean {
-    if (!ai.owner.inventoryComponent) {
+    if (!ai.owner.inventory) {
         return false;
     }
 
-    const manaItems = ai.owner.inventoryComponent
+    const manaItems = ai.owner.inventory
         .getItems()
         .filter(i => i.type === ItemType.HealSelf);
     return manaItems.length > 0;

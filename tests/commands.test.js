@@ -200,7 +200,7 @@ describe("player", function () {
                 ai: {
                     state: "normal"
                 },
-                inventoryComponent: {
+                inventory: {
                     getNamesAndCounts: fake.returns([])
                 }
             };
@@ -235,7 +235,7 @@ describe("player", function () {
                 useFunc: fake.returns(false)
             };
             const owner = {
-                inventoryComponent: {
+                inventory: {
                     hasItem: fake.returns(false),
                 }
             };
@@ -253,7 +253,7 @@ describe("player", function () {
                 useFunc: fake.returns(false)
             };
             const owner = {
-                inventoryComponent: {
+                inventory: {
                     hasItem: fake.returns(true),
                     useItem: fake()
                 }
@@ -261,7 +261,7 @@ describe("player", function () {
 
             const ret = useItemCommand("item")(owner);
             expect(ret).to.be.false;
-            expect(owner.inventoryComponent.useItem.calledOnce).to.be.false;
+            expect(owner.inventory.useItem.calledOnce).to.be.false;
             expect(ItemData["item"].useFunc.calledOnce).to.be.true;
         });
 
@@ -273,7 +273,7 @@ describe("player", function () {
                 useFunc: fake.returns(true)
             };
             const owner = {
-                inventoryComponent: {
+                inventory: {
                     hasItem: fake.returns(true),
                     useItem: fake()
                 }
@@ -281,7 +281,7 @@ describe("player", function () {
 
             const ret = useItemCommand("item")(owner);
             expect(ret).to.be.true;
-            expect(owner.inventoryComponent.useItem.calledOnce).to.be.true;
+            expect(owner.inventory.useItem.calledOnce).to.be.true;
             expect(ItemData["item"].useFunc.calledOnce).to.be.true;
         });
     });

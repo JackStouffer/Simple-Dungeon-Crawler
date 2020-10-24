@@ -194,8 +194,8 @@ describe("object", function () {
             it("should set the inventory to basic inventory", function () {
                 ObjectData["test_object"].inventory = "basic_inventory";
                 const obj = createObject("test_object");
-                expect(obj.inventoryComponent.constructor.name).to.be.equal("BasicInventory");
-                expect(obj.inventoryComponent.owner).to.be.deep.equal(obj);
+                expect(obj.inventory.constructor.name).to.be.equal("BasicInventory");
+                expect(obj.inventory.owner).to.be.deep.equal(obj);
             });
 
             it("should populate the inventory with items from the pool", function () {
@@ -206,7 +206,7 @@ describe("object", function () {
                     }
                 ];
                 const obj = createObject("test_object");
-                expect(obj.inventoryComponent.getItems()).to.be.deep.equal([{
+                expect(obj.inventory.getItems()).to.be.deep.equal([{
                     id: "health_potion_weak",
                     count: 1,
                     displayName: "Weak Potion of Healing",
@@ -275,7 +275,7 @@ describe("object", function () {
                 blocks: true,
                 ai: {},
                 interactable: {},
-                inventoryComponent: {
+                inventory: {
                     getItems: fake.returns([])
                 },
                 setAI: function (ai) {
@@ -303,7 +303,7 @@ describe("object", function () {
         });
 
         it("should add items in inventory to the world as dropped items", function () {
-            const inventoryComponent = {
+            const inventory = {
                 getItems: fake.returns([{ id: "test1", count: 1 }, { id: "test2", count: 2 }])
             };
             const target = {
@@ -313,7 +313,7 @@ describe("object", function () {
                 blocks: true,
                 ai: {},
                 interactable: {},
-                inventoryComponent,
+                inventory,
                 setAI: function (ai) {
                     this.ai = ai;
                 },
@@ -333,8 +333,8 @@ describe("object", function () {
                 globals
                     .Game
                     .gameObjects[0]
-                    .inventoryComponent
-            ).to.be.deep.equal(inventoryComponent);
+                    .inventory
+            ).to.be.deep.equal(inventory);
         });
     });
 
@@ -357,7 +357,7 @@ describe("object", function () {
                 blocks: true,
                 ai: {},
                 interactable: {},
-                inventoryComponent: {
+                inventory: {
                     getItems: fake.returns([])
                 }
             };
@@ -366,7 +366,7 @@ describe("object", function () {
         });
 
         it("should add items in inventory to the world as dropped items", function () {
-            const inventoryComponent = {
+            const inventory = {
                 getItems: fake.returns([{ id: "test1", count: 1 }, { id: "test2", count: 2 }])
             };
             const target = {
@@ -376,7 +376,7 @@ describe("object", function () {
                 blocks: true,
                 ai: {},
                 interactable: {},
-                inventoryComponent
+                inventory
             };
             removeDeathCallback(target);
             expect(globals.Game.gameObjects).to.have.lengthOf(1);
@@ -384,8 +384,8 @@ describe("object", function () {
                 globals
                     .Game
                     .gameObjects[0]
-                    .inventoryComponent
-            ).to.be.deep.equal(inventoryComponent);
+                    .inventory
+            ).to.be.deep.equal(inventory);
         });
     });
 });
