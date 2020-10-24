@@ -472,7 +472,7 @@ export const ObjectData: { [key: string]: ObjectDataDetails } = {
     },
     "player": {
         name: "The Player",
-        graphics: "transparency_graphics",
+        graphics: "player_graphics",
         lighting: "player_lighting",
         lightingColor: "white",
         lightingRange: 7,

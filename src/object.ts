@@ -16,7 +16,8 @@ import {
     BasicGraphics,
     TransparencyGraphics,
     DrawAfterSeen,
-    GraphicsComponent
+    GraphicsComponent,
+    PlayerGraphics
 } from "./graphics";
 import { LightingComponent, ReflectivityLighting, PlayerLighting } from "./lighting";
 import { BasicFighter, FighterComponent } from "./fighter";
@@ -262,14 +263,17 @@ export function createObject(id: string, x: number = 0, y: number = 0): GameObje
 
     if (data.graphics) {
         switch (data.graphics) {
+            case "player_graphics":
+                object.setGraphics(new PlayerGraphics(data));
+                break;
             case "basic_graphics":
-                object.setGraphics(new BasicGraphics(data.char, data.fgColor, data.bgColor));
+                object.setGraphics(new BasicGraphics(data));
                 break;
             case "transparency_graphics":
-                object.setGraphics(new TransparencyGraphics(data.char, data.fgColor));
+                object.setGraphics(new TransparencyGraphics(data));
                 break;
             case "draw_after_seen":
-                object.setGraphics(new DrawAfterSeen(data.char, data.fgColor, data.bgColor));
+                object.setGraphics(new DrawAfterSeen(data));
                 break;
             default:
                 throw new Error(`Unhandled Graphics type ${data.graphics}`);
@@ -386,7 +390,7 @@ export function enemyDeathCallback(target: GameObject): void {
 
     target.name = `Remains of a ${target.name}`;
     target.blocks = false;
-    target.setGraphics(new BasicGraphics("%", "black", "red"));
+    target.setGraphics(new BasicGraphics(ObjectData["dead_body"]));
     target.setFighter(null);
     target.setAI(null);
     target.setInteractable(null);
