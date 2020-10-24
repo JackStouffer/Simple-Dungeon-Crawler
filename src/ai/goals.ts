@@ -3,20 +3,19 @@ import { distanceBetweenObjects } from "../map";
 import { AIComponent } from "./components";
 
 export function resolveTargetPositionKnown(ai: AIComponent) {
-    return ai.state === "chase";
+    return ai.knowsTargetPosition;
 }
 
 export function resolveTargetInLOS(ai: AIComponent) {
-    // FIXME
-    return ai.state === "chase";
+    return ai.hasTargetInSight;
 }
 
 export function resolveNextToTarget(ai: AIComponent) {
     return distanceBetweenObjects(ai.owner, ai.target) < 1.5;
 }
 
-export function resolveEnoughManaForSpell(spellID: string) {
-    return function (ai: AIComponent) {
+export function resolveEnoughManaForSpellGenerator(spellID: string) {
+    return function (ai: AIComponent): boolean {
         const spellData = SpellData[spellID];
         return ai.owner.fighter.getEffectiveStats().mana >= spellData.manaCost;
     };
@@ -43,7 +42,7 @@ export function resolveHasManaItem(ai: AIComponent) {
     return manaItems.length > 0;
 }
 
-export function resolveHasHealingItem(ai: AIComponent) {
+export function resolveHasHealingItem(ai: AIComponent): boolean {
     if (!ai.owner.inventoryComponent) {
         return false;
     }
@@ -54,7 +53,7 @@ export function resolveHasHealingItem(ai: AIComponent) {
     return manaItems.length > 0;
 }
 
-export function resolveInDangerousArea() {
+export function resolveInDangerousArea(): boolean {
     // FIXME
     return false;
 }
@@ -68,15 +67,14 @@ export function resolveAfraid(ai: AIComponent) {
 }
 
 export function resolveCowering(ai: AIComponent) {
-    return ai.state === "cower";
+    return ai.isCowering;
 }
 
-export function resolveAtFallbackPosition() {
-    // FIXME
-    return false;
+export function resolveAtFallbackPosition(ai: AIComponent): boolean {
+    return ai.isAtFallbackPosition;
 }
 
-export function resolveHasArrows() {
+export function resolveHasArrows(): boolean {
     // FIXME
     return false;
 }

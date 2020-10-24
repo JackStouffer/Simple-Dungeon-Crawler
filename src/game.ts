@@ -84,12 +84,8 @@ export function mouseLook(e: MouseEvent): void {
         return;
     }
 
-    if (target?.name && target.ai && target.ai.state) {
-        if (target.ai.state === "wander") {
-            displayMessage("A " + target.name + ", it hasn't seen you.");
-        } else {
-            displayMessage("A " + target.name);
-        }
+    if (target?.name && target.ai) {
+        displayMessage(`A ${target.name} (${target.ai.getStateName()})`);
     } else if (target?.name) {
         displayMessage(target.name);
     } else if (!target) {

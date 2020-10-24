@@ -11,7 +11,7 @@ import {
     resolveTargetPositionKnown,
     resolveTargetInLOS,
     resolveNextToTarget,
-    resolveEnoughManaForSpell,
+    resolveEnoughManaForSpellGenerator,
     resolveLowHealth,
     resolveLowMana,
     resolveHasManaItem,
@@ -925,15 +925,15 @@ export interface SpellDataDetails {
 export const SpellData: { [key: string]: SpellDataDetails } = {
     "lightning_bolt": {
         displayName: "Lightning Bolt",
-        manaCost: 50,
+        manaCost: 10,
         value: 20,
         type: SpellType.DamageOther,
         damageType: DamageType.Electric,
         useFunc: castDamageSpell
     },
     "wild_lightning_bolt": {
-        displayName: "Lightning Bolt",
-        manaCost: 60,
+        displayName: "Wild Lightning Bolt",
+        manaCost: 10,
         value: 30,
         type: SpellType.WildDamage,
         damageType: DamageType.Electric,
@@ -941,7 +941,7 @@ export const SpellData: { [key: string]: SpellDataDetails } = {
     },
     "fireball": {
         displayName: "Fireball",
-        manaCost: 50,
+        manaCost: 10,
         value: 20,
         type: SpellType.DamageOther,
         damageType: DamageType.Fire,
@@ -950,7 +950,7 @@ export const SpellData: { [key: string]: SpellDataDetails } = {
     },
     "wild_fireball": {
         displayName: "Wild Fireball",
-        manaCost: 60,
+        manaCost: 10,
         value: 30,
         type: SpellType.WildDamage,
         damageType: DamageType.Fire,
@@ -958,27 +958,27 @@ export const SpellData: { [key: string]: SpellDataDetails } = {
     },
     "confuse": {
         displayName: "Confuse",
-        manaCost: 50,
+        manaCost: 20,
         value: 8,
-        type: SpellType.Effect,
+        type: SpellType.DamageOther,
         useFunc: castConfuse
     },
     "clairvoyance": {
         displayName: "Clairvoyance",
-        manaCost: 50,
+        manaCost: 20,
         type: SpellType.Passive,
         useFunc: castClairvoyance
     },
     "lesser_heal": {
         displayName: "Lesser Heal",
-        manaCost: 50,
+        manaCost: 10,
         value: 25,
         type: SpellType.HealSelf,
         useFunc: castHeal
     },
     "heal": {
         displayName: "Heal",
-        manaCost: 50,
+        manaCost: 30,
         value: 50,
         type: SpellType.HealSelf,
         useFunc: castHeal
@@ -992,16 +992,16 @@ export const SpellData: { [key: string]: SpellDataDetails } = {
     },
     "lesser_haste": {
         displayName: "Lesser Haste",
-        manaCost: 100,
-        value: 6,
+        manaCost: 30,
+        value: 10,
         type: SpellType.Effect,
         useFunc: castHaste
     },
     "lesser_slow": {
         displayName: "Lesser Slow",
-        manaCost: 100,
-        value: 6,
-        type: SpellType.Effect,
+        manaCost: 30,
+        value: 10,
+        type: SpellType.DamageOther,
         useFunc: castSlow
     }
 };
@@ -1151,7 +1151,7 @@ for (const key in SpellData) {
     const action = `castSpell_${key}`;
     if (data.type === SpellType.DamageOther) {
         GoalData[goal] = {
-            resolver: resolveEnoughManaForSpell(key)
+            resolver: resolveEnoughManaForSpellGenerator(key)
         };
         ActionData[action] = {
             preconditions: {
@@ -1165,7 +1165,7 @@ for (const key in SpellData) {
         };
     } else if (data.type === SpellType.HealSelf) {
         GoalData[goal] = {
-            resolver: resolveEnoughManaForSpell(key)
+            resolver: resolveEnoughManaForSpellGenerator(key)
         };
         ActionData[action] = {
             preconditions: { lowHealth: true, [goal]: true },

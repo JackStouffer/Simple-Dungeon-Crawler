@@ -136,11 +136,17 @@ describe("ai", function () {
     });
 
     describe("createVisibilityCallback", function () {
-        it("should mark the ai state as chase when the player is seen", function () {
-            const ai = { state: "wander", owner: { name: "test" } };
+        it("should mark the target as seen", function () {
+            const ai = {
+                knowsTargetPosition: false,
+                hasTargetInSight: false,
+                target: globals.Game.player,
+                owner: { name: "test" }
+            };
             const func = createVisibilityCallback(ai);
             func(0, 0, 0, 1);
-            expect(ai.state).to.be.equal("chase");
+            expect(ai.knowsTargetPosition).to.be.true;
+            expect(ai.hasTargetInSight).to.be.true;
         });
     });
 

@@ -30,7 +30,7 @@ import { reverse } from "lodash";
 
 export interface PlannerWorldState {
     [key: string]: boolean | number
-};
+}
 
 interface PlannerNode {
     f: number;

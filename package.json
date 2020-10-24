@@ -4,7 +4,7 @@
   "description": "A simple dungeon crawling game with console graphics",
   "private": true,
   "scripts": {
-    "test": "webpack --config webpack.test.js && mocha test-dist/main.js --require source-map-support/register && eslint src/*.ts tests/*.js",
+    "test": "webpack --config webpack.test.js && mocha test-dist/main.js --require source-map-support/register && eslint src/*.ts src/ai/*.ts tests/*.js tests/ai/*.js",
     "eslint": "eslint src/*.ts tests/*.js",
     "build": "webpack --config webpack.dev.js && cp -r bin/ dev/bin/",
     "dist": "webpack --config webpack.prod.js && cp -r bin/ dev/bin/",
