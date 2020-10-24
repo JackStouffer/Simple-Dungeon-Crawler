@@ -102,7 +102,6 @@ export enum DeathType {
 
 export enum GameState {
     Gameplay,
-    Target,
     OpeningCinematic,
     WinCinematic,
     LoseCinematic,
@@ -261,6 +260,7 @@ export interface InventoryPoolProbabilities {
 export interface ObjectDataDetails {
     name: string;
     ai?: string;
+    input?: string;
     char: string;
     fgColor: string;
     blocks: boolean
@@ -477,6 +477,7 @@ export const ObjectData: { [key: string]: ObjectDataDetails } = {
         lightingColor: "white",
         lightingRange: 7,
         ai: null,
+        input: "player_input",
         inventory: "basic_inventory",
         fighter: "basic_fighter",
         speed: BASE_SPEED,

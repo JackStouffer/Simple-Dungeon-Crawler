@@ -11,9 +11,9 @@ export type Command = (actor: GameObject) => boolean;
 /**
  * Command that does nothing. Useful for passing a turn
  */
-export function noOpCommand() {
+export function noOpCommand(shouldAct: boolean = true) {
     return function (): boolean {
-        return true;
+        return shouldAct;
     };
 }
 

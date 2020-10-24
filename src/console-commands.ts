@@ -2,6 +2,26 @@ import globals from "./globals";
 import { ItemData, SpellData } from "./data";
 
 /**
+ * Start the game loop
+ */
+export function startGameLoop() {
+    if (!globals.animationFrameID) {
+        globals.animationFrameID = window.requestAnimationFrame(
+            globals.Game.mainLoop.bind(globals.Game)
+        );
+    }
+}
+
+
+/**
+ * Stop the game loop
+ */
+export function stopGameLoop() {
+    globals.animationFrameID = null;
+    window.cancelAnimationFrame(globals.animationFrameID);
+}
+
+/**
  * Give the player all available items
  */
 export function giveAllItems(): void {

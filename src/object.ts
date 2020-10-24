@@ -20,6 +20,7 @@ import {
 } from "./graphics";
 import { LightingComponent, ReflectivityLighting, PlayerLighting } from "./lighting";
 import { BasicFighter, FighterComponent } from "./fighter";
+import { InputHandler, PlayerInputHandler } from "./input-handler";
 import { displayMessage } from "./ui";
 import { GameMap, PathNode } from "./map";
 
@@ -39,6 +40,7 @@ export class GameObject implements SpeedActor {
     blocks: boolean;
     blocksSight: boolean;
     ai: AIComponent;
+    inputHandler: InputHandler;
     graphics: GraphicsComponent;
     lighting: LightingComponent;
     fighter: FighterComponent & SpeedActor;
@@ -173,6 +175,21 @@ export class GameObject implements SpeedActor {
 
         interactable.setOwner(this);
         this.interactable = interactable;
+    }
+
+    setInputHandler(handler: InputHandler): void {
+        if (handler === null && this.inputHandler !== null) {
+            this.inputHandler.setOwner(null);
+            this.inputHandler = null;
+            return;
+        }
+
+        if (handler === null && this.inputHandler === null) {
+            return;
+        }
+
+        handler.setOwner(this);
+        this.inputHandler = handler;
     }
 
     /**
@@ -337,6 +354,16 @@ export function createObject(id: string, x: number = 0, y: number = 0): GameObje
                 break;
             case "door_interactable":
                 object.setInteractable(new DoorInteractable());
+                break;
+            default:
+                throw new Error(`Unhandled Interactable type ${data.interactable}`);
+        }
+    }
+
+    if (data.input) {
+        switch (data.input) {
+            case "player_input":
+                object.setInputHandler(new PlayerInputHandler());
                 break;
             default:
                 throw new Error(`Unhandled Interactable type ${data.interactable}`);

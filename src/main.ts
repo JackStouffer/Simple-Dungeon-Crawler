@@ -1,6 +1,13 @@
 import globals from "./globals";
 import { SimpleDungeonCrawler } from "./game";
-import { giveAllItems, giveAllSpells, toggleAI, togglePlayerFOV } from "./console-commands";
+import {
+    giveAllItems,
+    giveAllSpells,
+    toggleAI,
+    togglePlayerFOV,
+    startGameLoop,
+    stopGameLoop
+} from "./console-commands";
 
 globals.window = window;
 globals.document = document;
@@ -11,5 +18,7 @@ globals.window.giveAllItems = giveAllItems;
 globals.window.giveAllSpells = giveAllSpells;
 globals.window.toggleAI = toggleAI;
 globals.window.togglePlayerFOV = togglePlayerFOV;
+globals.window.startGameLoop = startGameLoop;
+globals.window.stopGameLoop = stopGameLoop;
 
 globals.Game.startGameplay();

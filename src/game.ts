@@ -24,16 +24,13 @@ import {
 import { Camera } from "./camera";
 import { createObject, GameObject } from "./object";
 import {
-    moveCommand,
-    openInventoryCommand,
-    openSpellsCommand,
-    getItemCommand,
     useItemCommand,
     Command,
     useSpellCommand
 } from "./commands";
 import { WIDTH, HEIGHT, GameState, LevelName, ItemType, SpellType } from "./data";
 import input from "./input";
+import { PlayerState } from "./input-handler";
 import {
     GameMap,
     drawMap,
@@ -140,13 +137,9 @@ export class SimpleDungeonCrawler {
     volumes: Volume[];
     pathNodes: Map<number, PathNode>;
 
-    keyCommands: KeyCommand[];
     keyBindingMenu: KeyBindingMenu;
     inventoryMenu: InventoryMenu;
     spellSelectionMenu: SpellSelectionMenu;
-
-    itemForTarget: InventoryItemDetails;
-    spellForTarget: SpellFighterDetails;
 
     constructor() {
         this.state = GameState.OpeningCinematic;
@@ -160,7 +153,6 @@ export class SimpleDungeonCrawler {
         this.volumes = [];
         this.pathNodes = new Map();
         this.totalTurns = 0;
-        this.itemForTarget = null;
 
         this.processAI = true;
         this.isLightingEnabled = true;
@@ -181,20 +173,6 @@ export class SimpleDungeonCrawler {
             const loading = globals.document.getElementById("loading");
             loading.parentNode.removeChild(loading);
         }
-
-        this.keyCommands = [
-            { key: "w", description: "Move Up", command: moveCommand(0, 8) },
-            { key: "e", description: "Move Up Right", command: moveCommand(1, 8) },
-            { key: "d", description: "Move Right", command: moveCommand(2, 8) },
-            { key: "c", description: "Move Down Right", command: moveCommand(3, 8) },
-            { key: "s", description: "Move Down", command: moveCommand(4, 8) },
-            { key: "z", description: "Move Down Left", command: moveCommand(5, 8) },
-            { key: "a", description: "Move Left", command: moveCommand(6, 8) },
-            { key: "q", description: "Move Up Left", command: moveCommand(7, 8) },
-            { key: "i", description: "Inventory", command: openInventoryCommand() },
-            { key: "g", description: "Get Item", command: getItemCommand() },
-            { key: "m", description: "Spells", command: openSpellsCommand() }
-        ];
 
         input.init();
 
@@ -274,7 +252,6 @@ export class SimpleDungeonCrawler {
     render(): void {
         switch (this.state) {
             case GameState.Gameplay:
-            case GameState.Target:
                 this.display.clear();
                 this.gameCamera.update(this.map);
 
@@ -314,7 +291,7 @@ export class SimpleDungeonCrawler {
                 drawUI(this.display, this.player);
                 break;
             case GameState.PauseMenu:
-                this.keyBindingMenu.draw(this.keyCommands);
+                this.keyBindingMenu.draw(this.player.inputHandler.keyCommands);
                 break;
             case GameState.InventoryMenu:
                 this.inventoryMenu.draw(this.player.inventory.getItems());
@@ -376,50 +353,16 @@ export class SimpleDungeonCrawler {
                 return acted;
             }
 
-            for (let i = 0; i < this.keyCommands.length; i++) {
-                const keyCommand = this.keyCommands[i];
-                if (input.isDown(keyCommand.key)) {
-                    acted = keyCommand.command(this.player);
+            for (let i = 0; i < this.gameObjects.length; i++) {
+                const object = this.gameObjects[i];
+                if (object.inputHandler) {
+                    const command: Command = object.inputHandler.handleInput();
+                    if (command !== null) {
+                        acted = command(object);
+                    }
                     return acted;
                 }
             }
-        } else if (this.state === GameState.Target) {
-            globals.gameEventEmitter.emit("tutorial.spellTargeting");
-
-            const e: MouseEvent = input.getMouseEvent();
-            if (!e) {
-                return acted;
-            }
-
-            const target: GameObject = mouseTarget(
-                e,
-                this.gameObjects,
-                this.gameCamera
-            );
-            if (!target) {
-                displayMessage("Canceled casting");
-                this.itemForTarget = null;
-
-                if (this.itemForTarget !== null) {
-                    this.hookMouseLook();
-                    this.state = GameState.InventoryMenu;
-                } else if (this.spellForTarget !== null) {
-                    this.hookMouseLook();
-                    this.state = GameState.SpellMenu;
-                }
-                return acted;
-            }
-
-            let command: Command = null;
-            if (this.itemForTarget !== null) {
-                command = useItemCommand(this.itemForTarget.id, target);
-            } else if (this.spellForTarget !== null) {
-                command = useSpellCommand(this.spellForTarget.id, target);
-            }
-
-            acted = command(this.player);
-            this.hookMouseLook();
-            this.state = GameState.Gameplay;
         } else if (this.state === GameState.PauseMenu) {
             if (input.isDown("Escape")) {
                 globals.gameEventEmitter.emit("ui.closeKeybinding");
@@ -428,7 +371,7 @@ export class SimpleDungeonCrawler {
                 return acted;
             }
 
-            this.keyBindingMenu.handleInput(this.keyCommands);
+            this.keyBindingMenu.handleInput(this.player.inputHandler.keyCommands);
         } else if (this.state === GameState.InventoryMenu) {
             if (input.isDown("Escape")) {
                 globals.gameEventEmitter.emit("ui.closeInventory");
@@ -461,9 +404,10 @@ export class SimpleDungeonCrawler {
                     case ItemType.DamageScroll:
                     case ItemType.SlowOther:
                     case ItemType.ConfuseScroll:
-                        this.itemForTarget = item;
                         this.unhookMouseLook();
-                        this.state = GameState.Target;
+                        this.player.inputHandler.itemForTarget = item;
+                        this.player.inputHandler.setState(PlayerState.Target);
+                        this.state = GameState.Gameplay;
                         break;
                     default:
                         assertUnreachable(item.type);
@@ -494,9 +438,10 @@ export class SimpleDungeonCrawler {
                         }
                         break;
                     case SpellType.DamageOther:
-                        this.spellForTarget = spell;
                         this.unhookMouseLook();
-                        this.state = GameState.Target;
+                        this.player.inputHandler.spellForTarget = spell;
+                        this.player.inputHandler.setState(PlayerState.Target);
+                        this.state = GameState.Gameplay;
                         break;
                     default:
                         assertUnreachable(spell.type);
@@ -524,7 +469,7 @@ export class SimpleDungeonCrawler {
     }
 
     mainLoop(): void {
-        globals.window.animationFrameID = window.requestAnimationFrame(this.mainLoop.bind(this));
+        globals.animationFrameID = window.requestAnimationFrame(this.mainLoop.bind(this));
         this.render();
 
         const acted = this.handleInput();
