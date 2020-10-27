@@ -30,7 +30,8 @@ import {
     chaseWeight,
     useHealingItemAction,
     useManaItemAction,
-    castSpellAction
+    castSpellAction,
+    meleeAttackAction
 } from "./ai/actions";
 import {
     castHeal,
@@ -259,12 +260,14 @@ export interface InventoryPoolProbabilities {
 
 export interface ObjectDataDetails {
     name: string;
-    ai?: string;
-    input?: string;
     char: string;
+    bgColor?: string;
+    emptyColor?: string;
     fgColor: string;
     blocks: boolean
     blocksSight: boolean;
+    ai?: string;
+    input?: string;
     inventory?: string;
     fighter?: string;
     graphics?: string;
@@ -272,13 +275,13 @@ export interface ObjectDataDetails {
     lighting?: string;
     lightingColor?: string;
     lightingRange?: number;
-    bgColor?: string;
-    speed?: number;
-    emptyColor?: string;
     level?: number;
     experience?: number;
     experienceGiven?: number;
     sightRange?: number;
+    maxTilesPerMove?: number;
+    loseTrackAfterNTurns?: number;
+    speed?: number;
     maxHp?: number;
     maxMana?: number;
     strength?: number;
@@ -481,6 +484,7 @@ export const ObjectData: { [key: string]: ObjectDataDetails } = {
         inventory: "basic_inventory",
         fighter: "basic_fighter",
         speed: BASE_SPEED,
+        maxTilesPerMove: 7,
         interactable: null,
         char: "@",
         fgColor: "blue",
@@ -522,6 +526,8 @@ export const ObjectData: { [key: string]: ObjectDataDetails } = {
         strength: 3,
         defense: 1,
         sightRange: 7,
+        loseTrackAfterNTurns: 6,
+        maxTilesPerMove: 5,
         damageAffinity: {
             [DamageType.Physical]: Affinity.normal,
             [DamageType.Fire]: Affinity.normal,
@@ -564,6 +570,8 @@ export const ObjectData: { [key: string]: ObjectDataDetails } = {
         strength: 7,
         defense: 4,
         sightRange: 7,
+        maxTilesPerMove: 5,
+        loseTrackAfterNTurns: 6,
         damageAffinity: {
             [DamageType.Physical]: Affinity.normal,
             [DamageType.Fire]: Affinity.normal,
@@ -611,6 +619,8 @@ export const ObjectData: { [key: string]: ObjectDataDetails } = {
         strength: 2,
         defense: 1,
         sightRange: 7,
+        maxTilesPerMove: 7,
+        loseTrackAfterNTurns: 6,
         damageAffinity: {
             [DamageType.Physical]: Affinity.normal,
             [DamageType.Fire]: Affinity.normal,
@@ -648,6 +658,8 @@ export const ObjectData: { [key: string]: ObjectDataDetails } = {
         strength: 2,
         defense: 1,
         sightRange: 7,
+        maxTilesPerMove: 7,
+        loseTrackAfterNTurns: 6,
         damageAffinity: {
             [DamageType.Physical]: Affinity.normal,
             [DamageType.Fire]: Affinity.strong,
@@ -684,7 +696,9 @@ export const ObjectData: { [key: string]: ObjectDataDetails } = {
         maxMana: 0,
         strength: 2,
         defense: 1,
-        sightRange: 7,
+        sightRange: 10,
+        maxTilesPerMove: 5,
+        loseTrackAfterNTurns: 6,
         damageAffinity: {
             [DamageType.Physical]: Affinity.normal,
             [DamageType.Fire]: Affinity.normal,
@@ -730,7 +744,9 @@ export const ObjectData: { [key: string]: ObjectDataDetails } = {
         maxMana: 100,
         strength: 2,
         defense: 1,
-        sightRange: 7,
+        sightRange: 10,
+        maxTilesPerMove: 5,
+        loseTrackAfterNTurns: 6,
         damageAffinity: {
             [DamageType.Physical]: Affinity.normal,
             [DamageType.Fire]: Affinity.normal,
@@ -923,6 +939,10 @@ export interface SpellDataDetails {
     useFunc: (details: SpellDataDetails, user: GameObject, target?: GameObject) => boolean;
 }
 
+/**
+ * Defines all the properties of a spell: the name, mana cost,
+ * damage values, damage type, and the function to execute.
+ */
 export const SpellData: { [key: string]: SpellDataDetails } = {
     "lightning_bolt": {
         displayName: "Lightning Bolt",
@@ -1015,6 +1035,10 @@ export interface GoalDataDetails {
     resolver: (ai: AIComponent) => boolean
 }
 
+/**
+ * A set of world state variables and the functions used
+ * to determine if they're true. Used in the planner.
+ */
 export const GoalData: { [key: string]: GoalDataDetails } = {
     "targetPositionKnown": {
         resolver: resolveTargetPositionKnown
@@ -1069,6 +1093,12 @@ export interface Action {
     weight: (ai: AIComponent) => number
 }
 
+/**
+ * Action data by the action's name. An action is something which
+ * satisfies goal, thereby changing the world state. Defines
+ * which state variables are changed, the function to perform the
+ * action, and the cost (weight) of the action.
+ */
 export const ActionData: { [key: string]: Action } = {
     "wander": {
         preconditions: { targetPositionKnown: false },
@@ -1115,7 +1145,7 @@ export const ActionData: { [key: string]: Action } = {
     "meleeAttack": {
         preconditions: { nextToTarget: true, targetKilled: false },
         postconditions: { targetKilled: true },
-        updateFunction: chaseAction,
+        updateFunction: meleeAttackAction,
         weight: () => 1
     },
     "reposition": {

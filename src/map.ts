@@ -1,4 +1,5 @@
 import { Display, RNG } from "./rot/index";
+import { toRGB, fromString, multiply } from "./rot/color";
 import { isNil, get } from "lodash";
 
 import {
@@ -328,7 +329,9 @@ export function drawTile(display: Display, tile: Tile, x: number, y: number) {
     } else {
         if (tile.isVisibleAndLit()) {
             fgColor = tile.fgColor;
-            bgColor = tile.lightingColor;
+            bgColor = toRGB(
+                multiply(fromString(tile.bgColor), fromString(tile.lightingColor))
+            );
         } else if (tile.explored) {
             fgColor = COLOR_DARK_GROUND;
             bgColor = COLOR_DARK_GROUND;
@@ -343,7 +346,7 @@ export function drawTile(display: Display, tile: Tile, x: number, y: number) {
     }
 }
 
-interface Point {
+export interface Point {
     x: number;
     y: number;
 }

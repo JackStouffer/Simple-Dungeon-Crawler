@@ -3,6 +3,7 @@ import { Color, toRGB, add, fromString } from "./rot/color";
 import { ReflectivityCallback } from "./rot/lighting";
 
 import { createPassableSightCallback } from "./ai/components";
+import { WIDTH, HEIGHT } from "./data";
 import { GameObject } from "./object";
 import { GameMap } from "./map";
 
@@ -70,6 +71,38 @@ export class ReflectivityLighting implements LightingComponent {
  * Component
  */
 export class PlayerLighting implements LightingComponent {
+    private color: string;
+    private range: number;
+    owner: GameObject;
+
+    constructor(color: string, range: number) {
+        this.color = color;
+        this.range = range;
+    }
+
+    setOwner(owner: GameObject) {
+        this.owner = owner;
+    }
+
+    compute(map: GameMap) {
+        const sightFov = new FOV.PreciseShadowcasting(
+            createPassableSightCallback(this.owner)
+        );
+        sightFov.compute(this.owner.x, this.owner.y, WIDTH + 2, function(x, y) {
+            if (x < 0 || y < 0 || y >= map.length || x >= map[y].length) {
+                return;
+            }
+            map[y][x].explored = true;
+            map[y][x].visible = true;
+            map[y][x].lightingColor = "white";
+        });
+    }
+}
+
+/**
+ * Component
+ */
+export class PlayerCaveLighting implements LightingComponent {
     private color: string;
     private range: number;
     owner: GameObject;

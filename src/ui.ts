@@ -13,12 +13,19 @@ import {
 } from "./data";
 import { KeyCommand } from "./game";
 import input from "./input";
-import { GameObject } from "./object";
+import { PlayerState } from "./input-handler";
 import { InventoryItemDetails } from "./inventory";
 import { SpellFighterDetails } from "./fighter";
+import { GameObject } from "./object";
 import { assertUnreachable } from "./util";
+import { GameMap, getObjectsAtLocation } from "./map";
 
-export function drawUI(display: Display, player: GameObject) {
+export function drawUI(
+    display: Display,
+    player: GameObject,
+    gameObjects: GameObject[],
+    map: GameMap
+) {
     for (let x = 0; x < WIDTH; x++) {
         for (let y = 0; y < UI_HEIGHT; y++) {
             display.draw(x, HEIGHT - (UI_HEIGHT - y), MAP_FILLED_SPACE, "blue", "blue");
@@ -27,11 +34,31 @@ export function drawUI(display: Display, player: GameObject) {
 
     const stats = player.fighter.getEffectiveStats();
 
-    display.drawText(1, HEIGHT - UI_HEIGHT, "%c{white}%b{blue}HP: " + stats.hp + "/" + stats.maxHp);
-    display.drawText(14, HEIGHT - UI_HEIGHT, "%c{white}%b{blue}Mana: " + stats.mana + "/" + stats.maxMana);
-    display.drawText(30, HEIGHT - UI_HEIGHT, "%c{white}%b{blue}STR: " + stats.strength);
-    display.drawText(38, HEIGHT - UI_HEIGHT, "%c{white}%b{blue}DEF: " + stats.defense);
-    display.drawText(46, HEIGHT - UI_HEIGHT, "%c{white}%b{blue}EXP: " + player.fighter.experience + "/" + (LEVEL_UP_BASE + player.fighter.level * LEVEL_UP_FACTOR));
+    display.drawText(1, HEIGHT - UI_HEIGHT, `%c{white}%b{blue}HP: ${stats.hp}/${stats.maxHp}`);
+    display.drawText(14, HEIGHT - UI_HEIGHT, `%c{white}%b{blue}Mana: ${stats.mana}/${stats.maxMana}`);
+    display.drawText(30, HEIGHT - UI_HEIGHT, `%c{white}%b{blue}STR: ${stats.strength}`);
+    display.drawText(38, HEIGHT - UI_HEIGHT, `%c{white}%b{blue}DEF: ${stats.defense}`);
+    display.drawText(46, HEIGHT - UI_HEIGHT, `%c{white}%b{blue}EXP: ${player.fighter.experience}/${(LEVEL_UP_BASE + player.fighter.level * LEVEL_UP_FACTOR)}`);
+    display.drawText(23, HEIGHT - UI_HEIGHT + 2, `%c{white}%b{blue}${PlayerState[player.inputHandler.getState()]}`);
+
+    const mousePosition = input.getMousePosition();
+    if (mousePosition === null) { return; }
+    const { x, y } = mousePosition;
+    const target = getObjectsAtLocation(gameObjects, x, y)[0];
+    const tile = map[y][x];
+
+    if (!tile?.isVisibleAndLit()) {
+        return;
+    }
+
+    if (target?.name && target?.ai && target?.fighter) {
+        const targetStats = target.fighter.getEffectiveStats();
+        display.drawText(1, HEIGHT - UI_HEIGHT + 4, `%c{white}%b{blue}A ${target.name} (${targetStats.hp}/${targetStats.maxHp}) (${target.ai.getStateName()})`);
+    } else if (target?.name) {
+        display.drawText(1, HEIGHT - UI_HEIGHT + 4, `%c{white}%b{blue}A ${target.name}`);
+    } else if (!target) {
+        display.drawText(1, HEIGHT - UI_HEIGHT + 4, `%c{white}%b{blue}${tile.name}`);
+    }
 }
 
 export const enum MessageType {
@@ -246,8 +273,7 @@ export class KeyBindingMenu {
         }
 
         globals.Game.display.drawText(2, 1, "%c{white}%b{black} Keyboard Bindings");
-        globals.Game.display.drawText(2, 3, "%c{white}%b{black} Use the arrow keys to select a binding, and enter to change it");
-        globals.Game.display.drawText(2, 5, "%c{white}%b{black} Use Escape to exit");
+        globals.Game.display.drawText(2, 3, "%c{white}%b{black} Use the arrow keys to select a binding, and enter to change it. Use Escape to exit");
 
         for (let i = 0; i < keyCommands.length; i++) {
             const key = keyCommands[i].key;

@@ -1,9 +1,11 @@
 import Display from "./rot/display/display";
 
-import { GameMap, getObjectsAtLocation } from "./map";
+import input from "./input";
+import { GameMap, getObjectsAtLocation, Point } from "./map";
 import { GameObject } from "./object";
 import { Camera } from "./camera";
 import { ObjectDataDetails } from "./data";
+import { PlayerState, getPlayerMovementPath } from "./input-handler";
 
 export interface GraphicsComponent {
     char: string;
@@ -160,6 +162,26 @@ export class PlayerGraphics implements GraphicsComponent {
                 this.fgColor,
                 bgColor
             );
+
+            if (this.owner.inputHandler?.getState() === PlayerState.Combat) {
+                const mousePosition: Point = input.getMousePosition();
+                if (!mousePosition) { return; }
+
+                const path = getPlayerMovementPath(
+                    mousePosition.x,
+                    mousePosition.y,
+                    this.owner,
+                    map,
+                    objects
+                );
+                if (!path) { return; }
+
+                for (let i = 0; i < path.length; i++) {
+                    const step = path[i];
+                    const { x, y } = camera.worldToScreen(step[0], step[1]);
+                    display.draw(x, y, "", "yellow", "yellow");
+                }
+            }
         }
     }
 }

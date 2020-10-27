@@ -33,6 +33,7 @@ import input from "./input";
 import { PlayerState } from "./input-handler";
 import {
     GameMap,
+    Point,
     drawMap,
     getObjectsAtLocation,
     resetVisibility,
@@ -46,7 +47,6 @@ import {
     KeyBindingMenu,
     InventoryMenu,
     SpellSelectionMenu,
-    displayMessage
 } from "./ui";
 import {
     explainMovement,
@@ -65,47 +65,21 @@ import { InventoryItemDetails } from "./inventory";
 globals.gameEventEmitter = new EventEmitter();
 
 /**
- * Function to bind the mousedown event to looking at
- * objects or tiles in the game world and printing a
- * message to the log.
- * @param {Event} e The JS event object
- * @returns {void}
- */
-export function mouseLook(e: MouseEvent): void {
-    const [x, y] = globals.Game.display.eventToPosition(e);
-    const target = getObjectsAtLocation(globals.Game.gameObjects, x, y)[0];
-    const tile = globals.Game.map[y][x];
-
-    if (!tile.isVisibleAndLit()) {
-        displayMessage("Can't see what's there.");
-        return;
-    }
-
-    if (target?.name && target.ai) {
-        displayMessage(`A ${target.name} (${target.ai.getStateName()})`);
-    } else if (target?.name) {
-        displayMessage(target.name);
-    } else if (!target) {
-        displayMessage(tile.name);
-    }
-}
-
-/**
  * Unhook the mouse look functionality and then listen for a mouse
  * input. If it's a left click on an object with a fighter component,
  * then re-hook the mouse look function and pass the target to the
  * callback cb.
  * @return {void}
  */
-export function mouseTarget(e: MouseEvent, gameObjects: GameObject[], camera: Camera): GameObject {
-    const pos = globals.Game.display.eventToPosition(e);
-
-    const { x, y } = camera.screenToWorld(pos[0], pos[1]);
+export function mouseTarget(
+    mousePosition: Point,
+    gameObjects: GameObject[]
+): GameObject {
     let target = null;
-    const objects = getObjectsAtLocation(globals.Game.gameObjects, x, y);
+    const objects = getObjectsAtLocation(gameObjects, mousePosition.x, mousePosition.y);
 
     for (let i = 0; i < objects.length; i++) {
-        if (objects[i].fighter) {
+        if (objects[i].fighter || objects[i].interactable) {
             target = objects[i];
             break;
         }
@@ -152,7 +126,7 @@ export class SimpleDungeonCrawler {
         this.map = [];
         this.volumes = [];
         this.pathNodes = new Map();
-        this.totalTurns = 0;
+        this.totalTurns = 1;
 
         this.processAI = true;
         this.isLightingEnabled = true;
@@ -174,8 +148,6 @@ export class SimpleDungeonCrawler {
             loading.parentNode.removeChild(loading);
         }
 
-        input.init();
-
         this.keyBindingMenu = new KeyBindingMenu();
         this.inventoryMenu = new InventoryMenu();
         this.spellSelectionMenu = new SpellSelectionMenu();
@@ -186,7 +158,7 @@ export class SimpleDungeonCrawler {
         this.player = createObject("player", 1, 1);
         this.map = [];
         this.gameObjects = [];
-        this.totalTurns = 0;
+        this.totalTurns = 1;
         this.scheduler.clear();
         this.scheduler.add(this.player, true);
         this.gameCamera.follow(this.player);
@@ -243,6 +215,8 @@ export class SimpleDungeonCrawler {
 
         globals.gameEventEmitter.emit("tutorial.start");
 
+        input.init();
+
         this.mainLoop();
     }
 
@@ -288,7 +262,7 @@ export class SimpleDungeonCrawler {
                         this.gameObjects
                     ));
 
-                drawUI(this.display, this.player);
+                drawUI(this.display, this.player, this.gameObjects, this.map);
                 break;
             case GameState.PauseMenu:
                 this.keyBindingMenu.draw(this.player.inputHandler.keyCommands);
@@ -356,7 +330,9 @@ export class SimpleDungeonCrawler {
             for (let i = 0; i < this.gameObjects.length; i++) {
                 const object = this.gameObjects[i];
                 if (object.inputHandler) {
-                    const command: Command = object.inputHandler.handleInput();
+                    const command: Command = object.inputHandler.handleInput(
+                        this.map, this.gameObjects
+                    );
                     if (command !== null) {
                         acted = command(object);
                     }
@@ -404,7 +380,6 @@ export class SimpleDungeonCrawler {
                     case ItemType.DamageScroll:
                     case ItemType.SlowOther:
                     case ItemType.ConfuseScroll:
-                        this.unhookMouseLook();
                         this.player.inputHandler.itemForTarget = item;
                         this.player.inputHandler.setState(PlayerState.Target);
                         this.state = GameState.Gameplay;
@@ -438,7 +413,6 @@ export class SimpleDungeonCrawler {
                         }
                         break;
                     case SpellType.DamageOther:
-                        this.unhookMouseLook();
                         this.player.inputHandler.spellForTarget = spell;
                         this.player.inputHandler.setState(PlayerState.Target);
                         this.state = GameState.Gameplay;
@@ -449,7 +423,6 @@ export class SimpleDungeonCrawler {
             }
         } else if (this.state === GameState.OpeningCinematic) {
             if (input.isDown("Enter")) {
-                this.hookMouseLook();
                 this.loadLevel("forrest_001");
                 this.state = GameState.Gameplay;
             }
@@ -470,12 +443,9 @@ export class SimpleDungeonCrawler {
 
     mainLoop(): void {
         globals.animationFrameID = window.requestAnimationFrame(this.mainLoop.bind(this));
-        this.render();
 
         const acted = this.handleInput();
         if (acted === true) {
-            this.totalTurns++;
-
             const volumes = findVolumeCollision(this.volumes, this.player);
             if (volumes.length) {
                 volumes.forEach((v: Volume) => v.enter(this.player));
@@ -492,25 +462,16 @@ export class SimpleDungeonCrawler {
                     }
                 } while (this.currentActor !== this.player);
             }
+
+            this.totalTurns++;
         }
 
         if (this.player.fighter === null || this.player.fighter.getEffectiveStats().hp <= 0) {
             this.state = GameState.LoseCinematic;
         }
 
+        this.render();
         input.clearInputs();
-    }
-
-    hookMouseLook() {
-        // break out the hook and unhook mouse look into their own functions
-        // because other actions need to take over the mouse at some points
-        // and we don"t want anything other than the Game object interacting
-        // with the canvas
-        this.canvas.addEventListener("mousedown", mouseLook);
-    }
-
-    unhookMouseLook() {
-        this.canvas.removeEventListener("mousedown", mouseLook);
     }
 
     addObject(object: GameObject): void {

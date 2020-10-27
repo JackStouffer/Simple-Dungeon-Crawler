@@ -5,9 +5,9 @@ import { VisibilityCallback } from "../rot/fov/fov";
 import { PassableCallback } from "../rot/path/path";
 
 import globals from "../globals";
-import { GoalData, ActionData, ObjectDataDetails } from "../data";
+import { GoalData, ActionData, ObjectDataDetails, ObjectData } from "../data";
 import { Planner, ActionList, PlannerWorldState } from "./planner";
-import { Command, moveCommand, noOpCommand } from "../commands";
+import { Command, goToLocationCommand, noOpCommand } from "../commands";
 import { GameMap, isBlocked, PathNode, isSightBlocked } from "../map";
 import { GameObject } from "../object";
 import { displayMessage } from "../ui";
@@ -230,7 +230,9 @@ export class PlanningAI implements AIComponent {
         if (!worldState.targetInLineOfSight && this.knowsTargetPosition) {
             this.turnsWithTargetOutOfSight++;
         }
-        if (this.turnsWithTargetOutOfSight === 7) {
+
+        const loseTrackAfterNTurns = ObjectData[this.owner.type].loseTrackAfterNTurns;
+        if (this.turnsWithTargetOutOfSight === loseTrackAfterNTurns) {
             this.knowsTargetPosition = false;
             this.turnsWithTargetOutOfSight = 0;
             worldState.targetPositionKnown = false;
@@ -352,7 +354,7 @@ export class ConfusedAI implements AIComponent {
             } while (blocks === true);
 
             this.turns--;
-            return moveCommand(dir, 8);
+            return goToLocationCommand(newX, newY);
         } else {
             if (this.owner === globals.Game.player) {
                 displayMessage("You are no longer confused");

@@ -1,5 +1,3 @@
-import { DIRS } from "./rot/index";
-
 import globals from "./globals";
 import { SpellData, ItemData, GameState } from "./data";
 import { isBlocked } from "./map";
@@ -10,6 +8,8 @@ export type Command = (actor: GameObject) => boolean;
 
 /**
  * Command that does nothing. Useful for passing a turn
+ * @param {boolean} shouldAct if the command should take a turn
+ * @returns {Command} a command which does nothing
  */
 export function noOpCommand(shouldAct: boolean = true) {
     return function (): boolean {
@@ -18,47 +18,51 @@ export function noOpCommand(shouldAct: boolean = true) {
 }
 
 /**
- * Create a move function for a specified GameObject. The function
- * checks if the moved to space contains a blocking object or tile.
- * If there is a blocking tile, it will not move, if it contains a
- * blocking object, it first tries to interact, and the attack.
- *
- * @param {GameObject} actor The game object to manipulate
- * @param {Number} direction A clock-wise direction to move in
- * @param {Number} topology Either four directions or eight
- * @returns {Function} A function to move the game object, it returns true when moved, false otherwise
+ * Move the game object to a specific point on the map
+ * @param {number} x the x coordinate to move to
+ * @param {number} y the y coordinate to move to
+ * @returns {Command} a command for movement
  */
-export function moveCommand(direction: number, topology: number): Command {
+export function goToLocationCommand(x: number, y: number): Command {
     return function(actor: GameObject): boolean {
-        const dir: number[] = DIRS[topology][direction];
-        const newX: number = actor.x + dir[0];
-        const newY: number = actor.y + dir[1];
-        const { object, blocks } = isBlocked(
+        const { blocks } = isBlocked(
             globals.Game.map,
             globals.Game.gameObjects,
-            newX,
-            newY
+            x,
+            y
         );
-
-        if (object) {
-            if (object.interactable) {
-                object.interactable.interact(actor);
-                return true;
-            }
-
-            if (object.fighter) {
-                actor.fighter.attack(object);
-                return true;
-            }
-        }
 
         if (blocks === true) {
             return false;
         }
 
-        actor.x = newX;
-        actor.y = newY;
+        actor.x = x;
+        actor.y = y;
         return true;
+    };
+}
+
+/**
+ * Interact with the target, either calling the interactable or
+ * attacking the fighter
+ * @param {GameObject} target the object to interact with
+ * @returns {Command} a command for interacting
+ */
+export function interactCommand(target: GameObject): Command {
+    return function(actor: GameObject): boolean {
+        if (!target) { return null; }
+
+        if (target.interactable) {
+            target.interactable.interact(actor);
+            return true;
+        }
+
+        if (actor.fighter && target.fighter) {
+            actor.fighter.attack(target);
+            return true;
+        }
+
+        return false;
     };
 }
 
@@ -113,7 +117,7 @@ export function openSpellsCommand(): Command {
 /**
  * Create a command function to use an item in the object's inventory
  * and call its use function.
- * @param {String} itemID The id of the item to use
+ * @param {string} itemID The id of the item to use
  * @returns {Function} A command function which takes an object as a param
  */
 export function useItemCommand(itemID: string, target: GameObject = null): Command {
@@ -135,7 +139,7 @@ export function useItemCommand(itemID: string, target: GameObject = null): Comma
 /**
  * Create a command function to cast a spell in the known spells
  * and call its use function.
- * @param {String} spellID The id of the spell to use
+ * @param {string} spellID The id of the spell to use
  * @returns {Function} A command function which takes an object as a param
  */
 export function useSpellCommand(spellID: string, target?: GameObject): Command {

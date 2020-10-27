@@ -1,14 +1,13 @@
 declare const ENV: string;
 
-import { findKey, isEqual } from "lodash";
-
 import { RNG, DIRS, Path } from "../rot/index";
 
 import {
     Command,
-    moveCommand,
     useItemCommand,
-    useSpellCommand
+    useSpellCommand,
+    goToLocationCommand,
+    interactCommand
 } from "../commands";
 import {
     AIComponent,
@@ -19,25 +18,28 @@ import {
     distanceBetweenObjects,
     GameMap,
     isBlocked,
-    PathNode
+    PathNode,
+    Point
 } from "../map";
 import { displayMessage } from "../ui";
-import { ItemType } from "../data";
+import { ItemType, ObjectData } from "../data";
 
 /**
- * Calculate a path from the actor to the target and return
- * the x and y coordinates of the next step along that path.
- *
- * @param {GameObject} actor The game object to start from
- * @param {Number} targetX The target x coordinate
- * @param {Number} targetY The target y coordinate
- * @returns {Object} The x and y coordinates
+ * Calculate a path from a game object to the give x and y
+ * coordinates. Return the x and y position of the nth step
+ * along the path.
+ * @param {GameObject} actor The starting point
+ * @param {number} targetX The x coordinate to move towards
+ * @param {number} targetY The y coordinate to move towards
+ * @param {number} steps The number of steps along the path to take
+ * @returns {Point} the nth step along the path
  */
-export function getNextStepTowardsTarget(
+export function getStepsTowardsTarget(
     actor: GameObject,
     targetX: number,
-    targetY: number
-): { x: number, y: number } {
+    targetY: number,
+    steps: number
+): Point {
     const aStar = new Path.AStar(
         targetX,
         targetY,
@@ -53,36 +55,24 @@ export function getNextStepTowardsTarget(
 
     // remove our own position
     path.shift();
+    // remove the target's position
+    path.pop();
 
     if (path.length > 0) {
-        return { x: path[0][0], y: path[0][1] };
+        const index = Math.min(steps - 1, path.length - 1);
+        return { x: path[index][0], y: path[index][1] };
     }
     return { x: null, y: null };
 }
 
 /**
- * Turn a change in position to a ROT.js DIR, so
- * a number between 0 and 7.
- *
- * @param {Number} currentX The starting x coordinate
- * @param {Number} currentY The starting y coordinate
- * @param {Number} newX The new x coordinate
- * @param {Number} newY The new y coordinate
- * @return {Number} the ROT.js DIR
+ * Generates a command to move in a random direction that is not
+ * blocked.
+ * @param ai The AI which is acting
+ * @param map The current game map
+ * @param gameObjects The current map's list of objects
+ * @returns {Command} A move command
  */
-export function newPositionToDirection(
-    currentX: number,
-    currentY: number,
-    newX: number,
-    newY: number
-): number {
-    const key = findKey(
-        DIRS[8],
-        function(o) { return isEqual(o, [newX - currentX, newY - currentY]); }
-    );
-    return Number.parseInt(key, 10);
-}
-
 export function wanderAction(ai: AIComponent, map: GameMap, gameObjects: GameObject[]): Command {
     let blocks, newX, newY, dir;
     do {
@@ -92,9 +82,19 @@ export function wanderAction(ai: AIComponent, map: GameMap, gameObjects: GameObj
         ({ blocks } = isBlocked(map, gameObjects, newX, newY));
     } while (blocks === true);
 
-    return moveCommand(dir, 8);
+    return goToLocationCommand(newX, newY);
 }
 
+/**
+ * Generates a command to move towards the AI's current patrol node.
+ * If the AI is at the patrol node, then set the AI's patrol node to
+ * the next node.
+ * @param {AIComponent} ai The AI which is acting
+ * @param {GameMap} map The current game map
+ * @param {GameObject[]} gameObjects The current map's list of objects
+ * @param {Map<number, PathNode>} pathNodes The map of patrol nodes for the map
+ * @returns {Command} A move command
+ */
 export function patrolAction(
     ai: AIComponent,
     map: GameMap,
@@ -122,39 +122,69 @@ export function patrolAction(
         ai.patrolTarget = sortedNodes[0];
     }
 
-    let { x, y } = getNextStepTowardsTarget(
+    const maxTilesPerMove = ObjectData[ai.owner.type].maxTilesPerMove;
+    let { x, y } = getStepsTowardsTarget(
         ai.owner,
         ai.patrolTarget.x,
-        ai.patrolTarget.y
+        ai.patrolTarget.y,
+        maxTilesPerMove
     );
     if (x === null || y === null) {
         ai.patrolTarget = pathNodes.get(ai.patrolTarget.next);
-        ({ x, y } = getNextStepTowardsTarget(
+        ({ x, y } = getStepsTowardsTarget(
             ai.owner,
             ai.patrolTarget.x,
-            ai.patrolTarget.y
+            ai.patrolTarget.y,
+            maxTilesPerMove
         ));
     }
-    return moveCommand(newPositionToDirection(ai.owner.x, ai.owner.y, x, y), 8);
+    return goToLocationCommand(x, y);
 }
 
+/**
+ * Go towards the AI's target
+ * @param {AIComponent} ai The ai to act
+ * @returns {Command} a command to move
+ */
 export function chaseAction(ai: AIComponent): Command {
-    const { x, y } = getNextStepTowardsTarget(
+    const { x, y } = getStepsTowardsTarget(
         ai.owner,
         ai.target.x,
-        ai.target.y
+        ai.target.y,
+        5
     );
     if (x === null || y === null) {
         return null;
     }
 
-    return moveCommand(newPositionToDirection(ai.owner.x, ai.owner.y, x, y), 8);
+    return goToLocationCommand(x, y);
 }
 
+/**
+ * Find the weight of chasing the AI's target
+ * @param {AIComponent} ai the ai to calculate the weight for
+ * @returns {number} the weight
+ */
 export function chaseWeight(ai: AIComponent): number {
     return distanceBetweenObjects(ai.owner, ai.target);
 }
 
+/**
+ * Generate a command to attack the current AI's target. Should
+ * only be called if the AI is in attack range.
+ * @param ai The AI which is acting
+ * @returns {Command} An attack command
+ */
+export function meleeAttackAction(ai: AIComponent): Command {
+    return interactCommand(ai.target);
+}
+
+/**
+ * Generate a command to use the most effective healing item
+ * in the AI's inventory.
+ * @param ai The AI to act
+ * @returns {Command} A use item command
+ */
 export function useHealingItemAction(ai: AIComponent): Command {
     const item = ai.owner.inventory
         .getItems()
@@ -164,6 +194,12 @@ export function useHealingItemAction(ai: AIComponent): Command {
     return useItemCommand(item.id);
 }
 
+/**
+ * Generate a command to use the most effective add mana item
+ * in the AI's inventory.
+ * @param ai The AI to act
+ * @returns {Command} A use item command
+ */
 export function useManaItemAction(ai: AIComponent): Command {
     const item = ai.owner.inventory
         .getItems()
@@ -173,6 +209,15 @@ export function useManaItemAction(ai: AIComponent): Command {
     return useItemCommand(item.id);
 }
 
+/**
+ * A generator for an Action Update function.
+ *
+ * The generated update function will return a command
+ * which uses the specified spell.
+ *
+ * @param spellID The ID of the spell to use
+ * @returns {function} the action update function
+ */
 export function castSpellAction(spellID: string) {
     return function (ai: AIComponent): Command {
         if (ENV === "DEV") {

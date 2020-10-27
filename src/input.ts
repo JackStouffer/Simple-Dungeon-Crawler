@@ -1,10 +1,12 @@
 import { get } from "lodash";
 import globals from "./globals";
+import { Point } from "./map";
 
 declare const ENV: string;
 
 const pressed: Set<string> = new Set();
-let mouseEvent: MouseEvent = null;
+let mouseDownEvent: MouseEvent = null;
+let mouseMoveEvent: MouseEvent = null;
 
 function init(): void {
     globals.window.addEventListener("keydown", function (e: KeyboardEvent) {
@@ -14,7 +16,12 @@ function init(): void {
 
     globals.window.addEventListener("mousedown", function (e: MouseEvent) {
         e.preventDefault();
-        mouseEvent = e;
+        mouseDownEvent = e;
+    });
+
+    globals.Game.canvas.addEventListener("mousemove", function (e: MouseEvent) {
+        e.preventDefault();
+        mouseMoveEvent = e;
     });
 }
 
@@ -32,13 +39,30 @@ function getFirstKeyPressed(): string {
     return get([...pressed.values()], "[0]", null);
 }
 
-function getMouseEvent() {
-    return mouseEvent;
+function getLeftMouseDown(): Point {
+    if (!mouseDownEvent) { return null; }
+
+    const pos = globals.Game.display.eventToPosition(mouseDownEvent);
+    return globals.Game.gameCamera.screenToWorld(pos[0], pos[1]);
+}
+
+function getMousePosition(): Point {
+    if (!mouseMoveEvent) { return null; }
+    const pos = globals.Game.display.eventToPosition(mouseMoveEvent);
+    return globals.Game.gameCamera.screenToWorld(pos[0], pos[1]);
 }
 
 function clearInputs(): void {
-    mouseEvent = null;
+    mouseDownEvent = null;
     pressed.clear();
 }
 
-export default { init, isDown, press, getFirstKeyPressed, getMouseEvent, clearInputs };
+export default {
+    init,
+    isDown,
+    press,
+    getFirstKeyPressed,
+    getLeftMouseDown,
+    getMousePosition,
+    clearInputs
+};
