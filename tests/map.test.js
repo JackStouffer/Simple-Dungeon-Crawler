@@ -241,7 +241,7 @@ describe("map", function () {
             tile.visible = true;
             tile.lightingColor = "#ffffff";
             drawTile(display, tile, 0, 0);
-            expect(display.draw.calledWith(0, 0, "", "white", "#ffffff")).to.be.true;
+            expect(display.draw.calledWith(0, 0, "", "white", "rgb(255,255,255)")).to.be.true;
         });
 
         it("should draw a non-blocking tile with the fgColor when visible", function () {

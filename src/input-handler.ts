@@ -99,18 +99,10 @@ export class PlayerInputHandler implements InputHandler {
         this.owner = null;
         this.state = PlayerState.Combat;
         this.keyCommands = [
-            // { key: "w", description: "Move Up", command: moveCommand(0, 8) },
-            // { key: "e", description: "Move Up Right", command: moveCommand(1, 8) },
-            // { key: "d", description: "Move Right", command: moveCommand(2, 8) },
-            // { key: "c", description: "Move Down Right", command: moveCommand(3, 8) },
-            // { key: "s", description: "Move Down", command: moveCommand(4, 8) },
-            // { key: "z", description: "Move Down Left", command: moveCommand(5, 8) },
-            // { key: "a", description: "Move Left", command: moveCommand(6, 8) },
-            // { key: "q", description: "Move Up Left", command: moveCommand(7, 8) },
             { key: "i", description: "Inventory", command: openInventoryCommand() },
             { key: "g", description: "Get Item", command: getItemCommand() },
             { key: "m", description: "Spells", command: openSpellsCommand() },
-            { key: "x", description: "Don't Move", command: noOpCommand(true) }
+            { key: "x", description: "Do Nothing", command: noOpCommand(true) }
         ];
     }
 
@@ -140,7 +132,7 @@ export class PlayerInputHandler implements InputHandler {
                 if (distanceBetweenObjects(mouseDownPosition, this.owner) < 1.5) {
                     const target: GameObject = mouseTarget(
                         mouseDownPosition,
-                        globals.Game.gameObjects
+                        objects
                     );
                     if (target) { return interactCommand(target); }
                 }
@@ -153,7 +145,12 @@ export class PlayerInputHandler implements InputHandler {
                     objects
                 );
                 if (path) {
-                    return goToLocationCommand(mouseDownPosition.x, mouseDownPosition.y);
+                    return goToLocationCommand(
+                        mouseDownPosition.x,
+                        mouseDownPosition.y,
+                        map,
+                        objects
+                    );
                 }
             }
 
@@ -166,10 +163,7 @@ export class PlayerInputHandler implements InputHandler {
                 return null;
             }
 
-            const target: GameObject = mouseTarget(
-                position,
-                globals.Game.gameObjects
-            );
+            const target: GameObject = mouseTarget(position, objects);
             if (!target) {
                 displayMessage("Canceled casting");
                 this.itemForTarget = null;

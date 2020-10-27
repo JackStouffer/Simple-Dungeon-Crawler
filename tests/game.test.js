@@ -47,25 +47,16 @@ describe("game", function () {
         });
 
         describe("handleInput", function () {
-            it("should call a command when its key is pressed", function () {
-                globals.Game.keyCommands = [{ key: "w", description: "Move Up", command: fake.returns(true) }];
-                globals.Game.state = GameState.Gameplay;
-
-                input.press("w");
-                globals.Game.handleInput();
-                expect(globals.Game.keyCommands[0].command.calledOnce).to.be.true;
-            });
-
             it("should go into PauseMenu state when escape is pressed when in gameplay", function () {
                 globals.Game.keyCommands = [{ key: "w", description: "Move Up", command: fake.returns(true) }];
                 globals.Game.state = GameState.Gameplay;
 
-                input.press("Escape");
+                input.pressKey("Escape");
                 globals.Game.handleInput();
                 expect(globals.Game.state).to.be.equal(GameState.PauseMenu);
                 input.clearInputs();
 
-                input.press("Escape");
+                input.pressKey("Escape");
                 globals.Game.handleInput();
                 expect(globals.Game.state).to.be.equal(GameState.Gameplay);
             });
@@ -75,7 +66,7 @@ describe("game", function () {
                 globals.Game.state = GameState.InventoryMenu;
                 globals.Game.canvas = { addEventListener: fake() };
 
-                input.press("Escape");
+                input.pressKey("Escape");
                 globals.Game.handleInput();
                 expect(globals.Game.state).to.be.equal(GameState.Gameplay);
             });
@@ -95,7 +86,7 @@ describe("game", function () {
                 };
                 globals.Game.state = GameState.InventoryMenu;
 
-                input.press("w");
+                input.pressKey("w");
                 globals.Game.handleInput();
                 expect(ItemData["item"].useFunc.calledOnce).to.be.true;
                 expect(globals.Game.state).to.be.equal(GameState.Gameplay);
@@ -104,7 +95,7 @@ describe("game", function () {
             it("should go back to gameplay state when escape is pressed when in SpellMenu", function () {
                 globals.Game.state = GameState.SpellMenu;
 
-                input.press("Escape");
+                input.pressKey("Escape");
                 globals.Game.handleInput();
                 expect(globals.Game.state).to.be.equal(GameState.Gameplay);
             });
@@ -124,7 +115,7 @@ describe("game", function () {
                 };
                 globals.Game.state = GameState.SpellMenu;
 
-                input.press("w");
+                input.pressKey("w");
                 globals.Game.handleInput();
                 expect(SpellData["spell"].useFunc.calledOnce).to.be.true;
                 expect(globals.Game.state).to.be.equal(GameState.Gameplay);
@@ -134,7 +125,7 @@ describe("game", function () {
                 globals.Game.state = GameState.OpeningCinematic;
                 globals.Game.canvas = { addEventListener: fake() };
 
-                input.press("Enter");
+                input.pressKey("Enter");
                 globals.Game.handleInput();
                 expect(globals.Game.state).to.be.equal(GameState.Gameplay);
             });
@@ -142,7 +133,7 @@ describe("game", function () {
             it("should go to gameplay state when enter is pressed when in loseCinematic state", function () {
                 globals.Game.state = GameState.LoseCinematic;
 
-                input.press("Enter");
+                input.pressKey("Enter");
                 globals.Game.handleInput();
                 expect(globals.Game.state).to.be.equal(GameState.Gameplay);
             });
@@ -150,7 +141,7 @@ describe("game", function () {
             it("should go to gameplay state when enter is pressed when in winCinematic state", function () {
                 globals.Game.state = GameState.WinCinematic;
 
-                input.press("Enter");
+                input.pressKey("Enter");
                 globals.Game.handleInput();
                 expect(globals.Game.state).to.be.equal(GameState.Gameplay);
             });

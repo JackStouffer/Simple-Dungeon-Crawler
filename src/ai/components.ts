@@ -354,7 +354,7 @@ export class ConfusedAI implements AIComponent {
             } while (blocks === true);
 
             this.turns--;
-            return goToLocationCommand(newX, newY);
+            return goToLocationCommand(newX, newY, globals.Game.map, globals.Game.gameObjects);
         } else {
             if (this.owner === globals.Game.player) {
                 displayMessage("You are no longer confused");

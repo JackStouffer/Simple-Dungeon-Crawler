@@ -1,6 +1,6 @@
 import globals from "./globals";
 import { SpellData, ItemData, GameState } from "./data";
-import { isBlocked } from "./map";
+import { GameMap, isBlocked } from "./map";
 import { displayMessage } from "./ui";
 import { GameObject } from "./object";
 
@@ -23,14 +23,14 @@ export function noOpCommand(shouldAct: boolean = true) {
  * @param {number} y the y coordinate to move to
  * @returns {Command} a command for movement
  */
-export function goToLocationCommand(x: number, y: number): Command {
+export function goToLocationCommand(
+    x: number,
+    y: number,
+    map: GameMap,
+    gameObjects: GameObject[]
+): Command {
     return function(actor: GameObject): boolean {
-        const { blocks } = isBlocked(
-            globals.Game.map,
-            globals.Game.gameObjects,
-            x,
-            y
-        );
+        const { blocks } = isBlocked(map, gameObjects, x, y );
 
         if (blocks === true) {
             return false;

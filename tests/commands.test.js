@@ -6,7 +6,8 @@ import { fake } from "sinon";
 import globals from "../src/globals";
 import { Tile } from "../src/map";
 import {
-    moveCommand,
+    goToLocationCommand,
+    interactCommand,
     getItemCommand,
     openInventoryCommand,
     openSpellsCommand,
@@ -36,7 +37,7 @@ const filledSpaceData = [
     true
 ];
 
-describe("player", function () {
+describe("command", function () {
     beforeEach(function () {
         globals.Game = {
             map: [
@@ -69,48 +70,26 @@ describe("player", function () {
         };
     });
 
-    describe("moveCommand", function () {
-        it("should move the player up", function () {
+    describe("goToLocationCommand", function () {
+        it("should move the player", function () {
             const player = { x: 1, y: 1 };
-            const func = moveCommand(0, 8);
+            const func = goToLocationCommand(0, 0, globals.Game.map, globals.Game.gameObjects);
             func(player);
-            expect(player.x).to.be.equal(1);
+            expect(player.x).to.be.equal(0);
             expect(player.y).to.be.equal(0);
-        });
-
-        it("should move the player down", function () {
-            const player = { x: 0, y: 0 };
-            const func = moveCommand(4, 8);
-            func(player);
-            expect(player.x).to.be.equal(0);
-            expect(player.y).to.be.equal(1);
-        });
-
-        it("should move the player left", function () {
-            const player = { x: 1, y: 1 };
-            const func = moveCommand(6, 8);
-            func(player);
-            expect(player.x).to.be.equal(0);
-            expect(player.y).to.be.equal(1);
-        });
-
-        it("should move the player right", function () {
-            const player = { x: 1, y: 1 };
-            const func = moveCommand(2, 8);
-            func(player);
-            expect(player.x).to.be.equal(2);
-            expect(player.y).to.be.equal(1);
         });
 
         it("should not move the player when the spot is blocked", function () {
             const player = { x: 1, y: 1 };
-            const func = moveCommand(4, 8);
+            const func = goToLocationCommand(2, 2, globals.Game.map, globals.Game.gameObjects);
             const ret = func(player);
             expect(player.x).to.be.equal(1);
             expect(player.y).to.be.equal(1);
             expect(ret).to.be.false;
         });
+    });
 
+    describe("interactCommand", function () {
         it("should interact with an object", function () {
             const player = { x: 0, y: 0 };
             globals.Game.gameObjects = [{
@@ -119,7 +98,7 @@ describe("player", function () {
                 blocks: true,
                 interactable: { interact: fake() }
             }];
-            const func = moveCommand(2, 8);
+            const func = interactCommand(globals.Game.gameObjects[0]);
             func(player);
             expect(globals.Game.gameObjects[0].interactable.interact.calledOnce).to.be.true;
         });
@@ -132,7 +111,7 @@ describe("player", function () {
                 blocks: true,
                 fighter: {}
             }];
-            const func = moveCommand(2, 8);
+            const func = interactCommand(globals.Game.gameObjects[0]);
             func(player);
             expect(player.fighter.attack.calledOnce).to.be.true;
         });

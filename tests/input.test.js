@@ -10,12 +10,12 @@ describe("input", function () {
 
     describe("isDown", function () {
         it("should return false if a button is not pressed", function () {
-            input.press("d");
+            input.pressKey("d");
             expect(input.isDown("w")).to.be.false;
         });
 
         it("should return true if a button is pressed", function () {
-            input.press("w");
+            input.pressKey("w");
             expect(input.isDown("w")).to.be.true;
         });
     });
@@ -26,8 +26,8 @@ describe("input", function () {
         });
 
         it("should return the first key pressed", function () {
-            input.press("w");
-            input.press("d");
+            input.pressKey("w");
+            input.pressKey("d");
             expect(input.getFirstKeyPressed()).to.be.equal("w");
         });
     });

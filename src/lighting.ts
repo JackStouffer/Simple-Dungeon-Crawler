@@ -3,7 +3,7 @@ import { Color, toRGB, add, fromString } from "./rot/color";
 import { ReflectivityCallback } from "./rot/lighting";
 
 import { createPassableSightCallback } from "./ai/components";
-import { WIDTH, HEIGHT } from "./data";
+import { WIDTH } from "./data";
 import { GameObject } from "./object";
 import { GameMap } from "./map";
 

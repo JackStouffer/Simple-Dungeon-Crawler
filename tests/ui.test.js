@@ -17,7 +17,7 @@ describe("ui", function () {
                 { key: "w" },
                 { key: "d" }
             ];
-            input.press("d");
+            input.pressKey("d");
             menu.handleInput(commands);
             expect(menu.currentSelection).to.be.equal(0);
         });
@@ -28,7 +28,7 @@ describe("ui", function () {
                 { key: "w" },
                 { key: "d" }
             ];
-            input.press("ArrowDown");
+            input.pressKey("ArrowDown");
             menu.handleInput(commands);
             expect(menu.currentSelection).to.be.equal(1);
         });
@@ -40,7 +40,7 @@ describe("ui", function () {
                 { key: "w" },
                 { key: "d" }
             ];
-            input.press("ArrowUp");
+            input.pressKey("ArrowUp");
             menu.handleInput(commands);
             expect(menu.currentSelection).to.be.equal(0);
         });
@@ -51,7 +51,7 @@ describe("ui", function () {
                 { key: "w" },
                 { key: "d" }
             ];
-            input.press("Enter");
+            input.pressKey("Enter");
             menu.handleInput(commands);
             expect(menu.state).to.be.equal("change");
         });
@@ -61,10 +61,10 @@ describe("ui", function () {
             const commands = [
                 { key: "w" }
             ];
-            input.press("Enter");
+            input.pressKey("Enter");
             menu.handleInput(commands);
             input.clearInputs();
-            input.press("d");
+            input.pressKey("d");
             menu.handleInput(commands);
             expect(commands[0].key).to.be.equal("d");
         });
@@ -77,7 +77,7 @@ describe("ui", function () {
                 { id: "test" },
                 { id: "test2" }
             ];
-            input.press("j");
+            input.pressKey("j");
             menu.handleInput(items);
             expect(menu.currentSelection).to.be.equal(0);
         });
@@ -88,7 +88,7 @@ describe("ui", function () {
                 { id: "test" },
                 { id: "test2" }
             ];
-            input.press("ArrowDown");
+            input.pressKey("ArrowDown");
             menu.handleInput(items);
             expect(menu.currentSelection).to.be.equal(1);
         });
@@ -100,7 +100,7 @@ describe("ui", function () {
                 { id: "test" },
                 { id: "test2" }
             ];
-            input.press("ArrowUp");
+            input.pressKey("ArrowUp");
             menu.handleInput(items);
             expect(menu.currentSelection).to.be.equal(0);
         });
@@ -111,7 +111,7 @@ describe("ui", function () {
                 { id: "test" },
                 { id: "test2" }
             ];
-            input.press("Enter");
+            input.pressKey("Enter");
             const item = menu.handleInput(items);
             expect(item).to.be.deep.equal({ id: "test" });
         });
@@ -124,7 +124,7 @@ describe("ui", function () {
                 { id: "test" },
                 { id: "test2" }
             ];
-            input.press("d");
+            input.pressKey("d");
             menu.handleInput(spells);
             expect(menu.currentSelection).to.be.equal(0);
         });
@@ -135,7 +135,7 @@ describe("ui", function () {
                 { id: "test" },
                 { id: "test2" }
             ];
-            input.press("ArrowDown");
+            input.pressKey("ArrowDown");
             menu.handleInput(spells);
             expect(menu.currentSelection).to.be.equal(1);
         });
@@ -147,7 +147,7 @@ describe("ui", function () {
                 { id: "test" },
                 { id: "test2" }
             ];
-            input.press("ArrowUp");
+            input.pressKey("ArrowUp");
             menu.handleInput(spells);
             expect(menu.currentSelection).to.be.equal(0);
         });
@@ -158,7 +158,7 @@ describe("ui", function () {
                 { id: "test" },
                 { id: "test2" }
             ];
-            input.press("Enter");
+            input.pressKey("Enter");
             const spell = menu.handleInput(spells);
             expect(spell).to.be.deep.equal({ id: "test" });
         });

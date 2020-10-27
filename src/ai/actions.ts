@@ -82,7 +82,7 @@ export function wanderAction(ai: AIComponent, map: GameMap, gameObjects: GameObj
         ({ blocks } = isBlocked(map, gameObjects, newX, newY));
     } while (blocks === true);
 
-    return goToLocationCommand(newX, newY);
+    return goToLocationCommand(newX, newY, map, gameObjects);
 }
 
 /**
@@ -138,7 +138,7 @@ export function patrolAction(
             maxTilesPerMove
         ));
     }
-    return goToLocationCommand(x, y);
+    return goToLocationCommand(x, y, map, gameObjects);
 }
 
 /**
@@ -146,7 +146,11 @@ export function patrolAction(
  * @param {AIComponent} ai The ai to act
  * @returns {Command} a command to move
  */
-export function chaseAction(ai: AIComponent): Command {
+export function chaseAction(
+    ai: AIComponent,
+    map: GameMap,
+    gameObjects: GameObject[],
+): Command {
     const { x, y } = getStepsTowardsTarget(
         ai.owner,
         ai.target.x,
@@ -157,7 +161,7 @@ export function chaseAction(ai: AIComponent): Command {
         return null;
     }
 
-    return goToLocationCommand(x, y);
+    return goToLocationCommand(x, y, map, gameObjects);
 }
 
 /**

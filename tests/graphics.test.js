@@ -27,7 +27,11 @@ describe("graphics", function () {
             const owner = {
                 x: 0,
                 y: 0,
-                graphics: new BasicGraphics("T", "white", "black")
+                graphics: new BasicGraphics({
+                    char: "T",
+                    fgColor: "white",
+                    bgColor: "black"
+                })
             };
             owner.graphics.setOwner(owner);
             owner.graphics.draw(display, camera, [[{ isVisibleAndLit: fake.returns(true) }]]);
@@ -38,7 +42,11 @@ describe("graphics", function () {
             const owner = {
                 x: 0,
                 y: 0,
-                graphics: new BasicGraphics("T", "white", "black")
+                graphics: new BasicGraphics({
+                    char: "T",
+                    fgColor: "white",
+                    bgColor: "black"
+                })
             };
             owner.graphics.setOwner(owner);
             owner.graphics.draw(display, camera, [[{ isVisibleAndLit: fake.returns(false) }]]);
@@ -58,7 +66,10 @@ describe("graphics", function () {
             const owner = {
                 x: 0,
                 y: 0,
-                graphics: new TransparencyGraphics("T", "white")
+                graphics: new TransparencyGraphics({
+                    char: "T",
+                    fgColor: "white"
+                })
             };
             owner.graphics.setOwner(owner);
             owner.graphics.draw(display, camera, map, objects);
@@ -76,7 +87,10 @@ describe("graphics", function () {
             const owner = {
                 x: 0,
                 y: 0,
-                graphics: new TransparencyGraphics("T", "white")
+                graphics: new TransparencyGraphics({
+                    char: "T",
+                    fgColor: "white"
+                })
             };
             owner.graphics.setOwner(owner);
             owner.graphics.draw(display, camera, map, objects);
@@ -101,7 +115,10 @@ describe("graphics", function () {
             const owner = {
                 x: 0,
                 y: 0,
-                graphics: new TransparencyGraphics("T", "white")
+                graphics: new TransparencyGraphics({
+                    char: "T",
+                    fgColor: "white"
+                })
             };
             owner.graphics.setOwner(owner);
             owner.graphics.draw(display, camera, map, objects);
@@ -126,7 +143,10 @@ describe("graphics", function () {
             const owner = {
                 x: 0,
                 y: 0,
-                graphics: new TransparencyGraphics("T", "white")
+                graphics: new TransparencyGraphics({
+                    char: "T",
+                    fgColor: "white"
+                })
             };
             owner.graphics.setOwner(owner);
             owner.graphics.draw(display, camera, map, objects);
@@ -139,7 +159,11 @@ describe("graphics", function () {
             const owner = {
                 x: 0,
                 y: 0,
-                graphics: new DrawAfterSeen("T", "white", "black")
+                graphics: new DrawAfterSeen({
+                    char: "T",
+                    fgColor: "white",
+                    bgColor: "black"
+                })
             };
             owner.graphics.setOwner(owner);
             owner.graphics.draw(display, camera, [[{ explored: true }]]);
@@ -150,7 +174,11 @@ describe("graphics", function () {
             const owner = {
                 x: 0,
                 y: 0,
-                graphics: new DrawAfterSeen("T", "white", "black")
+                graphics: new DrawAfterSeen({
+                    char: "T",
+                    fgColor: "white",
+                    bgColor: "black"
+                })
             };
             owner.graphics.setOwner(owner);
             owner.graphics.draw(display, camera, [[{ explored: false }]]);
