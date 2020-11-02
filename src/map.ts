@@ -13,6 +13,7 @@ import {
 import { createObject, GameObject } from "./object";
 import { TriggerVolume, Volume } from "./volume";
 import { Camera } from "./camera";
+import { Nullable } from "./util";
 
 export class Tile {
     name: string;
@@ -79,7 +80,7 @@ export class PathNode {
 }
 
 function findProperty(o: any, name: string): any {
-    if (!o.properties || !o.properties.length) { return null; }
+    if (o.properties === undefined || o.properties.length === 0) { return null; }
 
     const property = o.properties.filter((prop: any) => {
         return prop.name === name;
@@ -109,19 +110,19 @@ export function loadTiledMap(level: LevelName) {
     const volumes: Volume[] = [];
     const pathNodes: Map<number, PathNode> = new Map();
     const fallbackNodes = new Map();
-    let playerLocation: number[] = null;
+    let playerLocation: number[] = [0, 0];
 
     const tileLayer = get(sourceData.layers.filter((l: any) => l.name === "Tile Layer"), "[0]");
     const objectLayer = get(sourceData.layers.filter((l: any) => l.name === "Object Layer"), "[0]");
     const nodeLayer = get(sourceData.layers.filter((l: any) => l.name === "Node Layer"), "[0]");
 
-    if (!tileLayer) {
+    if (tileLayer === null) {
         throw new Error(`No tile layer in map ${level}`);
     }
-    if (!objectLayer) {
+    if (objectLayer === null) {
         throw new Error(`No object layer in map ${level}`);
     }
-    if (!nodeLayer) {
+    if (nodeLayer === null) {
         throw new Error(`No node layer in map ${level}`);
     }
 
@@ -146,7 +147,7 @@ export function loadTiledMap(level: LevelName) {
     }
 
     objectLayer.objects.forEach((o: any) => {
-        if (o.point) {
+        if (o.point !== undefined) {
             if (o.type === "object") {
                 const type = findProperty(o, "objectType"),
                     inventory = findProperty(o, "inventory"),
@@ -155,36 +156,50 @@ export function loadTiledMap(level: LevelName) {
                     pathName = findProperty(o, "pathName"),
                     fallbackPosition = findProperty(o, "fallbackPosition");
 
-                if (!type) {
+                if (type === null) {
                     throw new Error(`No id for ${o.name}`);
                 }
 
                 if (type === "player") {
                     playerLocation = [Math.floor(o.x / tileSize), Math.floor(o.y / tileSize)];
                 } else {
-                    const obj = createObject(
+                    const obj: GameObject = createObject(
                         type,
                         Math.floor(o.x / tileSize),
                         Math.floor(o.y / tileSize),
                     );
 
-                    if (inventory && obj.inventory) {
-                        inventory.split(",").forEach((i: string) => obj.inventory.addItem(i));
+                    // different if statement because of typescript's weird semantic
+                    // analysis around null checks
+                    if (obj.inventory !== null) {
+                        if (inventory !== null && inventory !== "") {
+                            inventory
+                                .split(",")
+                                .forEach((i: string) => obj.inventory!.addItem(i));
+                        }
                     }
 
-                    if (levelName && obj.interactable && obj.interactable.setLevel) {
+                    if (levelName !== null &&
+                        obj.interactable !== null &&
+                        obj.interactable.setLevel !== undefined) {
                         obj.interactable.setLevel(levelName);
                     }
 
-                    if (spellId && obj.interactable && obj.interactable.setSpell) {
+                    if (spellId !== null &&
+                        obj.interactable !== null &&
+                        obj.interactable.setSpell !== undefined) {
                         obj.interactable.setSpell(spellId);
                     }
 
-                    if (pathName && obj.ai && obj.ai.setPatrolPath) {
+                    if (pathName !== null &&
+                        obj.ai !== null &&
+                        obj.ai.setPatrolPath !== undefined) {
                         obj.ai.setPatrolPath(pathName);
                     }
 
-                    if (fallbackPosition && obj.ai && obj.ai.setFallbackPosition) {
+                    if (fallbackPosition !== null &&
+                        obj.ai !== null &&
+                        obj.ai.setFallbackPosition !== undefined) {
                         obj.ai.setFallbackPosition(fallbackPosition);
                     }
 
@@ -233,7 +248,7 @@ export function loadTiledMap(level: LevelName) {
  * @param {Array} objects An array of GameObjects
  * @returns {Object}      The x and y coordinates
  */
-export function findEmptySpace(map: GameMap, objects: GameObject[]) {
+export function findEmptySpace(map: GameMap, objects: GameObject[]): Point {
     let x = 0, y = 0;
     let blocks = true;
     while (blocks) {
@@ -273,7 +288,8 @@ export function isBlocked(map: GameMap, objects: GameObject[], x: number, y: num
     const target = objects.filter(
         object => object.x === x && object.y === y && object.blocks === true
     )[0];
-    return target ? { object: target, blocks: true } : { object: null, blocks: false };
+    return target !== undefined ?
+        { object: target, blocks: true } : { object: null, blocks: false };
 }
 
 /**
@@ -284,7 +300,7 @@ export function isBlocked(map: GameMap, objects: GameObject[], x: number, y: num
  * @param {Number} y The y coordinate to check
  * @returns {Boolean} Does the spot block sight
  */
-export function isSightBlocked(map: GameMap, objects: GameObject[], x: number, y: number) {
+export function isSightBlocked(map: GameMap, objects: GameObject[], x: number, y: number): boolean {
     if (!Array.isArray(map) || map.length === 0 || !Array.isArray(map[0])) { throw new Error("Bad map data"); }
 
     if (x < 0 || y < 0 || x >= map[0].length || y >= map.length || map[y][x].blocksSight) {
@@ -308,12 +324,13 @@ export function isSightBlocked(map: GameMap, objects: GameObject[], x: number, y
  * @param {Number} x The x coordinate
  * @param {Number} y The y coordinate
  */
-export function drawTile(display: Display, tile: Tile, x: number, y: number) {
+export function drawTile(display: Display, tile: Tile, x: number, y: number): void {
     if (x > WIDTH || x < 0 || y > HEIGHT || y < 0) {
         return;
     }
 
-    let fgColor, bgColor;
+    let fgColor: string = "";
+    let bgColor: string = "";
 
     if (tile.blocks) {
         if (tile.isVisibleAndLit()) {
@@ -378,7 +395,7 @@ export function getRandomFighterWithinRange(
     actors: GameObject[],
     origin: GameObject,
     maxDistance: number
-): GameObject {
+): Nullable<GameObject> {
     const possibleActors = actors
         .filter(a => !isNil(a.fighter))
         .filter(a => !isNil(a.ai))
@@ -432,7 +449,7 @@ export function setAllToExplored(
  * @param  {Array}   map     An array of arrays of Tiles
  * @return {void}
  */
-export function drawMap(display: Display, camera: Camera, map: GameMap) {
+export function drawMap(display: Display, camera: Camera, map: GameMap): void {
     for (let y = 0; y < map.length; y++) {
         for (let x = 0; x < map[y].length; x++) {
             const { x: screenX, y: screenY } = camera.worldToScreen(x, y);
@@ -449,7 +466,7 @@ export function drawMap(display: Display, camera: Camera, map: GameMap) {
  * @param {GameObject} object A game object
  * @returns {Array} An array of volumes
  */
-export function findVolumeCollision(volumes: Volume[], object: GameObject) {
+export function findVolumeCollision(volumes: Volume[], object: GameObject): Volume[] {
     return volumes.filter(v => {
         if (v.x < object.x &&
             v.x + v.width > object.x &&

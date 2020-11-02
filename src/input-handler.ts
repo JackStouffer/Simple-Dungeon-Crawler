@@ -1,10 +1,6 @@
-import Path from "./rot/path/index";
-
 import globals from "./globals";
-import { createPassableCallback } from "./ai/components";
-import { KeyCommand, mouseTarget } from "./game";
+import { mouseTarget } from "./game";
 import input from "./input";
-import { ObjectData } from "./data";
 import {
     Command,
     goToLocationCommand,
@@ -14,14 +10,21 @@ import {
     useItemCommand,
     useSpellCommand,
     noOpCommand,
-    interactCommand
+    interactCommand,
+    getActorMovementPath
 } from "./commands";
 import { GameObject } from "./object";
 import { displayMessage } from "./ui";
 import { InventoryItemDetails } from "./inventory";
 import { SpellFighterDetails } from "./fighter";
-import { distanceBetweenObjects, getObjectsAtLocation, GameMap } from "./map";
+import { distanceBetweenObjects, GameMap } from "./map";
+import { Nullable } from "./util";
 
+export interface KeyCommand {
+    key: string;
+    description: string;
+    command: Command;
+}
 
 export enum PlayerState {
     Combat,
@@ -29,71 +32,23 @@ export enum PlayerState {
 }
 
 export interface InputHandler {
-    owner: GameObject;
-    keyCommands?: KeyCommand[];
-    itemForTarget?: InventoryItemDetails;
-    spellForTarget?: SpellFighterDetails;
+    owner: Nullable<GameObject>;
+    keyCommands: KeyCommand[];
+    itemForTarget: Nullable<InventoryItemDetails>;
+    spellForTarget: Nullable<SpellFighterDetails>;
 
-    setOwner: (owner: GameObject) => void;
-    handleInput: (map: GameMap, objects: GameObject[]) => Command;
-    setState?: (state: any) => void;
-    getState?: () => any;
-}
-
-export function getPlayerMovementPath(
-    x: number,
-    y: number,
-    player: GameObject,
-    map: GameMap,
-    objects: GameObject[]
-): number[][] {
-    const maxTilesPerMove = ObjectData[player.type].maxTilesPerMove;
-    // quick distance check to cut down the number of
-    // AStar calcs
-    if (distanceBetweenObjects({ x, y }, player) < maxTilesPerMove * 2) {
-        const aStar = new Path.AStar(
-            x,
-            y,
-            createPassableCallback(player),
-            { topology: 8 }
-        );
-
-        if (y >= map.length ||
-            x >= map[0].length ||
-            !map[y][x].explored ||
-            map[y][x].blocks) {
-            return;
-        }
-
-        if (getObjectsAtLocation(objects, x, y)
-            .filter(o => o.blocks)
-            .length > 0) {
-            return;
-        }
-
-        const path: number[][] = [];
-        function pathCallback(x: number, y: number) {
-            path.push([x, y]);
-        }
-        aStar.compute(player.x, player.y, pathCallback);
-
-        if (path.length === 0 || path.length > maxTilesPerMove) { return; }
-
-        // remove our own position
-        path.shift();
-        if (path.length === 0) { return; }
-        return path;
-    }
-
-    return null;
+    setOwner: (owner: Nullable<GameObject>) => void;
+    handleInput: (map: GameMap, objects: GameObject[]) => Nullable<Command>;
+    setState: (state: any) => void;
+    getState: () => any;
 }
 
 export class PlayerInputHandler implements InputHandler {
     private state: PlayerState;
     keyCommands: KeyCommand[];
-    owner: GameObject;
-    itemForTarget: InventoryItemDetails;
-    spellForTarget: SpellFighterDetails;
+    owner: Nullable<GameObject>;
+    itemForTarget: Nullable<InventoryItemDetails>;
+    spellForTarget: Nullable<SpellFighterDetails>;
 
     constructor() {
         this.owner = null;
@@ -106,7 +61,7 @@ export class PlayerInputHandler implements InputHandler {
         ];
     }
 
-    setOwner(owner: GameObject): void {
+    setOwner(owner: Nullable<GameObject>): void {
         this.owner = owner;
     }
 
@@ -118,7 +73,9 @@ export class PlayerInputHandler implements InputHandler {
         this.state = state;
     }
 
-    handleInput(map: GameMap, objects: GameObject[]): Command {
+    handleInput(map: GameMap, objects: GameObject[]): Nullable<Command> {
+        if (this.owner === null) { throw new Error("Can't handle input with an owner"); }
+
         if (this.state === PlayerState.Combat) {
             for (let i = 0; i < this.keyCommands.length; i++) {
                 const keyCommand = this.keyCommands[i];
@@ -130,24 +87,23 @@ export class PlayerInputHandler implements InputHandler {
             const mouseDownPosition = input.getLeftMouseDown();
             if (mouseDownPosition !== null) {
                 if (distanceBetweenObjects(mouseDownPosition, this.owner) < 1.5) {
-                    const target: GameObject = mouseTarget(
+                    const target = mouseTarget(
                         mouseDownPosition,
                         objects
                     );
-                    if (target) { return interactCommand(target); }
+                    if (target !== null) { return interactCommand(target); }
                 }
 
-                const path = getPlayerMovementPath(
+                const path = getActorMovementPath(
                     mouseDownPosition.x,
                     mouseDownPosition.y,
                     this.owner,
                     map,
                     objects
                 );
-                if (path) {
+                if (path !== null) {
                     return goToLocationCommand(
-                        mouseDownPosition.x,
-                        mouseDownPosition.y,
+                        path,
                         map,
                         objects
                     );
@@ -159,22 +115,22 @@ export class PlayerInputHandler implements InputHandler {
             globals.gameEventEmitter.emit("tutorial.spellTargeting");
 
             const position = input.getLeftMouseDown();
-            if (!position) {
+            if (position === null) {
                 return null;
             }
 
-            const target: GameObject = mouseTarget(position, objects);
-            if (!target) {
+            const target = mouseTarget(position, objects);
+            if (target !== null) {
                 displayMessage("Canceled casting");
                 this.itemForTarget = null;
                 this.spellForTarget = null;
                 return null;
             }
 
-            let command: Command = null;
-            if (this.itemForTarget) {
+            let command: Nullable<Command> = null;
+            if (this.itemForTarget !== null) {
                 command = useItemCommand(this.itemForTarget.id, target);
-            } else if (this.spellForTarget) {
+            } else if (this.spellForTarget !== null) {
                 command = useSpellCommand(this.spellForTarget.id, target);
             }
 
@@ -183,5 +139,7 @@ export class PlayerInputHandler implements InputHandler {
             this.spellForTarget = null;
             return command;
         }
+
+        return null;
     }
 }

@@ -12,3 +12,5 @@ export function randomIntFromInterval(min: number, max: number) {
 export function assertUnreachable(_x: never): never {
     throw new Error("Should be unreachable");
 }
+
+export type Nullable<T> = T | null;

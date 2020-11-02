@@ -18,6 +18,9 @@ import { GameObject } from "./object";
  * @param {GameObject} user The object using the item
  */
 export function castHeal(item: ItemDataDetails | SpellDataDetails, user: GameObject) {
+    if (item.value === null) { throw new Error("Item does not have a healing value"); }
+    if (user.fighter === null) { throw new Error("Cannot heal a user without a fighter"); }
+
     const stats = user.fighter.getEffectiveStats();
     if (stats.hp >= stats.maxHp) {
         if (user === globals.Game.player) {
@@ -45,6 +48,9 @@ export function castIncreaseMana(
     item: ItemDataDetails | SpellDataDetails,
     user: GameObject
 ): boolean {
+    if (item.value === null) { throw new Error("Item does not have a value"); }
+    if (user.fighter === null) { throw new Error("Cannot increase mana on a user without a fighter"); }
+
     const stats = user.fighter.getEffectiveStats();
     if (stats.mana >= stats.maxMana) {
         if (user === globals.Game.player) {
@@ -65,10 +71,13 @@ export function castDamageSpell(
     user: GameObject,
     target: GameObject
 ): boolean {
+    if (item.value === null) { throw new Error("Item does not have a value"); }
+    if (target.fighter === null) { throw new Error("Cannot attack a user without a fighter"); }
+
     target.fighter.takeDamage(item.value, false, item.damageType);
 
     // Check for the fighter again because it could have died already
-    if (target.fighter && item.statusEffectFunc) {
+    if (target.fighter !== null && item.statusEffectFunc !== undefined) {
         const stats = target.fighter.getEffectiveStats();
 
         if (RNG.getUniform() <= stats.ailmentSusceptibility) {
@@ -87,6 +96,8 @@ export function castWildDamageSpell(
     item: SpellDataDetails | ItemDataDetails,
     user: GameObject
 ): boolean {
+    if (item.value === null) { throw new Error("Item does not have a value"); }
+
     let target;
     do {
         target = getRandomFighterWithinRange(globals.Game.map, globals.Game.gameObjects, user, 16);
@@ -99,10 +110,10 @@ export function castWildDamageSpell(
         return false;
     }
 
-    target.fighter.takeDamage(item.value, false, item.damageType);
+    target.fighter!.takeDamage(item.value, false, item.damageType);
 
     // Check for the fighter again because it could have died already
-    if (target.fighter && item.statusEffectFunc) {
+    if (target.fighter !== null && item.statusEffectFunc !== undefined) {
         const stats = target.fighter.getEffectiveStats();
 
         if (RNG.getUniform() <= stats.ailmentSusceptibility) {
@@ -122,6 +133,9 @@ export function castConfuse(
     user: GameObject,
     target: GameObject
 ): boolean {
+    if (item.value === null) { throw new Error("Item does not have a value"); }
+    if (target.ai === null) { throw new Error("Cannot confuse an object without an AI"); }
+
     displayMessage(target.name + " is now confused");
     const oldAI = target.ai;
     target.ai = new ConfusedAI(oldAI, item.value);
@@ -146,7 +160,8 @@ export function castHaste(
     item: ItemDataDetails | SpellDataDetails,
     user: GameObject
 ): boolean {
-    if (!user.fighter) { throw new Error("user of castHaste must have a fighter"); }
+    if (item.value === null) { throw new Error("Item does not have a value"); }
+    if (user.fighter === null) { throw new Error("user of castHaste must have a fighter"); }
 
     const effects = user.fighter.getStatisticEffects();
     if (effects.filter(e => e.name === "Haste").length > 0) {
@@ -169,6 +184,9 @@ export function castSlow(
     user: GameObject,
     target: GameObject
 ): boolean {
+    if (item.value === null) { throw new Error("Item does not have a value"); }
+    if (target.fighter === null) { throw new Error("target of castSlow must have a fighter"); }
+
     const statusEffects = target.fighter.getStatusEffects();
     if (statusEffects.filter(e => e.name === "Slow").length > 0) {
         displayMessage(`${target.name} is already slowed`);
@@ -179,3 +197,13 @@ export function castSlow(
     target.fighter.addStatisticEffect(createSlowEffect(target, item.value));
     return true;
 }
+
+// export function castFireWall(
+//     item: SpellDataDetails | ItemDataDetails,
+//     user: GameObject,
+//     x: number,
+//     y: number
+// ): boolean {
+//     globals.Game.addObject();
+//     return true;
+// }

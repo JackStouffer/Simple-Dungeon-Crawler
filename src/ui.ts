@@ -1,5 +1,7 @@
 declare const ENV: string;
 
+import { get } from "lodash";
+
 import { Display } from "./rot/index";
 import globals from "./globals";
 import {
@@ -11,14 +13,13 @@ import {
     LEVEL_UP_FACTOR,
     SpellType
 } from "./data";
-import { KeyCommand } from "./game";
 import input from "./input";
-import { PlayerState } from "./input-handler";
+import { PlayerState, KeyCommand } from "./input-handler";
 import { InventoryItemDetails } from "./inventory";
 import { SpellFighterDetails } from "./fighter";
 import { GameObject } from "./object";
-import { assertUnreachable } from "./util";
 import { GameMap, getObjectsAtLocation } from "./map";
+import { assertUnreachable, Nullable } from "./util";
 
 export function drawUI(
     display: Display,
@@ -26,6 +27,9 @@ export function drawUI(
     gameObjects: GameObject[],
     map: GameMap
 ) {
+    if (player.fighter === null) { throw new Error("Player must have a fighter"); }
+    if (player.inputHandler === null) { throw new Error("Player must have a inputHandler"); }
+
     for (let x = 0; x < WIDTH; x++) {
         for (let y = 0; y < UI_HEIGHT; y++) {
             display.draw(x, HEIGHT - (UI_HEIGHT - y), MAP_FILLED_SPACE, "blue", "blue");
@@ -44,20 +48,20 @@ export function drawUI(
     const mousePosition = input.getMousePosition();
     if (mousePosition === null) { return; }
     const { x, y } = mousePosition;
-    const target = getObjectsAtLocation(gameObjects, x, y)[0];
+    const target = get(getObjectsAtLocation(gameObjects, x, y), "[0]", null);
     const tile = map[y][x];
 
     if (!tile?.isVisibleAndLit()) {
         return;
     }
 
-    if (target?.name && target?.ai && target?.fighter) {
+    if (target === null) {
+        display.drawText(1, HEIGHT - UI_HEIGHT + 4, `%c{white}%b{blue}${tile.name}`);
+    } else if (target.ai !== null && target.fighter !== null) {
         const targetStats = target.fighter.getEffectiveStats();
         display.drawText(1, HEIGHT - UI_HEIGHT + 4, `%c{white}%b{blue}A ${target.name} (${targetStats.hp}/${targetStats.maxHp}) (${target.ai.getStateName()})`);
-    } else if (target?.name) {
+    } else {
         display.drawText(1, HEIGHT - UI_HEIGHT + 4, `%c{white}%b{blue}A ${target.name}`);
-    } else if (!target) {
-        display.drawText(1, HEIGHT - UI_HEIGHT + 4, `%c{white}%b{blue}${tile.name}`);
     }
 }
 
@@ -98,7 +102,7 @@ export function displayMessage(text: string, type: MessageType = MessageType.Def
 
 export class InventoryMenu {
     private currentSelection: number;
-    private allowedKeys: Set<string>;
+    private readonly allowedKeys: Set<string>;
 
     constructor() {
         this.currentSelection = 0;
@@ -136,7 +140,7 @@ export class InventoryMenu {
         }
     }
 
-    handleInput(inventoryItems: InventoryItemDetails[]): InventoryItemDetails {
+    handleInput(inventoryItems: InventoryItemDetails[]): Nullable<InventoryItemDetails> {
         if (input.isDown("Enter")) {
             globals.gameEventEmitter.emit("ui.select");
             return inventoryItems[this.currentSelection];
@@ -158,7 +162,7 @@ export class InventoryMenu {
 
 export class SpellSelectionMenu {
     private currentSelection: number;
-    private allowedKeys: Set<string>;
+    private readonly allowedKeys: Set<string>;
 
     constructor() {
         this.currentSelection = 0;
@@ -220,7 +224,7 @@ export class SpellSelectionMenu {
         }
     }
 
-    handleInput(spells: SpellFighterDetails[]): SpellFighterDetails {
+    handleInput(spells: SpellFighterDetails[]): Nullable<SpellFighterDetails> {
         if (input.isDown("Enter")) {
             globals.gameEventEmitter.emit("ui.select");
             return spells[this.currentSelection];
@@ -243,7 +247,7 @@ export class SpellSelectionMenu {
 export class KeyBindingMenu {
     private state: "selection" | "change";
     private currentSelection: number;
-    private allowedSelectionKeys: Set<string>;
+    private readonly allowedSelectionKeys: Set<string>;
 
     constructor() {
         this.state = "selection";
@@ -251,12 +255,12 @@ export class KeyBindingMenu {
         this.allowedSelectionKeys = new Set(["ArrowDown", "ArrowUp", "Enter", "Escape"]);
     }
 
-    resetState() {
+    resetState(): void {
         this.state = "selection";
         this.currentSelection = 0;
     }
 
-    draw(keyCommands: KeyCommand[]) {
+    draw(keyCommands: KeyCommand[]): void {
         // add one for header
         const height = keyCommands.length + UI_HEIGHT + 4;
         const width = WIDTH;
@@ -299,7 +303,7 @@ export class KeyBindingMenu {
         }
     }
 
-    handleInput(keyCommands: KeyCommand[]) {
+    handleInput(keyCommands: KeyCommand[]): void {
         if (this.state === "selection") {
             if (input.isDown("Escape")) {
                 globals.gameEventEmitter.emit("ui.select");
@@ -323,8 +327,8 @@ export class KeyBindingMenu {
         } else if (this.state === "change") {
             globals.gameEventEmitter.emit("ui.select");
 
-            const key: string = input.getFirstKeyPressed();
-            if (key) {
+            const key: Nullable<string> = input.getFirstKeyPressed();
+            if (key !== null) {
                 keyCommands[this.currentSelection].key = key;
                 this.state = "selection";
             }

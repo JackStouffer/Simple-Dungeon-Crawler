@@ -1,10 +1,10 @@
 declare const ENV: string;
 
-// @ts-ignore
+// @ts-expect-error
 import * as forrest_001 from "./maps/forrest_001";
-// @ts-ignore
+// @ts-expect-error
 import * as durdwin_001 from "./maps/durdwin_001";
-// @ts-ignore
+// @ts-expect-error
 import * as dev_room from "./maps/dev_room";
 
 import {
@@ -48,6 +48,7 @@ import { AIComponent } from "./ai/components";
 import { GameObject } from "./object";
 import { Command } from "./commands";
 import { PathNode } from "./map";
+import { Nullable } from "./util";
 
 export const WIDTH = 58;
 export const HEIGHT = 38;
@@ -261,106 +262,197 @@ export interface InventoryPoolProbabilities {
 export interface ObjectDataDetails {
     name: string;
     char: string;
-    bgColor?: string;
-    emptyColor?: string;
+    bgColor: Nullable<string>;
+    emptyColor: Nullable<string>;
     fgColor: string;
     blocks: boolean
     blocksSight: boolean;
-    ai?: string;
-    input?: string;
-    inventory?: string;
-    fighter?: string;
-    graphics?: string;
-    interactable?: string;
-    lighting?: string;
-    lightingColor?: string;
-    lightingRange?: number;
-    level?: number;
-    experience?: number;
-    experienceGiven?: number;
-    sightRange?: number;
-    maxTilesPerMove?: number;
-    loseTrackAfterNTurns?: number;
-    speed?: number;
-    maxHp?: number;
-    maxMana?: number;
-    strength?: number;
-    defense?: number;
-    onDeath?: DeathType;
-    damageAffinity?: DamageAffinityMap;
-    inventoryPool?: InventoryPoolProbabilities[];
-    actions?: string[];
-    spells?: string[];
+    ai: Nullable<string>;
+    input: Nullable<string>;
+    inventory: Nullable<string>;
+    fighter: Nullable<string>;
+    graphics: Nullable<string>;
+    interactable: Nullable<string>;
+    lighting: Nullable<string>;
+    lightingColor: Nullable<string>;
+    lightingRange: Nullable<number>;
+    trigger: Nullable<string>;
+    triggerDamage: Nullable<number>;
+    level: Nullable<number>;
+    experience: Nullable<number>;
+    experienceGiven: Nullable<number>;
+    sightRange: Nullable<number>;
+    maxTilesPerMove: Nullable<number>;
+    loseTrackAfterNTurns: Nullable<number>;
+    speed: Nullable<number>;
+    maxHp: Nullable<number>;
+    maxMana: Nullable<number>;
+    strength: Nullable<number>;
+    defense: Nullable<number>;
+    onDeath: Nullable<DeathType>;
+    damageAffinity: Nullable<DamageAffinityMap>;
+    inventoryPool: Nullable<InventoryPoolProbabilities[]>;
+    actions: Nullable<string[]>;
+    spells: Nullable<string[]>;
 }
 
 export const ObjectData: { [key: string]: ObjectDataDetails } = {
     "door": {
         name: "Door",
+        blocks: true,
+        blocksSight: true,
+        char: "\u1882",
+        fgColor: "white",
+        bgColor: "brown",
         graphics: "basic_graphics",
         ai: null,
         inventory: null,
         fighter: null,
+        input: null,
+        lighting: null,
+        lightingColor: null,
+        lightingRange: null,
         interactable: "door_interactable",
-        char: "\u1882",
-        fgColor: "white",
-        bgColor: "brown",
-        blocks: true,
-        blocksSight: true
+        emptyColor: null,
+        trigger: null,
+        triggerDamage: null,
+        level: null,
+        experience: null,
+        experienceGiven: null,
+        sightRange: null,
+        maxTilesPerMove: null,
+        loseTrackAfterNTurns: null,
+        speed: null,
+        maxHp: null,
+        maxMana: null,
+        strength: null,
+        defense: null,
+        onDeath: null,
+        damageAffinity: null,
+        inventoryPool: null,
+        actions: null,
+        spells: null
     },
     "load_door": {
         name: "Door to new area",
-        graphics: "draw_after_seen",
-        ai: null,
-        inventory: null,
-        fighter: null,
-        interactable: "load_level_interactable",
+        blocks: true,
+        blocksSight: true,
         char: "\u1882",
         fgColor: "white",
         bgColor: "black",
-        blocks: true,
-        blocksSight: true
-    },
-    "stairs": {
-        name: "Stairs",
+        emptyColor: null,
         graphics: "draw_after_seen",
         ai: null,
         inventory: null,
         fighter: null,
         interactable: "load_level_interactable",
+        input: null,
+        lighting: null,
+        lightingColor: null,
+        lightingRange: null,
+        trigger: null,
+        triggerDamage: null,
+        level: null,
+        experience: null,
+        experienceGiven: null,
+        sightRange: null,
+        maxTilesPerMove: null,
+        loseTrackAfterNTurns: null,
+        speed: null,
+        maxHp: null,
+        maxMana: null,
+        strength: null,
+        defense: null,
+        onDeath: null,
+        damageAffinity: null,
+        inventoryPool: null,
+        actions: null,
+        spells: null
+    },
+    "stairs": {
+        name: "Stairs",
         char: "\u1750",
         fgColor: "white",
         bgColor: "black",
+        emptyColor: null,
         blocks: true,
-        blocksSight: false
+        blocksSight: false,
+        graphics: "draw_after_seen",
+        ai: null,
+        inventory: null,
+        fighter: null,
+        interactable: "load_level_interactable",
+        input: null,
+        lighting: null,
+        lightingColor: null,
+        lightingRange: null,
+        trigger: null,
+        triggerDamage: null,
+        level: null,
+        experience: null,
+        experienceGiven: null,
+        sightRange: null,
+        maxTilesPerMove: null,
+        loseTrackAfterNTurns: null,
+        speed: null,
+        maxHp: null,
+        maxMana: null,
+        strength: null,
+        defense: null,
+        onDeath: null,
+        damageAffinity: null,
+        inventoryPool: null,
+        actions: null,
+        spells: null
     },
     "chest": {
         name: "Chest",
-        graphics: "draw_after_seen",
-        ai: "chest_ai",
-        fighter: null,
-        inventory: "basic_inventory",
-        interactable: "give_items_interactable",
         char: "*",
         fgColor: "white",
         bgColor: "brown",
         emptyColor: "purple",
         blocks: true,
-        blocksSight: false
+        blocksSight: false,
+        graphics: "draw_after_seen",
+        ai: "chest_ai",
+        fighter: null,
+        inventory: "basic_inventory",
+        interactable: "give_items_interactable",
+        input: null,
+        lighting: null,
+        lightingColor: null,
+        lightingRange: null,
+        trigger: null,
+        triggerDamage: null,
+        level: null,
+        experience: null,
+        experienceGiven: null,
+        sightRange: null,
+        maxTilesPerMove: null,
+        loseTrackAfterNTurns: null,
+        speed: null,
+        maxHp: null,
+        maxMana: null,
+        strength: null,
+        defense: null,
+        onDeath: null,
+        damageAffinity: null,
+        inventoryPool: null,
+        actions: null,
+        spells: null
     },
     "crate": {
         name: "Wooden Crate",
-        graphics: "basic_graphics",
-        ai: null,
-        fighter: "basic_fighter",
-        speed: BASE_SPEED,
-        inventory: "basic_inventory",
-        interactable: null,
         char: "\u2612",
         fgColor: "white",
         bgColor: "brown",
         emptyColor: "purple",
         blocks: true,
         blocksSight: false,
+        graphics: "basic_graphics",
+        ai: null,
+        fighter: "basic_fighter",
+        speed: BASE_SPEED,
         experience: 0,
         experienceGiven: 0,
         maxHp: 5,
@@ -373,22 +465,38 @@ export const ObjectData: { [key: string]: ObjectDataDetails } = {
             [DamageType.Electric]: Affinity.normal,
             [DamageType.Water]: Affinity.normal,
             [DamageType.Nature]: Affinity.normal
-        }
+        },
+        inventory: "basic_inventory",
+        input: null,
+        lighting: null,
+        lightingColor: null,
+        lightingRange: null,
+        trigger: null,
+        triggerDamage: null,
+        level: null,
+        sightRange: null,
+        maxTilesPerMove: null,
+        loseTrackAfterNTurns: null,
+        maxMana: null,
+        inventoryPool: null,
+        actions: null,
+        spells: null,
+        interactable: null
     },
     "barrel": {
         name: "Wooden Barrel",
+        blocks: true,
+        blocksSight: false,
+        char: "\u232D",
+        fgColor: "white",
+        bgColor: "brown",
+        emptyColor: "purple",
         graphics: "basic_graphics",
         ai: null,
         fighter: "basic_fighter",
         speed: BASE_SPEED,
         inventory: "basic_inventory",
         interactable: null,
-        char: "\u232D",
-        fgColor: "white",
-        bgColor: "brown",
-        emptyColor: "purple",
-        blocks: true,
-        blocksSight: false,
         experience: 0,
         experienceGiven: 0,
         maxHp: 3,
@@ -401,77 +509,201 @@ export const ObjectData: { [key: string]: ObjectDataDetails } = {
             [DamageType.Electric]: Affinity.normal,
             [DamageType.Water]: Affinity.normal,
             [DamageType.Nature]: Affinity.normal
-        }
+        },
+        input: null,
+        lighting: null,
+        lightingColor: null,
+        lightingRange: null,
+        trigger: null,
+        triggerDamage: null,
+        level: null,
+        sightRange: null,
+        maxTilesPerMove: null,
+        loseTrackAfterNTurns: null,
+        maxMana: null,
+        inventoryPool: null,
+        actions: null,
+        spells: null
     },
     "dead_body": {
         name: "Dead Body",
+        char: "%",
+        fgColor: "black",
+        bgColor: "red",
+        emptyColor: null,
+        blocks: false,
+        blocksSight: false,
         graphics: "basic_graphics",
         ai: null,
         fighter: null,
         inventory: null,
         interactable: null,
-        char: "%",
-        fgColor: "black",
-        bgColor: "red",
-        blocks: false,
-        blocksSight: false
+        input: null,
+        lighting: null,
+        lightingColor: null,
+        lightingRange: null,
+        trigger: null,
+        triggerDamage: null,
+        level: null,
+        experience: null,
+        experienceGiven: null,
+        sightRange: null,
+        maxTilesPerMove: null,
+        loseTrackAfterNTurns: null,
+        speed: null,
+        maxHp: null,
+        maxMana: null,
+        strength: null,
+        defense: null,
+        onDeath: null,
+        damageAffinity: null,
+        inventoryPool: null,
+        actions: null,
+        spells: null
     },
     "lantern": {
         name: "Small Lantern",
+        char: "\u16E1",
+        fgColor: "black",
+        bgColor: "yellow",
+        emptyColor: null,
+        blocks: true,
+        blocksSight: false,
         graphics: "basic_graphics",
         lighting: "reflectivity",
         lightingColor: "yellow",
         lightingRange: 4,
         ai: null,
         fighter: null,
+        level: null,
+        experience: null,
+        experienceGiven: null,
+        speed: null,
+        maxHp: null,
+        maxMana: null,
+        strength: null,
+        defense: null,
+        onDeath: null,
+        damageAffinity: null,
+        inventoryPool: null,
         inventory: null,
         interactable: null,
-        char: "\u16E1",
-        fgColor: "black",
-        bgColor: "yellow",
-        blocks: true,
-        blocksSight: false
+        input: null,
+        trigger: null,
+        triggerDamage: null,
+        sightRange: null,
+        maxTilesPerMove: null,
+        loseTrackAfterNTurns: null,
+        actions: null,
+        spells: null
     },
     "campfire": {
         name: "Small Fire",
+        char: "\u0436",
+        fgColor: "black",
+        bgColor: "orange",
+        emptyColor: null,
+        blocks: false,
+        blocksSight: false,
         graphics: "basic_graphics",
         lighting: "reflectivity",
         lightingColor: "orange",
         lightingRange: 6,
         ai: null,
+        loseTrackAfterNTurns: null,
+        actions: null,
+        spells: null,
+        sightRange: null,
+        maxTilesPerMove: null,
         fighter: null,
+        level: null,
+        experience: null,
+        experienceGiven: null,
+        speed: null,
+        maxHp: null,
+        maxMana: null,
+        strength: null,
+        defense: null,
+        onDeath: null,
+        damageAffinity: null,
+        inventoryPool: null,
         inventory: null,
         interactable: null,
-        char: "\u0436",
-        fgColor: "black",
-        bgColor: "orange",
-        blocks: true,
-        blocksSight: false
+        input: null,
+        trigger: "fire",
+        triggerDamage: 10,
     },
     "dropped_item": {
         name: "Dropped Item",
-        graphics: "basic_graphics",
-        ai: "dropped_item_ai",
-        inventory: null,
-        fighter: null,
-        interactable: "give_items_interactable",
         char: "!",
         fgColor: "white",
         bgColor: "brown",
+        emptyColor: null,
         blocks: false,
-        blocksSight: false
+        blocksSight: false,
+        graphics: "basic_graphics",
+        input: null,
+        ai: "dropped_item_ai",
+        loseTrackAfterNTurns: null,
+        actions: null,
+        spells: null,
+        sightRange: null,
+        maxTilesPerMove: null,
+        inventory: null,
+        fighter: null,
+        lighting: null,
+        lightingColor: null,
+        lightingRange: null,
+        level: null,
+        experience: null,
+        experienceGiven: null,
+        speed: null,
+        maxHp: null,
+        maxMana: null,
+        strength: null,
+        defense: null,
+        onDeath: null,
+        damageAffinity: null,
+        inventoryPool: null,
+        interactable: "give_items_interactable",
+        trigger: null,
+        triggerDamage: null
     },
     "magic_shrine": {
         name: "Magicka Shrine",
-        graphics: "basic_graphics",
-        ai: null,
-        fighter: null,
-        interactable: "give_spell_interactable",
         char: "\u06DE",
         fgColor: "black",
         bgColor: "gold",
+        emptyColor: null,
         blocks: true,
-        blocksSight: false
+        blocksSight: false,
+        graphics: "basic_graphics",
+        lighting: null,
+        lightingColor: null,
+        lightingRange: null,
+        inventory: null,
+        input: null,
+        ai: null,
+        loseTrackAfterNTurns: null,
+        actions: null,
+        spells: null,
+        sightRange: null,
+        maxTilesPerMove: null,
+        fighter: null,
+        level: null,
+        experience: null,
+        experienceGiven: null,
+        speed: null,
+        maxHp: null,
+        maxMana: null,
+        strength: null,
+        defense: null,
+        onDeath: null,
+        damageAffinity: null,
+        inventoryPool: null,
+        interactable: "give_spell_interactable",
+        trigger: null,
+        triggerDamage: null
     },
     "player": {
         name: "The Player",
@@ -480,6 +712,10 @@ export const ObjectData: { [key: string]: ObjectDataDetails } = {
         lightingColor: "white",
         lightingRange: 7,
         ai: null,
+        sightRange: null,
+        loseTrackAfterNTurns: null,
+        spells: null,
+        actions: null,
         input: "player_input",
         inventory: "basic_inventory",
         fighter: "basic_fighter",
@@ -488,6 +724,8 @@ export const ObjectData: { [key: string]: ObjectDataDetails } = {
         interactable: null,
         char: "@",
         fgColor: "blue",
+        bgColor: null,
+        emptyColor: null,
         blocks: true,
         blocksSight: false,
         level: 1,
@@ -504,18 +742,37 @@ export const ObjectData: { [key: string]: ObjectDataDetails } = {
             [DamageType.Water]: Affinity.normal,
             [DamageType.Nature]: Affinity.normal
         },
-        onDeath: DeathType.Default
+        onDeath: DeathType.Default,
+        inventoryPool: null,
+        trigger: null,
+        triggerDamage: null
     },
     "goblin": {
         name: "Goblin",
+        char: "G",
+        fgColor: "green",
+        bgColor: null,
+        emptyColor: null,
         graphics: "transparency_graphics",
         ai: "planning_ai",
+        sightRange: 7,
+        loseTrackAfterNTurns: 6,
+        maxTilesPerMove: 5,
+        actions: [
+            "wander",
+            "chase",
+            "goToEnemy",
+            "meleeAttack"
+        ],
+        spells: null,
+        input: null,
+        lighting: null,
+        lightingColor: null,
+        lightingRange: null,
         fighter: "basic_fighter",
         speed: BASE_SPEED,
         inventory: "basic_inventory",
         interactable: null,
-        char: "G",
-        fgColor: "green",
         blocks: true,
         blocksSight: false,
         level: 3,
@@ -525,9 +782,6 @@ export const ObjectData: { [key: string]: ObjectDataDetails } = {
         maxMana: 0,
         strength: 3,
         defense: 1,
-        sightRange: 7,
-        loseTrackAfterNTurns: 6,
-        maxTilesPerMove: 5,
         damageAffinity: {
             [DamageType.Physical]: Affinity.normal,
             [DamageType.Fire]: Affinity.normal,
@@ -535,33 +789,40 @@ export const ObjectData: { [key: string]: ObjectDataDetails } = {
             [DamageType.Water]: Affinity.normal,
             [DamageType.Nature]: Affinity.normal
         },
-        actions: [
-            "wander",
-            "chase",
-            "goToEnemy",
-            "meleeAttack"
-        ],
         inventoryPool: [
             {
                 itemID: "health_potion_weak",
                 probability: 0.25
             }
         ],
-        onDeath: DeathType.Default
+        onDeath: DeathType.Default,
+        trigger: null,
+        triggerDamage: null
     },
     "goblin_brute": {
         name: "Goblin Brute",
-        graphics: "basic_graphics",
-        ai: "planning_ai",
-        fighter: "basic_fighter",
-        speed: BASE_SPEED,
-        inventory: "basic_inventory",
-        interactable: null,
+        blocks: true,
+        blocksSight: false,
         char: "G",
         fgColor: "green",
         bgColor: "red",
-        blocks: true,
-        blocksSight: false,
+        emptyColor: null,
+        graphics: "basic_graphics",
+        ai: "planning_ai",
+        sightRange: 7,
+        maxTilesPerMove: 5,
+        loseTrackAfterNTurns: 6,
+        actions: [
+            "guard",
+            "chase",
+            "useHealingItem",
+            "goToEnemy",
+            "reposition",
+            "meleeAttack"
+        ],
+        spells: null,
+        input: null,
+        fighter: "basic_fighter",
         level: 10,
         experience: 0,
         experienceGiven: 500,
@@ -569,9 +830,7 @@ export const ObjectData: { [key: string]: ObjectDataDetails } = {
         maxMana: 0,
         strength: 7,
         defense: 4,
-        sightRange: 7,
-        maxTilesPerMove: 5,
-        loseTrackAfterNTurns: 6,
+        speed: BASE_SPEED,
         damageAffinity: {
             [DamageType.Physical]: Affinity.normal,
             [DamageType.Fire]: Affinity.normal,
@@ -589,28 +848,35 @@ export const ObjectData: { [key: string]: ObjectDataDetails } = {
                 probability: 0.1
             }
         ],
-        actions: [
-            "guard",
-            "chase",
-            "useHealingItem",
-            "goToEnemy",
-            "reposition",
-            "meleeAttack"
-        ],
-        onDeath: DeathType.Default
+        onDeath: DeathType.Default,
+        inventory: "basic_inventory",
+        interactable: null,
+        lighting: null,
+        lightingRange: null,
+        lightingColor: null,
+        trigger: null,
+        triggerDamage: null
     },
     "rat": {
         name: "Rat",
         graphics: "transparency_graphics",
-        ai: "planning_ai",
-        fighter: "basic_fighter",
-        speed: BASE_SPEED,
-        inventory: "basic_inventory",
-        interactable: null,
         char: "r",
         fgColor: "brown",
-        blocks: true,
-        blocksSight: false,
+        bgColor: null,
+        emptyColor: null,
+        input: null,
+        ai: "planning_ai",
+        sightRange: 7,
+        maxTilesPerMove: 7,
+        loseTrackAfterNTurns: 6,
+        actions: [
+            "wander",
+            "chase",
+            "goToEnemy",
+            "meleeAttack"
+        ],
+        spells: null,
+        fighter: "basic_fighter",
         level: 1,
         experience: 0,
         experienceGiven: 10,
@@ -618,9 +884,11 @@ export const ObjectData: { [key: string]: ObjectDataDetails } = {
         maxMana: 0,
         strength: 2,
         defense: 1,
-        sightRange: 7,
-        maxTilesPerMove: 7,
-        loseTrackAfterNTurns: 6,
+        speed: BASE_SPEED,
+        inventory: "basic_inventory",
+        interactable: null,
+        blocks: true,
+        blocksSight: false,
         damageAffinity: {
             [DamageType.Physical]: Affinity.normal,
             [DamageType.Fire]: Affinity.normal,
@@ -628,26 +896,37 @@ export const ObjectData: { [key: string]: ObjectDataDetails } = {
             [DamageType.Water]: Affinity.normal,
             [DamageType.Nature]: Affinity.normal
         },
+        inventoryPool: [],
+        onDeath: DeathType.Default,
+        lighting: null,
+        lightingRange: null,
+        lightingColor: null,
+        trigger: null,
+        triggerDamage: null
+    },
+    "water_sprite": {
+        name: "Water Sprite",
+        graphics: "basic_graphics",
+        char: "s",
+        fgColor: "white",
+        bgColor: "blue",
+        emptyColor: null,
+        input: null,
+        ai: "planning_ai",
+        sightRange: 7,
+        maxTilesPerMove: 7,
+        loseTrackAfterNTurns: 6,
         actions: [
             "wander",
             "chase",
             "goToEnemy",
             "meleeAttack"
         ],
-        inventoryPool: [],
-        onDeath: DeathType.Default
-    },
-    "water_sprite": {
-        name: "Water Sprite",
-        graphics: "basic_graphics",
-        ai: "planning_ai",
+        spells: null,
         fighter: "basic_fighter",
         speed: BASE_SPEED,
         inventory: "basic_inventory",
         interactable: null,
-        char: "s",
-        fgColor: "white",
-        bgColor: "blue",
         blocks: true,
         blocksSight: false,
         level: 1,
@@ -657,9 +936,6 @@ export const ObjectData: { [key: string]: ObjectDataDetails } = {
         maxMana: 0,
         strength: 2,
         defense: 1,
-        sightRange: 7,
-        maxTilesPerMove: 7,
-        loseTrackAfterNTurns: 6,
         damageAffinity: {
             [DamageType.Physical]: Affinity.normal,
             [DamageType.Fire]: Affinity.strong,
@@ -667,45 +943,28 @@ export const ObjectData: { [key: string]: ObjectDataDetails } = {
             [DamageType.Water]: Affinity.nullified,
             [DamageType.Nature]: Affinity.normal
         },
-        actions: [
-            "wander",
-            "chase",
-            "goToEnemy",
-            "meleeAttack"
-        ],
         inventoryPool: [],
-        onDeath: DeathType.Default
+        onDeath: DeathType.Default,
+        lighting: null,
+        lightingRange: null,
+        lightingColor: null,
+        trigger: null,
+        triggerDamage: null
     },
     "bandit": {
         name: "Bandit",
+        blocks: true,
+        blocksSight: false,
         graphics: "basic_graphics",
-        ai: "planning_ai",
-        fighter: "basic_fighter",
-        speed: BASE_SPEED,
-        inventory: "basic_inventory",
-        interactable: null,
         char: "b",
         fgColor: "white",
         bgColor: "brown",
-        blocks: true,
-        blocksSight: false,
-        level: 1,
-        experience: 0,
-        experienceGiven: 10,
-        maxHp: 30,
-        maxMana: 0,
-        strength: 2,
-        defense: 1,
+        emptyColor: null,
+        input: null,
+        ai: "planning_ai",
         sightRange: 10,
         maxTilesPerMove: 5,
         loseTrackAfterNTurns: 6,
-        damageAffinity: {
-            [DamageType.Physical]: Affinity.normal,
-            [DamageType.Fire]: Affinity.normal,
-            [DamageType.Electric]: Affinity.normal,
-            [DamageType.Water]: Affinity.normal,
-            [DamageType.Nature]: Affinity.normal
-        },
         actions: [
             "guard",
             "chase",
@@ -716,37 +975,18 @@ export const ObjectData: { [key: string]: ObjectDataDetails } = {
             "cower",
             "meleeAttack"
         ],
-        inventoryPool: [
-            {
-                itemID: "health_potion_weak",
-                probability: 0.25
-            }
-        ],
-        onDeath: DeathType.Default
-    },
-    "bandit_mage": {
-        name: "Bandit Mage",
-        graphics: "basic_graphics",
-        ai: "planning_ai",
+        spells: null,
         fighter: "basic_fighter",
         speed: BASE_SPEED,
         inventory: "basic_inventory",
         interactable: null,
-        char: "b",
-        fgColor: "white",
-        bgColor: "blue",
-        blocks: true,
-        blocksSight: false,
-        level: 5,
+        level: 1,
         experience: 0,
-        experienceGiven: 100,
+        experienceGiven: 10,
         maxHp: 30,
-        maxMana: 100,
+        maxMana: 0,
         strength: 2,
         defense: 1,
-        sightRange: 10,
-        maxTilesPerMove: 5,
-        loseTrackAfterNTurns: 6,
         damageAffinity: {
             [DamageType.Physical]: Affinity.normal,
             [DamageType.Fire]: Affinity.normal,
@@ -754,6 +994,31 @@ export const ObjectData: { [key: string]: ObjectDataDetails } = {
             [DamageType.Water]: Affinity.normal,
             [DamageType.Nature]: Affinity.normal
         },
+        inventoryPool: [
+            {
+                itemID: "health_potion_weak",
+                probability: 0.25
+            }
+        ],
+        onDeath: DeathType.Default,
+        lighting: null,
+        lightingRange: null,
+        lightingColor: null,
+        trigger: null,
+        triggerDamage: null
+    },
+    "bandit_mage": {
+        name: "Bandit Mage",
+        graphics: "basic_graphics",
+        char: "b",
+        fgColor: "white",
+        bgColor: "blue",
+        emptyColor: null,
+        input: null,
+        ai: "planning_ai",
+        sightRange: 10,
+        maxTilesPerMove: 5,
+        loseTrackAfterNTurns: 6,
         spells: [
             "fireball",
             "lesser_heal"
@@ -769,19 +1034,44 @@ export const ObjectData: { [key: string]: ObjectDataDetails } = {
             "cower",
             "meleeAttack"
         ],
+        fighter: "basic_fighter",
+        level: 5,
+        experience: 0,
+        experienceGiven: 100,
+        maxHp: 30,
+        maxMana: 100,
+        strength: 2,
+        defense: 1,
+        speed: BASE_SPEED,
+        damageAffinity: {
+            [DamageType.Physical]: Affinity.normal,
+            [DamageType.Fire]: Affinity.normal,
+            [DamageType.Electric]: Affinity.normal,
+            [DamageType.Water]: Affinity.normal,
+            [DamageType.Nature]: Affinity.normal
+        },
+        inventory: "basic_inventory",
+        interactable: null,
+        blocks: true,
+        blocksSight: false,
         inventoryPool: [],
-        onDeath: DeathType.Default
+        onDeath: DeathType.Default,
+        lighting: null,
+        lightingRange: null,
+        lightingColor: null,
+        trigger: null,
+        triggerDamage: null
     }
 };
 
 export interface ItemDataDetails {
     displayName: string,
     type: ItemType,
-    value?: number,
-    damageType?: DamageType;
-    statusEffectFunc?: any;
+    value: Nullable<number>,
+    damageType: Nullable<DamageType>;
+    statusEffectFunc: Nullable<any>;
 
-    useFunc: (details: ItemDataDetails, user: GameObject, target?: GameObject) => boolean;
+    useFunc: (details: ItemDataDetails, user: GameObject, target: Nullable<GameObject>) => boolean;
 }
 
 export const ItemData: { [key: string]: ItemDataDetails } = {
@@ -789,138 +1079,161 @@ export const ItemData: { [key: string]: ItemDataDetails } = {
         displayName: "Weak Potion of Healing",
         value: 25,
         type: ItemType.HealSelf,
-        useFunc: castHeal
+        damageType: null,
+        useFunc: castHeal,
+        statusEffectFunc: null
     },
     "health_potion": {
         displayName: "Potion of Healing",
         value: 50,
         type: ItemType.HealSelf,
-        useFunc: castHeal
+        damageType: null,
+        useFunc: castHeal,
+        statusEffectFunc: null
     },
     "health_potion_strong": {
         displayName: "Strong Potion of Healing",
         value: 100,
         type: ItemType.HealSelf,
-        useFunc: castHeal
+        damageType: null,
+        useFunc: castHeal,
+        statusEffectFunc: null
     },
     "mana_potion_weak": {
         displayName: "Weak Potion of Mana",
         value: 25,
         type: ItemType.AddManaSelf,
-        useFunc: castIncreaseMana
+        damageType: null,
+        useFunc: castIncreaseMana,
+        statusEffectFunc: null
     },
     "lightning_scroll_weak": {
         displayName: "Weak Scroll of Lightning",
         value: 20,
         type: ItemType.DamageScroll,
+        damageType: DamageType.Electric,
         useFunc: castDamageSpell,
-        damageType: DamageType.Electric
+        statusEffectFunc: null
     },
     "lightning_scroll": {
         displayName: "Scroll of Lightning",
         value: 50,
         type: ItemType.DamageScroll,
+        damageType: DamageType.Electric,
         useFunc: castDamageSpell,
-        damageType: DamageType.Electric
+        statusEffectFunc: null
     },
     "lightning_scroll_strong": {
         displayName: "Strong Scroll of Lightning",
         value: 100,
         type: ItemType.DamageScroll,
+        damageType: DamageType.Electric,
         useFunc: castDamageSpell,
-        damageType: DamageType.Electric
+        statusEffectFunc: null
     },
     "fireball_scroll_weak": {
         displayName: "Weak Scroll of Fire",
         value: 20,
         type: ItemType.DamageScroll,
-        useFunc: castDamageSpell,
         damageType: DamageType.Fire,
+        useFunc: castDamageSpell,
         statusEffectFunc: createBurnEffect
     },
     "fireball_scroll": {
         displayName: "Scroll of Fire",
         value: 50,
         type: ItemType.DamageScroll,
-        useFunc: castDamageSpell,
         damageType: DamageType.Fire,
+        useFunc: castDamageSpell,
         statusEffectFunc: createBurnEffect
     },
     "fireball_scroll_strong": {
         displayName: "Strong Scroll of Fire",
         value: 100,
         type: ItemType.DamageScroll,
-        useFunc: castDamageSpell,
         damageType: DamageType.Fire,
+        useFunc: castDamageSpell,
         statusEffectFunc: createBurnEffect
     },
     "lightning_scroll_weak_wild": {
         displayName: "Weak Scroll of Wild Lightning",
         value: 50,
         type: ItemType.WildDamageScroll,
+        damageType: DamageType.Electric,
         useFunc: castWildDamageSpell,
-        damageType: DamageType.Electric
+        statusEffectFunc: null
     },
     "lightning_scroll_wild": {
         displayName: "Scroll of Wild Lightning",
         value: 100,
         type: ItemType.WildDamageScroll,
+        damageType: DamageType.Electric,
         useFunc: castWildDamageSpell,
-        damageType: DamageType.Electric
+        statusEffectFunc: null
     },
     "lightning_scroll_strong_wild": {
         displayName: "Strong Scroll of Wild Lightning",
         value: 150,
         type: ItemType.WildDamageScroll,
+        damageType: DamageType.Electric,
         useFunc: castWildDamageSpell,
-        damageType: DamageType.Electric
+        statusEffectFunc: null
     },
     "fireball_scroll_weak_wild": {
         displayName: "Weak Scroll of Wild Fire",
         value: 50,
         type: ItemType.WildDamageScroll,
-        useFunc: castWildDamageSpell,
         damageType: DamageType.Fire,
+        useFunc: castWildDamageSpell,
         statusEffectFunc: createBurnEffect
     },
     "fireball_scroll_wild": {
         displayName: "Scroll of Wild Fire",
         value: 100,
         type: ItemType.WildDamageScroll,
-        useFunc: castWildDamageSpell,
         damageType: DamageType.Fire,
+        useFunc: castWildDamageSpell,
         statusEffectFunc: createBurnEffect
     },
     "fireball_scroll_strong_wild": {
         displayName: "Strong Scroll of Wild Fire",
         value: 150,
         type: ItemType.WildDamageScroll,
-        useFunc: castWildDamageSpell,
         damageType: DamageType.Fire,
+        useFunc: castWildDamageSpell,
         statusEffectFunc: createBurnEffect
     },
     "confuse_scroll": {
         displayName: "Scroll of Confuse Enemy",
         value: 8,
         type: ItemType.ConfuseScroll,
-        useFunc: castConfuse
+        damageType: null,
+        useFunc: castConfuse,
+        statusEffectFunc: null
     },
     "clairvoyance_scroll": {
         displayName: "Scroll of Clairvoyance",
+        value: null,
         type: ItemType.ClairvoyanceScroll,
-        useFunc: castClairvoyance
+        damageType: null,
+        useFunc: castClairvoyance,
+        statusEffectFunc: null
     },
     "haste_potion_weak": {
         displayName: "Weak Potion of Haste",
         value: 5,
         type: ItemType.HasteSelf,
-        useFunc: castHaste
+        damageType: null,
+        useFunc: castHaste,
+        statusEffectFunc: null
     },
     "slow_poison_weak": {
         displayName: "Weak Poison of Slow",
         value: 5,
         type: ItemType.SlowOther,
-        useFunc: castSlow
+        damageType: null,
+        useFunc: castSlow,
+        statusEffectFunc: null
     }
 };
 
@@ -932,11 +1245,11 @@ export interface SpellDataDetails {
     displayName: string;
     manaCost: number;
     type: SpellType;
-    value?: number;
-    damageType?: DamageType;
+    value: Nullable<number>;
+    damageType: Nullable<DamageType>;
     statusEffectFunc?: any;
 
-    useFunc: (details: SpellDataDetails, user: GameObject, target?: GameObject) => boolean;
+    useFunc: (details: SpellDataDetails, user: GameObject, target: Nullable<GameObject>) => boolean;
 }
 
 /**
@@ -982,12 +1295,15 @@ export const SpellData: { [key: string]: SpellDataDetails } = {
         manaCost: 20,
         value: 8,
         type: SpellType.DamageOther,
+        damageType: null,
         useFunc: castConfuse
     },
     "clairvoyance": {
         displayName: "Clairvoyance",
         manaCost: 20,
+        value: null,
         type: SpellType.Passive,
+        damageType: null,
         useFunc: castClairvoyance
     },
     "lesser_heal": {
@@ -995,6 +1311,7 @@ export const SpellData: { [key: string]: SpellDataDetails } = {
         manaCost: 10,
         value: 25,
         type: SpellType.HealSelf,
+        damageType: null,
         useFunc: castHeal
     },
     "heal": {
@@ -1002,6 +1319,7 @@ export const SpellData: { [key: string]: SpellDataDetails } = {
         manaCost: 30,
         value: 50,
         type: SpellType.HealSelf,
+        damageType: null,
         useFunc: castHeal
     },
     "greater_heal": {
@@ -1009,6 +1327,7 @@ export const SpellData: { [key: string]: SpellDataDetails } = {
         manaCost: 50,
         value: 100,
         type: SpellType.HealSelf,
+        damageType: null,
         useFunc: castHeal
     },
     "lesser_haste": {
@@ -1016,6 +1335,7 @@ export const SpellData: { [key: string]: SpellDataDetails } = {
         manaCost: 30,
         value: 10,
         type: SpellType.Effect,
+        damageType: null,
         useFunc: castHaste
     },
     "lesser_slow": {
@@ -1023,6 +1343,7 @@ export const SpellData: { [key: string]: SpellDataDetails } = {
         manaCost: 30,
         value: 10,
         type: SpellType.DamageOther,
+        damageType: null,
         useFunc: castSlow
     }
 };
@@ -1208,7 +1529,7 @@ for (const key in SpellData) {
 }
 for (const objectID in ObjectData) {
     const data = ObjectData[objectID];
-    if (data.spells) {
+    if (data.spells !== null && data.actions !== null) {
         for (let i = 0; i < data.spells.length; i++) {
             const spell = data.spells[i];
             data.actions.push(`castSpell_${spell}`);

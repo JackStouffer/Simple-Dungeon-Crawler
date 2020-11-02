@@ -13,27 +13,28 @@ import { displayMessage, MessageType } from "./ui";
 import { cloneDeep } from "lodash";
 import { GameObject } from "./object";
 import { StatisticEffect, StatusEffect } from "./effects";
+import { Nullable } from "./util";
 
 export interface FighterComponent {
-    owner: GameObject;
-    experience?: number;
-    level?: number;
+    owner: Nullable<GameObject>;
+    experience: number;
+    level: number;
 
-    setOwner: (owner: GameObject) => void;
+    setOwner: (owner: Nullable<GameObject>) => void;
     act: () => void;
     attack: (target: GameObject) => void;
     getEffectiveStats: () => FighterStats;
-    heal?: (hp: number) => void;
-    takeDamage?: (damage: number, critical: boolean, damageType: any) => boolean;
-    addSpellById?: (id: string) => boolean;
-    useMana?: (mana: number) => void;
-    addMana?: (mana: number) => void;
-    hasSpell?: (spell: string) => boolean;
-    getKnownSpells?: () => SpellFighterDetails[];
-    getStatusEffects?: () => StatusEffect[];
-    addStatusEffect?: (effect: StatusEffect) => void;
-    getStatisticEffects?: () => StatisticEffect[];
-    addStatisticEffect?: (effect: StatisticEffect) => void;
+    heal: (hp: number) => void;
+    takeDamage: (damage: number, critical: boolean, damageType: any) => boolean;
+    addSpellById: (id: string) => boolean;
+    useMana: (mana: number) => void;
+    addMana: (mana: number) => void;
+    hasSpell: (spell: string) => boolean;
+    getKnownSpells: () => SpellFighterDetails[];
+    getStatusEffects: () => StatusEffect[];
+    addStatusEffect: (effect: StatusEffect) => void;
+    getStatisticEffects: () => StatisticEffect[];
+    addStatisticEffect: (effect: StatisticEffect) => void;
 }
 
 export interface FighterStats {
@@ -52,30 +53,32 @@ export interface SpellFighterDetails {
     id: string;
     displayName: string;
     manaCost: number;
-    value: number;
+    value: Nullable<number>;
     type: SpellType;
 }
+
+export type DeathCallback = ((target: GameObject) => void) | null;
 
 /**
  * Component which controls the combat information and interaction
  * between different fighters
  */
-class BasicFighter implements FighterComponent, SpeedActor {
-    owner: GameObject;
+export class BasicFighter implements FighterComponent, SpeedActor {
+    owner: Nullable<GameObject>;
     experience: number;
     experienceGiven: number;
     level: number;
 
     private stats: FighterStats;
-    private deathCallback: (target: GameObject) => void;
-    private criticalChance: number;
-    private criticalDamageMultiplier: number;
-    private statusEffects: StatusEffect[];
-    private statisticEffects: StatisticEffect[];
-    private damageAffinity: any;
-    private knownSpells: Set<string>;
+    private readonly deathCallback: DeathCallback;
+    private readonly criticalChance: number;
+    private readonly criticalDamageMultiplier: number;
+    private readonly statusEffects: StatusEffect[];
+    private readonly statisticEffects: StatisticEffect[];
+    private readonly damageAffinity: any;
+    private readonly knownSpells: Set<string>;
 
-    constructor(data: any, deathCallback: (target: GameObject) => void = null) {
+    constructor(data: any, deathCallback: DeathCallback = null) {
         this.stats = {
             hp: data.maxHp,
             maxHp: data.maxHp,
@@ -104,7 +107,7 @@ class BasicFighter implements FighterComponent, SpeedActor {
         this.knownSpells = new Set();
     }
 
-    setOwner(owner: GameObject) {
+    setOwner(owner: Nullable<GameObject>) {
         this.owner = owner;
     }
 
@@ -132,7 +135,7 @@ class BasicFighter implements FighterComponent, SpeedActor {
             const effect = this.statusEffects[i];
             effect.act();
 
-            if (effect.turns === 0) {
+            if (effect.turns === 0 && this.owner !== null) {
                 displayMessage(`${effect.name} has ended for ${this.owner.name}`);
                 this.statusEffects.splice(i, 1);
             }
@@ -142,7 +145,7 @@ class BasicFighter implements FighterComponent, SpeedActor {
             const effect = this.statisticEffects[i];
             effect.act();
 
-            if (effect.turns === 0) {
+            if (effect.turns === 0 && this.owner !== null) {
                 displayMessage(`${effect.name} has ended for ${this.owner.name}`);
                 this.statisticEffects.splice(i, 1);
             }
@@ -164,14 +167,14 @@ class BasicFighter implements FighterComponent, SpeedActor {
             this.stats.hp -= damage;
         }
 
-        if (critical) {
+        if (critical && this.owner !== null) {
             displayMessage(`CRITICAL! ${this.owner.name} takes ${damage} of ${DamageType[damageType]} damage.`, MessageType.Critical);
-        } else {
+        } else if (this.owner !== null) {
             displayMessage(`${this.owner.name} takes ${damage} ${DamageType[damageType]} damage.`);
         }
 
         if (this.stats.hp <= 0) {
-            if (this.deathCallback !== null) {
+            if (this.deathCallback !== null && this.owner !== null) {
                 this.deathCallback(this.owner);
             }
 
@@ -187,7 +190,7 @@ class BasicFighter implements FighterComponent, SpeedActor {
      * @param target the object to attack
      */
     attack(target: GameObject): void {
-        if (!target.fighter) { return; }
+        if (target.fighter === null) { return; }
 
         const effectiveStats = this.getEffectiveStats();
         let damage = Math.round(effectiveStats.strength);
@@ -201,9 +204,9 @@ class BasicFighter implements FighterComponent, SpeedActor {
         if (damage > 0) {
             const killed = target.fighter.takeDamage(damage, critical, DamageType.Physical);
             if (killed) {
-                this.experience += ObjectData[target.type].experienceGiven;
+                this.experience += ObjectData[target.type].experienceGiven ?? 0;
             }
-        } else {
+        } else if (this.owner !== null) {
             displayMessage(`${this.owner.name} attacks ${target.name}, but it's too weak!`);
         }
     }
@@ -343,4 +346,3 @@ class BasicFighter implements FighterComponent, SpeedActor {
         return this.getEffectiveStats().speed;
     }
 }
-export { BasicFighter };

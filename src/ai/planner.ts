@@ -27,6 +27,7 @@
  */
 
 import { reverse } from "lodash";
+import { Nullable } from "../util";
 
 export interface PlannerWorldState {
     [key: string]: boolean | number
@@ -38,7 +39,7 @@ interface PlannerNode {
     h: number;
     id: number;
     name: string;
-    p_id: number;
+    p_id: Nullable<number>;
     state: PlannerWorldState;
 }
 
@@ -180,31 +181,31 @@ function walkPath(path: PlannerPath) {
 
     while (Object.keys(oList).length > 0) {
         // Find lowest node
-        const lowest: { [key: string]: number } = {"node": null, "f": 9000000};
+        const lowest: { node: Nullable<number>; f: number } = {"node": null, "f": 9000000};
 
         const values = Object.values(oList);
         for (let i = 0; i < values.length; i++) {
             const nextNode = values[i];
-            if (!lowest["node"] || nextNode["f"] < lowest["f"]) {
+            if (lowest["node"] === null || nextNode["f"] < lowest["f"]) {
                 lowest["node"] = nextNode["id"];
                 lowest["f"] = nextNode["f"];
             }
         }
 
-        if (lowest["node"]) {
+        if (lowest["node"] !== null) {
             node = path["nodes"][lowest["node"]];
         } else {
             return;
         }
 
         // Remove node with lowest rank
-        delete oList[node["id"]];
+        delete oList[node.id];
 
         // If it matches the goal, we are done
         if (conditionsAreMet(node["state"], path["goal"])) {
             const newPath = [];
 
-            while (node["p_id"]) {
+            while (node["p_id"] !== null) {
                 newPath.push(node);
                 node = path["nodes"][node["p_id"]];
             }
@@ -254,7 +255,7 @@ function walkPath(path: PlannerPath) {
             const inCList = nodeInList(nextNode, cList);
 
             if (inOList && gCost < nextNode["g"]) {
-                // @ts-ignore
+                // @ts-expect-error
                 delete oList[nextNode];
             }
 
@@ -278,9 +279,9 @@ function walkPath(path: PlannerPath) {
 
 class Planner {
     values: PlannerWorldState;
-    startState: PlannerWorldState;
-    goalState: PlannerWorldState;
-    actionList: ActionList;
+    startState: Nullable<PlannerWorldState>;
+    goalState: Nullable<PlannerWorldState>;
+    actionList: Nullable<ActionList>;
 
     constructor(...keys: string[]) {
         this.startState = null;
@@ -319,7 +320,7 @@ class Planner {
         );
 
         if (invalidStates.size > 0) {
-            throw new Error(`Invalid states for world goal state: ${invalidStates}`);
+            throw new Error(`Invalid states for world goal state: ${[...invalidStates]}`);
         }
 
         this.goalState = this.state(keywordArgs);
@@ -334,6 +335,10 @@ class Planner {
     }
 
     calculate() {
+        if (this.actionList === null) { throw new Error("Can't calculate path with no actionList"); }
+        if (this.startState === null) { throw new Error("Can't calculate path with no startState"); }
+        if (this.goalState === null) { throw new Error("Can't calculate path with no goalState"); }
+
         const actions: ActionList["conditions"] = {};
         for (const key in this.actionList.conditions) {
             actions[key] = Object.assign({}, this.actionList.conditions[key]);

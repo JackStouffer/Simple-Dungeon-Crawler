@@ -5,6 +5,7 @@ import { FighterStats } from "./fighter";
 import globals from "./globals";
 import { GameObject } from "./object";
 import { displayMessage } from "./ui";
+import { Nullable } from "./util";
 
 export type EffectActCallback = (owner: GameObject) => void;
 
@@ -22,8 +23,8 @@ export class StatusEffect {
     owner: GameObject;
     readonly name: string;
     turns: number;
-    private actCallback: EffectActCallback;
-    private endCallback: EffectActCallback;
+    private readonly actCallback: Nullable<EffectActCallback>;
+    private readonly endCallback: Nullable<EffectActCallback>;
 
     /**
      * Create a new StatusEffect
@@ -37,8 +38,8 @@ export class StatusEffect {
         owner: GameObject,
         name: string,
         turns: number,
-        actCallback: EffectActCallback = null,
-        endCallback: EffectActCallback = null) {
+        actCallback: Nullable<EffectActCallback> = null,
+        endCallback: Nullable<EffectActCallback> = null) {
         this.owner = owner;
         this.name = name;
         this.turns = turns;
@@ -49,11 +50,11 @@ export class StatusEffect {
     act() {
         this.turns--;
 
-        if (this.actCallback) {
+        if (this.actCallback !== null) {
             this.actCallback(this.owner);
         }
 
-        if (this.turns === 0 && this.endCallback) {
+        if (this.turns === 0 && this.endCallback !== null) {
             this.endCallback(this.owner);
         }
     }
@@ -73,7 +74,7 @@ export class StatisticEffect {
     owner: GameObject;
     name: string;
     turns: number;
-    private modifier: StatisticEffectModifier;
+    private readonly modifier: StatisticEffectModifier;
 
     constructor(owner: GameObject, name: string, turns: number, modifier: StatisticEffectModifier) {
         this.owner = owner;
@@ -114,7 +115,7 @@ export class StatisticEffect {
  */
 export function createBurnEffect(victim: GameObject, damage: number, turns: number): StatusEffect {
     function act(owner: GameObject) {
-        if (owner.fighter) {
+        if (owner.fighter !== null) {
             owner.fighter.takeDamage(damage, false, DamageType.Fire);
         }
 
@@ -136,7 +137,7 @@ export function createBurnEffect(victim: GameObject, damage: number, turns: numb
  * @returns {StatusEffect} The resulting effect object
  */
 export function createHasteEffect(user: GameObject, turns: number): StatisticEffect {
-    if (!user.fighter) { throw new Error("user of createHasteEffect must have a fighter"); }
+    if (user.fighter === null) { throw new Error("user of createHasteEffect must have a fighter"); }
     return new StatisticEffect(user, "Haste", turns, { stat: "speed", type: "multiply", value: 2 });
 }
 
@@ -148,6 +149,6 @@ export function createHasteEffect(user: GameObject, turns: number): StatisticEff
  * @returns {StatusEffect} The resulting effect object
  */
 export function createSlowEffect(victim: GameObject, turns: number): StatisticEffect {
-    if (!victim.fighter) { throw new Error("user of createHasteEffect must have a fighter"); }
+    if (victim.fighter === null) { throw new Error("user of createHasteEffect must have a fighter"); }
     return new StatisticEffect(victim, "Slow", turns, { stat: "speed", type: "multiply", value: 0.5 });
 }

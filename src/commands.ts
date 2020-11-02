@@ -1,6 +1,11 @@
+import { isNil } from "lodash";
+
+import Path from "./rot/path/index";
+
 import globals from "./globals";
-import { SpellData, ItemData, GameState } from "./data";
-import { GameMap, isBlocked } from "./map";
+import { createPassableCallback } from "./ai/components";
+import { SpellData, ItemData, GameState, ObjectData } from "./data";
+import { GameMap, isBlocked, distanceBetweenObjects, getObjectsAtLocation } from "./map";
 import { displayMessage } from "./ui";
 import { GameObject } from "./object";
 
@@ -50,14 +55,14 @@ export function goToLocationCommand(
  */
 export function interactCommand(target: GameObject): Command {
     return function(actor: GameObject): boolean {
-        if (!target) { return null; }
+        if (target === null) { return null; }
 
-        if (target.interactable) {
+        if (target.interactable !== null) {
             target.interactable.interact(actor);
             return true;
         }
 
-        if (actor.fighter && target.fighter) {
+        if (actor.fighter !== null && target.fighter !== null) {
             actor.fighter.attack(target);
             return true;
         }

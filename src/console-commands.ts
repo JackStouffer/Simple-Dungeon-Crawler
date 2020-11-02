@@ -1,3 +1,4 @@
+import { isNil } from "lodash";
 import globals from "./globals";
 import { ItemData, SpellData } from "./data";
 
@@ -5,7 +6,7 @@ import { ItemData, SpellData } from "./data";
  * Start the game loop
  */
 export function startGameLoop() {
-    if (!globals.animationFrameID) {
+    if (isNil(globals.animationFrameID)) {
         globals.animationFrameID = window.requestAnimationFrame(
             globals.Game.mainLoop.bind(globals.Game)
         );
@@ -43,12 +44,12 @@ export function giveAllSpells(): void {
  * Turn on/off AI processing
  */
 export function toggleAI(): void {
-    globals.Game.processAI = !globals.Game.processAI;
+    globals.Game.processAI = !(globals.Game.processAI as boolean);
 }
 
 /**
  * Turn on/off lighting calculations
  */
 export function togglePlayerFOV(): void {
-    globals.Game.isLightingEnabled = !globals.Game.isLightingEnabled;
+    globals.Game.isLightingEnabled = !(globals.Game.isLightingEnabled as boolean);
 }

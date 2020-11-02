@@ -2,10 +2,17 @@ import globals from "./globals";
 import { ItemData, SpellData } from "./data";
 import { displayMessage } from "./ui";
 import { GameObject } from "./object";
+import { Nullable } from "./util";
 
+/**
+ * Interactables are any object which does something when
+ * the user clicks on it. Examples would be chests, which
+ * give items, or switches which open gates, or doors which
+ * open.
+ */
 export interface InteractableComponent {
-    owner: GameObject;
-    setOwner: (owner: GameObject) => void;
+    owner: Nullable<GameObject>;
+    setOwner: (owner: Nullable<GameObject>) => void;
     interact: (user: GameObject) => void;
     setLevel?: (name: string) => void;
     setSpell?: (name: string) => void;
@@ -16,18 +23,20 @@ export interface InteractableComponent {
  * to the user when interacted with
  */
 export class GiveItemsInteractable implements InteractableComponent {
-    owner: GameObject;
+    owner: Nullable<GameObject>;
 
     constructor() {
         this.owner = null;
     }
 
-    setOwner(owner: GameObject) {
+    setOwner(owner: Nullable<GameObject>) {
         this.owner = owner;
     }
 
     interact(user: GameObject) {
-        if (this.owner.inventory && user.inventory) {
+        if (this.owner === null) { throw new Error("Can't interact without an owner"); }
+
+        if (this.owner.inventory !== null && user.inventory !== null) {
             const items = this.owner.inventory.getItems();
             if (items.length > 0) {
                 for (let i = 0; i < items.length; i++) {
@@ -44,7 +53,7 @@ export class GiveItemsInteractable implements InteractableComponent {
                 displayMessage("Empty");
             }
         } else {
-            throw new Error(`Missing inventory on ${this.owner} or ${user}`);
+            throw new Error(`Missing inventory on ${this.owner.name} or ${user.name}`);
         }
     }
 }
@@ -53,15 +62,15 @@ export class GiveItemsInteractable implements InteractableComponent {
  * Interaction component that adds a spell to the user's spell list
  */
 export class GiveSpellInteractable implements InteractableComponent {
-    owner: GameObject;
+    owner: Nullable<GameObject>;
     spellId: string;
 
     constructor() {
         this.owner = null;
-        this.spellId = null;
+        this.spellId = "";
     }
 
-    setOwner(owner: GameObject): void {
+    setOwner(owner: Nullable<GameObject>): void {
         this.owner = owner;
     }
 
@@ -70,9 +79,9 @@ export class GiveSpellInteractable implements InteractableComponent {
     }
 
     interact(user: GameObject): void {
-        if (!user.fighter) { return; }
+        if (user.fighter === null) { return; }
 
-        if (!this.spellId) {
+        if (this.spellId === null) {
             throw new Error("No spell id given");
         }
 
@@ -95,17 +104,19 @@ export class GiveSpellInteractable implements InteractableComponent {
  * when interacting
  */
 export class DoorInteractable implements InteractableComponent {
-    owner: GameObject;
+    owner: Nullable<GameObject>;
 
     constructor() {
         this.owner = null;
     }
 
-    setOwner(owner: GameObject) {
+    setOwner(owner: Nullable<GameObject>) {
         this.owner = owner;
     }
 
     interact() {
+        if (this.owner === null) { throw new Error("Can't interact without an owner"); }
+
         globals.gameEventEmitter.emit("door.open");
         globals.Game.removeObject(this.owner);
     }
@@ -115,24 +126,26 @@ export class DoorInteractable implements InteractableComponent {
  * Interaction component that calls Game.nextLevel when interacted with
  */
 export class LoadLevelInteractable implements InteractableComponent {
-    owner: GameObject;
+    owner: Nullable<GameObject>;
     levelName: string;
 
     constructor() {
         this.owner = null;
-        this.levelName = null;
+        this.levelName = "";
     }
 
     setLevel(name: string) {
         this.levelName = name;
     }
 
-    setOwner(owner: GameObject) {
+    setOwner(owner: Nullable<GameObject>) {
         this.owner = owner;
     }
 
     interact(): void {
-        if (!this.levelName) {
+        if (this.owner === null) { throw new Error("Can't interact without an owner"); }
+
+        if (this.levelName === null) {
             throw new Error("No level name has been set for load");
         }
         globals.Game.loadLevel(this.levelName);

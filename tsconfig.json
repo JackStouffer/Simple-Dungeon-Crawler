@@ -5,9 +5,10 @@
         "target": "es2018",
         "noImplicitAny": true,
         "alwaysStrict": true,
-        "noImplicitThis": true
+        "noImplicitThis": true,
+        "strictNullChecks": true
     },
-    "include": ["./src/**/*"],
+    "include": ["./src/**/*.ts"],
     "exclude": [
         "./src/maps/World.tsx",
         "src/maps/DungeonCrawl_ProjectUtumnoTileset.tsx"

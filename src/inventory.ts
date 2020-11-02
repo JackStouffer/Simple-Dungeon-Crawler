@@ -1,18 +1,20 @@
 import globals from "./globals";
 import { ItemData, ItemType } from "./data";
 import { GameObject } from "./object";
+import { Nullable } from "./util";
 
 export interface InventoryItemDetails {
     id: string;
     displayName: string;
     type: ItemType;
     count: number;
-    value?: number;
+    value: Nullable<number>;
 }
 
 export interface InventoryComponent {
-    owner: GameObject;
-    setOwner: (owner: GameObject) => void;
+    owner: Nullable<GameObject>;
+
+    setOwner: (owner: Nullable<GameObject>) => void;
     getItems: () => InventoryItemDetails[];
     addItem: (id: string, count?: number) => boolean;
     useItem: (id: string) => void;
@@ -23,8 +25,8 @@ export interface InventoryComponent {
  * Inventory component. Holds items and their counts.
  */
 export class BasicInventory implements InventoryComponent {
-    owner: GameObject;
-    private inventory: Map<string, number>;
+    owner: Nullable<GameObject>;
+    private readonly inventory: Map<string, number>;
 
     constructor() {
         this.owner = null;
@@ -38,7 +40,7 @@ export class BasicInventory implements InventoryComponent {
      * @param {GameObject} owner The component owner
      * @returns {void}
      */
-    setOwner(owner: GameObject) {
+    setOwner(owner: Nullable<GameObject>) {
         this.owner = owner;
     }
 
@@ -48,16 +50,18 @@ export class BasicInventory implements InventoryComponent {
      * @returns {Array} An array of objects
      */
     getItems(): InventoryItemDetails[] {
-        return [...this.inventory.keys()].map(e => {
-            const data = ItemData[e];
-            return {
-                id: e,
+        const res: InventoryItemDetails[] = [];
+        for (const [k, v] of this.inventory) {
+            const data = ItemData[k];
+            res.push({
+                id: k,
                 displayName: data.displayName,
                 type: data.type,
-                count: this.inventory.get(e),
+                count: v,
                 value: data.value
-            };
-        });
+            });
+        }
+        return res;
     }
 
     /**
@@ -72,15 +76,16 @@ export class BasicInventory implements InventoryComponent {
     /**
      * Add an item to the inventory by ID. Can add more than one
      * of the item with the count parameter.
-     * @param {String} id Item ID
-     * @param {Number} count The number of the item to add
-     * @returns {Boolean} If the item was successfully added
+     * @param {string} id Item ID
+     * @param {number} count The number of the item to add
+     * @returns {boolean} If the item was successfully added
      */
-    addItem(id: string, count = 1): boolean {
+    addItem(id: string, count: number = 1): boolean {
+        if (this.owner === null) { throw new Error("Tried to add an item on a ownerless inventory"); }
         if (!(id in ItemData)) { throw new Error(`${id} is not a valid item id`); }
 
         if (this.hasItem(id)) {
-            const newValue = this.inventory.get(id) + count;
+            const newValue = this.inventory.get(id)! + count;
 
             if (newValue === 100) {
                 return false;
@@ -106,7 +111,7 @@ export class BasicInventory implements InventoryComponent {
      * Use an item by ID, thereby reducing its count in the
      * inventory or removing it from the list of items if the
      * count results in zero.
-     * @param {String} id Item ID
+     * @param {string} id Item ID
      * @returns {void}
      */
     useItem(id: string): void {
@@ -114,7 +119,7 @@ export class BasicInventory implements InventoryComponent {
             throw new Error(`Item ${id} not in inventory`);
         }
 
-        this.inventory.set(id, this.inventory.get(id) - 1);
+        this.inventory.set(id, this.inventory.get(id)! - 1);
 
         if (this.inventory.get(id) === 0) {
             this.inventory.delete(id);

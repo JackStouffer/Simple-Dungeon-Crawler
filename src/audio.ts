@@ -1,6 +1,7 @@
 declare const ENV: string;
 
 import { Howl } from "howler";
+import { Nullable } from "./util";
 
 const sounds: { [key: string]: Howl } = {};
 
@@ -10,8 +11,8 @@ const levelThemes: { [key: string]: string } = {
 };
 
 interface SoundChannel {
-    id: number,
-    sound: Howl
+    id: Nullable<number>,
+    sound: Nullable<Howl>
 }
 
 const musicVolume = 0.8;
@@ -215,7 +216,7 @@ export function playLevelTheme(levelName: string) {
         return;
     }
 
-    if (musicChannel.id) {
+    if (musicChannel.id !== null && musicChannel.sound !== null) {
         musicChannel.sound.fade(musicVolume, 0, 3000, musicChannel.id);
     }
 
@@ -229,7 +230,7 @@ export function pauseMusic() {
         return;
     }
 
-    if (musicChannel.id) {
+    if (musicChannel.id !== null && musicChannel.sound !== null) {
         musicChannel.sound.pause(musicChannel.id);
     }
 }
@@ -239,7 +240,7 @@ export function resumeMusic() {
         return;
     }
 
-    if (musicChannel.id) {
+    if (musicChannel.id !== null && musicChannel.sound !== null) {
         musicChannel.sound.play(musicChannel.id);
     }
 }

@@ -1,3 +1,5 @@
+import { isNil } from "lodash";
+
 import { RNG } from "./rot/index";
 import { SpeedActor } from "./rot/scheduler/speed";
 
@@ -24,6 +26,8 @@ import { BasicFighter, FighterComponent } from "./fighter";
 import { InputHandler, PlayerInputHandler } from "./input-handler";
 import { displayMessage } from "./ui";
 import { GameMap, PathNode } from "./map";
+import { FireTrigger, TriggerComponent } from "./trigger";
+import { Nullable } from "./util";
 
 /**
  * Base class representing all objects in the game. Uses the
@@ -40,13 +44,14 @@ export class GameObject implements SpeedActor {
     y: number;
     blocks: boolean;
     blocksSight: boolean;
-    ai: AIComponent;
-    inputHandler: InputHandler;
-    graphics: GraphicsComponent;
-    lighting: LightingComponent;
-    fighter: FighterComponent & SpeedActor;
-    inventory: InventoryComponent;
-    interactable: InteractableComponent;
+    ai: Nullable<AIComponent>;
+    inputHandler: Nullable<InputHandler>;
+    graphics: Nullable<GraphicsComponent>;
+    lighting: Nullable<LightingComponent>;
+    fighter: Nullable<FighterComponent & SpeedActor>;
+    inventory: Nullable<InventoryComponent>;
+    interactable: Nullable<InteractableComponent>;
+    trigger: Nullable<TriggerComponent>;
 
     constructor(type: string, x: number, y: number, name: string, blocks=false, blocksSight=false) {
         this.type = type;
@@ -60,22 +65,24 @@ export class GameObject implements SpeedActor {
         this.lighting = null;
         this.fighter = null;
         this.ai = null;
+        this.inputHandler = null;
         this.inventory = null;
         this.interactable = null;
+        this.trigger = null;
     }
 
     /**
      * Give this object graphics
      * @param ai {GraphicsComponent} The graphic component instance
      */
-    setGraphics(graphics: GraphicsComponent): void {
+    setGraphics(graphics: Nullable<GraphicsComponent>): void {
         if (graphics === null && this.graphics !== null) {
             this.graphics.setOwner(null);
             this.graphics = null;
             return;
         }
 
-        if (graphics === null && this.graphics === null) {
+        if (graphics === null) {
             return;
         }
 
@@ -87,14 +94,14 @@ export class GameObject implements SpeedActor {
      * Give this object lighting
      * @param ai {LightingComponent} The lighting component instance
      */
-    setLighting(lighting: LightingComponent): void {
+    setLighting(lighting: Nullable<LightingComponent>): void {
         if (lighting === null && this.lighting !== null) {
             this.lighting.setOwner(null);
             this.lighting = null;
             return;
         }
 
-        if (lighting === null && this.lighting === null) {
+        if (lighting === null) {
             return;
         }
 
@@ -106,14 +113,14 @@ export class GameObject implements SpeedActor {
      * Give this object an fighter
      * @param ai {FighterComponent} The fighter instance
      */
-    setFighter(fighter: FighterComponent & SpeedActor): void {
+    setFighter(fighter: (FighterComponent & SpeedActor) | null): void {
         if (fighter === null && this.fighter !== null) {
             this.fighter.setOwner(null);
             this.fighter = null;
             return;
         }
 
-        if (fighter === null && this.fighter === null) {
+        if (fighter === null) {
             return;
         }
 
@@ -125,14 +132,14 @@ export class GameObject implements SpeedActor {
      * Give this object an AI
      * @param ai {AIComponent} The AI instance
      */
-    setAI(ai: AIComponent): void {
+    setAI(ai: AIComponent | null): void {
         if (ai === null && this.ai !== null) {
             this.ai.setOwner(null);
             this.ai = null;
             return;
         }
 
-        if (ai === null && this.ai === null) {
+        if (ai === null) {
             return;
         }
 
@@ -144,14 +151,14 @@ export class GameObject implements SpeedActor {
      * Give this object inventory
      * @param ai {InventoryComponent} The inventory component instance
      */
-    setInventory(inventory: InventoryComponent): void {
+    setInventory(inventory: InventoryComponent | null): void {
         if (inventory === null && this.inventory !== null) {
             this.inventory.setOwner(null);
             this.inventory = null;
             return;
         }
 
-        if (inventory === null && this.inventory === null) {
+        if (inventory === null) {
             return;
         }
 
@@ -163,14 +170,14 @@ export class GameObject implements SpeedActor {
      * Give this object interaction
      * @param ai {InteractableComponent} The interactable component instance
      */
-    setInteractable(interactable: InteractableComponent): void {
+    setInteractable(interactable: InteractableComponent | null): void {
         if (interactable === null && this.interactable !== null) {
             this.interactable.setOwner(null);
             this.interactable = null;
             return;
         }
 
-        if (interactable === null && this.interactable === null) {
+        if (interactable === null) {
             return;
         }
 
@@ -178,14 +185,14 @@ export class GameObject implements SpeedActor {
         this.interactable = interactable;
     }
 
-    setInputHandler(handler: InputHandler): void {
+    setInputHandler(handler: InputHandler | null): void {
         if (handler === null && this.inputHandler !== null) {
             this.inputHandler.setOwner(null);
             this.inputHandler = null;
             return;
         }
 
-        if (handler === null && this.inputHandler === null) {
+        if (handler === null) {
             return;
         }
 
@@ -193,11 +200,26 @@ export class GameObject implements SpeedActor {
         this.inputHandler = handler;
     }
 
+    setTrigger(trigger: TriggerComponent | null): void {
+        if (trigger === null && this.trigger !== null) {
+            this.trigger.setOwner(null);
+            this.trigger = null;
+            return;
+        }
+
+        if (trigger === null) {
+            return;
+        }
+
+        trigger.setOwner(this);
+        this.trigger = trigger;
+    }
+
     /**
      * @returns {number} The actor's speed
      */
     getSpeed(): number {
-        if (this.fighter) {
+        if (this.fighter !== null) {
             return this.fighter.getSpeed();
         }
         return BASE_SPEED;
@@ -213,14 +235,14 @@ export class GameObject implements SpeedActor {
     act(map: GameMap, gameObjects: GameObject[], pathNodes: Map<number, PathNode>): boolean {
         let acted: boolean = true;
 
-        if (this.ai) {
+        if (this.ai !== null) {
             const command = this.ai.act(map, gameObjects, pathNodes);
-            if (command) {
+            if (command !== null) {
                 acted = command(this);
             }
         }
 
-        if (this.fighter) {
+        if (this.fighter !== null) {
             this.fighter.act();
         }
 
@@ -245,13 +267,13 @@ export function createObject(id: string, x: number = 0, y: number = 0): GameObje
         data.blocksSight
     );
 
-    if (data.ai) {
+    if (data.ai !== null) {
         switch (data.ai) {
             case "planning_ai":
                 object.setAI(new PlanningAI(data));
                 break;
             case "chest_ai":
-                object.setAI(new ChestAI(data.bgColor, data.emptyColor));
+                object.setAI(new ChestAI(data));
                 break;
             case "dropped_item_ai":
                 object.setAI(new DroppedItemAI());
@@ -261,7 +283,7 @@ export function createObject(id: string, x: number = 0, y: number = 0): GameObje
         }
     }
 
-    if (data.graphics) {
+    if (data.graphics !== null) {
         switch (data.graphics) {
             case "player_graphics":
                 object.setGraphics(new PlayerGraphics(data));
@@ -280,7 +302,11 @@ export function createObject(id: string, x: number = 0, y: number = 0): GameObje
         }
     }
 
-    if (data.lighting) {
+    if (data.lighting !== null) {
+        if (data.lightingColor === null || data.lightingRange === null) {
+            throw new Error("Cannot set lighting without lightingColor and lightingRange");
+        }
+
         switch (data.lighting) {
             case "reflectivity":
                 object.setLighting(
@@ -297,7 +323,7 @@ export function createObject(id: string, x: number = 0, y: number = 0): GameObje
         }
     }
 
-    if (data.fighter) {
+    if (data.fighter !== null) {
         let callback;
 
         switch (data.onDeath) {
@@ -322,12 +348,12 @@ export function createObject(id: string, x: number = 0, y: number = 0): GameObje
                 throw new Error(`Unhandled Fighter type ${data.fighter}`);
         }
 
-        if (data.spells) {
-            data.spells.forEach(s => object.fighter.addSpellById(s));
+        if (data.spells !== null) {
+            data.spells.forEach(s => object.fighter!.addSpellById(s));
         }
     }
 
-    if (data.inventory) {
+    if (data.inventory !== null) {
         switch (data.inventory) {
             case "basic_inventory":
                 object.setInventory(new BasicInventory());
@@ -336,16 +362,16 @@ export function createObject(id: string, x: number = 0, y: number = 0): GameObje
                 throw new Error(`Unhandled Inventory type ${data.inventory}`);
         }
 
-        if (data.inventoryPool) {
+        if (data.inventoryPool !== null) {
             for (let i = 0; i < data.inventoryPool.length; i++) {
                 if (RNG.getUniform() <= data.inventoryPool[i].probability) {
-                    object.inventory.addItem(data.inventoryPool[i].itemID);
+                    object.inventory!.addItem(data.inventoryPool[i].itemID);
                 }
             }
         }
     }
 
-    if (data.interactable) {
+    if (data.interactable !== null) {
         switch (data.interactable) {
             case "give_items_interactable":
                 object.setInteractable(new GiveItemsInteractable());
@@ -364,13 +390,24 @@ export function createObject(id: string, x: number = 0, y: number = 0): GameObje
         }
     }
 
-    if (data.input) {
+    if (!isNil(data.input)) {
         switch (data.input) {
             case "player_input":
                 object.setInputHandler(new PlayerInputHandler());
                 break;
             default:
                 throw new Error(`Unhandled Interactable type ${data.interactable}`);
+        }
+    }
+
+    if (!isNil(data.trigger)) {
+        switch (data.trigger) {
+            case "fire":
+                if (data.triggerDamage === null) { throw new Error("Cannot create fire trigger without damage"); }
+                object.setTrigger(new FireTrigger(data.triggerDamage, 3, 5));
+                break;
+            default:
+                throw new Error(`Unhandled trigger type ${data.trigger}`);
         }
     }
 
@@ -395,7 +432,7 @@ export function enemyDeathCallback(target: GameObject): void {
     target.setAI(null);
     target.setInteractable(null);
 
-    if (target.inventory?.getItems().length > 0) {
+    if (target.inventory !== null && target.inventory.getItems().length > 0) {
         const item = createObject("dropped_item", target.x, target.y);
         item.inventory = target.inventory;
         globals.Game.addObject(item);
@@ -412,7 +449,7 @@ export function enemyDeathCallback(target: GameObject): void {
  * @return {void}
  */
 export function removeDeathCallback(target: GameObject): void {
-    if (target.inventory.getItems().length > 0) {
+    if (target.inventory !== null && target.inventory.getItems().length > 0) {
         globals.gameEventEmitter.emit("tutorial.pickUpItem");
 
         const item = createObject("dropped_item", target.x, target.y);

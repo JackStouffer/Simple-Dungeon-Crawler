@@ -15,7 +15,7 @@ export class TriggerVolume implements Volume {
     y: number;
     width: number;
     height: number;
-    private eventName: string;
+    private readonly eventName: string;
 
     constructor(x: number, y: number, width: number, height: number, eventName: string) {
         this.x = x;

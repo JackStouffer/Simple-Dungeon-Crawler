@@ -57,10 +57,10 @@ import {
     explainSpellMenu,
     explainPickUpItem
 } from "./tutorials";
-import { assertUnreachable } from "./util";
 import { Volume } from "./volume";
 import { SpellFighterDetails } from "./fighter";
 import { InventoryItemDetails } from "./inventory";
+import { assertUnreachable, Nullable } from "./util";
 
 globals.gameEventEmitter = new EventEmitter();
 
@@ -74,12 +74,12 @@ globals.gameEventEmitter = new EventEmitter();
 export function mouseTarget(
     mousePosition: Point,
     gameObjects: GameObject[]
-): GameObject {
+): Nullable<GameObject> {
     let target = null;
     const objects = getObjectsAtLocation(gameObjects, mousePosition.x, mousePosition.y);
 
     for (let i = 0; i < objects.length; i++) {
-        if (objects[i].fighter || objects[i].interactable) {
+        if (objects[i].fighter !== null || objects[i].interactable !== null) {
             target = objects[i];
             break;
         }
@@ -88,24 +88,18 @@ export function mouseTarget(
     return target;
 }
 
-export interface KeyCommand {
-    key: string;
-    description: string;
-    command: Command;
-}
-
 export class SimpleDungeonCrawler {
     state: GameState;
     totalTurns: number;
-    canvas: HTMLElement;
-    display: Display;
+    canvas: Nullable<HTMLElement>;
+    display: Nullable<Display>;
     gameCamera: Camera;
     processAI: boolean;
     isLightingEnabled: boolean;
 
     scheduler: SpeedScheduler;
     player: GameObject;
-    currentActor: GameObject;
+    currentActor: Nullable<GameObject>;
     gameObjects: GameObject[];
     map: GameMap;
     volumes: Volume[];
@@ -119,7 +113,7 @@ export class SimpleDungeonCrawler {
         this.state = GameState.OpeningCinematic;
         this.canvas = null;
         this.display = null;
-        this.player = null;
+        this.player = createObject("player", 1, 1);
         this.currentActor = null;
         this.scheduler = new SpeedScheduler();
         this.gameObjects = [];
@@ -172,13 +166,17 @@ export class SimpleDungeonCrawler {
     }
 
     async startGameplay(): Promise<void> {
-        this.display.drawText(WIDTH - (WIDTH - 28), 22, "%c{white}Loading Sounds");
+        if (this.display !== null) {
+            this.display.drawText(WIDTH - (WIDTH - 28), 22, "%c{white}Loading Sounds");
+        }
 
         try {
             await loadSounds();
         } catch (err) {
-            this.display.clear();
-            this.display.drawText(WIDTH - (WIDTH - 10), 22, "%c{white}Error loading game files, please reload the page");
+            if (this.display !== null) {
+                this.display.clear();
+                this.display.drawText(WIDTH - (WIDTH - 10), 22, "%c{white}Error loading game files, please reload the page");
+            }
             return;
         }
 
@@ -209,7 +207,6 @@ export class SimpleDungeonCrawler {
         globals.gameEventEmitter.on("tutorial.spellTargeting", explainSpellTargeting);
         globals.gameEventEmitter.on("tutorial.wildSpells", explainWildSpells);
 
-        this.player = createObject("player", 1, 1);
         this.scheduler.add(this.player, true);
         this.gameCamera.follow(this.player);
 
@@ -224,6 +221,9 @@ export class SimpleDungeonCrawler {
      * Draw the game world to the canvas
      */
     render(): void {
+        if (this.display === null) { throw new Error("Cannot render without a display"); }
+        if (this.player === null) { throw new Error("Cannot render without a player"); }
+
         switch (this.state) {
             case GameState.Gameplay:
                 this.display.clear();
@@ -231,9 +231,12 @@ export class SimpleDungeonCrawler {
 
                 if (this.isLightingEnabled) {
                     resetVisibility(this.map);
-                    this.gameObjects
-                        .filter(o => o.lighting && typeof o.lighting.compute === "function")
-                        .forEach(o => o.lighting.compute(this.map));
+                    for (let i = 0; i < this.gameObjects.length; i++) {
+                        const obj = this.gameObjects[i];
+                        if (obj.lighting !== null) {
+                            obj.lighting.compute(this.map);
+                        }
+                    }
                 } else {
                     setAllToExplored(this.map, true, true);
                 }
@@ -241,36 +244,45 @@ export class SimpleDungeonCrawler {
                 drawMap(this.display, this.gameCamera, this.map);
 
                 this.gameObjects
-                    .filter(o => o.graphics && typeof o.graphics.draw === "function")
+                    .filter(o => o.graphics !== null)
                     // Make sure objects with fighters cannot be drawn over
                     .sort((a, b) => {
-                        if (!a.fighter && b.fighter) {
+                        if (a.fighter === null && b.fighter !== null) {
                             return -1;
                         }
-                        if (!a.fighter && !b.fighter) {
+                        if (a.fighter === null && b.fighter === null) {
                             return -1;
                         }
-                        if (a.fighter && !b.fighter) {
+                        if (a.fighter !== null && b.fighter === null) {
                             return 1;
                         }
                         return 0;
                     })
-                    .forEach(o => o.graphics.draw(
-                        this.display,
+                    .forEach(o => o.graphics!.draw(
+                        this.display!,
                         this.gameCamera,
                         this.map,
                         this.gameObjects
                     ));
 
-                drawUI(this.display, this.player, this.gameObjects, this.map);
+                drawUI(this.display!, this.player, this.gameObjects, this.map);
                 break;
             case GameState.PauseMenu:
+                if (this.player.inputHandler === null) {
+                    break;
+                }
                 this.keyBindingMenu.draw(this.player.inputHandler.keyCommands);
                 break;
             case GameState.InventoryMenu:
+                if (this.player.inventory === null) {
+                    break;
+                }
                 this.inventoryMenu.draw(this.player.inventory.getItems());
                 break;
             case GameState.SpellMenu:
+                if (this.player.fighter === null) {
+                    break;
+                }
                 this.spellSelectionMenu.draw(this.player.fighter.getKnownSpells());
                 break;
             case GameState.OpeningCinematic:
@@ -329,8 +341,8 @@ export class SimpleDungeonCrawler {
 
             for (let i = 0; i < this.gameObjects.length; i++) {
                 const object = this.gameObjects[i];
-                if (object.inputHandler) {
-                    const command: Command = object.inputHandler.handleInput(
+                if (object.inputHandler !== null) {
+                    const command: Nullable<Command> = object.inputHandler.handleInput(
                         this.map, this.gameObjects
                     );
                     if (command !== null) {
@@ -347,6 +359,10 @@ export class SimpleDungeonCrawler {
                 return acted;
             }
 
+            if (this.player.inputHandler === null) {
+                return acted;
+            }
+
             this.keyBindingMenu.handleInput(this.player.inputHandler.keyCommands);
         } else if (this.state === GameState.InventoryMenu) {
             if (input.isDown("Escape")) {
@@ -356,12 +372,16 @@ export class SimpleDungeonCrawler {
                 return acted;
             }
 
-            const item: InventoryItemDetails = this.inventoryMenu.handleInput(
+            if (this.player.inventory === null) {
+                return acted;
+            }
+
+            const item: Nullable<InventoryItemDetails> = this.inventoryMenu.handleInput(
                 this.player.inventory.getItems()
             );
 
-            if (item) {
-                let command: Command = null;
+            if (item !== null) {
+                let command: Nullable<Command> = null;
 
                 switch (item.type) {
                     case ItemType.HealSelf:
@@ -380,9 +400,13 @@ export class SimpleDungeonCrawler {
                     case ItemType.DamageScroll:
                     case ItemType.SlowOther:
                     case ItemType.ConfuseScroll:
+                        this.state = GameState.Gameplay;
+
+                        if (this.player.inputHandler === null) {
+                            break;
+                        }
                         this.player.inputHandler.itemForTarget = item;
                         this.player.inputHandler.setState(PlayerState.Target);
-                        this.state = GameState.Gameplay;
                         break;
                     default:
                         assertUnreachable(item.type);
@@ -396,11 +420,15 @@ export class SimpleDungeonCrawler {
                 return acted;
             }
 
-            const spell: SpellFighterDetails = this.spellSelectionMenu.handleInput(
+            if (this.player.fighter === null) {
+                return acted;
+            }
+
+            const spell: Nullable<SpellFighterDetails> = this.spellSelectionMenu.handleInput(
                 this.player.fighter.getKnownSpells()
             );
 
-            if (spell) {
+            if (spell !== null) {
                 switch (spell.type) {
                     case SpellType.Effect:
                     case SpellType.HealSelf:
@@ -413,9 +441,13 @@ export class SimpleDungeonCrawler {
                         }
                         break;
                     case SpellType.DamageOther:
+                        this.state = GameState.Gameplay;
+
+                        if (this.player.inputHandler === null) {
+                            break;
+                        }
                         this.player.inputHandler.spellForTarget = spell;
                         this.player.inputHandler.setState(PlayerState.Target);
-                        this.state = GameState.Gameplay;
                         break;
                     default:
                         assertUnreachable(spell.type);
@@ -447,18 +479,20 @@ export class SimpleDungeonCrawler {
         const acted = this.handleInput();
         if (acted === true) {
             const volumes = findVolumeCollision(this.volumes, this.player);
-            if (volumes.length) {
+            if (volumes.length > 0) {
                 volumes.forEach((v: Volume) => v.enter(this.player));
             }
 
             if (this.processAI) {
                 do {
                     this.currentActor = this.scheduler.next();
+                    if (this.currentActor === null) { continue; }
+
                     this.currentActor.act(this.map, this.gameObjects, this.pathNodes);
 
                     const volumes = findVolumeCollision(this.volumes, this.currentActor);
-                    if (volumes.length) {
-                        volumes.forEach((v: Volume) => v.enter(this.currentActor));
+                    if (volumes.length > 0) {
+                        volumes.forEach((v: Volume) => v.enter(this.currentActor!));
                     }
                 } while (this.currentActor !== this.player);
             }

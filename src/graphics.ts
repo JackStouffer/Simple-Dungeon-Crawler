@@ -1,18 +1,21 @@
 import Display from "./rot/display/display";
 
 import input from "./input";
-import { GameMap, getObjectsAtLocation, Point } from "./map";
+import { GameMap, getObjectsAtLocation } from "./map";
 import { GameObject } from "./object";
 import { Camera } from "./camera";
 import { ObjectDataDetails } from "./data";
-import { PlayerState, getPlayerMovementPath } from "./input-handler";
+import { PlayerState } from "./input-handler";
+import { getActorMovementPath } from "./commands";
+import { Nullable } from "./util";
 
 export interface GraphicsComponent {
     char: string;
     fgColor: string;
     bgColor: string;
-    owner: GameObject;
-    setOwner: (owner: GameObject) => void;
+    owner: Nullable<GameObject>;
+
+    setOwner: (owner: Nullable<GameObject>) => void;
     draw: (display: Display, camera: Camera, map: GameMap, objects: GameObject[]) => void;
 }
 
@@ -25,21 +28,33 @@ export class BasicGraphics implements GraphicsComponent {
     char: string;
     fgColor: string;
     bgColor: string;
-    owner: GameObject;
+    owner: Nullable<GameObject>;
 
     constructor(data: ObjectDataDetails) {
+        if (data.char === null) {
+            throw new Error("Missing data on DrawAfterSeen ctor");
+        }
+        if (data.fgColor === null) {
+            throw new Error("Missing data on DrawAfterSeen ctor");
+        }
+        if (data.bgColor === null) {
+            throw new Error("Missing data on DrawAfterSeen ctor");
+        }
+
         this.char = data.char;
         this.fgColor = data.fgColor;
         this.bgColor = data.bgColor;
         this.owner = null;
     }
 
-    setOwner(owner: GameObject) {
+    setOwner(owner: Nullable<GameObject>) {
         this.owner = owner;
     }
 
     draw(display: Display, camera: Camera, map: GameMap) {
-        if (this.owner && map[this.owner.y][this.owner.x].isVisibleAndLit()) {
+        if (this.owner === null) { throw new Error("Can't draw BasicGraphics without owner"); }
+
+        if (map[this.owner.y][this.owner.x].isVisibleAndLit()) {
             const { x, y } = camera.worldToScreen(this.owner.x, this.owner.y);
             display.draw(x, y, this.char, this.fgColor, this.bgColor);
         }
@@ -54,15 +69,22 @@ export class TransparencyGraphics implements GraphicsComponent {
     char: string;
     fgColor: string;
     bgColor: string;
-    owner: GameObject;
+    owner: Nullable<GameObject>;
 
     constructor(data: ObjectDataDetails) {
+        if (data.char === null) {
+            throw new Error("Missing data on DrawAfterSeen ctor");
+        }
+        if (data.fgColor === null) {
+            throw new Error("Missing data on DrawAfterSeen ctor");
+        }
+
         this.char = data.char;
         this.fgColor = data.fgColor;
         this.owner = null;
     }
 
-    setOwner(owner: GameObject) {
+    setOwner(owner: Nullable<GameObject>) {
         this.owner = owner;
     }
 
@@ -78,16 +100,18 @@ export class TransparencyGraphics implements GraphicsComponent {
      * @param {Array} objects An array of GameObjects
      */
     draw(display: Display, camera: Camera, map: GameMap, objects: GameObject[]) {
-        if (this.owner && map[this.owner.y][this.owner.x].isVisibleAndLit()) {
+        if (this.owner === null) { throw new Error("Can't draw TransparencyGraphics without owner"); }
+
+        if (map[this.owner.y][this.owner.x].isVisibleAndLit()) {
             let bgColor = map[this.owner.y][this.owner.x].lightingColor;
             const objectsAtLocation = getObjectsAtLocation(objects, this.owner.x, this.owner.y);
             if (objectsAtLocation.length > 0) {
                 for (let i = 0; i < objectsAtLocation.length; i++) {
                     const obj = objectsAtLocation[i];
-                    if (obj === this.owner) {
+                    if (obj === this.owner || obj.graphics === null) {
                         continue;
                     }
-                    if (obj.graphics.bgColor) {
+                    if (obj.graphics.bgColor !== null) {
                         bgColor = obj.graphics.bgColor;
                     }
                 }
@@ -114,15 +138,22 @@ export class PlayerGraphics implements GraphicsComponent {
     char: string;
     fgColor: string;
     bgColor: string;
-    owner: GameObject;
+    owner: Nullable<GameObject>;
 
     constructor(data: ObjectDataDetails) {
+        if (data.char === null) {
+            throw new Error("Missing data on DrawAfterSeen ctor");
+        }
+        if (data.fgColor === null) {
+            throw new Error("Missing data on DrawAfterSeen ctor");
+        }
+
         this.char = data.char;
         this.fgColor = data.fgColor;
         this.owner = null;
     }
 
-    setOwner(owner: GameObject) {
+    setOwner(owner: Nullable<GameObject>) {
         this.owner = owner;
     }
 
@@ -138,16 +169,19 @@ export class PlayerGraphics implements GraphicsComponent {
      * @param {Array} objects An array of GameObjects
      */
     draw(display: Display, camera: Camera, map: GameMap, objects: GameObject[]) {
-        if (this.owner && map[this.owner.y][this.owner.x].isVisibleAndLit()) {
+        if (this.owner === null) { throw new Error("Can't draw PlayerGraphics without owner"); }
+        if (this.owner.inputHandler === null) { throw new Error("Can't draw PlayerGraphics without inputHandler"); }
+
+        if (map[this.owner.y][this.owner.x].isVisibleAndLit()) {
             let bgColor = map[this.owner.y][this.owner.x].lightingColor;
             const objectsAtLocation = getObjectsAtLocation(objects, this.owner.x, this.owner.y);
             if (objectsAtLocation.length > 0) {
                 for (let i = 0; i < objectsAtLocation.length; i++) {
                     const obj = objectsAtLocation[i];
-                    if (obj === this.owner) {
+                    if (obj === this.owner || obj.graphics === null) {
                         continue;
                     }
-                    if (obj.graphics.bgColor) {
+                    if (obj.graphics.bgColor !== null) {
                         bgColor = obj.graphics.bgColor;
                     }
                 }
@@ -163,18 +197,18 @@ export class PlayerGraphics implements GraphicsComponent {
                 bgColor
             );
 
-            if (this.owner.inputHandler?.getState() === PlayerState.Combat) {
-                const mousePosition: Point = input.getMousePosition();
-                if (!mousePosition) { return; }
+            if (this.owner.inputHandler.getState() === PlayerState.Combat) {
+                const mousePosition = input.getMousePosition();
+                if (mousePosition === null) { return; }
 
-                const path = getPlayerMovementPath(
+                const path = getActorMovementPath(
                     mousePosition.x,
                     mousePosition.y,
                     this.owner,
                     map,
                     objects
                 );
-                if (!path) { return; }
+                if (path === null) { return; }
 
                 for (let i = 0; i < path.length; i++) {
                     const step = path[i];
@@ -194,21 +228,33 @@ export class DrawAfterSeen implements GraphicsComponent {
     char: string;
     fgColor: string;
     bgColor: string;
-    owner: GameObject;
+    owner: Nullable<GameObject>;
 
     constructor(data: ObjectDataDetails) {
+        if (data.char === null) {
+            throw new Error("Missing data on DrawAfterSeen ctor");
+        }
+        if (data.fgColor === null) {
+            throw new Error("Missing data on DrawAfterSeen ctor");
+        }
+        if (data.bgColor === null) {
+            throw new Error("Missing data on DrawAfterSeen ctor");
+        }
+
         this.char = data.char;
         this.fgColor = data.fgColor;
         this.bgColor = data.bgColor;
         this.owner = null;
     }
 
-    setOwner(owner: GameObject) {
+    setOwner(owner: Nullable<GameObject>) {
         this.owner = owner;
     }
 
     draw(display: Display, camera: Camera, map: GameMap) {
-        if (this.owner && map[this.owner.y][this.owner.x].explored) {
+        if (this.owner === null) { throw new Error("Can't draw DrawAfterSeen without owner"); }
+
+        if (map[this.owner.y][this.owner.x].explored) {
             const { x, y } = camera.worldToScreen(this.owner.x, this.owner.y);
             display.draw(x, y, this.char, this.fgColor, this.bgColor);
         }

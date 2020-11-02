@@ -1,12 +1,13 @@
 import { get } from "lodash";
 import globals from "./globals";
 import { Point } from "./map";
+import { Nullable } from "./util";
 
 declare const ENV: string;
 
 const pressed: Set<string> = new Set();
-let mouseDownEvent: MouseEvent = null;
-let mouseMoveEvent: MouseEvent = null;
+let mouseDownEvent: Nullable<MouseEvent> = null;
+let mouseMoveEvent: Nullable<MouseEvent> = null;
 
 function init(): void {
     globals.window.addEventListener("keydown", function (e: KeyboardEvent) {
@@ -61,7 +62,7 @@ function isDown(key: string): boolean {
  * on JS Sets preserving insertion order.
  * @returns {string} the name of the key
  */
-function getFirstKeyPressed(): string {
+function getFirstKeyPressed(): Nullable<string> {
     return get([...pressed.values()], "[0]", null);
 }
 
@@ -70,8 +71,8 @@ function getFirstKeyPressed(): string {
  * one, null otherwise.
  * @returns {Point} the position in the game world
  */
-function getLeftMouseDown(): Point {
-    if (!mouseDownEvent) { return null; }
+function getLeftMouseDown(): Nullable<Point> {
+    if (mouseDownEvent === null) { return null; }
 
     const pos = globals.Game.display.eventToPosition(mouseDownEvent);
     return globals.Game.gameCamera.screenToWorld(pos[0], pos[1]);
@@ -82,8 +83,8 @@ function getLeftMouseDown(): Point {
  * one, null otherwise.
  * @returns {Point} the position in the game world
  */
-function getMousePosition(): Point {
-    if (!mouseMoveEvent) { return null; }
+function getMousePosition(): Nullable<Point> {
+    if (mouseMoveEvent === null) { return null; }
     const pos = globals.Game.display.eventToPosition(mouseMoveEvent);
     return globals.Game.gameCamera.screenToWorld(pos[0], pos[1]);
 }

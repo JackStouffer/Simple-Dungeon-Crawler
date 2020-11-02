@@ -6,11 +6,12 @@ import { createPassableSightCallback } from "./ai/components";
 import { WIDTH } from "./data";
 import { GameObject } from "./object";
 import { GameMap } from "./map";
+import { Nullable } from "./util";
 
 export interface LightingComponent {
-    owner: GameObject;
+    owner: Nullable<GameObject>;
 
-    setOwner: (owner: GameObject) => void;
+    setOwner: (owner: GameObject | null) => void;
     compute: (map: any) => void;
 }
 
@@ -27,20 +28,22 @@ function createReflectivityCallback(map: GameMap): ReflectivityCallback {
  * Component
  */
 export class ReflectivityLighting implements LightingComponent {
-    private color: string;
-    private range: number;
-    owner: GameObject;
+    private readonly color: string;
+    private readonly range: number;
+    owner: Nullable<GameObject>;
 
     constructor(color: string, range: number) {
         this.color = color;
         this.range = range;
     }
 
-    setOwner(owner: GameObject) {
+    setOwner(owner: Nullable<GameObject>) {
         this.owner = owner;
     }
 
     compute(map: GameMap) {
+        if (this.owner === null) { throw new Error("Cannot compute lighting for null owner"); }
+
         function lightingCallback(x: number, y: number, color: Color) {
             if (x < 0 || y < 0 || y >= map.length || x >= map[y].length) {
                 return;
@@ -71,20 +74,22 @@ export class ReflectivityLighting implements LightingComponent {
  * Component
  */
 export class PlayerLighting implements LightingComponent {
-    private color: string;
-    private range: number;
-    owner: GameObject;
+    private readonly color: string;
+    private readonly range: number;
+    owner: Nullable<GameObject>;
 
     constructor(color: string, range: number) {
         this.color = color;
         this.range = range;
     }
 
-    setOwner(owner: GameObject) {
+    setOwner(owner: Nullable<GameObject>) {
         this.owner = owner;
     }
 
     compute(map: GameMap) {
+        if (this.owner === null) { throw new Error("Cannot compute lighting for null owner"); }
+
         const sightFov = new FOV.PreciseShadowcasting(
             createPassableSightCallback(this.owner)
         );
@@ -103,20 +108,22 @@ export class PlayerLighting implements LightingComponent {
  * Component
  */
 export class PlayerCaveLighting implements LightingComponent {
-    private color: string;
-    private range: number;
-    owner: GameObject;
+    private readonly color: string;
+    private readonly range: number;
+    owner: Nullable<GameObject>;
 
     constructor(color: string, range: number) {
         this.color = color;
         this.range = range;
     }
 
-    setOwner(owner: GameObject) {
+    setOwner(owner: Nullable<GameObject>) {
         this.owner = owner;
     }
 
     compute(map: GameMap) {
+        if (this.owner === null) { throw new Error("Cannot compute lighting for null owner"); }
+
         function lightingCallback(x: number, y: number, color: Color) {
             if (x < 0 || y < 0 || y >= map.length || x >= map[y].length) {
                 return;

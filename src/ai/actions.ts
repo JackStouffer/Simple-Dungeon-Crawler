@@ -1,5 +1,3 @@
-declare const ENV: string;
-
 import { RNG, DIRS, Path } from "../rot/index";
 
 import {
@@ -7,12 +5,16 @@ import {
     useItemCommand,
     useSpellCommand,
     goToLocationCommand,
-    interactCommand
+    interactCommand,
+    getActorMovementPath,
+    noOpCommand
 } from "../commands";
 import {
     AIComponent,
-    createPassableCallback
+    createPassableCallback,
+    PlanningAI
 } from "./components";
+import { ItemType } from "../data";
 import { GameObject } from "../object";
 import {
     distanceBetweenObjects,
@@ -22,7 +24,7 @@ import {
     Point
 } from "../map";
 import { displayMessage } from "../ui";
-import { ItemType, ObjectData } from "../data";
+import { Nullable } from "../util";
 
 /**
  * Calculate a path from a game object to the give x and y
@@ -39,7 +41,7 @@ export function getStepsTowardsTarget(
     targetX: number,
     targetY: number,
     steps: number
-): Point {
+): Nullable<Point> {
     const aStar = new Path.AStar(
         targetX,
         targetY,
@@ -62,7 +64,7 @@ export function getStepsTowardsTarget(
         const index = Math.min(steps - 1, path.length - 1);
         return { x: path[index][0], y: path[index][1] };
     }
-    return { x: null, y: null };
+    return null;
 }
 
 /**
@@ -74,15 +76,21 @@ export function getStepsTowardsTarget(
  * @returns {Command} A move command
  */
 export function wanderAction(ai: AIComponent, map: GameMap, gameObjects: GameObject[]): Command {
-    let blocks, newX, newY, dir;
+    if (ai.owner === null) { throw new Error("No owner on AI for wanderAction"); }
+
+    let blocks: boolean = true;
+    let newX: number = 0;
+    let newY: number = 0;
+    let dir: number = RNG.getItem([0, 1, 2, 3, 4, 5, 6, 7]) ?? 0;
+
     do {
-        dir = RNG.getItem([0, 1, 2, 3, 4, 5, 6, 7]);
+        dir = RNG.getItem([0, 1, 2, 3, 4, 5, 6, 7]) ?? 0;
         newX = ai.owner.x + DIRS[8][dir][0];
         newY = ai.owner.y + DIRS[8][dir][1];
         ({ blocks } = isBlocked(map, gameObjects, newX, newY));
     } while (blocks === true);
 
-    return goToLocationCommand(newX, newY, map, gameObjects);
+    return goToLocationCommand([[newX, newY]], map, gameObjects);
 }
 
 /**
@@ -96,14 +104,13 @@ export function wanderAction(ai: AIComponent, map: GameMap, gameObjects: GameObj
  * @returns {Command} A move command
  */
 export function patrolAction(
-    ai: AIComponent,
+    ai: PlanningAI,
     map: GameMap,
     gameObjects: GameObject[],
     pathNodes: Map<number, PathNode>
 ): Command {
-    if (ENV === "DEV" && !ai.pathName) {
-        throw new Error("pathName not set for PatrollingMonsterAI");
-    }
+    if (ai.pathName === null) { throw new Error("pathName not set for PatrollingMonsterAI"); }
+    if (ai.owner === null) { throw new Error("No owner on AI for patrolAction"); }
 
     // For the first node, find the closest node on the path
     // to the current position, we can just follow the path
@@ -112,7 +119,7 @@ export function patrolAction(
         const sortedNodes = [...pathNodes.values()]
             .filter((n) => { return n.pathName === ai.pathName; })
             .map((e) => {
-                e.distance = distanceBetweenObjects(e, ai.owner);
+                e.distance = distanceBetweenObjects(e, ai.owner!);
                 return e;
             })
             .sort((a, b) => {
@@ -122,23 +129,19 @@ export function patrolAction(
         ai.patrolTarget = sortedNodes[0];
     }
 
-    const maxTilesPerMove = ObjectData[ai.owner.type].maxTilesPerMove;
-    let { x, y } = getStepsTowardsTarget(
-        ai.owner,
+    const path = getActorMovementPath(
         ai.patrolTarget.x,
         ai.patrolTarget.y,
-        maxTilesPerMove
+        ai.owner,
+        map,
+        gameObjects
     );
-    if (x === null || y === null) {
-        ai.patrolTarget = pathNodes.get(ai.patrolTarget.next);
-        ({ x, y } = getStepsTowardsTarget(
-            ai.owner,
-            ai.patrolTarget.x,
-            ai.patrolTarget.y,
-            maxTilesPerMove
-        ));
+
+    if (path === null) {
+        return noOpCommand(true);
     }
-    return goToLocationCommand(x, y, map, gameObjects);
+
+    return goToLocationCommand(path, map, gameObjects);
 }
 
 /**
@@ -147,21 +150,19 @@ export function patrolAction(
  * @returns {Command} a command to move
  */
 export function chaseAction(
-    ai: AIComponent,
+    ai: PlanningAI,
     map: GameMap,
     gameObjects: GameObject[],
 ): Command {
-    const { x, y } = getStepsTowardsTarget(
-        ai.owner,
-        ai.target.x,
-        ai.target.y,
-        5
-    );
-    if (x === null || y === null) {
-        return null;
+    if (ai.owner === null) { throw new Error("No owner on AI for chaseAction"); }
+    if (ai.target === null) { throw new Error("Cannot perform chaseAction without a target"); }
+
+    const path = getActorMovementPath(ai.target.x, ai.target.y, ai.owner, map, gameObjects);
+    if (path === null) {
+        return noOpCommand(true);
     }
 
-    return goToLocationCommand(x, y, map, gameObjects);
+    return goToLocationCommand(path, map, gameObjects);
 }
 
 /**
@@ -169,7 +170,10 @@ export function chaseAction(
  * @param {AIComponent} ai the ai to calculate the weight for
  * @returns {number} the weight
  */
-export function chaseWeight(ai: AIComponent): number {
+export function chaseWeight(ai: PlanningAI): number {
+    if (ai.owner === null) { throw new Error("No owner on AI for chaseWeight"); }
+    if (ai.target === null) { throw new Error("Cannot find chaseWeight without a target"); }
+
     return distanceBetweenObjects(ai.owner, ai.target);
 }
 
@@ -179,7 +183,9 @@ export function chaseWeight(ai: AIComponent): number {
  * @param ai The AI which is acting
  * @returns {Command} An attack command
  */
-export function meleeAttackAction(ai: AIComponent): Command {
+export function meleeAttackAction(ai: PlanningAI): Command {
+    if (ai.owner === null) { throw new Error("No owner on AI for meleeAttackAction"); }
+    if (ai.target === null) { throw new Error("Cannot perform meleeAttackAction without a target"); }
     return interactCommand(ai.target);
 }
 
@@ -189,11 +195,14 @@ export function meleeAttackAction(ai: AIComponent): Command {
  * @param ai The AI to act
  * @returns {Command} A use item command
  */
-export function useHealingItemAction(ai: AIComponent): Command {
+export function useHealingItemAction(ai: PlanningAI): Command {
+    if (ai.owner === null) { throw new Error("No owner on AI for useHealingItemAction"); }
+    if (ai.owner.inventory === null) { throw new Error("No inventory on owner for AI for castSpellAction"); }
+
     const item = ai.owner.inventory
         .getItems()
         .filter(i => i.type === ItemType.HealSelf)
-        .sort((a, b) => a.value - b.value)[0];
+        .sort((a, b) => a.value! - b.value!)[0];
     displayMessage(`${ai.owner.name} used a ${item.displayName}`);
     return useItemCommand(item.id);
 }
@@ -204,11 +213,14 @@ export function useHealingItemAction(ai: AIComponent): Command {
  * @param ai The AI to act
  * @returns {Command} A use item command
  */
-export function useManaItemAction(ai: AIComponent): Command {
+export function useManaItemAction(ai: PlanningAI): Command {
+    if (ai.owner === null) { throw new Error("No owner on AI for useManaItemAction"); }
+    if (ai.owner.inventory === null) { throw new Error("No inventory on owner for AI for useManaItemAction"); }
+
     const item = ai.owner.inventory
         .getItems()
         .filter(i => i.type === ItemType.AddManaSelf)
-        .sort((a, b) => a.value - b.value)[0];
+        .sort((a, b) => a.value! - b.value!)[0];
     displayMessage(`${ai.owner.name} used a ${item.displayName}`);
     return useItemCommand(item.id);
 }
@@ -219,17 +231,19 @@ export function useManaItemAction(ai: AIComponent): Command {
  * The generated update function will return a command
  * which uses the specified spell.
  *
- * @param spellID The ID of the spell to use
+ * @param {string} spellID The ID of the spell to use
  * @returns {function} the action update function
  */
-export function castSpellAction(spellID: string) {
-    return function (ai: AIComponent): Command {
-        if (ENV === "DEV") {
-            const spells = ai.owner.fighter.getKnownSpells().map(s => s.id);
-            if (spells.indexOf(spellID) === -1) {
-                throw new Error(`${ai.owner.name} does not know spell ${spellID}`);
-            }
+export function castSpellAction(spellID: string): (ai: PlanningAI) => Command {
+    return function (ai: PlanningAI): Command {
+        if (ai.owner === null) { throw new Error("No owner on AI for castSpellAction"); }
+        if (ai.owner.fighter === null) { throw new Error("No fighter on owner for AI for castSpellAction"); }
+
+        const spells = ai.owner.fighter.getKnownSpells().map(s => s.id);
+        if (spells.indexOf(spellID) === -1) {
+            throw new Error(`${ai.owner.name} does not know spell ${spellID}`);
         }
+
         return useSpellCommand(spellID, ai.target);
     };
 }

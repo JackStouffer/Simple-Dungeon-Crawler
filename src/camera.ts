@@ -1,11 +1,12 @@
 import { WIDTH, HEIGHT, UI_HEIGHT } from "./data";
 import { GameMap } from "./map";
 import { GameObject } from "./object";
+import { Nullable } from "./util";
 
 export class Camera {
     private x: number;
     private y: number;
-    private following: GameObject;
+    private following: Nullable<GameObject>;
 
     constructor() {
         this.x = 0;
@@ -18,6 +19,8 @@ export class Camera {
     }
 
     update(map: GameMap) {
+        if (this.following === null) { return; }
+
         // make the camera follow the sprite
         this.x = Math.floor(this.following.x - WIDTH / 2);
         this.y = Math.floor(this.following.y - (HEIGHT - UI_HEIGHT) / 2);

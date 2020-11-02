@@ -5,7 +5,7 @@
   "private": true,
   "scripts": {
     "test": "webpack --config webpack.test.js && mocha test-dist/main.js --require source-map-support/register && eslint src/*.ts src/ai/*.ts tests/*.js tests/ai/*.js",
-    "eslint": "eslint src/*.ts tests/*.js",
+    "eslint": "eslint src/*.ts",
     "build": "webpack --config webpack.dev.js && cp -r bin/ dev/bin/",
     "dist": "webpack --config webpack.prod.js && cp -r bin/ dev/bin/",
     "start": "webpack-dev-server --config webpack.dev.js --open",
