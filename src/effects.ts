@@ -9,6 +9,10 @@ import { Nullable } from "./util";
 
 export type EffectActCallback = (owner: GameObject) => void;
 
+export enum StatusEffectType {
+    Burn
+}
+
 /**
  * Implements effects to Fighters that have a different effect
  * each turn for a set amount of turns.

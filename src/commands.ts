@@ -1,13 +1,12 @@
-import { isNil } from "lodash";
-
 import Path from "./rot/path/index";
 
 import globals from "./globals";
 import { createPassableCallback } from "./ai/components";
 import { SpellData, ItemData, GameState, ObjectData } from "./data";
 import { GameMap, isBlocked, distanceBetweenObjects, getObjectsAtLocation } from "./map";
-import { displayMessage } from "./ui";
 import { GameObject } from "./object";
+import { displayMessage } from "./ui";
+import { Nullable } from "./util";
 
 export type Command = (actor: GameObject) => boolean;
 
@@ -22,6 +21,56 @@ export function noOpCommand(shouldAct: boolean = true) {
     };
 }
 
+export function getActorMovementPath(
+    x: number,
+    y: number,
+    actor: GameObject,
+    map: GameMap,
+    objects: GameObject[]
+): Nullable<number[][]> {
+    if (ObjectData[actor.type].maxTilesPerMove === null) {
+        throw new Error(`Missing maxTilesPerMove for ${actor.type}`);
+    }
+    const maxTilesPerMove = ObjectData[actor.type].maxTilesPerMove!;
+
+    // quick distance check to cut down the number of
+    // AStar calcs
+    if (distanceBetweenObjects({ x, y }, actor) < maxTilesPerMove * 2) {
+        const aStar = new Path.AStar(
+            x,
+            y,
+            createPassableCallback(actor),
+            { topology: 8 }
+        );
+
+        if (y >= map.length ||
+            x >= map[0].length ||
+            map[y][x].blocks) {
+            return null;
+        }
+
+        if (getObjectsAtLocation(objects, x, y)
+            .filter(o => o.blocks && o !== actor)
+            .length > 0) {
+            return null;
+        }
+
+        const path: number[][] = [];
+        function pathCallback(x: number, y: number) {
+            path.push([x, y]);
+        }
+        aStar.compute(actor.x, actor.y, pathCallback);
+
+        if (path.length === 0 || path.length > maxTilesPerMove) { return null; }
+
+        // remove our own position
+        path.shift();
+        if (path.length === 0) { return null; }
+        return path;
+    }
+    return null;
+}
+
 /**
  * Move the game object to a specific point on the map
  * @param {number} x the x coordinate to move to
@@ -29,20 +78,39 @@ export function noOpCommand(shouldAct: boolean = true) {
  * @returns {Command} a command for movement
  */
 export function goToLocationCommand(
-    x: number,
-    y: number,
+    path: number[][],
     map: GameMap,
     gameObjects: GameObject[]
 ): Command {
     return function(actor: GameObject): boolean {
-        const { blocks } = isBlocked(map, gameObjects, x, y );
-
+        const destination = path[path.length - 1];
+        const { blocks } = isBlocked(
+            map,
+            gameObjects,
+            destination[0],
+            destination[1]
+        );
         if (blocks === true) {
             return false;
         }
 
-        actor.x = x;
-        actor.y = y;
+        const triggerMap: Map<string, GameObject> = new Map();
+        gameObjects
+            .filter(o => o.trigger)
+            .forEach(o => {
+                triggerMap.set(`${o.x},${o.y}`, o);
+            });
+
+        for (let i = 0; i < path.length; i++) {
+            const spot = path[i];
+            const object = triggerMap.get(`${spot[0]},${spot[1]}`);
+            if (object !== null && object !== undefined && object.trigger !== null) {
+                object.trigger.trigger(actor);
+            }
+        }
+
+        actor.x = destination[0];
+        actor.y = destination[1];
         return true;
     };
 }
@@ -55,8 +123,6 @@ export function goToLocationCommand(
  */
 export function interactCommand(target: GameObject): Command {
     return function(actor: GameObject): boolean {
-        if (target === null) { return null; }
-
         if (target.interactable !== null) {
             target.interactable.interact(actor);
             return true;
@@ -125,8 +191,9 @@ export function openSpellsCommand(): Command {
  * @param {string} itemID The id of the item to use
  * @returns {Function} A command function which takes an object as a param
  */
-export function useItemCommand(itemID: string, target: GameObject = null): Command {
+export function useItemCommand(itemID: string, target: Nullable<GameObject> = null): Command {
     return function (actor: GameObject): boolean {
+        if (actor.inventory === null) { return false; }
         if (!actor.inventory.hasItem(itemID)) { return false; }
 
         const itemDetails = ItemData[itemID];
@@ -147,8 +214,9 @@ export function useItemCommand(itemID: string, target: GameObject = null): Comma
  * @param {string} spellID The id of the spell to use
  * @returns {Function} A command function which takes an object as a param
  */
-export function useSpellCommand(spellID: string, target?: GameObject): Command {
+export function useSpellCommand(spellID: string, target: Nullable<GameObject> = null): Command {
     return function (actor: GameObject): boolean {
+        if (actor.fighter === null) { return false; }
         if (!actor.fighter.hasSpell(spellID)) { return false; }
 
         const details = SpellData[spellID];

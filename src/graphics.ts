@@ -1,10 +1,10 @@
 import Display from "./rot/display/display";
 
 import input from "./input";
-import { GameMap, getObjectsAtLocation } from "./map";
+import { distanceBetweenObjects, GameMap, getObjectsAtLocation } from "./map";
 import { GameObject } from "./object";
 import { Camera } from "./camera";
-import { ObjectDataDetails } from "./data";
+import { ObjectData, ObjectDataDetails } from "./data";
 import { PlayerState } from "./input-handler";
 import { getActorMovementPath } from "./commands";
 import { Nullable } from "./util";
@@ -171,6 +171,10 @@ export class PlayerGraphics implements GraphicsComponent {
     draw(display: Display, camera: Camera, map: GameMap, objects: GameObject[]) {
         if (this.owner === null) { throw new Error("Can't draw PlayerGraphics without owner"); }
         if (this.owner.inputHandler === null) { throw new Error("Can't draw PlayerGraphics without inputHandler"); }
+        if (ObjectData[this.owner.type].maxTilesPerMove === null) {
+            throw new Error(`Missing maxTilesPerMove for ${this.owner.type}`);
+        }
+        const maxTilesPerMove = ObjectData[this.owner.type].maxTilesPerMove!;
 
         if (map[this.owner.y][this.owner.x].isVisibleAndLit()) {
             let bgColor = map[this.owner.y][this.owner.x].lightingColor;
@@ -201,19 +205,23 @@ export class PlayerGraphics implements GraphicsComponent {
                 const mousePosition = input.getMousePosition();
                 if (mousePosition === null) { return; }
 
-                const path = getActorMovementPath(
-                    mousePosition.x,
-                    mousePosition.y,
-                    this.owner,
-                    map,
-                    objects
-                );
-                if (path === null) { return; }
+                // quick distance check to cut down the number of
+                // AStar calcs
+                if (distanceBetweenObjects(this.owner, mousePosition) < maxTilesPerMove * 2) {
+                    const path = getActorMovementPath(
+                        mousePosition.x,
+                        mousePosition.y,
+                        this.owner,
+                        map,
+                        objects
+                    );
+                    if (path === null) { return; }
 
-                for (let i = 0; i < path.length; i++) {
-                    const step = path[i];
-                    const { x, y } = camera.worldToScreen(step[0], step[1]);
-                    display.draw(x, y, "", "yellow", "yellow");
+                    for (let i = 0; i < path.length; i++) {
+                        const step = path[i];
+                        const { x, y } = camera.worldToScreen(step[0], step[1]);
+                        display.draw(x, y, "", "yellow", "yellow");
+                    }
                 }
             }
         }

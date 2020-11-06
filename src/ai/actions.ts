@@ -6,7 +6,6 @@ import {
     useSpellCommand,
     goToLocationCommand,
     interactCommand,
-    getActorMovementPath,
     noOpCommand
 } from "../commands";
 import {
@@ -14,17 +13,17 @@ import {
     createPassableCallback,
     PlanningAI
 } from "./components";
-import { ItemType } from "../data";
 import { GameObject } from "../object";
 import {
     distanceBetweenObjects,
     GameMap,
     isBlocked,
     PathNode,
-    Point
 } from "../map";
 import { displayMessage } from "../ui";
+import { ItemType, ObjectData } from "../data";
 import { Nullable } from "../util";
+import { get } from "lodash";
 
 /**
  * Calculate a path from a game object to the give x and y
@@ -41,7 +40,7 @@ export function getStepsTowardsTarget(
     targetX: number,
     targetY: number,
     steps: number
-): Nullable<Point> {
+): Nullable<number[][]> {
     const aStar = new Path.AStar(
         targetX,
         targetY,
@@ -61,8 +60,7 @@ export function getStepsTowardsTarget(
     path.pop();
 
     if (path.length > 0) {
-        const index = Math.min(steps - 1, path.length - 1);
-        return { x: path[index][0], y: path[index][1] };
+        return path.slice(0, steps);
     }
     return null;
 }
@@ -111,6 +109,10 @@ export function patrolAction(
 ): Command {
     if (ai.pathName === null) { throw new Error("pathName not set for PatrollingMonsterAI"); }
     if (ai.owner === null) { throw new Error("No owner on AI for patrolAction"); }
+    if (ObjectData[ai.owner.type].maxTilesPerMove === null) {
+        throw new Error(`Missing maxTilesPerMove for ${ai.owner.type}`);
+    }
+    const maxTilesPerMove = ObjectData[ai.owner.type].maxTilesPerMove!;
 
     // For the first node, find the closest node on the path
     // to the current position, we can just follow the path
@@ -126,17 +128,34 @@ export function patrolAction(
                 return a.distance - b.distance;
             });
 
-        ai.patrolTarget = sortedNodes[0];
+        ai.patrolTarget = get(sortedNodes, "[0]", null);
+    }
+    if (ai.patrolTarget === null) {
+        return noOpCommand(true);
     }
 
-    const path = getActorMovementPath(
+    let path: Nullable<number[][]> = getStepsTowardsTarget(
+        ai.owner,
         ai.patrolTarget.x,
         ai.patrolTarget.y,
-        ai.owner,
-        map,
-        gameObjects
+        maxTilesPerMove
     );
+    // try the next node
+    if (path === null) {
+        ai.patrolTarget = pathNodes.get(ai.patrolTarget.next) ?? null;
 
+        if (ai.patrolTarget === null) {
+            return noOpCommand(true);
+        }
+
+        path = getStepsTowardsTarget(
+            ai.owner,
+            ai.patrolTarget.x,
+            ai.patrolTarget.y,
+            maxTilesPerMove
+        );
+    }
+    // give up
     if (path === null) {
         return noOpCommand(true);
     }
@@ -157,7 +176,16 @@ export function chaseAction(
     if (ai.owner === null) { throw new Error("No owner on AI for chaseAction"); }
     if (ai.target === null) { throw new Error("Cannot perform chaseAction without a target"); }
 
-    const path = getActorMovementPath(ai.target.x, ai.target.y, ai.owner, map, gameObjects);
+    const path: Nullable<number[][]> = getStepsTowardsTarget(
+        ai.owner,
+        ai.target.x,
+        ai.target.y,
+        5
+    );
+    if (path === null) {
+        return noOpCommand(true);
+    }
+
     if (path === null) {
         return noOpCommand(true);
     }

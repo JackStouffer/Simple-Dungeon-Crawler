@@ -91,7 +91,9 @@ export class PlayerInputHandler implements InputHandler {
                         mouseDownPosition,
                         objects
                     );
-                    if (target !== null) { return interactCommand(target); }
+                    if (target !== null && target !== this.owner) {
+                        return interactCommand(target);
+                    }
                 }
 
                 const path = getActorMovementPath(
