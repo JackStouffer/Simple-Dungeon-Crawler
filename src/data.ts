@@ -1,5 +1,3 @@
-declare const ENV: string;
-
 // @ts-expect-error
 import * as forrest_001 from "./maps/forrest_001";
 // @ts-expect-error
@@ -1237,10 +1235,6 @@ export const ItemData: { [key: string]: ItemDataDetails } = {
     }
 };
 
-if (ENV !== "TEST") {
-    Object.freeze(ItemData);
-}
-
 export interface SpellDataDetails {
     displayName: string;
     manaCost: number;
@@ -1347,10 +1341,6 @@ export const SpellData: { [key: string]: SpellDataDetails } = {
         useFunc: castSlow
     }
 };
-
-if (ENV !== "TEST") {
-    Object.freeze(SpellData);
-}
 
 export interface GoalDataDetails {
     resolver: (ai: AIComponent) => boolean
@@ -1536,9 +1526,6 @@ for (const objectID in ObjectData) {
         }
     }
 }
-if (ENV !== "TEST") {
-    Object.freeze(ObjectData);
-}
 
 export const LevelData: { [key: string]: any } = {
     forrest_001,
@@ -1547,7 +1534,3 @@ export const LevelData: { [key: string]: any } = {
 };
 
 export type LevelName = keyof typeof LevelData;
-
-if (ENV !== "TEST") {
-    Object.freeze(LevelData);
-}

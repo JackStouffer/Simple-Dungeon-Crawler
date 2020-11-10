@@ -1,7 +1,7 @@
 /* global describe, it, afterEach */
 
-import { expect } from "chai";
-import input from "../src/input";
+const { expect } = require("chai");
+const input = require("../test-dist/input").default;
 
 describe("input", function () {
     afterEach(function () {

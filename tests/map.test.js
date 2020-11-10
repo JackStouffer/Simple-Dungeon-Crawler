@@ -1,19 +1,11 @@
 /* global describe, before, beforeEach, it */
 
-import { expect } from "chai";
-import { fake } from "sinon";
-import {
-    Tile,
-    loadTiledMap,
-    findEmptySpace,
-    isBlocked,
-    isSightBlocked,
-    drawTile,
-    getRandomFighterWithinRange,
-    drawMap,
-    setAllToExplored
-} from "../src/map";
-import {
+const _ = require("lodash");
+const { expect } = require("chai");
+const { fake } = require("sinon");
+const proxyquire =  require('proxyquire');
+
+const {
     COLOR_DARK_GROUND,
     LevelData,
     TileData,
@@ -22,38 +14,73 @@ import {
     DeathType,
     DamageType,
     Affinity
-} from "../src/data";
-import testMap from "./test-data/map";
+} = require("../test-dist/data");
+const testMap = require("./test-data/map");
+
+const emptySpaceData = [
+    "empty",
+    "",
+    "white",
+    "white",
+    "grey",
+    "grey",
+    false,
+    false
+];
+const filledSpaceData = [
+    "filled",
+    "",
+    "grey",
+    "grey",
+    "brown",
+    "brown",
+    true,
+    true
+];
 
 describe("map", function () {
-    let map;
-    const emptySpaceData = [
-        "empty",
-        "",
-        "white",
-        "white",
-        "grey",
-        "grey",
-        false,
-        false
-    ];
-    const filledSpaceData = [
-        "filled",
-        "",
-        "grey",
-        "grey",
-        "brown",
-        "brown",
-        true,
-        true
-    ];
-    let display;
-    LevelData["test"] = testMap;
-    ItemData["test"] = {
-        displayName: "test"
-    };
+    let mapModule, map, display;
+
+    function mock(mocks) {
+        const defaultMocks = _.extend({
+            "./globals": {
+                default: {
+                    Game: {
+                        player: {}
+                    },
+                    gameEventEmitter: {
+                        emit: fake()
+                    }
+                }
+            },
+            "./object": {
+                createObject: (type, x, y) => {
+                    return {
+                        x, y, type,
+                        inventory: {
+                            getItems: fake(),
+                            addItem: fake()
+                        },
+                        interactable: {
+                            setLevel: fake(),
+                            setSpell: fake()
+                        }
+                    };
+                }
+            },
+            "./ui": {
+                displayMessage: fake()
+            }
+        }, mocks);
+
+        mapModule = proxyquire('../test-dist/map', defaultMocks);
+    }
 
     before(function () {
+        LevelData["test"] = testMap;
+        ItemData["test"] = {
+            displayName: "test"
+        };
         ObjectData["test"] = {
             name: "test",
             char: "a",
@@ -75,22 +102,26 @@ describe("map", function () {
         };
     });
 
+    beforeEach(() => {
+        mock();
+    });
+
     beforeEach(function () {
         map = [
             [
-                new Tile(...emptySpaceData),
-                new Tile(...emptySpaceData),
-                new Tile(...filledSpaceData)
+                new mapModule.Tile(...emptySpaceData),
+                new mapModule.Tile(...emptySpaceData),
+                new mapModule.Tile(...filledSpaceData)
             ],
             [
-                new Tile(...emptySpaceData),
-                new Tile(...emptySpaceData),
-                new Tile(...emptySpaceData)
+                new mapModule.Tile(...emptySpaceData),
+                new mapModule.Tile(...emptySpaceData),
+                new mapModule.Tile(...emptySpaceData)
             ],
             [
-                new Tile(...filledSpaceData),
-                new Tile(...filledSpaceData),
-                new Tile(...filledSpaceData)
+                new mapModule.Tile(...filledSpaceData),
+                new mapModule.Tile(...filledSpaceData),
+                new mapModule.Tile(...filledSpaceData)
             ]
         ];
         display = {
@@ -100,8 +131,8 @@ describe("map", function () {
 
     describe("loadTiledMap", function () {
         it("should load tile data into Tiles", function () {
-            const { map } = loadTiledMap("test");
-            expect(map[0][0]).to.be.deep.equal(new Tile(
+            const { map } = mapModule.loadTiledMap("test");
+            expect(map[0][0]).to.be.deep.equal(new mapModule.Tile(
                 TileData[1048].name,
                 TileData[1048].char,
                 TileData[1048].fgColor,
@@ -114,14 +145,13 @@ describe("map", function () {
         });
 
         it("should set the player location correctly", function () {
-            const { playerLocation } = loadTiledMap("test");
+            const { playerLocation } = mapModule.loadTiledMap("test");
             expect(playerLocation[0]).to.be.equal(27);
             expect(playerLocation[1]).to.be.equal(23);
         });
 
         it("should load a game object correctly", function () {
-            const { objects } = loadTiledMap("test");
-            expect(objects[0].type).to.be.equal("test");
+            const { objects } = mapModule.loadTiledMap("test");
             expect(objects[0].x).to.be.equal(40);
             expect(objects[0].y).to.be.equal(15);
         });
@@ -132,41 +162,35 @@ describe("map", function () {
                 type: "test",
                 value: 10
             };
-            const { objects } = loadTiledMap("test");
+            const { objects } = mapModule.loadTiledMap("test");
             expect(objects[1].type).to.be.equal("chest");
-            expect(objects[1].inventory.getItems()).to.be.deep.equal([{
-                id: "test",
-                count: 1,
-                displayName: "Test Item",
-                type: "test",
-                value: 10
-            }]);
+            expect(objects[1].inventory.addItem.calledOnce).to.be.true;
         });
 
         it("should set the level to load for a load level interactable", function () {
-            const { objects } = loadTiledMap("test");
+            const { objects } = mapModule.loadTiledMap("test");
             expect(objects[2].type).to.be.equal("load_door");
-            expect(objects[2].interactable.levelName).to.be.equal("test_level");
+            expect(objects[2].interactable.setLevel.calledWith("test_level")).to.be.true;
         });
 
         it("should set the spell for a set spell interactable", function () {
-            const { objects } = loadTiledMap("test");
+            const { objects } = mapModule.loadTiledMap("test");
             expect(objects[3].type).to.be.equal("magic_shrine");
-            expect(objects[3].interactable.spellId).to.be.equal("test_spell");
+            expect(objects[3].interactable.setSpell.calledWith("test_spell")).to.be.true;
         });
     });
 
     describe("findEmptySpace", function () {
         it("should return an empty space", function () {
-            const { x, y } = findEmptySpace(map, []);
+            const { x, y } = mapModule.findEmptySpace(map, []);
             expect(map[y][x].blocks).to.be.false;
         });
 
         it("should not return an empty space if it has a blocking object on it", function () {
             map = [
-                [new Tile(...emptySpaceData), new Tile(...emptySpaceData)],
+                [new mapModule.Tile(...emptySpaceData), new mapModule.Tile(...emptySpaceData)],
             ];
-            const { x, y } = findEmptySpace(map, [{ x: 0, y: 0, blocks: true }]);
+            const { x, y } = mapModule.findEmptySpace(map, [{ x: 0, y: 0, blocks: true }]);
             expect(x).to.be.equal(1);
             expect(y).to.be.equal(0);
         });
@@ -174,19 +198,19 @@ describe("map", function () {
 
     describe("isBlocked", function () {
         it("should return true if the space on the map is blocked", function () {
-            const { object, blocks } = isBlocked(map, [], 0, 3);
+            const { object, blocks } = mapModule.isBlocked(map, [], 0, 3);
             expect(blocks).to.be.true;
             expect(object).to.be.null;
         });
 
         it("should return false if the space on the map is not blocked", function () {
-            const { object, blocks } = isBlocked(map, [], 0, 0);
+            const { object, blocks } = mapModule.isBlocked(map, [], 0, 0);
             expect(blocks).to.be.false;
             expect(object).to.be.null;
         });
 
         it("should return the blocking object if it's on the space", function () {
-            const { object, blocks } = isBlocked(map, [{ x: 0, y: 0, blocks: true }], 0, 0);
+            const { object, blocks } = mapModule.isBlocked(map, [{ x: 0, y: 0, blocks: true }], 0, 0);
             expect(object).to.be.deep.equal({ x: 0, y: 0, blocks: true });
             expect(blocks).to.be.true;
         });
@@ -194,62 +218,62 @@ describe("map", function () {
 
     describe("isSightBlocked", function () {
         it("should return true if the space on the map blocks sight", function () {
-            expect(isSightBlocked(map, [], 0, 3)).to.be.true;
+            expect(mapModule.isSightBlocked(map, [], 0, 3)).to.be.true;
         });
 
         it("should return false if the space on the map does not block sight", function () {
-            expect(isSightBlocked(map, [], 0, 0)).to.be.equal(false);
+            expect(mapModule.isSightBlocked(map, [], 0, 0)).to.be.equal(false);
         });
 
         it("should return true if an object on the spot blocks sight", function () {
             expect(
-                isSightBlocked(map, [{ x: 0, y: 0, blocksSight: true }], 0, 0)
+                mapModule.isSightBlocked(map, [{ x: 0, y: 0, blocksSight: true }], 0, 0)
             ).to.be.deep.equal(true);
         });
     });
 
     describe("drawTile", function () {
         it("should not draw a non-blocking tile when it's invisible", function () {
-            const tile = new Tile(...emptySpaceData);
-            drawTile(display, tile, 0, 0);
+            const tile = new mapModule.Tile(...emptySpaceData);
+            mapModule.drawTile(display, tile, 0, 0);
             expect(display.draw.calledOnce).to.be.false;
         });
 
         it("should not draw a blocking tile when it's invisible", function () {
-            const tile = new Tile(...filledSpaceData);
-            drawTile(display, tile, 0, 0);
+            const tile = new mapModule.Tile(...filledSpaceData);
+            mapModule.drawTile(display, tile, 0, 0);
             expect(display.draw.calledOnce).to.be.false;
         });
 
         it("should draw a non-blocking tile as dark when it's explored but not visible", function () {
-            const tile = new Tile(...emptySpaceData);
+            const tile = new mapModule.Tile(...emptySpaceData);
             tile.explored = true;
-            drawTile(display, tile, 0, 0);
+            mapModule.drawTile(display, tile, 0, 0);
             expect(display.draw.calledWith(0, 0, "", COLOR_DARK_GROUND, COLOR_DARK_GROUND)).to.be.true;
         });
 
         it("should draw a blocking tile with its explored color when it's explored but not visible", function () {
-            const tile = new Tile(...filledSpaceData);
+            const tile = new mapModule.Tile(...filledSpaceData);
             tile.explored = true;
-            drawTile(display, tile, 0, 0);
+            mapModule.drawTile(display, tile, 0, 0);
             expect(display.draw.calledWith(0, 0, "", "brown", "brown")).to.be.true;
         });
 
         it("should draw a non-blocking tile with the light color when visible", function () {
-            const tile = new Tile(...emptySpaceData);
+            const tile = new mapModule.Tile(...emptySpaceData);
             tile.explored = true;
             tile.visible = true;
             tile.lightingColor = "#ffffff";
-            drawTile(display, tile, 0, 0);
+            mapModule.drawTile(display, tile, 0, 0);
             expect(display.draw.calledWith(0, 0, "", "white", "rgb(255,255,255)")).to.be.true;
         });
 
         it("should draw a non-blocking tile with the fgColor when visible", function () {
-            const tile = new Tile(...filledSpaceData);
+            const tile = new mapModule.Tile(...filledSpaceData);
             tile.explored = true;
             tile.visible = true;
             tile.lightingColor = "#ffffff";
-            drawTile(display, tile, 0, 0);
+            mapModule.drawTile(display, tile, 0, 0);
             expect(display.draw.calledWith(0, 0, "", "grey", "grey")).to.be.true;
         });
     });
@@ -263,7 +287,7 @@ describe("map", function () {
             }
 
             const gameObjects = [{ name: "test1", x: 2, y: 1, fighter: {}, ai: {} }];
-            const actor = getRandomFighterWithinRange(map, gameObjects, { x: 0, y: 0 }, 8);
+            const actor = mapModule.getRandomFighterWithinRange(map, gameObjects, { x: 0, y: 0 }, 8);
             expect(actor.name).to.be.equal("test1");
         });
 
@@ -275,7 +299,7 @@ describe("map", function () {
             }
 
             const gameObjects = [{ name: "test1", x: 2, y: 1, fighter: {}, ai: {} }];
-            const actor = getRandomFighterWithinRange(map, gameObjects, { x: 0, y: 0 }, 1);
+            const actor = mapModule.getRandomFighterWithinRange(map, gameObjects, { x: 0, y: 0 }, 1);
             expect(actor).to.be.equal(null);
         });
     });
@@ -287,8 +311,8 @@ describe("map", function () {
                     return { x, y };
                 }
             };
-            setAllToExplored(map);
-            drawMap(display, camera, map);
+            mapModule.setAllToExplored(map);
+            mapModule.drawMap(display, camera, map);
             expect(display.draw.callCount).to.be.equal(9);
         });
     });

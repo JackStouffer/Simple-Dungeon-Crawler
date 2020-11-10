@@ -6,7 +6,6 @@ import {
     LEVEL_UP_FACTOR,
     DamageType,
     SpellData,
-    ObjectData,
     SpellType
 } from "./data";
 import { displayMessage, MessageType } from "./ui";
@@ -19,6 +18,7 @@ export interface FighterComponent {
     owner: Nullable<GameObject>;
     experience: number;
     level: number;
+    experienceGiven?: number;
 
     setOwner: (owner: Nullable<GameObject>) => void;
     act: () => void;
@@ -204,7 +204,7 @@ export class BasicFighter implements FighterComponent, SpeedActor {
         if (damage > 0) {
             const killed = target.fighter.takeDamage(damage, critical, DamageType.Physical);
             if (killed) {
-                this.experience += ObjectData[target.type].experienceGiven ?? 0;
+                this.experience += target.fighter.experienceGiven ?? 0;
             }
         } else if (this.owner !== null) {
             displayMessage(`${this.owner.name} attacks ${target.name}, but it's too weak!`);

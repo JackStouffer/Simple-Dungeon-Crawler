@@ -1,5 +1,3 @@
-declare const ENV: string;
-
 import { Howl } from "howler";
 import { Nullable } from "./util";
 
@@ -22,10 +20,6 @@ const musicChannel: SoundChannel = {
 };
 
 export async function loadSounds() {
-    if (ENV === "TEST") {
-        return;
-    }
-
     await Promise.all([
         new Promise(function(resolve, reject) {
             sounds.uiClick = new Howl({
@@ -126,90 +120,46 @@ export function loadEventualSounds() {
 }
 
 export function playUIClick() {
-    if (ENV === "TEST") {
-        return;
-    }
-
     sounds.uiClick.play();
 }
 
 export function playUIRollover() {
-    if (ENV === "TEST") {
-        return;
-    }
-
     sounds.uiRollover.play();
 }
 
 export function playOpenSpells() {
-    if (ENV === "TEST") {
-        return;
-    }
-
     sounds.bookFlip.play();
 }
 
 export function playCloseSpells() {
-    if (ENV === "TEST") {
-        return;
-    }
-
     sounds.bookFlip2.play();
 }
 
 export function playOpenInventory() {
-    if (ENV === "TEST") {
-        return;
-    }
-
     sounds.handleLeather2.play();
 }
 
 export function playCloseInventory() {
-    if (ENV === "TEST") {
-        return;
-    }
-
     sounds.handleLeather.play();
 }
 
 export function playPing() {
-    if (ENV === "TEST") {
-        return;
-    }
-
     sounds.ping.play();
 }
 
 export function playDoorOpen() {
-    if (ENV === "TEST") {
-        return;
-    }
-
     sounds.doorOpening.play();
 }
 
 export function playChestOpen() {
-    if (ENV === "TEST") {
-        return;
-    }
-
     sounds.chestOpening.play();
 }
 
 export function playBoxBreak() {
-    if (ENV === "TEST") {
-        return;
-    }
-
     sounds.boxBreaking.play();
 }
 
 export function playLevelTheme(levelName: string) {
-    if (ENV === "TEST") {
-        return;
-    }
-
     const levelTheme = sounds[levelThemes[levelName]];
 
     if (musicChannel.sound === levelTheme) {
@@ -226,20 +176,12 @@ export function playLevelTheme(levelName: string) {
 }
 
 export function pauseMusic() {
-    if (ENV === "TEST") {
-        return;
-    }
-
     if (musicChannel.id !== null && musicChannel.sound !== null) {
         musicChannel.sound.pause(musicChannel.id);
     }
 }
 
 export function resumeMusic() {
-    if (ENV === "TEST") {
-        return;
-    }
-
     if (musicChannel.id !== null && musicChannel.sound !== null) {
         musicChannel.sound.play(musicChannel.id);
     }

@@ -1,11 +1,32 @@
 /* global describe, it, afterEach */
 
-import { expect } from "chai";
+const _ = require("lodash");
+const { expect } = require("chai");
+const proxyquire =  require('proxyquire');
 
-import input from "../src/input";
-import { KeyBindingMenu, InventoryMenu, SpellSelectionMenu } from "../src/ui";
+const input = require("../test-dist/input").default;
+const { KeyBindingMenu, InventoryMenu, SpellSelectionMenu } = require("../test-dist/ui");
 
 describe("ui", function () {
+    let skills, gameObject;
+
+    function mock(mocks) {
+        const defaultMocks = _.extend({
+            "./globals": {
+                default: {
+                    Game: {
+                    }
+                }
+            }
+        }, mocks);
+
+        skills = proxyquire('../test-dist/ui', defaultMocks);
+    }
+
+    beforeEach(() => {
+        mock();
+    });
+
     afterEach(function () {
         input.clearInputs();
     });

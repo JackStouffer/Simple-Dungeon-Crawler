@@ -1,19 +1,41 @@
 /* global describe, it, beforeEach */
 
-import { expect } from "chai";
-import { fake } from "sinon";
-import globals from "../src/globals";
-import { createObject } from "../src/object";
-import { BasicFighter } from "../src/fighter";
-import { StatisticEffect, StatusEffect } from "../src/effects";
-import { DamageType, SpellData, Affinity, ObjectData, DeathType } from "../src/data";
+const _ = require("lodash");
+const { expect } = require("chai");
+const { fake } = require("sinon");
+const proxyquire =  require('proxyquire');
 
-globals.Game = {
-    player: null,
-    addObject: fake()
-};
+const { StatisticEffect, StatusEffect } = require("../test-dist/effects");
+const { DamageType, SpellData, Affinity, ObjectData, DeathType } = require("../test-dist/data");
 
 describe("fighter", function () {
+    let fighterModule;
+
+    function mock(mocks) {
+        const defaultMocks = _.extend({
+            './globals': {
+                default: {
+                    Game: {
+                        player: null,
+                        addObject: fake()
+                    },
+                    gameEventEmitter: {
+                        emit: fake()
+                    }
+                }
+            },
+            "./ui": {
+                displayMessage: fake()
+            }
+        }, mocks);
+
+        fighterModule = proxyquire('../test-dist/fighter', defaultMocks);
+    }
+
+    beforeEach(function () {
+        mock();
+    });
+
     describe("BasicFighter", function () {
         let data;
         const owner = { name: "test", blocks: true };
@@ -72,7 +94,7 @@ describe("fighter", function () {
 
         describe("act", function () {
             it("should increase the level of the fighter if the experience is high enough", function () {
-                const fighter = new BasicFighter(data);
+                const fighter = new fighterModule.BasicFighter(data);
                 fighter.experience = 10000;
                 fighter.act();
                 expect(fighter.level).to.be.equal(2);
@@ -80,7 +102,7 @@ describe("fighter", function () {
 
             it("should replenish the hp and mp on level up", function () {
                 const owner = { name: "test" };
-                const fighter = new BasicFighter(data);
+                const fighter = new fighterModule.BasicFighter(data);
                 fighter.setOwner(owner);
 
                 fighter.takeDamage(1, false, DamageType.physical);
@@ -92,7 +114,7 @@ describe("fighter", function () {
             });
 
             it("should call the act function on status effects", function () {
-                const fighter = new BasicFighter(data);
+                const fighter = new fighterModule.BasicFighter(data);
                 const callback = fake();
                 const effect = new StatusEffect(fighter, "test", 2, callback);
                 fighter.addStatusEffect(effect);
@@ -103,7 +125,7 @@ describe("fighter", function () {
             });
 
             it("should remove a status effect when it's out of turns", function () {
-                const fighter = new BasicFighter(data);
+                const fighter = new fighterModule.BasicFighter(data);
                 fighter.setOwner(owner);
                 const callback = fake();
                 const effect = new StatusEffect(fighter, "test", 1, callback);
@@ -114,7 +136,7 @@ describe("fighter", function () {
             });
 
             it("should remove a stat effect when it's out of turns", function () {
-                const fighter = new BasicFighter(data);
+                const fighter = new fighterModule.BasicFighter(data);
                 fighter.setOwner(owner);
                 const effect = new StatisticEffect(fighter, "test", 1, { type: "add", stat: "maxHp", value: 1 });
                 fighter.addStatisticEffect(effect);
@@ -127,7 +149,7 @@ describe("fighter", function () {
         describe("takeDamage", function () {
             it("should reduce hp by (value - defense) when takeDamage is called", function () {
                 const owner = { name: "test" };
-                const fighter = new BasicFighter(data);
+                const fighter = new fighterModule.BasicFighter(data);
                 fighter.setOwner(owner);
 
                 fighter.takeDamage(5, false, DamageType.Physical);
@@ -136,7 +158,7 @@ describe("fighter", function () {
 
             it("should always reduce enemy health by at least 1", function () {
                 const owner = { name: "test" };
-                const fighter = new BasicFighter(data);
+                const fighter = new fighterModule.BasicFighter(data);
                 fighter.setOwner(owner);
 
                 fighter.stats.defense = 1000;
@@ -147,7 +169,7 @@ describe("fighter", function () {
             it("should call the deathCallback on death", function () {
                 const deathCallback = fake();
                 const owner = { name: "test" };
-                const fighter = new BasicFighter(data, deathCallback);
+                const fighter = new fighterModule.BasicFighter(data, deathCallback);
                 fighter.setOwner(owner);
 
                 fighter.takeDamage(100, false, DamageType.Physical);
@@ -157,47 +179,48 @@ describe("fighter", function () {
 
         describe("attack", function () {
             it("should reduce enemy hp when attack is used", function () {
-                const fighter = new BasicFighter(data);
+                const fighter = new fighterModule.BasicFighter(data);
                 fighter.setOwner(owner);
 
-                const enemy = createObject("enemy");
-                const health = enemy.fighter.stats.hp;
+                const enemy = {
+                    fighter: {
+                        takeDamage: fake()
+                    }
+                };
 
                 fighter.attack(enemy);
-                expect(enemy.fighter.stats.hp).to.be.equal(health - 1);
-            });
-
-            it("should reduce enemy hp by strength - defense", function () {
-                data.strength = 10;
-                const fighter = new BasicFighter(data);
-                fighter.setOwner(owner);
-
-                const enemy = createObject("enemy");
-                const health = enemy.fighter.stats.hp;
-
-                fighter.attack(enemy);
-                expect(enemy.fighter.stats.hp).to.be.equal(health - 9);
+                expect(enemy.fighter.takeDamage.calledOnce).to.be.true;
             });
 
             it("should reduce enemy health by (strength - defense) * 1.5 when a critical occurs", function () {
                 data.strength = 10;
                 data.criticalChance = 1;
-                const fighter = new BasicFighter(data);
+                const fighter = new fighterModule.BasicFighter(data);
                 fighter.setOwner(owner);
-
-                const enemy = createObject("enemy");
-                const health = enemy.fighter.stats.hp;
+                const enemy = {
+                    fighter: {
+                        takeDamage: fake()
+                    }
+                };
+                const damage = data.strength * 1.5;
 
                 fighter.attack(enemy);
-                expect(enemy.fighter.stats.hp).to.be.equal(health - 14);
+                expect(
+                    enemy.fighter.takeDamage.calledWith(damage, true, DamageType.Physical)
+                ).to.be.true;
             });
 
             it("should add experience to the attacker if hp reaches zero", function () {
-                const fighter = new BasicFighter(data);
+                const fighter = new fighterModule.BasicFighter(data);
                 fighter.setOwner(owner);
                 fighter.stats.strength = 1000;
 
-                const enemy = createObject("enemy");
+                const enemy = {
+                    fighter: {
+                        experienceGiven: 50,
+                        takeDamage: fake.returns(true)
+                    }
+                };
                 fighter.attack(enemy);
                 expect(fighter.experience).to.be.equal(50);
             });
@@ -205,14 +228,14 @@ describe("fighter", function () {
 
         describe("heal", function () {
             it("should increase hp when heal is called", function () {
-                const fighter = new BasicFighter(data);
+                const fighter = new fighterModule.BasicFighter(data);
                 fighter.stats.hp = 5;
                 fighter.heal(5);
                 expect(fighter.stats.hp).to.be.equal(10);
             });
 
             it("should not increase hp past the max", function () {
-                const fighter = new BasicFighter(data);
+                const fighter = new fighterModule.BasicFighter(data);
                 fighter.heal(5);
                 expect(fighter.stats.hp).to.be.equal(10);
             });
@@ -220,12 +243,18 @@ describe("fighter", function () {
 
         describe("addSpellById", function () {
             it("should return true if the spell hasn't been learned yet", function () {
-                const fighter = new BasicFighter(data);
+                SpellData["spell"] = {
+                    value: 10,
+                };
+                const fighter = new fighterModule.BasicFighter(data);
                 expect(fighter.addSpellById("spell")).to.be.true;
             });
 
             it("should return false if the spell is already known", function () {
-                const fighter = new BasicFighter(data);
+                SpellData["spell"] = {
+                    value: 10,
+                };
+                const fighter = new fighterModule.BasicFighter(data);
                 fighter.addSpellById("spell");
                 expect(fighter.addSpellById("spell")).to.be.false;
             });
@@ -233,7 +262,7 @@ describe("fighter", function () {
 
         describe("getKnownSpells", function () {
             it("should give an empty array when no spells are known", function () {
-                const fighter = new BasicFighter(data);
+                const fighter = new fighterModule.BasicFighter(data);
                 expect(fighter.getKnownSpells()).to.have.lengthOf(0);
             });
 
@@ -251,7 +280,7 @@ describe("fighter", function () {
                     manaCost: 20
                 };
 
-                const fighter = new BasicFighter(data);
+                const fighter = new fighterModule.BasicFighter(data);
                 fighter.addSpellById("spell");
                 expect(fighter.getKnownSpells()).to.be.deep.equal([
                     {
@@ -282,7 +311,7 @@ describe("fighter", function () {
             });
 
             it("should not change output when the same spell is added twice", function () {
-                const fighter = new BasicFighter(data);
+                const fighter = new fighterModule.BasicFighter(data);
                 fighter.addSpellById("spell");
                 expect(fighter.getKnownSpells()).to.be.deep.equal([
                     {
@@ -308,7 +337,7 @@ describe("fighter", function () {
 
         describe("getEffectiveStats", function () {
             it("should do nothing if there are no status effects", function () {
-                const fighter = new BasicFighter(data);
+                const fighter = new fighterModule.BasicFighter(data);
                 const stats = fighter.getEffectiveStats();
                 expect(stats).to.be.deep.equal({
                     ailmentSusceptibility: 0,
@@ -323,7 +352,7 @@ describe("fighter", function () {
             });
 
             it("should modify the given stats", function () {
-                const fighter = new BasicFighter(data);
+                const fighter = new fighterModule.BasicFighter(data);
 
                 fighter.addStatisticEffect(new StatisticEffect(
                     null,
@@ -346,7 +375,7 @@ describe("fighter", function () {
             });
 
             it("should handle multiple modifiers", function () {
-                const fighter = new BasicFighter(data);
+                const fighter = new fighterModule.BasicFighter(data);
 
                 fighter.addStatisticEffect(new StatisticEffect(
                     null,
@@ -387,7 +416,7 @@ describe("fighter", function () {
             });
 
             it("should reduce health when maxHp is reduced", function () {
-                const fighter = new BasicFighter(data);
+                const fighter = new fighterModule.BasicFighter(data);
 
                 fighter.addStatisticEffect(new StatisticEffect(
                     null,
@@ -411,7 +440,7 @@ describe("fighter", function () {
             });
 
             it("should put maxHp back, but not hp, when maxHp is reduced", function () {
-                const fighter = new BasicFighter(data);
+                const fighter = new fighterModule.BasicFighter(data);
 
                 fighter.addStatisticEffect(new StatisticEffect(
                     null,
@@ -448,7 +477,7 @@ describe("fighter", function () {
             });
 
             it("should reduce mana when maxMana is reduced", function () {
-                const fighter = new BasicFighter(data);
+                const fighter = new fighterModule.BasicFighter(data);
 
                 fighter.addStatisticEffect(new StatisticEffect(
                     null,
@@ -472,7 +501,7 @@ describe("fighter", function () {
             });
 
             it("should put maxMana back, but not mana, when maxMana is reduced", function () {
-                const fighter = new BasicFighter(data);
+                const fighter = new fighterModule.BasicFighter(data);
 
                 fighter.addStatisticEffect(new StatisticEffect(
                     null,

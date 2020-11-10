@@ -1,24 +1,37 @@
 /* global describe, it, beforeEach */
 
-import { expect } from "chai";
-import { fake } from "sinon";
-import {
-    BasicGraphics,
-    DrawAfterSeen,
-    TransparencyGraphics
-} from "../src/graphics";
+const _ = require("lodash");
+const { expect } = require("chai");
+const { fake } = require("sinon");
+const proxyquire =  require('proxyquire');
 
 describe("graphics", function () {
-    let display, camera;
+    let graphics, display, camera;
 
-    beforeEach(function () {
+    function mock(mocks) {
+        const defaultMocks = _.extend({
+            "./globals": {
+                default: {
+                    Game: {
+                        player: {}
+                    }
+                }
+            }
+        }, mocks);
+
+        graphics = proxyquire('../test-dist/graphics', defaultMocks);
+    }
+
+    beforeEach(() => {
+        mock();
+
+        display = {
+            draw: fake()
+        };
         camera = {
             worldToScreen: function (x, y) {
                 return { x, y };
             }
-        };
-        display = {
-            draw: fake()
         };
     });
 
@@ -27,7 +40,7 @@ describe("graphics", function () {
             const owner = {
                 x: 0,
                 y: 0,
-                graphics: new BasicGraphics({
+                graphics: new graphics.BasicGraphics({
                     char: "T",
                     fgColor: "white",
                     bgColor: "black"
@@ -42,7 +55,7 @@ describe("graphics", function () {
             const owner = {
                 x: 0,
                 y: 0,
-                graphics: new BasicGraphics({
+                graphics: new graphics.BasicGraphics({
                     char: "T",
                     fgColor: "white",
                     bgColor: "black"
@@ -66,7 +79,7 @@ describe("graphics", function () {
             const owner = {
                 x: 0,
                 y: 0,
-                graphics: new TransparencyGraphics({
+                graphics: new graphics.TransparencyGraphics({
                     char: "T",
                     fgColor: "white"
                 })
@@ -87,7 +100,7 @@ describe("graphics", function () {
             const owner = {
                 x: 0,
                 y: 0,
-                graphics: new TransparencyGraphics({
+                graphics: new graphics.TransparencyGraphics({
                     char: "T",
                     fgColor: "white"
                 })
@@ -115,7 +128,7 @@ describe("graphics", function () {
             const owner = {
                 x: 0,
                 y: 0,
-                graphics: new TransparencyGraphics({
+                graphics: new graphics.TransparencyGraphics({
                     char: "T",
                     fgColor: "white"
                 })
@@ -143,7 +156,7 @@ describe("graphics", function () {
             const owner = {
                 x: 0,
                 y: 0,
-                graphics: new TransparencyGraphics({
+                graphics: new graphics.TransparencyGraphics({
                     char: "T",
                     fgColor: "white"
                 })
@@ -159,7 +172,7 @@ describe("graphics", function () {
             const owner = {
                 x: 0,
                 y: 0,
-                graphics: new DrawAfterSeen({
+                graphics: new graphics.DrawAfterSeen({
                     char: "T",
                     fgColor: "white",
                     bgColor: "black"
@@ -174,7 +187,7 @@ describe("graphics", function () {
             const owner = {
                 x: 0,
                 y: 0,
-                graphics: new DrawAfterSeen({
+                graphics: new graphics.DrawAfterSeen({
                     char: "T",
                     fgColor: "white",
                     bgColor: "black"

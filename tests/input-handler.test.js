@@ -1,58 +1,77 @@
 /* global describe, it, beforeEach, afterEach */
 
-import { expect } from "chai";
-import { fake } from "sinon";
+const _ = require("lodash");
+const { expect } = require("chai");
+const { fake } = require("sinon");
+const proxyquire =  require('proxyquire');
 
-import globals from "../src/globals";
-import input from "../src/input";
-import { PlayerInputHandler, PlayerState } from "../src/input-handler";
+const input = require("../test-dist/input");
 
 describe("input-handler", function () {
-    beforeEach(function () {
-        globals.Game = {
-            player: {
-                x: 0,
-                y: 0
-            },
-            map: [[]],
-            gameObjects: [],
-            display: {
-                eventToPosition: fake()
-            },
-            gameCamera: {
-                screenToWorld: fake()
+    let inputHandler;
+
+    function mock(mocks) {
+        const defaultMocks = _.extend({
+            "./globals": {
+                default: {
+                    Game: {
+                        player: {
+                            x: 0,
+                            y: 0
+                        },
+                        map: [[]],
+                        gameObjects: [],
+                        display: {
+                            eventToPosition: fake()
+                        },
+                        gameCamera: {
+                            screenToWorld: fake()
+                        }
+                    }
+                }
             }
-        };
+        }, mocks);
+
+        inputHandler = proxyquire('../test-dist/input-handler', defaultMocks);
+    }
+
+    beforeEach(function () {
+        mock();
     });
 
     afterEach(function () {
-        input.clearInputs();
+        input.default.clearInputs();
     });
 
     describe("PlayerInputHandler", function () {
         describe("getState", function () {
             it("should return the current state", function () {
-                const handler = new PlayerInputHandler();
-                expect(handler.getState()).to.be.equal(PlayerState.Combat);
+                const handler = new inputHandler.PlayerInputHandler();
+                expect(handler.getState()).to.be.equal(inputHandler.PlayerState.Combat);
             });
         });
 
         describe("setState", function () {
             it("should change the current state", function () {
-                const handler = new PlayerInputHandler();
-                handler.setState(PlayerState.Target);
-                expect(handler.getState()).to.be.equal(PlayerState.Target);
+                const handler = new inputHandler.PlayerInputHandler();
+                handler.setState(inputHandler.PlayerState.Target);
+                expect(handler.getState()).to.be.equal(inputHandler.PlayerState.Target);
             });
         });
 
         describe("handleInput", function () {
             it("should return a command when its key is pressed", function () {
-                const handler = new PlayerInputHandler();
+                const owner = {
+                    x: 0,
+                    y: 0
+                };
+                const handler = new inputHandler.PlayerInputHandler();
+                handler.setOwner(owner);
                 handler.keyCommands = [
                     { key: "w", description: "", command: "Hello" }
                 ];
-                input.pressKey("w");
-                const command = handler.handleInput(globals.Game.map, globals.Game.gameObjects);
+                input.default.pressKey("w");
+                const command = handler.handleInput([[]], []);
                 expect(command).to.be.equal("Hello");
             });
         });

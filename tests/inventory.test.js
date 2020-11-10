@@ -1,13 +1,51 @@
 /* global describe, it */
 
-import { expect } from "chai";
-import { BasicInventory } from "../src/inventory";
-import { ItemData } from "../src/data";
+const _ = require("lodash");
+const { expect } = require("chai");
+const { fake } = require("sinon");
+const proxyquire =  require('proxyquire');
+
+const { ItemData } = require("../test-dist/data");
 
 describe("inventory", function () {
+    let inventoryModule;
+
+    function mock(mocks) {
+        const defaultMocks = _.extend({
+            "./globals": {
+                default: {
+                    Game: {
+                        player: {}
+                    },
+                    gameEventEmitter: {
+                        emit: fake()
+                    }
+                }
+            },
+            "./ui": {
+                displayMessage: fake()
+            }
+        }, mocks);
+
+        inventoryModule = proxyquire('../test-dist/inventory', defaultMocks);
+    }
+
+    beforeEach(() => {
+        mock();
+    });
+
     describe("BasicInventory", function () {
         it("should add a new item to the inventory", function () {
-            const inventory = new BasicInventory();
+            ItemData["item"] = {
+                displayName: "Test Item",
+                type: "test",
+                value: 10
+            };
+
+            const owner = {};
+            const inventory = new inventoryModule.BasicInventory();
+            inventory.setOwner(owner);
+
             inventory.addItem("item");
             expect(inventory.hasItem("item")).to.be.true;
         });
@@ -24,7 +62,10 @@ describe("inventory", function () {
                 value: 10
             };
 
-            const inventory = new BasicInventory();
+            const owner = {};
+            const inventory = new inventoryModule.BasicInventory();
+            inventory.setOwner(owner);
+
             inventory.addItem("item");
             inventory.addItem("other");
             expect(inventory.getItems()).to.be.deep.equal([
@@ -52,7 +93,10 @@ describe("inventory", function () {
                 value: 10
             };
 
-            const inventory = new BasicInventory();
+            const owner = {};
+            const inventory = new inventoryModule.BasicInventory();
+            inventory.setOwner(owner);
+
             inventory.addItem("item", 5);
             expect(inventory.getItems()).to.be.deep.equal([{
                 "id": "item",
@@ -70,7 +114,10 @@ describe("inventory", function () {
                 value: 10
             };
 
-            const inventory = new BasicInventory();
+            const owner = {};
+            const inventory = new inventoryModule.BasicInventory();
+            inventory.setOwner(owner);
+
             inventory.addItem("item", 5);
             inventory.useItem("item");
             expect(inventory.getItems()).to.be.deep.equal([{
@@ -89,7 +136,10 @@ describe("inventory", function () {
                 value: 10
             };
 
-            const inventory = new BasicInventory();
+            const owner = {};
+            const inventory = new inventoryModule.BasicInventory();
+            inventory.setOwner(owner);
+
             inventory.addItem("item");
             expect(inventory.getItems()).to.be.deep.equal([{
                 "id": "item",
@@ -109,7 +159,10 @@ describe("inventory", function () {
                 value: 10
             };
 
-            const inventory = new BasicInventory();
+            const owner = {};
+            const inventory = new inventoryModule.BasicInventory();
+            inventory.setOwner(owner);
+
             inventory.addItem("item", 5);
             expect(inventory.getItems()).to.be.deep.equal([{
                 "id": "item",

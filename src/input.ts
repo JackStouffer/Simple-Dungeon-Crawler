@@ -3,8 +3,6 @@ import globals from "./globals";
 import { Point } from "./map";
 import { Nullable } from "./util";
 
-declare const ENV: string;
-
 const pressed: Set<string> = new Set();
 let mouseDownEvent: Nullable<MouseEvent> = null;
 let mouseMoveEvent: Nullable<MouseEvent> = null;
@@ -32,9 +30,7 @@ function init(): void {
  * @returns {void}
  */
 function pressKey(key: string): void {
-    if (ENV === "TEST") {
-        pressed.add(key);
-    }
+    pressed.add(key);
 }
 
 /**
@@ -43,9 +39,7 @@ function pressKey(key: string): void {
  * function to do that.
  */
 function pressMouse(): void {
-    if (ENV === "TEST") {
-        mouseDownEvent = new MouseEvent("mousedown");
-    }
+    mouseDownEvent = new MouseEvent("mousedown");
 }
 
 /**

@@ -1,74 +1,144 @@
 /* global describe, it, beforeEach, afterEach */
 
-import { fake } from "sinon";
-import { expect } from "chai";
+const _ = require("lodash");
+const { fake } = require("sinon");
+const { expect } = require("chai");
+const proxyquire =  require('proxyquire');
 
-import globals from "../src/globals";
-import { SimpleDungeonCrawler } from "../src/game";
-import { GameState, ItemData, SpellData, ItemType, SpellType } from "../src/data";
-import input from "../src/input";
+const { GameState, ItemData, SpellData, ItemType, SpellType } = require("../test-dist/data");
+const input = require("../test-dist/input");
+
+class MockDisplay {
+    getContainer() {}
+}
+
+class MockInventoryMenu {
+    draw() {}
+    handleInput() { return ItemData["item"]; }
+    resetState() {}
+}
 
 describe("game", function () {
-    describe("SimpleDungeonCrawler", function () {
-        beforeEach(function () {
-            globals.window = {
-                addEventListener: function () {}
-            };
-            globals.Game = new SimpleDungeonCrawler();
-            globals.Game.map = [[]];
-            globals.Game.display = {
-                draw: fake(),
-                drawText: fake(),
-                clear: fake()
-            };
-            globals.Game.player = {
-                x: 0,
-                y: 0,
-                graphics: { draw: fake() },
-                fighter: {
-                    getEffectiveStats: fake.returns({}),
-                    getKnownSpells: fake.returns([]),
-                    hasSpell: fake.returns(true),
-                    useMana: fake()
-                },
-                lighting: { compute: fake() },
-                inventory: {
-                    getItems: fake.returns([]),
-                    hasItem: fake.returns(true),
-                    useItem: fake()
-                },
-                getSpeed: fake.returns(1)
-            };
-            globals.Game.gameCamera.follow(globals.Game.player);
-        });
+    let game;
 
-        afterEach(function () {
-            input.clearInputs();
+    function mock(mocks) {
+        const defaultMocks = _.extend({
+            "./rot/index": {
+                Display: MockDisplay
+            },
+            './globals': {
+                default: {
+                    gameEventEmitter: {
+                        emit: fake()
+                    },
+                    window: {
+                        addEventListener: fake()
+                    },
+                    document: {
+                        getElementById: fake.returns({
+                            prepend: fake(),
+                            parentNode: {
+                                removeChild: fake()
+                            }
+                        })
+                    }
+                }
+            },
+            "./object": {
+                createObject: () => ({
+                    type: "player",
+                    getSpeed: fake.returns(10),
+                    fighter: {
+                        getKnownSpells: fake.returns([]),
+                        hasSpell: fake.returns(true),
+                        getEffectiveStats: fake.returns({
+                            mana: 100
+                        }),
+                        useMana: fake.returns(true)
+                    },
+                    inventory: {
+                        getItems: fake.returns([]),
+                        addItem: fake.returns(true),
+                        hasItem: fake.returns(true),
+                        useItem: fake.returns(true)
+                    }
+                })
+            },
+            "./map": {
+                loadTiledMap: fake.returns({
+                    map: [[]],
+                    playerLocation: [0, 0],
+                    objects: [],
+                    volumes: [],
+                    pathNodes: []
+                })
+            },
+            "./ui": {
+                displayMessage: fake(),
+                InventoryMenu: MockInventoryMenu
+            }
+        }, mocks);
+
+        game = proxyquire('../test-dist/game', defaultMocks);
+    }
+
+    beforeEach(function () {
+        mock();
+    });
+
+    beforeEach(function () {
+        input.default.clearInputs();
+    });
+
+    describe("SimpleDungeonCrawler", function () {
+        let gameInstance;
+        const player = {
+            x: 0,
+            y: 0,
+            graphics: { draw: fake() },
+            fighter: {
+                getEffectiveStats: fake.returns({}),
+                getKnownSpells: fake.returns([]),
+                hasSpell: fake.returns(true),
+                useMana: fake()
+            },
+            lighting: { compute: fake() },
+            inventory: {
+                getItems: fake.returns([]),
+                hasItem: fake.returns(true),
+                useItem: fake()
+            },
+            getSpeed: fake.returns(1)
+        };
+
+        beforeEach(function () {
+            gameInstance = new game.SimpleDungeonCrawler();
+            gameInstance.gameCamera.follow(gameInstance.player);
         });
 
         describe("handleInput", function () {
             it("should go into PauseMenu state when escape is pressed when in gameplay", function () {
-                globals.Game.keyCommands = [{ key: "w", description: "Move Up", command: fake.returns(true) }];
-                globals.Game.state = GameState.Gameplay;
+                gameInstance.keyCommands = [{ key: "w", description: "Move Up", command: fake.returns(true) }];
+                gameInstance.state = GameState.Gameplay;
 
-                input.pressKey("Escape");
-                globals.Game.handleInput();
-                expect(globals.Game.state).to.be.equal(GameState.PauseMenu);
-                input.clearInputs();
+                input.default.pressKey("Escape");
+                gameInstance.handleInput();
+                expect(gameInstance.state).to.be.equal(GameState.PauseMenu);
+                input.default.clearInputs();
 
-                input.pressKey("Escape");
-                globals.Game.handleInput();
-                expect(globals.Game.state).to.be.equal(GameState.Gameplay);
+                input.default.pressKey("Escape");
+                gameInstance.handleInput();
+                expect(gameInstance.state).to.be.equal(GameState.Gameplay);
             });
 
             it("should go back to gameplay state when escape is pressed when in inventoryMenu", function () {
-                globals.Game.keyCommands = [{ key: "w", description: "Move Up", command: fake.returns(true) }];
-                globals.Game.state = GameState.InventoryMenu;
-                globals.Game.canvas = { addEventListener: fake() };
+                gameInstance.keyCommands = [{ key: "w", description: "Move Up", command: fake.returns(true) }];
+                gameInstance.state = GameState.InventoryMenu;
+                gameInstance.canvas = { addEventListener: fake() };
 
-                input.pressKey("Escape");
-                globals.Game.handleInput();
-                expect(globals.Game.state).to.be.equal(GameState.Gameplay);
+                input.default.pressKey("Escape");
+                gameInstance.handleInput();
+                expect(gameInstance.state).to.be.equal(GameState.Gameplay);
             });
 
             it("should return to gameplay when the inventory ui returns an item", function () {
@@ -79,25 +149,20 @@ describe("game", function () {
                     type: ItemType.HealSelf,
                     useFunc: fake.returns(true)
                 };
-                globals.Game.inventoryMenu = {
-                    draw: fake(),
-                    handleInput: function () { return ItemData["item"]; },
-                    resetState: fake()
-                };
-                globals.Game.state = GameState.InventoryMenu;
+                gameInstance.player.inventory.addItem("item");
+                gameInstance.state = GameState.InventoryMenu;
 
-                input.pressKey("w");
-                globals.Game.handleInput();
+                gameInstance.handleInput();
                 expect(ItemData["item"].useFunc.calledOnce).to.be.true;
-                expect(globals.Game.state).to.be.equal(GameState.Gameplay);
+                expect(gameInstance.state).to.be.equal(GameState.Gameplay);
             });
 
             it("should go back to gameplay state when escape is pressed when in SpellMenu", function () {
-                globals.Game.state = GameState.SpellMenu;
+                gameInstance.state = GameState.SpellMenu;
 
-                input.pressKey("Escape");
-                globals.Game.handleInput();
-                expect(globals.Game.state).to.be.equal(GameState.Gameplay);
+                input.default.pressKey("Escape");
+                gameInstance.handleInput();
+                expect(gameInstance.state).to.be.equal(GameState.Gameplay);
             });
 
             it("should return to gameplay when the spell ui returns a spell", function () {
@@ -109,41 +174,41 @@ describe("game", function () {
                     manaCost: 20,
                     useFunc: fake.returns(true)
                 };
-                globals.Game.spellSelectionMenu = {
+                gameInstance.spellSelectionMenu = {
                     draw: fake(),
                     handleInput: function () { return SpellData["spell"]; }
                 };
-                globals.Game.state = GameState.SpellMenu;
+                gameInstance.state = GameState.SpellMenu;
 
-                input.pressKey("w");
-                globals.Game.handleInput();
+                input.default.pressKey("w");
+                gameInstance.handleInput();
                 expect(SpellData["spell"].useFunc.calledOnce).to.be.true;
-                expect(globals.Game.state).to.be.equal(GameState.Gameplay);
+                expect(gameInstance.state).to.be.equal(GameState.Gameplay);
             });
 
             it("should go to gameplay state when enter is pressed when in openingCinematic state", function () {
-                globals.Game.state = GameState.OpeningCinematic;
-                globals.Game.canvas = { addEventListener: fake() };
+                gameInstance.state = GameState.OpeningCinematic;
+                gameInstance.canvas = { addEventListener: fake() };
 
-                input.pressKey("Enter");
-                globals.Game.handleInput();
-                expect(globals.Game.state).to.be.equal(GameState.Gameplay);
+                input.default.pressKey("Enter");
+                gameInstance.handleInput();
+                expect(gameInstance.state).to.be.equal(GameState.Gameplay);
             });
 
             it("should go to gameplay state when enter is pressed when in loseCinematic state", function () {
-                globals.Game.state = GameState.LoseCinematic;
+                gameInstance.state = GameState.LoseCinematic;
 
-                input.pressKey("Enter");
-                globals.Game.handleInput();
-                expect(globals.Game.state).to.be.equal(GameState.Gameplay);
+                input.default.pressKey("Enter");
+                gameInstance.handleInput();
+                expect(gameInstance.state).to.be.equal(GameState.Gameplay);
             });
 
             it("should go to gameplay state when enter is pressed when in winCinematic state", function () {
-                globals.Game.state = GameState.WinCinematic;
+                gameInstance.state = GameState.WinCinematic;
 
-                input.pressKey("Enter");
-                globals.Game.handleInput();
-                expect(globals.Game.state).to.be.equal(GameState.Gameplay);
+                input.default.pressKey("Enter");
+                gameInstance.handleInput();
+                expect(gameInstance.state).to.be.equal(GameState.Gameplay);
             });
         });
     });
