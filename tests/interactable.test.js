@@ -1,17 +1,40 @@
 /* global describe, it, beforeEach */
 
-import { expect } from "chai";
-import { fake } from "sinon";
-import globals from "../src/globals";
-import { ItemData, SpellData } from "../src/data";
-import { GiveItemsInteractable, GiveSpellInteractable, DoorInteractable, LoadLevelInteractable } from "../src/interactable";
+const _ = require("lodash");
+const { expect } = require("chai");
+const { fake } = require("sinon");
+const proxyquire =  require('proxyquire');
+
+const { ItemData, SpellData } = require("../test-dist/data");
 
 describe("interactable", function () {
-    beforeEach(function () {
-        globals.Game = {
-            removeObject: fake(),
-            loadLevel: fake()
-        };
+    let interact, loadLevelFake, removeObjectFake;
+
+    function mock(mocks) {
+        loadLevelFake = fake();
+        removeObjectFake = fake();
+        const defaultMocks = _.extend({
+            "./globals": {
+                default: {
+                    Game: {
+                        removeObject: removeObjectFake,
+                        loadLevel: loadLevelFake
+                    },
+                    gameEventEmitter: {
+                        emit: fake()
+                    }
+                }
+            },
+            "./ui": {
+                displayMessage: fake()
+            }
+        }, mocks);
+
+        interact = proxyquire('../test-dist/interactable', defaultMocks);
+    }
+
+    beforeEach(() => {
+        mock();
     });
 
     describe("GiveItemsInteractable", function () {
@@ -24,7 +47,7 @@ describe("interactable", function () {
                     getIDsAndCounts: fake.returns([{ id: "test1", count: 1 }, { id: "test2", count: 1 }]),
                     useItem: fake()
                 },
-                interactable: new GiveItemsInteractable()
+                interactable: new interact.GiveItemsInteractable()
             };
             owner.interactable.setOwner(owner);
             const user = {};
@@ -40,7 +63,7 @@ describe("interactable", function () {
                     getItems: fake.returns([{ id: "test1", count: 1 }, { id: "test2", count: 1 }]),
                     useItem: fake()
                 },
-                interactable: new GiveItemsInteractable()
+                interactable: new interact.GiveItemsInteractable()
             };
             owner.interactable.setOwner(owner);
             const user = {
@@ -59,7 +82,7 @@ describe("interactable", function () {
             SpellData["test1"] = { name: "test1", value: 10 };
 
             const owner = {
-                interactable: new GiveSpellInteractable()
+                interactable: new interact.GiveSpellInteractable()
             };
             owner.interactable.setOwner(owner);
             owner.interactable.setSpell("test1");
@@ -78,29 +101,29 @@ describe("interactable", function () {
     describe("DoorInteractable", function () {
         it("should remove itself", function () {
             const owner = {
-                interactable: new DoorInteractable()
+                interactable: new interact.DoorInteractable()
             };
             owner.interactable.setOwner(owner);
             const user = {};
             owner.interactable.interact(user);
 
-            expect(globals.Game.removeObject.calledOnce).to.be.true;
-            expect(globals.Game.removeObject.calledWith(owner)).to.be.true;
+            expect(removeObjectFake.calledOnce).to.be.true;
+            expect(removeObjectFake.calledWith(owner)).to.be.true;
         });
     });
 
     describe("LoadLevelInteractable", function () {
         it("should call loadLevel", function () {
             const owner = {
-                interactable: new LoadLevelInteractable()
+                interactable: new interact.LoadLevelInteractable()
             };
             owner.interactable.setLevel("level_01");
             owner.interactable.setOwner(owner);
             const user = {};
             owner.interactable.interact(user);
 
-            expect(globals.Game.loadLevel.calledOnce).to.be.true;
-            expect(globals.Game.loadLevel.calledWith("level_01")).to.be.true;
+            expect(loadLevelFake.calledOnce).to.be.true;
+            expect(loadLevelFake.calledWith("level_01")).to.be.true;
         });
     });
 });

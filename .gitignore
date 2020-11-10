@@ -6,3 +6,5 @@ dev/
 bin/
 dist/bin/
 *.tiled-session
+.nyc_output/
+coverage/

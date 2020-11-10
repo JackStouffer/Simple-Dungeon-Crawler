@@ -1,58 +1,71 @@
 /* global describe, beforeEach, it */
 
-import { expect } from "chai";
-import { fake, stub } from "sinon";
+const _ = require("lodash");
+const { expect } = require("chai");
+const { fake, stub } = require("sinon");
+const proxyquire =  require('proxyquire');
 
-import globals from "../src/globals";
-import {
-    castHeal,
-    castDamageSpell,
-    castWildDamageSpell,
-    castConfuse,
-    castClairvoyance,
-    castHaste,
-    castSlow
-} from "../src/skills";
-import { createHasteEffect, createSlowEffect } from "../src/effects";
-import { DamageType } from "../src/data";
+const { createHasteEffect, createSlowEffect } = require("../test-dist/effects");
+const { DamageType } = require("../test-dist/data");
 
 describe("skills", function () {
+    let skills, gameObject;
+
+    function mock(mocks) {
+        const defaultMocks = _.extend({
+            "./globals": {
+                default: {
+                    Game: {
+                        player: null,
+                        render: fake(),
+                        map: [[{ visible: true }]],
+                        canvas: {
+                            addEventListener: function (_, cb) {
+                                return cb({ button: 0 });
+                            },
+                            removeEventListener: fake()
+                        },
+                        display: {
+                            eventToPosition: stub().returns([0, 0])
+                        },
+                        hookMouseLook: fake(),
+                        unhookMouseLook: fake(),
+                        gameObjects: [gameObject]
+                    },
+                    gameEventEmitter: {
+                        emit: fake()
+                    }
+                }
+            },
+            "./ui": {
+                displayMessage: fake()
+            }
+        }, mocks);
+
+        skills = proxyquire('../test-dist/skills', defaultMocks);
+    }
+
     beforeEach(() => {
-        globals.Game = {
-            player: null,
-            render: fake(),
-            map: [[{ visible: true }]],
-            canvas: {
-                addEventListener: function (_, cb) {
-                    return cb({ button: 0 });
-                },
-                removeEventListener: fake()
+        gameObject = {
+            fighter: {
+                takeDamage: fake(),
+                addStatusEffect: fake(),
+                getStatusEffects: fake.returns([]),
+                addStatisticEffect: fake(),
+                getSpeed: fake.returns(1),
+                getEffectiveStats: fake.returns({
+                    ailmentSusceptibility: 1
+                })
             },
-            display: {
-                eventToPosition: stub().returns([0, 0])
-            },
-            hookMouseLook: fake(),
-            unhookMouseLook: fake(),
-            gameObjects: [{
-                fighter: {
-                    takeDamage: fake(),
-                    addStatusEffect: fake(),
-                    getStatusEffects: fake.returns([]),
-                    addStatisticEffect: fake(),
-                    getSpeed: fake.returns(1),
-                    getEffectiveStats: fake.returns({
-                        ailmentSusceptibility: 1
-                    })
-                },
-                ai: { type: "testai" },
-                x: 0,
-                y: 0
-            }]
+            ai: { type: "testai" },
+            x: 0,
+            y: 0
         };
+        mock();
     });
 
     describe("castHeal", function () {
-        it("should heal the user with it's data value", async function () {
+        it("should heal the user with it's data value", function () {
             const user = {
                 fighter: {
                     heal: fake(),
@@ -63,7 +76,7 @@ describe("skills", function () {
                 }
             };
 
-            const used = await castHeal({ value: 10 }, user);
+            const used = skills.castHeal({ value: 10 }, user);
             expect(user.fighter.heal.calledOnce).to.be.true;
             expect(user.fighter.heal.calledWith(10)).to.be.true;
             expect(used).to.be.true;
@@ -82,19 +95,17 @@ describe("skills", function () {
                 }
             };
 
-            const used = castDamageSpell(
+            const used = skills.castDamageSpell(
                 { value: 10, damageType: DamageType.fire },
                 user,
-                globals.Game.gameObjects[0]
+                gameObject
             );
             expect(used).to.be.true;
-            expect(globals.Game.gameObjects[0].fighter.takeDamage.calledOnce).to.be.true;
-            expect(
-                globals
-                    .Game
-                    .gameObjects[0]
-                    .fighter
-                    .takeDamage.calledWith(10, false, DamageType.fire)
+            expect(gameObject.fighter.takeDamage.calledOnce).to.be.true;
+            expect(gameObject
+                .fighter
+                .takeDamage.calledWith(10, false, DamageType.fire
+            )
             ).to.be.true;
         });
 
@@ -110,19 +121,19 @@ describe("skills", function () {
             };
             const statusEffectFunc = fake.returns({ name: "test" });
 
-            const used = castDamageSpell(
+            const used = skills.castDamageSpell(
                 { value: 10, damageType: DamageType.fire, statusEffectFunc },
                 user,
-                globals.Game.gameObjects[0]
+                gameObject
             );
             expect(used).to.be.true;
-            expect(globals.Game.gameObjects[0].fighter.addStatusEffect.calledOnce).to.be.true;
-            expect(globals.Game.gameObjects[0].fighter.addStatusEffect.calledWith({ name: "test" })).to.be.true;
+            expect(gameObject.fighter.addStatusEffect.calledOnce).to.be.true;
+            expect(gameObject.fighter.addStatusEffect.calledWith({ name: "test" })).to.be.true;
         });
     });
 
     describe("castWildDamageSpell", function () {
-        it("should damage the target and return true to the callback", async function () {
+        it("should damage the target and return true to the callback", function () {
             const user = {
                 fighter: {
                     heal: fake(),
@@ -135,30 +146,23 @@ describe("skills", function () {
                 y: 0
             };
 
-            const used = await castWildDamageSpell(
+            const used = skills.castWildDamageSpell(
                 { value: 10, damageType: DamageType.fire },
                 user
             );
             expect(used).to.be.true;
             expect(
-                globals
-                    .Game
-                    .gameObjects[0]
-                    .fighter
-                    .takeDamage
-                    .calledOnce
+                gameObject.fighter.takeDamage.calledOnce
             ).to.be.true;
             expect(
-                globals
-                    .Game
-                    .gameObjects[0]
+                gameObject
                     .fighter
                     .takeDamage
                     .calledWith(10, false, DamageType.fire)
             ).to.be.true;
         });
 
-        it("should add a status effect", async function () {
+        it("should add a status effect", function () {
             const user = {
                 fighter: {
                     heal: fake(),
@@ -172,16 +176,43 @@ describe("skills", function () {
             };
             const statusEffectFunc = fake.returns({ name: "test" });
 
-            const used = await castWildDamageSpell(
+            const used = skills.castWildDamageSpell(
                 { value: 10, damageType: DamageType.fire, statusEffectFunc },
                 user
             );
             expect(used).to.be.true;
-            expect(globals.Game.gameObjects[0].fighter.addStatusEffect.calledOnce).to.be.true;
-            expect(globals.Game.gameObjects[0].fighter.addStatusEffect.calledWith({ name: "test" })).to.be.true;
+            expect(gameObject.fighter.addStatusEffect.calledOnce).to.be.true;
+            expect(gameObject.fighter.addStatusEffect.calledWith({ name: "test" })).to.be.true;
         });
 
-        it("should not damage the target and return false to the callback when no enemy is found", async function () {
+        it("should not damage the target and return false to the callback when no enemy is found", function () {
+            mock({
+                "./globals": {
+                    default: {
+                        Game: {
+                            player: null,
+                            render: fake(),
+                            map: [[{ visible: true }]],
+                            canvas: {
+                                addEventListener: function (_, cb) {
+                                    return cb({ button: 0 });
+                                },
+                                removeEventListener: fake()
+                            },
+                            display: {
+                                eventToPosition: stub().returns([0, 0])
+                            },
+                            hookMouseLook: fake(),
+                            unhookMouseLook: fake(),
+                            gameObjects: []
+                        },
+                        gameEventEmitter: {
+                            emit: fake()
+                        }
+                    }
+                }
+            });
+
             const user = {
                 fighter: {
                     heal: fake(),
@@ -193,9 +224,8 @@ describe("skills", function () {
                 x: 0,
                 y: 0
             };
-            globals.Game.gameObjects = [];
 
-            const used = await castWildDamageSpell(
+            const used = skills.castWildDamageSpell(
                 { value: 10, damageType: DamageType.fire },
                 user
             );
@@ -211,25 +241,52 @@ describe("skills", function () {
                 }
             };
 
-            const used = castConfuse({ value: 10 }, user, globals.Game.gameObjects[0]);
+            const used = skills.castConfuse({ value: 10 }, user, gameObject);
             expect(used).to.be.true;
-            expect(globals.Game.gameObjects[0].ai.constructor.name).to.be.equal("ConfusedAI");
+            expect(gameObject.ai.constructor.name).to.be.equal("ConfusedAI");
         });
     });
 
     describe("castClairvoyance", function () {
         it("should set the whole map to explored", function () {
-            const user = {};
-            globals.Game.map = [
+            const map = [
                 [{ explored: false }, { explored: false }],
                 [{ explored: false }, { explored: false }]
             ];
 
-            const used = castClairvoyance({ value: 10 }, user, globals.Game.gameObjects[0]);
+            mock({
+                "./globals": {
+                    default: {
+                        Game: {
+                            player: null,
+                            render: fake(),
+                            map,
+                            canvas: {
+                                addEventListener: function (_, cb) {
+                                    return cb({ button: 0 });
+                                },
+                                removeEventListener: fake()
+                            },
+                            display: {
+                                eventToPosition: stub().returns([0, 0])
+                            },
+                            hookMouseLook: fake(),
+                            unhookMouseLook: fake(),
+                            gameObjects: []
+                        },
+                        gameEventEmitter: {
+                            emit: fake()
+                        }
+                    }
+                }
+            });
+            const user = {};
 
-            for (let y = 0; y < globals.Game.map.length; y++) {
-                for (let x = 0; x < globals.Game.map[y].length; x++) {
-                    expect(globals.Game.map[y][x].explored).to.be.true;
+            const used = skills.castClairvoyance({ value: 10 }, user, gameObject);
+
+            for (let y = 0; y < map.length; y++) {
+                for (let x = 0; x < map[y].length; x++) {
+                    expect(map[y][x].explored).to.be.true;
                 }
             }
 
@@ -249,7 +306,7 @@ describe("skills", function () {
                 }
             };
 
-            const used = castHaste({ value: 10 }, user);
+            const used = skills.castHaste({ value: 10 }, user);
             expect(effects).to.have.lengthOf(1);
             expect(effects[0].constructor.name).to.be.equal("StatisticEffect");
             expect(effects[0].name).to.be.equal("Haste");
@@ -268,7 +325,7 @@ describe("skills", function () {
             };
             effects.push(createHasteEffect(user, 1));
 
-            const used = castHaste({ value: 10 }, user);
+            const used = skills.castHaste({ value: 10 }, user);
             expect(effects).to.have.lengthOf(1);
             expect(used).to.be.false;
         });
@@ -276,18 +333,18 @@ describe("skills", function () {
 
     describe("castSlow", function () {
         it("should add a Slow effect to the fighters status effects", function () {
-            const used = castSlow({ value: 10 }, null, globals.Game.gameObjects[0]);
-            expect(globals.Game.gameObjects[0].fighter.addStatisticEffect.calledOnce).to.be.true;
+            const used = skills.castSlow({ value: 10 }, null, gameObject);
+            expect(gameObject.fighter.addStatisticEffect.calledOnce).to.be.true;
             expect(used).to.be.true;
         });
 
         it("should give false if there's already a Slow effect on the fighter", function () {
-            globals.Game.gameObjects[0].fighter.getStatusEffects = fake.returns(
-                [createSlowEffect(globals.Game.gameObjects[0], 1)]
+            gameObject.fighter.getStatusEffects = fake.returns(
+                [createSlowEffect(gameObject, 1)]
             );
 
-            const used = castSlow({ value: 10 }, null, globals.Game.gameObjects[0]);
-            expect(globals.Game.gameObjects[0].fighter.addStatusEffect.calledOnce).to.be.false;
+            const used = skills.castSlow({ value: 10 }, null, gameObject);
+            expect(gameObject.fighter.addStatusEffect.calledOnce).to.be.false;
             expect(used).to.be.false;
         });
     });

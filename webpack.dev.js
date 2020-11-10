@@ -16,9 +16,6 @@ module.exports = merge(common, {
         path: resolve(__dirname, "dev")
     },
     plugins: [
-        new DefinePlugin({
-            ENV: JSON.stringify("DEV")
-        }),
         new HtmlWebpackPlugin({
             template: "index.html"
         })

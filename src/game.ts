@@ -1,5 +1,3 @@
-declare const ENV: string;
-
 import { EventEmitter } from "events";
 import { Display } from "./rot/index";
 import { default as SpeedScheduler } from "./rot/scheduler/speed";
@@ -125,22 +123,17 @@ export class SimpleDungeonCrawler {
         this.processAI = true;
         this.isLightingEnabled = true;
 
-        if (ENV === "TEST") {
-            this.display = null;
-            this.canvas = null;
-        } else {
-            this.display = new Display({
-                width: WIDTH,
-                height: HEIGHT,
-                fontSize: 14,
-                forceSquareRatio: true
-            });
-            this.canvas = this.display.getContainer();
-            globals.document.getElementById("canvas").prepend(this.canvas);
+        this.display = new Display({
+            width: WIDTH,
+            height: HEIGHT,
+            fontSize: 14,
+            forceSquareRatio: true
+        });
+        this.canvas = this.display.getContainer();
+        globals.document.getElementById("canvas").prepend(this.canvas);
 
-            const loading = globals.document.getElementById("loading");
-            loading.parentNode.removeChild(loading);
-        }
+        const loading = globals.document.getElementById("loading");
+        loading.parentNode.removeChild(loading);
 
         this.keyBindingMenu = new KeyBindingMenu();
         this.inventoryMenu = new InventoryMenu();
@@ -159,10 +152,8 @@ export class SimpleDungeonCrawler {
 
         this.loadLevel("forrest_001");
 
-        if (ENV !== "TEST") {
-            const log = globals.document.getElementById("log");
-            log.innerHTML = "";
-        }
+        const log = globals.document.getElementById("log");
+        log.innerHTML = "";
     }
 
     async startGameplay(): Promise<void> {
@@ -393,7 +384,7 @@ export class SimpleDungeonCrawler {
                         this.state = GameState.Gameplay;
                         acted = command(this.player);
                         if (!acted) {
-                            this.state = GameState.SpellMenu;
+                            this.state = GameState.InventoryMenu;
                         }
                         break;
                     // Items that need to be targeted

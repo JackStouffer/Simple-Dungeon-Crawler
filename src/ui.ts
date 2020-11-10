@@ -1,5 +1,3 @@
-declare const ENV: string;
-
 import { get } from "lodash";
 
 import { Display } from "./rot/index";
@@ -65,15 +63,13 @@ export function drawUI(
     }
 }
 
-export const enum MessageType {
+export enum MessageType {
     Default,
     Tutorial,
     Critical
 }
 
 export function displayMessage(text: string, type: MessageType = MessageType.Default) {
-    if (ENV === "TEST") { return; }
-
     const log = globals.document.getElementById("log");
     const el = document.createElement("div");
     const p = document.createElement("p");
