@@ -5,7 +5,7 @@ import { SpeedActor } from "./rot/scheduler/speed";
 
 import globals from "./globals";
 import { ObjectData, BASE_SPEED, DeathType } from "./data";
-import { PlanningAI, ChestAI, DroppedItemAI, AIComponent } from "./ai/components";
+import { PlanningAI, ChestAI, DroppedItemAI, AIComponent, RemoveAfterNTurns } from "./ai/components";
 import {
     GiveItemsInteractable,
     GiveSpellInteractable,
@@ -277,6 +277,9 @@ export function createObject(id: string, x: number = 0, y: number = 0): GameObje
                 break;
             case "dropped_item_ai":
                 object.setAI(new DroppedItemAI());
+                break;
+            case "remove_after_n_turns":
+                object.setAI(new RemoveAfterNTurns(data));
                 break;
             default:
                 throw new Error(`Unhandled AI type ${data.ai}`);

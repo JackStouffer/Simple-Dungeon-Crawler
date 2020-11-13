@@ -1,3 +1,5 @@
+import { get } from "lodash";
+
 import { RNG, DIRS, Path } from "../rot/index";
 
 import {
@@ -17,13 +19,20 @@ import { GameObject } from "../object";
 import {
     distanceBetweenObjects,
     GameMap,
+    getObjectsAtLocation,
     isBlocked,
     PathNode,
 } from "../map";
 import { displayMessage } from "../ui";
 import { ItemType, ObjectData } from "../data";
 import { Nullable } from "../util";
-import { get } from "lodash";
+import globals from "../globals";
+
+function weightCallback(x: number, y: number): number {
+    const objects = getObjectsAtLocation(globals.Game.gameObjects, x, y);
+    // if (objects.length > 0) { console.log(objects); }
+    return objects.length > 0 ? 20 : 0;
+}
 
 /**
  * Calculate a path from a game object to the give x and y
@@ -45,6 +54,7 @@ export function getStepsTowardsTarget(
         targetX,
         targetY,
         createPassableCallback(actor),
+        weightCallback,
         { topology: 8 }
     );
 
@@ -77,6 +87,7 @@ export function wanderAction(ai: AIComponent, map: GameMap, gameObjects: GameObj
     if (ai.owner === null) { throw new Error("No owner on AI for wanderAction"); }
 
     let blocks: boolean = true;
+    let object: Nullable<Object> = null;
     let newX: number = 0;
     let newY: number = 0;
     let dir: number = RNG.getItem([0, 1, 2, 3, 4, 5, 6, 7]) ?? 0;
@@ -85,8 +96,8 @@ export function wanderAction(ai: AIComponent, map: GameMap, gameObjects: GameObj
         dir = RNG.getItem([0, 1, 2, 3, 4, 5, 6, 7]) ?? 0;
         newX = ai.owner.x + DIRS[8][dir][0];
         newY = ai.owner.y + DIRS[8][dir][1];
-        ({ blocks } = isBlocked(map, gameObjects, newX, newY));
-    } while (blocks === true);
+        ({ blocks, object } = isBlocked(map, gameObjects, newX, newY));
+    } while (blocks === true || object !== null);
 
     return goToLocationCommand([[newX, newY]], map, gameObjects);
 }
@@ -109,10 +120,6 @@ export function patrolAction(
 ): Command {
     if (ai.pathName === null) { throw new Error("pathName not set for PatrollingMonsterAI"); }
     if (ai.owner === null) { throw new Error("No owner on AI for patrolAction"); }
-    if (ObjectData[ai.owner.type].maxTilesPerMove === null) {
-        throw new Error(`Missing maxTilesPerMove for ${ai.owner.type}`);
-    }
-    const maxTilesPerMove = ObjectData[ai.owner.type].maxTilesPerMove!;
 
     // For the first node, find the closest node on the path
     // to the current position, we can just follow the path
@@ -138,7 +145,7 @@ export function patrolAction(
         ai.owner,
         ai.patrolTarget.x,
         ai.patrolTarget.y,
-        maxTilesPerMove
+        2
     );
     // try the next node
     if (path === null) {
@@ -152,7 +159,7 @@ export function patrolAction(
             ai.owner,
             ai.patrolTarget.x,
             ai.patrolTarget.y,
-            maxTilesPerMove
+            2
         );
     }
     // give up
@@ -176,11 +183,16 @@ export function chaseAction(
     if (ai.owner === null) { throw new Error("No owner on AI for chaseAction"); }
     if (ai.target === null) { throw new Error("Cannot perform chaseAction without a target"); }
 
+    const maxTilesPerMove = ObjectData[ai.owner.type].maxTilesPerMove;
+    if (maxTilesPerMove === null) {
+        throw new Error(`Missing maxTilesPerMove for ${ai.owner.type}`);
+    }
+
     const path: Nullable<number[][]> = getStepsTowardsTarget(
         ai.owner,
         ai.target.x,
         ai.target.y,
-        5
+        maxTilesPerMove
     );
     if (path === null) {
         return noOpCommand(true);
@@ -262,8 +274,8 @@ export function useManaItemAction(ai: PlanningAI): Command {
  * @param {string} spellID The ID of the spell to use
  * @returns {function} the action update function
  */
-export function castSpellAction(spellID: string): (ai: PlanningAI) => Command {
-    return function (ai: PlanningAI): Command {
+export function castSpellAction(spellID: string) {
+    return function (ai: PlanningAI, map: GameMap, gameObjects: GameObject[]): Command {
         if (ai.owner === null) { throw new Error("No owner on AI for castSpellAction"); }
         if (ai.owner.fighter === null) { throw new Error("No fighter on owner for AI for castSpellAction"); }
 
@@ -272,6 +284,6 @@ export function castSpellAction(spellID: string): (ai: PlanningAI) => Command {
             throw new Error(`${ai.owner.name} does not know spell ${spellID}`);
         }
 
-        return useSpellCommand(spellID, ai.target);
+        return useSpellCommand(spellID, ai.target, map, gameObjects);
     };
 }

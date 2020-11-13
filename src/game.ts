@@ -31,9 +31,7 @@ import input from "./input";
 import { PlayerState } from "./input-handler";
 import {
     GameMap,
-    Point,
     drawMap,
-    getObjectsAtLocation,
     resetVisibility,
     loadTiledMap,
     findVolumeCollision,
@@ -61,30 +59,6 @@ import { InventoryItemDetails } from "./inventory";
 import { assertUnreachable, Nullable } from "./util";
 
 globals.gameEventEmitter = new EventEmitter();
-
-/**
- * Unhook the mouse look functionality and then listen for a mouse
- * input. If it's a left click on an object with a fighter component,
- * then re-hook the mouse look function and pass the target to the
- * callback cb.
- * @return {void}
- */
-export function mouseTarget(
-    mousePosition: Point,
-    gameObjects: GameObject[]
-): Nullable<GameObject> {
-    let target = null;
-    const objects = getObjectsAtLocation(gameObjects, mousePosition.x, mousePosition.y);
-
-    for (let i = 0; i < objects.length; i++) {
-        if (objects[i].fighter !== null || objects[i].interactable !== null) {
-            target = objects[i];
-            break;
-        }
-    }
-
-    return target;
-}
 
 export class SimpleDungeonCrawler {
     state: GameState;
@@ -200,8 +174,6 @@ export class SimpleDungeonCrawler {
 
         this.scheduler.add(this.player, true);
         this.gameCamera.follow(this.player);
-
-        globals.gameEventEmitter.emit("tutorial.start");
 
         input.init();
 
@@ -380,8 +352,9 @@ export class SimpleDungeonCrawler {
                     case ItemType.ClairvoyanceScroll:
                     case ItemType.HasteSelf:
                     case ItemType.WildDamageScroll:
-                        command = useItemCommand(item.id);
                         this.state = GameState.Gameplay;
+
+                        command = useItemCommand(item.id, null, this.map, this.gameObjects);
                         acted = command(this.player);
                         if (!acted) {
                             this.state = GameState.InventoryMenu;
@@ -397,7 +370,7 @@ export class SimpleDungeonCrawler {
                             break;
                         }
                         this.player.inputHandler.itemForTarget = item;
-                        this.player.inputHandler.setState(PlayerState.Target);
+                        this.player.inputHandler.state = PlayerState.Target;
                         break;
                     default:
                         assertUnreachable(item.type);
@@ -420,13 +393,17 @@ export class SimpleDungeonCrawler {
             );
 
             if (spell !== null) {
+                let command: Nullable<Command> = null;
+
                 switch (spell.type) {
                     case SpellType.Effect:
                     case SpellType.HealSelf:
                     case SpellType.Passive:
                     case SpellType.WildDamage:
                         this.state = GameState.Gameplay;
-                        acted = useSpellCommand(spell.id)(this.player);
+
+                        command = useSpellCommand(spell.id, null, this.map, this.gameObjects);
+                        acted = command(this.player);
                         if (!acted) {
                             this.state = GameState.SpellMenu;
                         }
@@ -438,7 +415,7 @@ export class SimpleDungeonCrawler {
                             break;
                         }
                         this.player.inputHandler.spellForTarget = spell;
-                        this.player.inputHandler.setState(PlayerState.Target);
+                        this.player.inputHandler.state = PlayerState.Target;
                         break;
                     default:
                         assertUnreachable(spell.type);
@@ -448,6 +425,7 @@ export class SimpleDungeonCrawler {
             if (input.isDown("Enter")) {
                 this.loadLevel("forrest_001");
                 this.state = GameState.Gameplay;
+                globals.gameEventEmitter.emit("tutorial.start");
             }
         } else if (this.state === GameState.WinCinematic) {
             if (input.isDown("Enter")) {

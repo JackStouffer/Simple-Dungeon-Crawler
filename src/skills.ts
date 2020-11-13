@@ -3,11 +3,21 @@ import { RNG } from "./rot/index";
 import globals from "./globals";
 import { ConfusedAI } from "./ai/components";
 import { createHasteEffect, createSlowEffect } from "./effects";
-import { getRandomFighterWithinRange, setAllToExplored } from "./map";
+import { GameMap, getRandomFighterWithinRange, isBlocked, Point, setAllToExplored } from "./map";
 import { displayMessage } from "./ui";
-import { randomIntFromInterval } from "./util";
 import { ItemDataDetails, SpellDataDetails } from "./data";
-import { GameObject } from "./object";
+import { createObject, GameObject } from "./object";
+import { randomIntFromInterval, Nullable } from "./util";
+import { mouseTarget } from "./input-handler";
+
+export type SkillFunction = (
+    details: ItemDataDetails | SpellDataDetails,
+    user: GameObject,
+    target: Nullable<Point>,
+    map: Nullable<GameMap>,
+    objects: Nullable<GameObject[]>,
+    rotation: Nullable<number>
+) => boolean;
 
 /**
  * Call the heal function on the user's fighter instance. Calls
@@ -69,22 +79,36 @@ export function castIncreaseMana(
 export function castDamageSpell(
     item: SpellDataDetails | ItemDataDetails,
     user: GameObject,
-    target: GameObject
+    target: Nullable<Point>,
+    map: Nullable<GameMap>,
+    objects: Nullable<GameObject[]>
 ): boolean {
-    if (item.value === null) { throw new Error("Item does not have a value"); }
-    if (target.fighter === null) { throw new Error("Cannot attack a user without a fighter"); }
+    if (item.value === null) { throw new Error("Item does not have a value for castDamageSpell"); }
+    if (target === null) { throw new Error("Target cannot be null for castDamageSpell"); }
+    if (map === null) { throw new Error("Map cannot be null for castDamageSpell"); }
+    if (objects === null) { throw new Error("Objects cannot be null for castDamageSpell"); }
 
-    target.fighter.takeDamage(item.value, false, item.damageType);
+    const object = mouseTarget(target, map, objects);
+    if (object === null) {
+        displayMessage("Canceled casting");
+        return false;
+    }
+    if (object.fighter === null) {
+        displayMessage(`${object.name} isn't attackable`);
+        return false;
+    }
+
+    object.fighter.takeDamage(item.value, false, item.damageType);
 
     // Check for the fighter again because it could have died already
-    if (target.fighter !== null && item.statusEffectFunc !== undefined) {
-        const stats = target.fighter.getEffectiveStats();
+    if (object.fighter !== null && item.statusEffectFunc !== undefined) {
+        const stats = object.fighter.getEffectiveStats();
 
         if (RNG.getUniform() <= stats.ailmentSusceptibility) {
             const effectDamage = Math.round(stats.maxHp * 0.0625);
             const turns = randomIntFromInterval(3, 6);
-            target.fighter.addStatusEffect(
-                item.statusEffectFunc(target, effectDamage, turns)
+            object.fighter.addStatusEffect(
+                item.statusEffectFunc(object, effectDamage, turns)
             );
         }
     }
@@ -94,32 +118,37 @@ export function castDamageSpell(
 
 export function castWildDamageSpell(
     item: SpellDataDetails | ItemDataDetails,
-    user: GameObject
+    user: GameObject,
+    target: Nullable<Point>,
+    map: Nullable<GameMap>,
+    objects: Nullable<GameObject[]>
 ): boolean {
     if (item.value === null) { throw new Error("Item does not have a value"); }
+    if (map === null) { throw new Error("Map cannot be null for castDamageSpell"); }
+    if (objects === null) { throw new Error("Objects cannot be null for castDamageSpell"); }
 
-    let target;
+    let object;
     do {
-        target = getRandomFighterWithinRange(globals.Game.map, globals.Game.gameObjects, user, 16);
-    } while (target === user);
+        object = getRandomFighterWithinRange(map, objects, user, 16);
+    } while (object === user);
 
-    if (target === null) {
+    if (object === null) {
         if (user === globals.Game.player) {
             displayMessage("No target is close enough to use the scroll");
         }
         return false;
     }
 
-    target.fighter!.takeDamage(item.value, false, item.damageType);
+    object.fighter!.takeDamage(item.value, false, item.damageType);
 
     // Check for the fighter again because it could have died already
-    if (target.fighter !== null && item.statusEffectFunc !== undefined) {
-        const stats = target.fighter.getEffectiveStats();
+    if (object.fighter !== null && item.statusEffectFunc !== undefined) {
+        const stats = object.fighter.getEffectiveStats();
 
         if (RNG.getUniform() <= stats.ailmentSusceptibility) {
             const effectDamage = Math.round(stats.maxHp * 0.0625);
             const turns = randomIntFromInterval(3, 6);
-            target.fighter.addStatusEffect(
+            object.fighter.addStatusEffect(
                 item.statusEffectFunc(target, effectDamage, turns)
             );
         }
@@ -198,12 +227,47 @@ export function castSlow(
     return true;
 }
 
-// export function castFireWall(
-//     item: SpellDataDetails | ItemDataDetails,
-//     user: GameObject,
-//     x: number,
-//     y: number
-// ): boolean {
-//     globals.Game.addObject();
-//     return true;
-// }
+export function castFireWall(
+    item: SpellDataDetails | ItemDataDetails,
+    user: GameObject,
+    target: Nullable<Point>,
+    map: Nullable<GameMap>,
+    objects: Nullable<GameObject[]>,
+    rotation: Nullable<number>
+): boolean {
+    if (target === null) { throw new Error("Target cannot be null for castFireWall"); }
+    if (map === null) { throw new Error("Map cannot be null for castFireWall"); }
+    if (objects === null) { throw new Error("Objects cannot be null for castFireWall"); }
+    if (rotation === null) { rotation = 0; }
+
+    let i: number = 0;
+    while(i < 6) {
+        const { blocks, object } = isBlocked(map, objects, target.x, target.y + i);
+
+        if (blocks === true && object === null) {
+            i++;
+            continue;
+        }
+
+        let obj;
+        switch (rotation) {
+            default:
+            case 0:
+                obj = createObject("fire_effect", target.x, target.y + i);
+                break;
+            case 90:
+                obj = createObject("fire_effect", target.x + i, target.y);
+                break;
+            case 180:
+                obj = createObject("fire_effect", target.x, target.y - i);
+                break;
+            case 270:
+                obj = createObject("fire_effect", target.x - i, target.y);
+                break;
+        }
+        globals.Game.addObject(obj);
+        i++;
+    }
+
+    return true;
+}

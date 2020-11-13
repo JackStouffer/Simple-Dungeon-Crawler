@@ -3,11 +3,18 @@ import Path from "./rot/path/index";
 import globals from "./globals";
 import { createPassableCallback } from "./ai/components";
 import { SpellData, ItemData, GameState, ObjectData } from "./data";
-import { GameMap, isBlocked, distanceBetweenObjects, getObjectsAtLocation } from "./map";
+import { GameMap, isBlocked, distanceBetweenObjects, getObjectsAtLocation, Point } from "./map";
 import { GameObject } from "./object";
 import { displayMessage } from "./ui";
 import { Nullable } from "./util";
 
+/**
+ * Command design pattern that encapsulates an action that a
+ * GameObject can perform. A function generally returns a Command
+ * as a closure. Takes the GameObject that is acting, and then
+ * returns a boolean representing if the actor took up their turn
+ * or not.
+ */
 export type Command = (actor: GameObject) => boolean;
 
 /**
@@ -40,6 +47,7 @@ export function getActorMovementPath(
             x,
             y,
             createPassableCallback(actor),
+            () => 0,
             { topology: 8 }
         );
 
@@ -191,13 +199,18 @@ export function openSpellsCommand(): Command {
  * @param {string} itemID The id of the item to use
  * @returns {Function} A command function which takes an object as a param
  */
-export function useItemCommand(itemID: string, target: Nullable<GameObject> = null): Command {
+export function useItemCommand(
+    itemID: string,
+    target: Nullable<Point> = null,
+    map: Nullable<GameMap> = null,
+    objects: Nullable<GameObject[]> = null
+): Command {
     return function (actor: GameObject): boolean {
         if (actor.inventory === null) { return false; }
         if (!actor.inventory.hasItem(itemID)) { return false; }
 
         const itemDetails = ItemData[itemID];
-        const used = itemDetails.useFunc(itemDetails, actor, target);
+        const used = itemDetails.useFunc(itemDetails, actor, target, map, objects, null);
 
         if (used) {
             actor.inventory.useItem(itemID);
@@ -214,7 +227,13 @@ export function useItemCommand(itemID: string, target: Nullable<GameObject> = nu
  * @param {string} spellID The id of the spell to use
  * @returns {Function} A command function which takes an object as a param
  */
-export function useSpellCommand(spellID: string, target: Nullable<GameObject> = null): Command {
+export function useSpellCommand(
+    spellID: string,
+    target: Nullable<Point> = null,
+    map: Nullable<GameMap> = null,
+    objects: Nullable<GameObject[]> = null,
+    rotation: Nullable<number> = null
+): Command {
     return function (actor: GameObject): boolean {
         if (actor.fighter === null) { return false; }
         if (!actor.fighter.hasSpell(spellID)) { return false; }
@@ -225,10 +244,35 @@ export function useSpellCommand(spellID: string, target: Nullable<GameObject> = 
             return false;
         }
 
-        const used = details.useFunc(details, actor, target);
+        const used = details.useFunc(details, actor, target, map, objects, rotation);
         if (used) {
             actor.fighter.useMana(details.manaCost);
             return true;
+        }
+
+        return false;
+    };
+}
+
+
+export function rotateReticleCommand(): Command {
+    return function (actor: GameObject): boolean {
+        if (actor.inputHandler === null) { return false; }
+
+        switch(actor.inputHandler.reticleRotation) {
+            case 0:
+                actor.inputHandler.reticleRotation = 90;
+                break;
+            case 90:
+                actor.inputHandler.reticleRotation = 180;
+                break;
+            case 180:
+                actor.inputHandler.reticleRotation = 270;
+                break;
+            case 270:
+                actor.inputHandler.reticleRotation = 0;
+                break;
+            default: break;
         }
 
         return false;

@@ -451,3 +451,38 @@ export class DroppedItemAI implements AIComponent {
         return noOpCommand(true);
     }
 }
+
+/**
+ * Interaction component removes owner to give the appearance of opening
+ * when interacting
+ */
+export class RemoveAfterNTurns implements AIComponent {
+    private turns: number;
+    owner: Nullable<GameObject>;
+
+    constructor(data: ObjectDataDetails) {
+        if (data.removeAfterNTurns === null) { throw new Error("RemoveAfterNTurns needs removeAfterNTurns set on the data"); }
+
+        this.owner = null;
+        this.turns = data.removeAfterNTurns;
+    }
+
+    getStateName(): string {
+        return `Turns Left: ${this.turns}`;
+    }
+
+    setOwner(owner: Nullable<GameObject>): void {
+        this.owner = owner;
+    }
+
+    act(): Command {
+        if (this.owner === null) { throw new Error("Can't interact without an owner"); }
+
+        if (this.turns <= 0) {
+            globals.Game.removeObject(this.owner);
+        }
+
+        this.turns--;
+        return noOpCommand(true);
+    }
+}

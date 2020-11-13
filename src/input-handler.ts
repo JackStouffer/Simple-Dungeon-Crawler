@@ -1,5 +1,4 @@
 import globals from "./globals";
-import { mouseTarget } from "./game";
 import input from "./input";
 import {
     Command,
@@ -11,14 +10,15 @@ import {
     useSpellCommand,
     noOpCommand,
     interactCommand,
-    getActorMovementPath
+    getActorMovementPath,
+    rotateReticleCommand
 } from "./commands";
 import { GameObject } from "./object";
-import { displayMessage } from "./ui";
 import { InventoryItemDetails } from "./inventory";
 import { SpellFighterDetails } from "./fighter";
-import { distanceBetweenObjects, GameMap } from "./map";
+import { distanceBetweenObjects, getObjectsAtLocation, GameMap, Point } from "./map";
 import { Nullable } from "./util";
+import { SpellData } from "./data";
 
 export interface KeyCommand {
     key: string;
@@ -31,7 +31,41 @@ export enum PlayerState {
     Target
 }
 
+/**
+ * Given a mouse position return the object at that location which
+ * has an interactable or fighter. If there is no object, return null.
+ * @param {Point} mousePosition - The mouse position
+ * @param {GameMap} map - The current game map
+ * @param {GameObject[]} gameObjects - The objects on the map
+ * @return {Nullable<GameObject>} A game object
+ */
+export function mouseTarget(
+    mousePosition: Point,
+    map: GameMap,
+    gameObjects: GameObject[]
+): Nullable<GameObject> {
+    let target = null;
+    const objects = getObjectsAtLocation(gameObjects, mousePosition.x, mousePosition.y);
+
+    if (mousePosition.x >= map[0].length ||
+        mousePosition.y >= map.length ||
+        map[mousePosition.y][mousePosition.x].visible === false) {
+        return null;
+    }
+
+    for (let i = 0; i < objects.length; i++) {
+        if (objects[i].fighter !== null || objects[i].interactable !== null) {
+            target = objects[i];
+            break;
+        }
+    }
+
+    return target;
+}
+
 export interface InputHandler {
+    state: any;
+    reticleRotation: 0 | 90 | 180 | 270;
     owner: Nullable<GameObject>;
     keyCommands: KeyCommand[];
     itemForTarget: Nullable<InventoryItemDetails>;
@@ -39,10 +73,12 @@ export interface InputHandler {
 
     setOwner: (owner: Nullable<GameObject>) => void;
     handleInput: (map: GameMap, objects: GameObject[]) => Nullable<Command>;
+    getTargetingReticle: () => Point[];
 }
 
 export class PlayerInputHandler implements InputHandler {
     state: PlayerState;
+    reticleRotation: 0 | 90 | 180 | 270;
     keyCommands: KeyCommand[];
     owner: Nullable<GameObject>;
     itemForTarget: Nullable<InventoryItemDetails>;
@@ -50,11 +86,15 @@ export class PlayerInputHandler implements InputHandler {
 
     constructor() {
         this.owner = null;
+        this.reticleRotation = 0;
         this.state = PlayerState.Combat;
+        this.itemForTarget = null;
+        this.spellForTarget = null;
         this.keyCommands = [
             { key: "i", description: "Inventory", command: openInventoryCommand() },
             { key: "g", description: "Get Item", command: getItemCommand() },
-            { key: "m", description: "Spells", command: openSpellsCommand() },
+            { key: "m", description: "Spell Menu", command: openSpellsCommand() },
+            { key: "r", description: "Rotate Reticle", command: rotateReticleCommand() },
             { key: "x", description: "Do Nothing", command: noOpCommand(true) }
         ];
     }
@@ -63,13 +103,55 @@ export class PlayerInputHandler implements InputHandler {
         this.owner = owner;
     }
 
+    /**
+     * Returns a list of Points that represent the area being targeted by
+     * the player.
+     */
+    getTargetingReticle(): Point[] {
+        if (this.state !== PlayerState.Target) { throw new Error("Cannot get reticle outside of targeting state"); }
 
+        const ret: Point[] = [];
+
+        const mousePosition = input.getMousePosition();
+        if (mousePosition === null) { return ret; }
+
+        if (this.spellForTarget !== null) {
+            const spellData = SpellData[this.spellForTarget.id];
+            if (spellData.areaOfEffect !== null) {
+                for (let dx = 0; dx < spellData.areaOfEffect.width; dx++) {
+                    for (let dy = 0; dy < spellData.areaOfEffect.height; dy++) {
+                        switch (this.reticleRotation) {
+                            case 0:
+                                ret.push({ x: mousePosition.x + dx, y: mousePosition.y + dy });
+                                break;
+                            case 90:
+                                ret.push({ x: mousePosition.x + dy, y: mousePosition.y + dx });
+                                break;
+                            case 180:
+                                ret.push({ x: mousePosition.x + dx, y: mousePosition.y - dy });
+                                break;
+                            case 270:
+                                ret.push({ x: mousePosition.x - dy, y: mousePosition.y + dx });
+                                break;
+                            default: break;
+                        }
+                    }
+                }
+            } else {
+                ret.push({ x: mousePosition.x, y: mousePosition.y });
+            }
+        } else {
+            ret.push({ x: mousePosition.x, y: mousePosition.y });
+        }
+
+        return ret;
     }
 
     handleInput(map: GameMap, objects: GameObject[]): Nullable<Command> {
         if (this.owner === null) { throw new Error("Can't handle input without an owner"); }
 
         if (this.state === PlayerState.Combat) {
+            // Key commands
             for (let i = 0; i < this.keyCommands.length; i++) {
                 const keyCommand = this.keyCommands[i];
                 if (input.isDown(keyCommand.key)) {
@@ -77,11 +159,13 @@ export class PlayerInputHandler implements InputHandler {
                 }
             }
 
+            // Movement
             const mouseDownPosition = input.getLeftMouseDown();
             if (mouseDownPosition !== null) {
                 if (distanceBetweenObjects(mouseDownPosition, this.owner) < 1.5) {
                     const target = mouseTarget(
                         mouseDownPosition,
+                        map,
                         objects
                     );
                     if (target !== null && target !== this.owner) {
@@ -109,24 +193,30 @@ export class PlayerInputHandler implements InputHandler {
         } else if (this.state === PlayerState.Target) {
             globals.gameEventEmitter.emit("tutorial.spellTargeting");
 
+            // Key commands
+            for (let i = 0; i < this.keyCommands.length; i++) {
+                const keyCommand = this.keyCommands[i];
+                if (input.isDown(keyCommand.key)) {
+                    return keyCommand.command;
+                }
+            }
+
             const position = input.getLeftMouseDown();
             if (position === null) {
                 return null;
             }
 
-            const target = mouseTarget(position, objects);
-            if (target !== null) {
-                displayMessage("Canceled casting");
-                this.itemForTarget = null;
-                this.spellForTarget = null;
-                return null;
-            }
-
             let command: Nullable<Command> = null;
             if (this.itemForTarget !== null) {
-                command = useItemCommand(this.itemForTarget.id, target);
+                command = useItemCommand(this.itemForTarget.id, position, map, objects);
             } else if (this.spellForTarget !== null) {
-                command = useSpellCommand(this.spellForTarget.id, target);
+                command = useSpellCommand(
+                    this.spellForTarget.id,
+                    position,
+                    map,
+                    objects,
+                    this.reticleRotation
+                );
             }
 
             this.state = PlayerState.Combat;

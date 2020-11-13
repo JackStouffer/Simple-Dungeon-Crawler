@@ -168,7 +168,7 @@ export class PlayerGraphics implements GraphicsComponent {
      * @param {Array} map The map 2D array
      * @param {Array} objects An array of GameObjects
      */
-    draw(display: Display, camera: Camera, map: GameMap, objects: GameObject[]) {
+    draw(display: Display, camera: Camera, map: GameMap, objects: GameObject[]): void {
         if (this.owner === null) { throw new Error("Can't draw PlayerGraphics without owner"); }
         if (this.owner.inputHandler === null) { throw new Error("Can't draw PlayerGraphics without inputHandler"); }
         if (ObjectData[this.owner.type].maxTilesPerMove === null) {
@@ -201,7 +201,8 @@ export class PlayerGraphics implements GraphicsComponent {
                 bgColor
             );
 
-            if (this.owner.inputHandler.getState() === PlayerState.Combat) {
+            const inputHandlerState = this.owner.inputHandler.state;
+            if (inputHandlerState === PlayerState.Combat) {
                 const mousePosition = input.getMousePosition();
                 if (mousePosition === null) { return; }
 
@@ -222,6 +223,19 @@ export class PlayerGraphics implements GraphicsComponent {
                         const { x, y } = camera.worldToScreen(step[0], step[1]);
                         display.draw(x, y, "", "yellow", "yellow");
                     }
+                }
+            } else if (inputHandlerState === PlayerState.Target) {
+                const targetArea = this.owner.inputHandler.getTargetingReticle();
+
+                for (let i = 0; i < targetArea.length; i++) {
+                    if (targetArea[i].x >= map[0].length ||
+                        targetArea[i].y >= map.length ||
+                        map[targetArea[i].y][targetArea[i].x].visible === false) {
+                        return;
+                    }
+
+                    const { x, y } = camera.worldToScreen(targetArea[i].x, targetArea[i].y);
+                    display.draw(x, y, "X", "black", "yellow");
                 }
             }
         }

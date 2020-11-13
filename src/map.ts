@@ -270,35 +270,41 @@ export function getObjectsAtLocation(objects: GameObject[], x: number, y: number
     return objects.filter(object => object.x === x && object.y === y);
 }
 
+interface BlocksResult {
+    object: Nullable<GameObject>;
+    blocks: boolean;
+}
+
 /**
- * Returns null if the space is open, true or the blocking object
- * if blocked.
- * @param {Array} map The map 2D array
- * @param {Array} objects An array of GameObjects
- * @param {Number} x The x coordinate to check
- * @param {Number} y The y coordinate to check
+ * Returns an object with two keys, object and blocks. Object
+ * will be the GameObject on the tile if there is one, and null
+ * otherwise. Blocks is true if either the tile or the object on
+ * the tile blocks, false otherwise.
+ *
+ * @param {GameMap} map The map 2D array
+ * @param {GameObject[]} objects An array of GameObjects
+ * @param {number} x The x coordinate to check
+ * @param {number} y The y coordinate to check
  */
-export function isBlocked(map: GameMap, objects: GameObject[], x: number, y: number) {
-    if (!Array.isArray(map) || map.length === 0 || !Array.isArray(map[0])) { throw new Error("Bad map data"); }
+export function isBlocked(map: GameMap, objects: GameObject[], x: number, y: number): BlocksResult {
+    if (map.length === 0) { throw new Error("Bad map data"); }
 
     if (x < 0 || y < 0 || x >= map[0].length || y >= map.length || map[y][x].blocks) {
         return { object: null, blocks: true };
     }
 
-    const target = objects.filter(
-        object => object.x === x && object.y === y && object.blocks === true
-    )[0];
-    return target !== undefined ?
-        { object: target, blocks: true } : { object: null, blocks: false };
+    const object = objects.filter(o => o.x === x && o.y === y)[0];
+    return object !== undefined ?
+        { object, blocks: object.blocks } : { object: null, blocks: false };
 }
 
 /**
  * Returns true if space blocks sight, false otherwise.
- * @param {Array} map The 2D map array
- * @param {Array} objects An array of GameObjects
- * @param {Number} x The x coordinate to check
- * @param {Number} y The y coordinate to check
- * @returns {Boolean} Does the spot block sight
+ * @param {GameMap} map The 2D map array
+ * @param {GameObject[]} objects An array of GameObjects
+ * @param {number} x The x coordinate to check
+ * @param {number} y The y coordinate to check
+ * @returns {boolean} Does the spot block sight
  */
 export function isSightBlocked(map: GameMap, objects: GameObject[], x: number, y: number): boolean {
     if (!Array.isArray(map) || map.length === 0 || !Array.isArray(map[0])) { throw new Error("Bad map data"); }

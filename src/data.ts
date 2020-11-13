@@ -39,7 +39,9 @@ import {
     castWildDamageSpell,
     castHaste,
     castSlow,
-    castIncreaseMana
+    castIncreaseMana,
+    castFireWall,
+    SkillFunction
 } from "./skills";
 import { createBurnEffect } from "./effects";
 import { AIComponent } from "./ai/components";
@@ -266,6 +268,7 @@ export interface ObjectDataDetails {
     blocks: boolean
     blocksSight: boolean;
     ai: Nullable<string>;
+    removeAfterNTurns: Nullable<number>;
     input: Nullable<string>;
     inventory: Nullable<string>;
     fighter: Nullable<string>;
@@ -304,6 +307,7 @@ export const ObjectData: { [key: string]: ObjectDataDetails } = {
         bgColor: "brown",
         graphics: "basic_graphics",
         ai: null,
+        removeAfterNTurns: null,
         inventory: null,
         fighter: null,
         input: null,
@@ -341,6 +345,7 @@ export const ObjectData: { [key: string]: ObjectDataDetails } = {
         emptyColor: null,
         graphics: "draw_after_seen",
         ai: null,
+        removeAfterNTurns: null,
         inventory: null,
         fighter: null,
         interactable: "load_level_interactable",
@@ -377,6 +382,7 @@ export const ObjectData: { [key: string]: ObjectDataDetails } = {
         blocksSight: false,
         graphics: "draw_after_seen",
         ai: null,
+        removeAfterNTurns: null,
         inventory: null,
         fighter: null,
         interactable: "load_level_interactable",
@@ -413,6 +419,7 @@ export const ObjectData: { [key: string]: ObjectDataDetails } = {
         blocksSight: false,
         graphics: "draw_after_seen",
         ai: "chest_ai",
+        removeAfterNTurns: null,
         fighter: null,
         inventory: "basic_inventory",
         interactable: "give_items_interactable",
@@ -449,6 +456,7 @@ export const ObjectData: { [key: string]: ObjectDataDetails } = {
         blocksSight: false,
         graphics: "basic_graphics",
         ai: null,
+        removeAfterNTurns: null,
         fighter: "basic_fighter",
         speed: BASE_SPEED,
         experience: 0,
@@ -491,6 +499,7 @@ export const ObjectData: { [key: string]: ObjectDataDetails } = {
         emptyColor: "purple",
         graphics: "basic_graphics",
         ai: null,
+        removeAfterNTurns: null,
         fighter: "basic_fighter",
         speed: BASE_SPEED,
         inventory: "basic_inventory",
@@ -533,6 +542,7 @@ export const ObjectData: { [key: string]: ObjectDataDetails } = {
         blocksSight: false,
         graphics: "basic_graphics",
         ai: null,
+        removeAfterNTurns: null,
         fighter: null,
         inventory: null,
         interactable: null,
@@ -572,6 +582,7 @@ export const ObjectData: { [key: string]: ObjectDataDetails } = {
         lightingColor: "yellow",
         lightingRange: 4,
         ai: null,
+        removeAfterNTurns: null,
         fighter: null,
         level: null,
         experience: null,
@@ -608,6 +619,44 @@ export const ObjectData: { [key: string]: ObjectDataDetails } = {
         lightingColor: "orange",
         lightingRange: 6,
         ai: null,
+        removeAfterNTurns: null,
+        loseTrackAfterNTurns: null,
+        actions: null,
+        spells: null,
+        sightRange: null,
+        maxTilesPerMove: null,
+        fighter: null,
+        level: null,
+        experience: null,
+        experienceGiven: null,
+        speed: null,
+        maxHp: null,
+        maxMana: null,
+        strength: null,
+        defense: null,
+        onDeath: null,
+        damageAffinity: null,
+        inventoryPool: null,
+        inventory: null,
+        interactable: null,
+        input: null,
+        trigger: "fire",
+        triggerDamage: 10,
+    },
+    "fire_effect": {
+        name: "Fire",
+        char: "\u0436",
+        fgColor: "black",
+        bgColor: "orange",
+        emptyColor: null,
+        blocks: false,
+        blocksSight: false,
+        graphics: "basic_graphics",
+        lighting: "reflectivity",
+        lightingColor: "orange",
+        lightingRange: 4,
+        ai: "remove_after_n_turns",
+        removeAfterNTurns: 5,
         loseTrackAfterNTurns: null,
         actions: null,
         spells: null,
@@ -642,6 +691,7 @@ export const ObjectData: { [key: string]: ObjectDataDetails } = {
         graphics: "basic_graphics",
         input: null,
         ai: "dropped_item_ai",
+        removeAfterNTurns: null,
         loseTrackAfterNTurns: null,
         actions: null,
         spells: null,
@@ -682,6 +732,7 @@ export const ObjectData: { [key: string]: ObjectDataDetails } = {
         inventory: null,
         input: null,
         ai: null,
+        removeAfterNTurns: null,
         loseTrackAfterNTurns: null,
         actions: null,
         spells: null,
@@ -710,6 +761,7 @@ export const ObjectData: { [key: string]: ObjectDataDetails } = {
         lightingColor: "white",
         lightingRange: 7,
         ai: null,
+        removeAfterNTurns: null,
         sightRange: null,
         loseTrackAfterNTurns: null,
         spells: null,
@@ -753,7 +805,8 @@ export const ObjectData: { [key: string]: ObjectDataDetails } = {
         emptyColor: null,
         graphics: "transparency_graphics",
         ai: "planning_ai",
-        sightRange: 7,
+        removeAfterNTurns: null,
+        sightRange: 10,
         loseTrackAfterNTurns: 6,
         maxTilesPerMove: 5,
         actions: [
@@ -807,7 +860,8 @@ export const ObjectData: { [key: string]: ObjectDataDetails } = {
         emptyColor: null,
         graphics: "basic_graphics",
         ai: "planning_ai",
-        sightRange: 7,
+        removeAfterNTurns: null,
+        sightRange: 10,
         maxTilesPerMove: 5,
         loseTrackAfterNTurns: 6,
         actions: [
@@ -864,8 +918,9 @@ export const ObjectData: { [key: string]: ObjectDataDetails } = {
         emptyColor: null,
         input: null,
         ai: "planning_ai",
-        sightRange: 7,
-        maxTilesPerMove: 7,
+        removeAfterNTurns: null,
+        sightRange: 9,
+        maxTilesPerMove: 4,
         loseTrackAfterNTurns: 6,
         actions: [
             "wander",
@@ -911,7 +966,8 @@ export const ObjectData: { [key: string]: ObjectDataDetails } = {
         emptyColor: null,
         input: null,
         ai: "planning_ai",
-        sightRange: 7,
+        removeAfterNTurns: null,
+        sightRange: 9,
         maxTilesPerMove: 7,
         loseTrackAfterNTurns: 6,
         actions: [
@@ -960,6 +1016,7 @@ export const ObjectData: { [key: string]: ObjectDataDetails } = {
         emptyColor: null,
         input: null,
         ai: "planning_ai",
+        removeAfterNTurns: null,
         sightRange: 10,
         maxTilesPerMove: 5,
         loseTrackAfterNTurns: 6,
@@ -1014,6 +1071,7 @@ export const ObjectData: { [key: string]: ObjectDataDetails } = {
         emptyColor: null,
         input: null,
         ai: "planning_ai",
+        removeAfterNTurns: null,
         sightRange: 10,
         maxTilesPerMove: 5,
         loseTrackAfterNTurns: 6,
@@ -1069,7 +1127,7 @@ export interface ItemDataDetails {
     damageType: Nullable<DamageType>;
     statusEffectFunc: Nullable<any>;
 
-    useFunc: (details: ItemDataDetails, user: GameObject, target: Nullable<GameObject>) => boolean;
+    useFunc: SkillFunction;
 }
 
 export const ItemData: { [key: string]: ItemDataDetails } = {
@@ -1235,6 +1293,11 @@ export const ItemData: { [key: string]: ItemDataDetails } = {
     }
 };
 
+interface Area {
+    width: number;
+    height: number;
+}
+
 export interface SpellDataDetails {
     displayName: string;
     manaCost: number;
@@ -1242,8 +1305,9 @@ export interface SpellDataDetails {
     value: Nullable<number>;
     damageType: Nullable<DamageType>;
     statusEffectFunc?: any;
+    areaOfEffect: Nullable<Area>;
 
-    useFunc: (details: SpellDataDetails, user: GameObject, target: Nullable<GameObject>) => boolean;
+    useFunc: SkillFunction;
 }
 
 /**
@@ -1257,6 +1321,7 @@ export const SpellData: { [key: string]: SpellDataDetails } = {
         value: 20,
         type: SpellType.DamageOther,
         damageType: DamageType.Electric,
+        areaOfEffect: null,
         useFunc: castDamageSpell
     },
     "wild_lightning_bolt": {
@@ -1265,6 +1330,7 @@ export const SpellData: { [key: string]: SpellDataDetails } = {
         value: 30,
         type: SpellType.WildDamage,
         damageType: DamageType.Electric,
+        areaOfEffect: null,
         useFunc: castWildDamageSpell
     },
     "fireball": {
@@ -1273,6 +1339,7 @@ export const SpellData: { [key: string]: SpellDataDetails } = {
         value: 20,
         type: SpellType.DamageOther,
         damageType: DamageType.Fire,
+        areaOfEffect: null,
         useFunc: castDamageSpell,
         statusEffectFunc: createBurnEffect
     },
@@ -1282,6 +1349,7 @@ export const SpellData: { [key: string]: SpellDataDetails } = {
         value: 30,
         type: SpellType.WildDamage,
         damageType: DamageType.Fire,
+        areaOfEffect: null,
         useFunc: castWildDamageSpell
     },
     "confuse": {
@@ -1290,6 +1358,7 @@ export const SpellData: { [key: string]: SpellDataDetails } = {
         value: 8,
         type: SpellType.DamageOther,
         damageType: null,
+        areaOfEffect: null,
         useFunc: castConfuse
     },
     "clairvoyance": {
@@ -1298,6 +1367,7 @@ export const SpellData: { [key: string]: SpellDataDetails } = {
         value: null,
         type: SpellType.Passive,
         damageType: null,
+        areaOfEffect: null,
         useFunc: castClairvoyance
     },
     "lesser_heal": {
@@ -1306,6 +1376,7 @@ export const SpellData: { [key: string]: SpellDataDetails } = {
         value: 25,
         type: SpellType.HealSelf,
         damageType: null,
+        areaOfEffect: null,
         useFunc: castHeal
     },
     "heal": {
@@ -1314,6 +1385,7 @@ export const SpellData: { [key: string]: SpellDataDetails } = {
         value: 50,
         type: SpellType.HealSelf,
         damageType: null,
+        areaOfEffect: null,
         useFunc: castHeal
     },
     "greater_heal": {
@@ -1322,6 +1394,7 @@ export const SpellData: { [key: string]: SpellDataDetails } = {
         value: 100,
         type: SpellType.HealSelf,
         damageType: null,
+        areaOfEffect: null,
         useFunc: castHeal
     },
     "lesser_haste": {
@@ -1330,6 +1403,7 @@ export const SpellData: { [key: string]: SpellDataDetails } = {
         value: 10,
         type: SpellType.Effect,
         damageType: null,
+        areaOfEffect: null,
         useFunc: castHaste
     },
     "lesser_slow": {
@@ -1338,7 +1412,20 @@ export const SpellData: { [key: string]: SpellDataDetails } = {
         value: 10,
         type: SpellType.DamageOther,
         damageType: null,
+        areaOfEffect: null,
         useFunc: castSlow
+    },
+    "fire_wall": {
+        displayName: "Wall of Fire",
+        manaCost: 30,
+        value: 10,
+        type: SpellType.DamageOther,
+        damageType: DamageType.Fire,
+        areaOfEffect: {
+            width: 1,
+            height: 6
+        },
+        useFunc: castFireWall
     }
 };
 

@@ -94,10 +94,11 @@ export default class AStar extends Path {
             }
         }
 
-        let item: Item | null = this.done[fromX+","+fromY];
+        let item: Item | null | undefined = this.done[fromX+","+fromY];
         if (item === null) { return; }
+        if (item === undefined) { return; }
 
-        while (item !== null) {
+        while (item !== null && item !== undefined) {
             callback(item.x, item.y);
             item = item.prev;
         }
