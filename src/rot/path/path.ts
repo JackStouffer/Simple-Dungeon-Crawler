@@ -30,6 +30,7 @@ import { DIRS } from "../constants";
 
 export type ComputeCallback = (x: number, y: number) => any;
 export type PassableCallback = (x: number, y: number) => boolean;
+export type WeightCallback = (x: number, y: number) => number;
 
 export interface Options {
     topology: 4 | 6 | 8;
