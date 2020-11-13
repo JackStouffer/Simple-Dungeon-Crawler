@@ -13,14 +13,14 @@ const hasMessageBeenShown = {
 
 export function explainMovement() {
     if (!hasMessageBeenShown.movement) {
-        displayMessage("Move with WASD and QEZC. Look at things with the mouse.", MessageType.Tutorial);
+        displayMessage("Move by clicking where you want to go.", MessageType.Tutorial);
         hasMessageBeenShown.movement = true;
     }
 }
 
 export function explainAttacking() {
     if (!hasMessageBeenShown.attack) {
-        displayMessage("Move into an enemy's tile to attack", MessageType.Tutorial);
+        displayMessage("Click enemy's to attack", MessageType.Tutorial);
         playPing();
         hasMessageBeenShown.attack = true;
     }
@@ -44,7 +44,7 @@ export function explainSpellMenu() {
 
 export function explainPickUpItem() {
     if (!hasMessageBeenShown.pickUpItem) {
-        displayMessage("Press g pick up items", MessageType.Tutorial);
+        displayMessage("Click on a dropped item to pick it up", MessageType.Tutorial);
         playPing();
         hasMessageBeenShown.pickUpItem = true;
     }
