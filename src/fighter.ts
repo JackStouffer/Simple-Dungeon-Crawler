@@ -202,9 +202,10 @@ export class BasicFighter implements FighterComponent, SpeedActor {
         }
 
         if (damage > 0) {
+            const experience = target.fighter.experienceGiven ?? 0;
             const killed = target.fighter.takeDamage(damage, critical, DamageType.Physical);
             if (killed) {
-                this.experience += target.fighter.experienceGiven ?? 0;
+                this.experience += experience;
             }
         } else if (this.owner !== null) {
             displayMessage(`${this.owner.name} attacks ${target.name}, but it's too weak!`);
