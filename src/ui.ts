@@ -41,7 +41,7 @@ export function drawUI(
     display.drawText(30, HEIGHT - UI_HEIGHT, `%c{white}%b{blue}STR: ${stats.strength}`);
     display.drawText(38, HEIGHT - UI_HEIGHT, `%c{white}%b{blue}DEF: ${stats.defense}`);
     display.drawText(46, HEIGHT - UI_HEIGHT, `%c{white}%b{blue}EXP: ${player.fighter.experience}/${(LEVEL_UP_BASE + player.fighter.level * LEVEL_UP_FACTOR)}`);
-    display.drawText(23, HEIGHT - UI_HEIGHT + 2, `%c{white}%b{blue}${PlayerState[player.inputHandler.getState()]}`);
+    display.drawText(23, HEIGHT - UI_HEIGHT + 2, `%c{white}%b{blue}${PlayerState[player.inputHandler.state]}`);
 
     const mousePosition = input.getMousePosition();
     if (mousePosition === null) { return; }

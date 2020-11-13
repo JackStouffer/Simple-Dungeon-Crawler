@@ -39,12 +39,10 @@ export interface InputHandler {
 
     setOwner: (owner: Nullable<GameObject>) => void;
     handleInput: (map: GameMap, objects: GameObject[]) => Nullable<Command>;
-    setState: (state: any) => void;
-    getState: () => any;
 }
 
 export class PlayerInputHandler implements InputHandler {
-    private state: PlayerState;
+    state: PlayerState;
     keyCommands: KeyCommand[];
     owner: Nullable<GameObject>;
     itemForTarget: Nullable<InventoryItemDetails>;
@@ -65,12 +63,7 @@ export class PlayerInputHandler implements InputHandler {
         this.owner = owner;
     }
 
-    getState() {
-        return this.state;
-    }
 
-    setState(state: PlayerState): void {
-        this.state = state;
     }
 
     handleInput(map: GameMap, objects: GameObject[]): Nullable<Command> {
