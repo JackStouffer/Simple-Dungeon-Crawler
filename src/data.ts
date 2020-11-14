@@ -41,6 +41,7 @@ import {
     castSlow,
     castIncreaseMana,
     castFireWall,
+    castIceWall,
     SkillFunction
 } from "./skills";
 import { createBurnEffect } from "./effects";
@@ -680,6 +681,49 @@ export const ObjectData: { [key: string]: ObjectDataDetails } = {
         trigger: "fire",
         triggerDamage: 10,
     },
+    "ice_wall": {
+        name: "Ice Wall",
+        char: "\u2042",
+        fgColor: "black",
+        bgColor: "lightblue",
+        emptyColor: null,
+        blocks: true,
+        blocksSight: true,
+        graphics: "basic_graphics",
+        lighting: null,
+        lightingColor: null,
+        lightingRange: null,
+        ai: null,
+        removeAfterNTurns: null,
+        loseTrackAfterNTurns: null,
+        actions: null,
+        spells: null,
+        sightRange: null,
+        maxTilesPerMove: null,
+        fighter: "basic_fighter",
+        level: 1,
+        experience: 0,
+        experienceGiven: 0,
+        speed: BASE_SPEED,
+        maxHp: 10,
+        maxMana: 0,
+        strength: null,
+        defense: 0,
+        onDeath: DeathType.RemoveFromWorld,
+        damageAffinity: {
+            [DamageType.Physical]: Affinity.normal,
+            [DamageType.Fire]: Affinity.weak,
+            [DamageType.Electric]: Affinity.normal,
+            [DamageType.Water]: Affinity.nullified,
+            [DamageType.Nature]: Affinity.normal
+        },
+        inventoryPool: [],
+        inventory: null,
+        interactable: null,
+        input: null,
+        trigger: "fire",
+        triggerDamage: 10,
+    },
     "dropped_item": {
         name: "Dropped Item",
         char: "!",
@@ -1120,12 +1164,18 @@ export const ObjectData: { [key: string]: ObjectDataDetails } = {
     }
 };
 
+interface Area {
+    width: number;
+    height: number;
+}
+
 export interface ItemDataDetails {
     displayName: string,
     type: ItemType,
     value: Nullable<number>,
     damageType: Nullable<DamageType>;
     statusEffectFunc: Nullable<any>;
+    areaOfEffect: Nullable<Area>;
 
     useFunc: SkillFunction;
 }
@@ -1136,6 +1186,7 @@ export const ItemData: { [key: string]: ItemDataDetails } = {
         value: 25,
         type: ItemType.HealSelf,
         damageType: null,
+        areaOfEffect: null,
         useFunc: castHeal,
         statusEffectFunc: null
     },
@@ -1144,6 +1195,7 @@ export const ItemData: { [key: string]: ItemDataDetails } = {
         value: 50,
         type: ItemType.HealSelf,
         damageType: null,
+        areaOfEffect: null,
         useFunc: castHeal,
         statusEffectFunc: null
     },
@@ -1152,6 +1204,7 @@ export const ItemData: { [key: string]: ItemDataDetails } = {
         value: 100,
         type: ItemType.HealSelf,
         damageType: null,
+        areaOfEffect: null,
         useFunc: castHeal,
         statusEffectFunc: null
     },
@@ -1160,6 +1213,7 @@ export const ItemData: { [key: string]: ItemDataDetails } = {
         value: 25,
         type: ItemType.AddManaSelf,
         damageType: null,
+        areaOfEffect: null,
         useFunc: castIncreaseMana,
         statusEffectFunc: null
     },
@@ -1168,6 +1222,7 @@ export const ItemData: { [key: string]: ItemDataDetails } = {
         value: 20,
         type: ItemType.DamageScroll,
         damageType: DamageType.Electric,
+        areaOfEffect: null,
         useFunc: castDamageSpell,
         statusEffectFunc: null
     },
@@ -1176,6 +1231,7 @@ export const ItemData: { [key: string]: ItemDataDetails } = {
         value: 50,
         type: ItemType.DamageScroll,
         damageType: DamageType.Electric,
+        areaOfEffect: null,
         useFunc: castDamageSpell,
         statusEffectFunc: null
     },
@@ -1184,6 +1240,7 @@ export const ItemData: { [key: string]: ItemDataDetails } = {
         value: 100,
         type: ItemType.DamageScroll,
         damageType: DamageType.Electric,
+        areaOfEffect: null,
         useFunc: castDamageSpell,
         statusEffectFunc: null
     },
@@ -1192,6 +1249,7 @@ export const ItemData: { [key: string]: ItemDataDetails } = {
         value: 20,
         type: ItemType.DamageScroll,
         damageType: DamageType.Fire,
+        areaOfEffect: null,
         useFunc: castDamageSpell,
         statusEffectFunc: createBurnEffect
     },
@@ -1200,6 +1258,7 @@ export const ItemData: { [key: string]: ItemDataDetails } = {
         value: 50,
         type: ItemType.DamageScroll,
         damageType: DamageType.Fire,
+        areaOfEffect: null,
         useFunc: castDamageSpell,
         statusEffectFunc: createBurnEffect
     },
@@ -1208,6 +1267,7 @@ export const ItemData: { [key: string]: ItemDataDetails } = {
         value: 100,
         type: ItemType.DamageScroll,
         damageType: DamageType.Fire,
+        areaOfEffect: null,
         useFunc: castDamageSpell,
         statusEffectFunc: createBurnEffect
     },
@@ -1216,6 +1276,7 @@ export const ItemData: { [key: string]: ItemDataDetails } = {
         value: 50,
         type: ItemType.WildDamageScroll,
         damageType: DamageType.Electric,
+        areaOfEffect: null,
         useFunc: castWildDamageSpell,
         statusEffectFunc: null
     },
@@ -1224,6 +1285,7 @@ export const ItemData: { [key: string]: ItemDataDetails } = {
         value: 100,
         type: ItemType.WildDamageScroll,
         damageType: DamageType.Electric,
+        areaOfEffect: null,
         useFunc: castWildDamageSpell,
         statusEffectFunc: null
     },
@@ -1232,6 +1294,7 @@ export const ItemData: { [key: string]: ItemDataDetails } = {
         value: 150,
         type: ItemType.WildDamageScroll,
         damageType: DamageType.Electric,
+        areaOfEffect: null,
         useFunc: castWildDamageSpell,
         statusEffectFunc: null
     },
@@ -1240,6 +1303,7 @@ export const ItemData: { [key: string]: ItemDataDetails } = {
         value: 50,
         type: ItemType.WildDamageScroll,
         damageType: DamageType.Fire,
+        areaOfEffect: null,
         useFunc: castWildDamageSpell,
         statusEffectFunc: createBurnEffect
     },
@@ -1248,6 +1312,7 @@ export const ItemData: { [key: string]: ItemDataDetails } = {
         value: 100,
         type: ItemType.WildDamageScroll,
         damageType: DamageType.Fire,
+        areaOfEffect: null,
         useFunc: castWildDamageSpell,
         statusEffectFunc: createBurnEffect
     },
@@ -1256,6 +1321,7 @@ export const ItemData: { [key: string]: ItemDataDetails } = {
         value: 150,
         type: ItemType.WildDamageScroll,
         damageType: DamageType.Fire,
+        areaOfEffect: null,
         useFunc: castWildDamageSpell,
         statusEffectFunc: createBurnEffect
     },
@@ -1264,6 +1330,7 @@ export const ItemData: { [key: string]: ItemDataDetails } = {
         value: 8,
         type: ItemType.ConfuseScroll,
         damageType: null,
+        areaOfEffect: null,
         useFunc: castConfuse,
         statusEffectFunc: null
     },
@@ -1272,6 +1339,7 @@ export const ItemData: { [key: string]: ItemDataDetails } = {
         value: null,
         type: ItemType.ClairvoyanceScroll,
         damageType: null,
+        areaOfEffect: null,
         useFunc: castClairvoyance,
         statusEffectFunc: null
     },
@@ -1280,6 +1348,7 @@ export const ItemData: { [key: string]: ItemDataDetails } = {
         value: 5,
         type: ItemType.HasteSelf,
         damageType: null,
+        areaOfEffect: null,
         useFunc: castHaste,
         statusEffectFunc: null
     },
@@ -1288,15 +1357,11 @@ export const ItemData: { [key: string]: ItemDataDetails } = {
         value: 5,
         type: ItemType.SlowOther,
         damageType: null,
+        areaOfEffect: null,
         useFunc: castSlow,
         statusEffectFunc: null
     }
 };
-
-interface Area {
-    width: number;
-    height: number;
-}
 
 export interface SpellDataDetails {
     displayName: string;
@@ -1335,7 +1400,7 @@ export const SpellData: { [key: string]: SpellDataDetails } = {
     },
     "fireball": {
         displayName: "Fireball",
-        manaCost: 10,
+        manaCost: 50,
         value: 20,
         type: SpellType.DamageOther,
         damageType: DamageType.Fire,
@@ -1426,6 +1491,18 @@ export const SpellData: { [key: string]: SpellDataDetails } = {
             height: 6
         },
         useFunc: castFireWall
+    },
+    "ice_wall": {
+        displayName: "Wall of Ice",
+        manaCost: 30,
+        value: null,
+        type: SpellType.DamageOther,
+        damageType: null,
+        areaOfEffect: {
+            width: 1,
+            height: 6
+        },
+        useFunc: castIceWall
     }
 };
 

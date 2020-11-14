@@ -436,8 +436,7 @@ export class DroppedItemAI implements AIComponent {
     }
 
     getStateName(): string {
-        // fix me
-        return "unknown";
+        return "";
     }
 
     act(): Command {
@@ -461,7 +460,9 @@ export class RemoveAfterNTurns implements AIComponent {
     owner: Nullable<GameObject>;
 
     constructor(data: ObjectDataDetails) {
-        if (data.removeAfterNTurns === null) { throw new Error("RemoveAfterNTurns needs removeAfterNTurns set on the data"); }
+        if (data.removeAfterNTurns === null) {
+            throw new Error("RemoveAfterNTurns needs removeAfterNTurns set on the data");
+        }
 
         this.owner = null;
         this.turns = data.removeAfterNTurns;

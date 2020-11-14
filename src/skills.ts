@@ -227,6 +227,76 @@ export function castSlow(
     return true;
 }
 
+function castWall(
+    item: SpellDataDetails | ItemDataDetails,
+    user: GameObject,
+    target: Nullable<Point>,
+    map: Nullable<GameMap>,
+    objects: Nullable<GameObject[]>,
+    rotation: Nullable<number>,
+    objectId: string
+): boolean {
+    if (target === null) { throw new Error("Target cannot be null for castWall"); }
+    if (map === null) { throw new Error("Map cannot be null for castWall"); }
+    if (objects === null) { throw new Error("Objects cannot be null for castWall"); }
+    if (rotation === null) { rotation = 0; }
+    if (item.areaOfEffect === null) { throw new Error("areaOfEffect cannot be null for castWall"); }
+
+    for (let dx = 0; dx < item.areaOfEffect.width; dx++) {
+        for (let dy = 0; dy < item.areaOfEffect.height; dy++) {
+            let locationX: number, locationY: number;
+            switch (rotation) {
+                default:
+                case 0:
+                    locationX = target.x + dx;
+                    locationY = target.y + dy;
+                    break;
+                case 90:
+                    locationX = target.x + dy;
+                    locationY = target.y + dx;
+                    break;
+                case 180:
+                    locationX = target.x + dx;
+                    locationY = target.y - dy;
+                    break;
+                case 270:
+                    locationX = target.x - dy;
+                    locationY = target.y + dx;
+                    break;
+            }
+
+            const { blocks, object } = isBlocked(map, objects, locationX, locationY);
+
+            if (blocks === true && object === null) {
+                continue;
+            }
+
+            globals.Game.addObject(createObject(objectId, locationX, locationY));
+        }
+    }
+
+    return true;
+}
+
+export function castIceWall(
+    item: SpellDataDetails | ItemDataDetails,
+    user: GameObject,
+    target: Nullable<Point>,
+    map: Nullable<GameMap>,
+    objects: Nullable<GameObject[]>,
+    rotation: Nullable<number>
+): boolean {
+    return castWall(
+        item,
+        user,
+        target,
+        map,
+        objects,
+        rotation,
+        "ice_wall"
+    );
+}
+
 export function castFireWall(
     item: SpellDataDetails | ItemDataDetails,
     user: GameObject,
@@ -235,39 +305,13 @@ export function castFireWall(
     objects: Nullable<GameObject[]>,
     rotation: Nullable<number>
 ): boolean {
-    if (target === null) { throw new Error("Target cannot be null for castFireWall"); }
-    if (map === null) { throw new Error("Map cannot be null for castFireWall"); }
-    if (objects === null) { throw new Error("Objects cannot be null for castFireWall"); }
-    if (rotation === null) { rotation = 0; }
-
-    let i: number = 0;
-    while(i < 6) {
-        const { blocks, object } = isBlocked(map, objects, target.x, target.y + i);
-
-        if (blocks === true && object === null) {
-            i++;
-            continue;
-        }
-
-        let obj;
-        switch (rotation) {
-            default:
-            case 0:
-                obj = createObject("fire_effect", target.x, target.y + i);
-                break;
-            case 90:
-                obj = createObject("fire_effect", target.x + i, target.y);
-                break;
-            case 180:
-                obj = createObject("fire_effect", target.x, target.y - i);
-                break;
-            case 270:
-                obj = createObject("fire_effect", target.x - i, target.y);
-                break;
-        }
-        globals.Game.addObject(obj);
-        i++;
-    }
-
-    return true;
+    return castWall(
+        item,
+        user,
+        target,
+        map,
+        objects,
+        rotation,
+        "fire_effect"
+    );
 }
