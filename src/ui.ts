@@ -46,6 +46,11 @@ export function drawUI(
     const mousePosition = input.getMousePosition();
     if (mousePosition === null) { return; }
     const { x, y } = mousePosition;
+
+    if (x < 0 || y < 0 || x >= map[0].length || y >= map.length) {
+        return;
+    }
+
     const target = get(getObjectsAtLocation(gameObjects, x, y), "[0]", null);
     const tile = map[y][x];
 

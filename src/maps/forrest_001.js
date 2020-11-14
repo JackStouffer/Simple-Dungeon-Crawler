@@ -158,8 +158,8 @@
                  "type":"object",
                  "visible":true,
                  "width":0,
-                 "x":1245.83210514049,
-                 "y":763.561757996511
+                 "x":1247.02699102889,
+                 "y":759.977100331318
                 }, 
                 {
                  "height":0,
@@ -349,50 +349,6 @@
                  "y":1112.95441431044
                 }, 
                 {
-                 "height":31.7176047570887,
-                 "id":19,
-                 "name":"Attacking Tutorial",
-                 "properties":[
-                        {
-                         "name":"event",
-                         "type":"string",
-                         "value":"tutorial.attacking"
-                        }, 
-                        {
-                         "name":"type",
-                         "type":"string",
-                         "value":"trigger_volume"
-                        }],
-                 "rotation":0,
-                 "type":"Rectangle",
-                 "visible":true,
-                 "width":64.5444802463356,
-                 "x":351.869652825507,
-                 "y":160.047793152268
-                }, 
-                {
-                 "height":31.7176,
-                 "id":20,
-                 "name":"Attacking Tutorial",
-                 "properties":[
-                        {
-                         "name":"event",
-                         "type":"string",
-                         "value":"tutorial.attacking"
-                        }, 
-                        {
-                         "name":"type",
-                         "type":"string",
-                         "value":"trigger_volume"
-                        }],
-                 "rotation":0,
-                 "type":"Rectangle",
-                 "visible":true,
-                 "width":64.1585486298727,
-                 "x":1055.33871101891,
-                 "y":768.394384098803
-                }, 
-                {
                  "height":0,
                  "id":31,
                  "name":"Bandit",
@@ -480,6 +436,52 @@
                  "width":0,
                  "x":303.835220653339,
                  "y":1431.56717461205
+                }, 
+                {
+                 "height":0,
+                 "id":37,
+                 "name":"Attacking Tutorial Trigger",
+                 "point":true,
+                 "properties":[
+                        {
+                         "name":"event",
+                         "type":"string",
+                         "value":"tutorial.attacking"
+                        }, 
+                        {
+                         "name":"objectType",
+                         "type":"string",
+                         "value":"event_trigger"
+                        }],
+                 "rotation":0,
+                 "type":"object",
+                 "visible":true,
+                 "width":0,
+                 "x":1067.03309833911,
+                 "y":786.234914565659
+                }, 
+                {
+                 "height":0,
+                 "id":38,
+                 "name":"Attacking Tutorial Trigger",
+                 "point":true,
+                 "properties":[
+                        {
+                         "name":"event",
+                         "type":"string",
+                         "value":"tutorial.attacking"
+                        }, 
+                        {
+                         "name":"objectType",
+                         "type":"string",
+                         "value":"event_trigger"
+                        }],
+                 "rotation":0,
+                 "type":"object",
+                 "visible":true,
+                 "width":0,
+                 "x":372.804397180069,
+                 "y":184.012426813239
                 }],
          "opacity":1,
          "type":"objectgroup",
@@ -603,7 +605,7 @@
          "y":0
         }],
  "nextlayerid":6,
- "nextobjectid":37,
+ "nextobjectid":39,
  "orientation":"orthogonal",
  "renderorder":"right-down",
  "tiledversion":"1.4.2",

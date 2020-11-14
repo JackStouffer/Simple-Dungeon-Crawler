@@ -1,5 +1,3 @@
-import { isNil } from "lodash";
-
 import { RNG } from "./rot/index";
 import { SpeedActor } from "./rot/scheduler/speed";
 
@@ -26,7 +24,7 @@ import { BasicFighter, FighterComponent } from "./fighter";
 import { InputHandler, PlayerInputHandler } from "./input-handler";
 import { displayMessage } from "./ui";
 import { GameMap, PathNode } from "./map";
-import { FireTrigger, TriggerComponent } from "./trigger";
+import { EventTrigger, FireTrigger, TriggerComponent } from "./trigger";
 import { Nullable } from "./util";
 
 /**
@@ -39,7 +37,7 @@ import { Nullable } from "./util";
  */
 export class GameObject implements SpeedActor {
     readonly type: string;
-    name: string;
+    name: Nullable<string>;
     x: number;
     y: number;
     blocks: boolean;
@@ -53,7 +51,14 @@ export class GameObject implements SpeedActor {
     interactable: Nullable<InteractableComponent>;
     trigger: Nullable<TriggerComponent>;
 
-    constructor(type: string, x: number, y: number, name: string, blocks=false, blocksSight=false) {
+    constructor(
+        type: string,
+        x: number,
+        y: number,
+        name: Nullable<string> = null,
+        blocks: boolean = false,
+        blocksSight: boolean = false
+    ) {
         this.type = type;
         this.x = x;
         this.y = y;
@@ -202,7 +207,7 @@ export class GameObject implements SpeedActor {
 
     setTrigger(trigger: TriggerComponent | null): void {
         if (trigger === null && this.trigger !== null) {
-            this.trigger.setOwner(null);
+            this.trigger.owner = null;
             this.trigger = null;
             return;
         }
@@ -211,7 +216,7 @@ export class GameObject implements SpeedActor {
             return;
         }
 
-        trigger.setOwner(this);
+        trigger.owner = this;
         this.trigger = trigger;
     }
 
@@ -393,7 +398,7 @@ export function createObject(id: string, x: number = 0, y: number = 0): GameObje
         }
     }
 
-    if (!isNil(data.input)) {
+    if (data.input !== null) {
         switch (data.input) {
             case "player_input":
                 object.setInputHandler(new PlayerInputHandler());
@@ -403,11 +408,14 @@ export function createObject(id: string, x: number = 0, y: number = 0): GameObje
         }
     }
 
-    if (!isNil(data.trigger)) {
+    if (data.trigger !== null) {
         switch (data.trigger) {
             case "fire":
-                if (data.triggerDamage === null) { throw new Error("Cannot create fire trigger without damage"); }
-                object.setTrigger(new FireTrigger(data.triggerDamage, 3, 5));
+                if (data.triggerValue === null) { throw new Error("Cannot create fire trigger without damage"); }
+                object.setTrigger(new FireTrigger(data.triggerValue, 3, 5));
+                break;
+            case "event":
+                object.setTrigger(new EventTrigger());
                 break;
             default:
                 throw new Error(`Unhandled trigger type ${data.trigger}`);

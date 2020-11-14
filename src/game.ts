@@ -34,7 +34,6 @@ import {
     drawMap,
     resetVisibility,
     loadTiledMap,
-    findVolumeCollision,
     PathNode,
     setAllToExplored
 } from "./map";
@@ -53,7 +52,6 @@ import {
     explainSpellMenu,
     explainPickUpItem
 } from "./tutorials";
-import { Volume } from "./volume";
 import { SpellFighterDetails } from "./fighter";
 import { InventoryItemDetails } from "./inventory";
 import { assertUnreachable, Nullable } from "./util";
@@ -69,12 +67,14 @@ export class SimpleDungeonCrawler {
     processAI: boolean;
     isLightingEnabled: boolean;
 
+    lastTimestamp: DOMHighResTimeStamp;
+    deltaTime: DOMHighResTimeStamp;
+
     scheduler: SpeedScheduler;
     player: GameObject;
     currentActor: Nullable<GameObject>;
     gameObjects: GameObject[];
     map: GameMap;
-    volumes: Volume[];
     pathNodes: Map<number, PathNode>;
 
     keyBindingMenu: KeyBindingMenu;
@@ -90,7 +90,6 @@ export class SimpleDungeonCrawler {
         this.scheduler = new SpeedScheduler();
         this.gameObjects = [];
         this.map = [];
-        this.volumes = [];
         this.pathNodes = new Map();
         this.totalTurns = 1;
 
@@ -177,7 +176,8 @@ export class SimpleDungeonCrawler {
 
         input.init();
 
-        this.mainLoop();
+        this.lastTimestamp = performance.now();
+        this.mainLoop(performance.now());
     }
 
     /**
@@ -273,11 +273,10 @@ export class SimpleDungeonCrawler {
      * @param name {string} the name of the level to load
      */
     loadLevel(name: LevelName): void {
-        const { map, playerLocation, objects, volumes, pathNodes } = loadTiledMap(name);
+        const { map, playerLocation, objects, pathNodes } = loadTiledMap(name);
         this.map = map;
         objects.push(this.player);
         this.gameObjects = objects;
-        this.volumes = volumes;
         this.pathNodes = pathNodes;
 
         this.player.x = playerLocation[0];
@@ -442,27 +441,20 @@ export class SimpleDungeonCrawler {
         return acted;
     }
 
-    mainLoop(): void {
+    mainLoop(timestamp: DOMHighResTimeStamp): void {
         globals.animationFrameID = window.requestAnimationFrame(this.mainLoop.bind(this));
+
+        this.deltaTime = timestamp - this.lastTimestamp;
+        this.lastTimestamp = timestamp;
 
         const acted = this.handleInput();
         if (acted === true) {
-            const volumes = findVolumeCollision(this.volumes, this.player);
-            if (volumes.length > 0) {
-                volumes.forEach((v: Volume) => v.enter(this.player));
-            }
-
             if (this.processAI) {
                 do {
                     this.currentActor = this.scheduler.next();
                     if (this.currentActor === null) { continue; }
 
                     this.currentActor.act(this.map, this.gameObjects, this.pathNodes);
-
-                    const volumes = findVolumeCollision(this.volumes, this.currentActor);
-                    if (volumes.length > 0) {
-                        volumes.forEach((v: Volume) => v.enter(this.currentActor!));
-                    }
                 } while (this.currentActor !== this.player);
             }
 

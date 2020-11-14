@@ -1,4 +1,5 @@
 import { DamageType } from "./data";
+import globals from "./globals";
 import { createBurnEffect } from "./effects";
 import { GameObject } from "./object";
 import { Nullable } from "./util";
@@ -11,7 +12,6 @@ import { Nullable } from "./util";
 export interface TriggerComponent {
     owner: Nullable<GameObject>;
 
-    setOwner: (owner: Nullable<GameObject>) => void;
     trigger: (actor: GameObject) => void;
 }
 
@@ -28,15 +28,27 @@ export class FireTrigger implements TriggerComponent {
         this.burnDamagePerTurn = burnDamagePerTurn;
     }
 
-    setOwner(owner: Nullable<GameObject>): void {
-        this.owner = owner;
-    }
-
     trigger(actor: GameObject): void {
         if (actor.fighter !== null) {
             actor.fighter.takeDamage(this.damage, false, DamageType.Fire);
             const burn = createBurnEffect(actor, this.burnDamagePerTurn, this.burnTurns);
             actor.fighter.addStatusEffect(burn);
+        }
+    }
+}
+
+export class EventTrigger implements TriggerComponent {
+    owner: Nullable<GameObject>;
+    eventName: Nullable<string>;
+
+    constructor() {
+        this.owner = null;
+        this.eventName = null;
+    }
+
+    trigger(actor: GameObject): void {
+        if (actor.type === "player" && this.eventName !== null) {
+            globals.gameEventEmitter.emit(this.eventName);
         }
     }
 }

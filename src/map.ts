@@ -11,9 +11,9 @@ import {
     TileData, WIDTH, HEIGHT, LevelName
 } from "./data";
 import { createObject, GameObject } from "./object";
-import { TriggerVolume, Volume } from "./volume";
 import { Camera } from "./camera";
 import { Nullable } from "./util";
+import { EventTrigger } from "./trigger";
 
 export class Tile {
     name: string;
@@ -107,7 +107,6 @@ export function loadTiledMap(level: LevelName) {
     const tileSize: number = sourceData.tileheight;
     const map: GameMap = [];
     const objects: GameObject[] = [];
-    const volumes: Volume[] = [];
     const pathNodes: Map<number, PathNode> = new Map();
     const fallbackNodes = new Map();
     let playerLocation: number[] = [0, 0];
@@ -154,7 +153,8 @@ export function loadTiledMap(level: LevelName) {
                     levelName = findProperty(o, "levelName"),
                     spellId = findProperty(o, "spellId"),
                     pathName = findProperty(o, "pathName"),
-                    fallbackPosition = findProperty(o, "fallbackPosition");
+                    fallbackPosition = findProperty(o, "fallbackPosition"),
+                    event = findProperty(o, "event");
 
                 if (type === null) {
                     throw new Error(`No id for ${o.name}`);
@@ -203,21 +203,17 @@ export function loadTiledMap(level: LevelName) {
                         obj.ai.setFallbackPosition(fallbackPosition);
                     }
 
+                    if (type === "event_trigger" &&
+                        event !== null &&
+                        obj.trigger !== null) {
+                        const trigger = obj.trigger as EventTrigger;
+                        trigger.eventName = event;
+                    }
+
                     objects.push(obj);
                 }
             } else {
                 throw new Error(`Unrecognized object type ${o.type}`);
-            }
-        } else if (o.type === "Rectangle") {
-            const x = Math.floor(o.x / tileSize);
-            const y = Math.floor(o.y / tileSize);
-            const width = Math.ceil(o.width / tileSize);
-            const height = Math.ceil(o.height / tileSize);
-            const type = findProperty(o, "type");
-
-            if (type === "trigger_volume") {
-                const event = findProperty(o, "event");
-                volumes.push(new TriggerVolume(x, y, width, height, event));
             }
         }
     });
@@ -237,7 +233,7 @@ export function loadTiledMap(level: LevelName) {
         }
     });
 
-    return { map, playerLocation, objects, volumes, pathNodes, fallbackNodes };
+    return { map, playerLocation, objects, pathNodes, fallbackNodes };
 }
 
 /**
@@ -462,24 +458,4 @@ export function drawMap(display: Display, camera: Camera, map: GameMap): void {
             drawTile(display, map[y][x], screenX, screenY);
         }
     }
-}
-
-/**
- * Does AABB collision for all of the volumes for a
- * given GameObject. Returns the list of volumes that
- * are colliding.
- * @param {Array} volumes An array of volume objects
- * @param {GameObject} object A game object
- * @returns {Array} An array of volumes
- */
-export function findVolumeCollision(volumes: Volume[], object: GameObject): Volume[] {
-    return volumes.filter(v => {
-        if (v.x < object.x &&
-            v.x + v.width > object.x &&
-            v.y <= object.y &&
-            v.y + v.height >= object.y) {
-            return true;
-        }
-        return false;
-    });
 }

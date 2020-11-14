@@ -261,11 +261,11 @@ export interface InventoryPoolProbabilities {
 }
 
 export interface ObjectDataDetails {
-    name: string;
-    char: string;
+    name: Nullable<string>;
+    char: Nullable<string>;
     bgColor: Nullable<string>;
     emptyColor: Nullable<string>;
-    fgColor: string;
+    fgColor: Nullable<string>;
     blocks: boolean
     blocksSight: boolean;
     ai: Nullable<string>;
@@ -279,7 +279,7 @@ export interface ObjectDataDetails {
     lightingColor: Nullable<string>;
     lightingRange: Nullable<number>;
     trigger: Nullable<string>;
-    triggerDamage: Nullable<number>;
+    triggerValue: Nullable<any>;
     level: Nullable<number>;
     experience: Nullable<number>;
     experienceGiven: Nullable<number>;
@@ -318,7 +318,7 @@ export const ObjectData: { [key: string]: ObjectDataDetails } = {
         interactable: "door_interactable",
         emptyColor: null,
         trigger: null,
-        triggerDamage: null,
+        triggerValue: null,
         level: null,
         experience: null,
         experienceGiven: null,
@@ -355,7 +355,7 @@ export const ObjectData: { [key: string]: ObjectDataDetails } = {
         lightingColor: null,
         lightingRange: null,
         trigger: null,
-        triggerDamage: null,
+        triggerValue: null,
         level: null,
         experience: null,
         experienceGiven: null,
@@ -392,7 +392,7 @@ export const ObjectData: { [key: string]: ObjectDataDetails } = {
         lightingColor: null,
         lightingRange: null,
         trigger: null,
-        triggerDamage: null,
+        triggerValue: null,
         level: null,
         experience: null,
         experienceGiven: null,
@@ -429,7 +429,7 @@ export const ObjectData: { [key: string]: ObjectDataDetails } = {
         lightingColor: null,
         lightingRange: null,
         trigger: null,
-        triggerDamage: null,
+        triggerValue: null,
         level: null,
         experience: null,
         experienceGiven: null,
@@ -479,7 +479,7 @@ export const ObjectData: { [key: string]: ObjectDataDetails } = {
         lightingColor: null,
         lightingRange: null,
         trigger: null,
-        triggerDamage: null,
+        triggerValue: null,
         level: null,
         sightRange: null,
         maxTilesPerMove: null,
@@ -523,7 +523,7 @@ export const ObjectData: { [key: string]: ObjectDataDetails } = {
         lightingColor: null,
         lightingRange: null,
         trigger: null,
-        triggerDamage: null,
+        triggerValue: null,
         level: null,
         sightRange: null,
         maxTilesPerMove: null,
@@ -552,7 +552,7 @@ export const ObjectData: { [key: string]: ObjectDataDetails } = {
         lightingColor: null,
         lightingRange: null,
         trigger: null,
-        triggerDamage: null,
+        triggerValue: null,
         level: null,
         experience: null,
         experienceGiven: null,
@@ -600,7 +600,7 @@ export const ObjectData: { [key: string]: ObjectDataDetails } = {
         interactable: null,
         input: null,
         trigger: null,
-        triggerDamage: null,
+        triggerValue: null,
         sightRange: null,
         maxTilesPerMove: null,
         loseTrackAfterNTurns: null,
@@ -642,7 +642,7 @@ export const ObjectData: { [key: string]: ObjectDataDetails } = {
         interactable: null,
         input: null,
         trigger: "fire",
-        triggerDamage: 10,
+        triggerValue: 10,
     },
     "fire_effect": {
         name: "Fire",
@@ -679,7 +679,7 @@ export const ObjectData: { [key: string]: ObjectDataDetails } = {
         interactable: null,
         input: null,
         trigger: "fire",
-        triggerDamage: 10,
+        triggerValue: 10,
     },
     "ice_wall": {
         name: "Ice Wall",
@@ -722,7 +722,7 @@ export const ObjectData: { [key: string]: ObjectDataDetails } = {
         interactable: null,
         input: null,
         trigger: "fire",
-        triggerDamage: 10,
+        triggerValue: 10,
     },
     "dropped_item": {
         name: "Dropped Item",
@@ -759,7 +759,7 @@ export const ObjectData: { [key: string]: ObjectDataDetails } = {
         inventoryPool: null,
         interactable: "give_items_interactable",
         trigger: null,
-        triggerDamage: null
+        triggerValue: null
     },
     "magic_shrine": {
         name: "Magicka Shrine",
@@ -796,7 +796,44 @@ export const ObjectData: { [key: string]: ObjectDataDetails } = {
         inventoryPool: null,
         interactable: "give_spell_interactable",
         trigger: null,
-        triggerDamage: null
+        triggerValue: null
+    },
+    "event_trigger": {
+        name: null,
+        graphics: null,
+        lighting: null,
+        lightingColor: null,
+        lightingRange: null,
+        ai: null,
+        removeAfterNTurns: null,
+        sightRange: null,
+        loseTrackAfterNTurns: null,
+        spells: null,
+        actions: null,
+        input: null,
+        inventory: null,
+        fighter: null,
+        speed: BASE_SPEED,
+        maxTilesPerMove: null,
+        interactable: null,
+        char: null,
+        fgColor: null,
+        bgColor: null,
+        emptyColor: null,
+        blocks: false,
+        blocksSight: false,
+        level: null,
+        experience: null,
+        experienceGiven: null,
+        maxHp: null,
+        maxMana: null,
+        strength: null,
+        defense: null,
+        damageAffinity: null,
+        onDeath: null,
+        inventoryPool: null,
+        trigger: "event",
+        triggerValue: null
     },
     "player": {
         name: "The Player",
@@ -839,7 +876,7 @@ export const ObjectData: { [key: string]: ObjectDataDetails } = {
         onDeath: DeathType.Default,
         inventoryPool: null,
         trigger: null,
-        triggerDamage: null
+        triggerValue: null
     },
     "goblin": {
         name: "Goblin",
@@ -892,7 +929,7 @@ export const ObjectData: { [key: string]: ObjectDataDetails } = {
         ],
         onDeath: DeathType.Default,
         trigger: null,
-        triggerDamage: null
+        triggerValue: null
     },
     "goblin_brute": {
         name: "Goblin Brute",
@@ -951,7 +988,7 @@ export const ObjectData: { [key: string]: ObjectDataDetails } = {
         lightingRange: null,
         lightingColor: null,
         trigger: null,
-        triggerDamage: null
+        triggerValue: null
     },
     "rat": {
         name: "Rat",
@@ -999,7 +1036,7 @@ export const ObjectData: { [key: string]: ObjectDataDetails } = {
         lightingRange: null,
         lightingColor: null,
         trigger: null,
-        triggerDamage: null
+        triggerValue: null
     },
     "water_sprite": {
         name: "Water Sprite",
@@ -1047,7 +1084,7 @@ export const ObjectData: { [key: string]: ObjectDataDetails } = {
         lightingRange: null,
         lightingColor: null,
         trigger: null,
-        triggerDamage: null
+        triggerValue: null
     },
     "bandit": {
         name: "Bandit",
@@ -1104,7 +1141,7 @@ export const ObjectData: { [key: string]: ObjectDataDetails } = {
         lightingRange: null,
         lightingColor: null,
         trigger: null,
-        triggerDamage: null
+        triggerValue: null
     },
     "bandit_mage": {
         name: "Bandit Mage",
@@ -1160,7 +1197,7 @@ export const ObjectData: { [key: string]: ObjectDataDetails } = {
         lightingRange: null,
         lightingColor: null,
         trigger: null,
-        triggerDamage: null
+        triggerValue: null
     }
 };
 
