@@ -1401,6 +1401,7 @@ export const ItemData: { [key: string]: ItemDataDetails } = {
 };
 
 export interface SpellDataDetails {
+    id: string;
     displayName: string;
     manaCost: number;
     type: SpellType;
@@ -1418,6 +1419,7 @@ export interface SpellDataDetails {
  */
 export const SpellData: { [key: string]: SpellDataDetails } = {
     "lightning_bolt": {
+        id: "lightning_bolt",
         displayName: "Lightning Bolt",
         manaCost: 10,
         value: 20,
@@ -1427,6 +1429,7 @@ export const SpellData: { [key: string]: SpellDataDetails } = {
         useFunc: castDamageSpell
     },
     "wild_lightning_bolt": {
+        id: "wild_lightning_bolt",
         displayName: "Wild Lightning Bolt",
         manaCost: 10,
         value: 30,
@@ -1436,6 +1439,7 @@ export const SpellData: { [key: string]: SpellDataDetails } = {
         useFunc: castWildDamageSpell
     },
     "fireball": {
+        id: "fireball",
         displayName: "Fireball",
         manaCost: 50,
         value: 20,
@@ -1446,6 +1450,7 @@ export const SpellData: { [key: string]: SpellDataDetails } = {
         statusEffectFunc: createBurnEffect
     },
     "wild_fireball": {
+        id: "wild_fireball",
         displayName: "Wild Fireball",
         manaCost: 10,
         value: 30,
@@ -1455,6 +1460,7 @@ export const SpellData: { [key: string]: SpellDataDetails } = {
         useFunc: castWildDamageSpell
     },
     "confuse": {
+        id: "confuse",
         displayName: "Confuse",
         manaCost: 20,
         value: 8,
@@ -1464,6 +1470,7 @@ export const SpellData: { [key: string]: SpellDataDetails } = {
         useFunc: castConfuse
     },
     "clairvoyance": {
+        id: "clairvoyance",
         displayName: "Clairvoyance",
         manaCost: 20,
         value: null,
@@ -1473,6 +1480,7 @@ export const SpellData: { [key: string]: SpellDataDetails } = {
         useFunc: castClairvoyance
     },
     "lesser_heal": {
+        id: "lesser_heal",
         displayName: "Lesser Heal",
         manaCost: 10,
         value: 25,
@@ -1482,6 +1490,7 @@ export const SpellData: { [key: string]: SpellDataDetails } = {
         useFunc: castHeal
     },
     "heal": {
+        id: "heal",
         displayName: "Heal",
         manaCost: 30,
         value: 50,
@@ -1491,6 +1500,7 @@ export const SpellData: { [key: string]: SpellDataDetails } = {
         useFunc: castHeal
     },
     "greater_heal": {
+        id: "greater_heal",
         displayName: "Greater Heal",
         manaCost: 50,
         value: 100,
@@ -1500,6 +1510,7 @@ export const SpellData: { [key: string]: SpellDataDetails } = {
         useFunc: castHeal
     },
     "lesser_haste": {
+        id: "lesser_haste",
         displayName: "Lesser Haste",
         manaCost: 30,
         value: 10,
@@ -1509,6 +1520,7 @@ export const SpellData: { [key: string]: SpellDataDetails } = {
         useFunc: castHaste
     },
     "lesser_slow": {
+        id: "lesser_slow",
         displayName: "Lesser Slow",
         manaCost: 30,
         value: 10,
@@ -1518,6 +1530,7 @@ export const SpellData: { [key: string]: SpellDataDetails } = {
         useFunc: castSlow
     },
     "fire_wall": {
+        id: "fire_wall",
         displayName: "Wall of Fire",
         manaCost: 30,
         value: 10,
@@ -1530,6 +1543,7 @@ export const SpellData: { [key: string]: SpellDataDetails } = {
         useFunc: castFireWall
     },
     "ice_wall": {
+        id: "ice_wall",
         displayName: "Wall of Ice",
         manaCost: 30,
         value: null,

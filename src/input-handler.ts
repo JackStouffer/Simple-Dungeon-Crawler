@@ -14,10 +14,9 @@ import {
 } from "./commands";
 import { GameObject } from "./object";
 import { InventoryItemDetails } from "./inventory";
-import { SpellFighterDetails } from "./fighter";
 import { distanceBetweenObjects, getObjectsAtLocation, GameMap, Point } from "./map";
 import { Nullable } from "./util";
-import { SpellData } from "./data";
+import { SpellData, SpellDataDetails } from "./data";
 
 export interface KeyCommand {
     key: string;
@@ -68,7 +67,7 @@ export interface InputHandler {
     owner: Nullable<GameObject>;
     keyCommands: KeyCommand[];
     itemForTarget: Nullable<InventoryItemDetails>;
-    spellForTarget: Nullable<SpellFighterDetails>;
+    spellForTarget: Nullable<SpellDataDetails>;
 
     handleInput: (map: GameMap, objects: GameObject[]) => Nullable<Command>;
     getTargetingReticle: () => Point[];
@@ -80,7 +79,7 @@ export class PlayerInputHandler implements InputHandler {
     keyCommands: KeyCommand[];
     owner: Nullable<GameObject>;
     itemForTarget: Nullable<InventoryItemDetails>;
-    spellForTarget: Nullable<SpellFighterDetails>;
+    spellForTarget: Nullable<SpellDataDetails>;
 
     constructor() {
         this.owner = null;

@@ -9,12 +9,12 @@ import {
     MAP_FILLED_SPACE,
     LEVEL_UP_BASE,
     LEVEL_UP_FACTOR,
-    SpellType
+    SpellType,
+    SpellDataDetails
 } from "./data";
 import input from "./input";
 import { PlayerState, KeyCommand } from "./input-handler";
 import { InventoryItemDetails } from "./inventory";
-import { SpellFighterDetails } from "./fighter";
 import { GameObject } from "./object";
 import { GameMap, getObjectsAtLocation } from "./map";
 import { assertUnreachable, Nullable } from "./util";
@@ -184,7 +184,7 @@ export class SpellSelectionMenu {
         this.currentSelection = 0;
     }
 
-    draw(spells: SpellFighterDetails[]): void {
+    draw(spells: SpellDataDetails[]): void {
         if (globals.Game === null) { throw new Error("Global Game object is null"); }
         if (globals.Game.display === null) { throw new Error("Cannot draw InventoryMenu when display is null"); }
 
@@ -238,7 +238,7 @@ export class SpellSelectionMenu {
         }
     }
 
-    handleInput(spells: SpellFighterDetails[]): Nullable<SpellFighterDetails> {
+    handleInput(spells: SpellDataDetails[]): Nullable<SpellDataDetails> {
         if (globals.gameEventEmitter === null) { throw new Error("Global gameEventEmitter is null"); }
 
         if (input.isDown("Enter")) {

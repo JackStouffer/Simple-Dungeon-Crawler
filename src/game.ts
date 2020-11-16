@@ -26,7 +26,7 @@ import {
     UseItemCommand,
     UseSpellCommand
 } from "./commands";
-import { WIDTH, HEIGHT, GameState, LevelName, ItemType, SpellType } from "./data";
+import { WIDTH, HEIGHT, GameState, LevelName, ItemType, SpellType, SpellDataDetails } from "./data";
 import input from "./input";
 import { PlayerState } from "./input-handler";
 import {
@@ -52,7 +52,6 @@ import {
     explainSpellMenu,
     explainPickUpItem
 } from "./tutorials";
-import { SpellFighterDetails } from "./fighter";
 import { InventoryItemDetails } from "./inventory";
 import { assertUnreachable, Nullable } from "./util";
 
@@ -394,7 +393,7 @@ export class SimpleDungeonCrawler {
                 return;
             }
 
-            const spell: Nullable<SpellFighterDetails> = this.spellSelectionMenu.handleInput(
+            const spell: Nullable<SpellDataDetails> = this.spellSelectionMenu.handleInput(
                 this.player.fighter.getKnownSpells()
             );
 

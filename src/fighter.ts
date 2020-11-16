@@ -6,7 +6,8 @@ import {
     LEVEL_UP_FACTOR,
     DamageType,
     SpellData,
-    SpellType
+    SpellType,
+    SpellDataDetails
 } from "./data";
 import { displayMessage, MessageType } from "./ui";
 import { cloneDeep } from "lodash";
@@ -29,7 +30,7 @@ export interface FighterComponent {
     useMana: (mana: number) => void;
     addMana: (mana: number) => void;
     hasSpell: (spell: string) => boolean;
-    getKnownSpells: () => SpellFighterDetails[];
+    getKnownSpells: () => SpellDataDetails[];
     getStatusEffects: () => StatusEffect[];
     addStatusEffect: (effect: StatusEffect) => void;
     getStatisticEffects: () => StatisticEffect[];
@@ -46,14 +47,6 @@ export interface FighterStats {
     speed: number;
     ailmentSusceptibility: number;
     [index: string]: number;
-}
-
-export interface SpellFighterDetails {
-    id: string;
-    displayName: string;
-    manaCost: number;
-    value: Nullable<number>;
-    type: SpellType;
 }
 
 export type DeathCallback = ((target: GameObject) => void) | null;
@@ -326,16 +319,8 @@ export class BasicFighter implements FighterComponent, SpeedActor {
         return true;
     }
 
-    getKnownSpells(): SpellFighterDetails[] {
-        return [...this.knownSpells].map(s => {
-            return {
-                id: s,
-                displayName: SpellData[s].displayName,
-                manaCost: SpellData[s].manaCost,
-                value: SpellData[s].value,
-                type: SpellData[s].type
-            };
-        });
+    getKnownSpells(): SpellDataDetails[] {
+        return [...this.knownSpells].map(s => SpellData[s]);
     }
 
     hasSpell(spellID: string) {
