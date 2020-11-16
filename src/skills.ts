@@ -163,15 +163,30 @@ export function castWildDamageSpell(
 export function castConfuse(
     item: SpellDataDetails | ItemDataDetails,
     user: GameObject,
-    target: GameObject
+    target: Nullable<Point>,
+    map: Nullable<GameMap>,
+    objects: Nullable<GameObject[]>
 ): boolean {
     if (item.value === null) { throw new Error("Item does not have a value"); }
-    if (target.ai === null) { throw new Error("Cannot confuse an object without an AI"); }
+    if (target === null) { throw new Error("Target cannot be null for castConfuse"); }
+    if (map === null) { throw new Error("Map cannot be null for castConfuse"); }
+    if (objects === null) { throw new Error("Objects cannot be null for castConfuse"); }
 
-    displayMessage(target.name + " is now confused");
-    const oldAI = target.ai;
-    target.ai = new ConfusedAI(oldAI, item.value);
-    target.ai.owner = target;
+    const object = mouseTarget(target, map, objects);
+    if (object === null) {
+        displayMessage("Canceled casting");
+        return false;
+    }
+    if (object.ai === null) { throw new Error("Cannot confuse an object without an AI"); }
+    if (object.fighter === null) {
+        displayMessage(`${object.name} isn't attack-able`);
+        return false;
+    }
+
+    displayMessage(object.name + " is now confused");
+    const oldAI = object.ai;
+    object.ai = new ConfusedAI(oldAI, item.value);
+    object.ai.owner = object;
     return true;
 }
 
@@ -216,19 +231,34 @@ export function castHaste(
 export function castSlow(
     item: SpellDataDetails | ItemDataDetails,
     user: GameObject,
-    target: GameObject
+    target: Nullable<Point>,
+    map: Nullable<GameMap>,
+    objects: Nullable<GameObject[]>
 ): boolean {
     if (item.value === null) { throw new Error("Item does not have a value"); }
-    if (target.fighter === null) { throw new Error("target of castSlow must have a fighter"); }
+    if (target === null) { throw new Error("Target cannot be null for castSlow"); }
+    if (map === null) { throw new Error("Map cannot be null for castSlow"); }
+    if (objects === null) { throw new Error("Objects cannot be null for castSlow"); }
 
-    const statusEffects = target.fighter.getStatusEffects();
-    if (statusEffects.filter(e => e.name === "Slow").length > 0) {
-        displayMessage(`${target.name} is already slowed`);
+    const object = mouseTarget(target, map, objects);
+    if (object === null) {
+        displayMessage("Canceled casting");
+        return false;
+    }
+    if (object.ai === null) { throw new Error("Cannot confuse an object without an AI"); }
+    if (object.fighter === null) {
+        displayMessage(`${object.name} isn't slow-able`);
         return false;
     }
 
-    displayMessage(`Spell hits and slows ${target.name}`);
-    target.fighter.addStatisticEffect(createSlowEffect(target, item.value));
+    const statusEffects = object.fighter.getStatusEffects();
+    if (statusEffects.filter(e => e.name === "Slow").length > 0) {
+        displayMessage(`${object.name} is already slowed`);
+        return false;
+    }
+
+    displayMessage(`Spell hits and slows ${object.name}`);
+    object.fighter.addStatisticEffect(createSlowEffect(object, item.value));
     return true;
 }
 

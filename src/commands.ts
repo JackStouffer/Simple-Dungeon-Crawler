@@ -6,6 +6,7 @@ import { SpellData, ItemData, GameState, ObjectData } from "./data";
 import { GameMap, isBlocked, distanceBetweenObjects, getObjectsAtLocation, Point } from "./map";
 import { GameObject } from "./object";
 import { Nullable } from "./util";
+import { displayMessage } from "./ui";
 
 /**
  * Command design pattern that encapsulates an action that a
@@ -340,6 +341,11 @@ export class UseSpellCommand implements Command {
         const stats = actor.fighter.getEffectiveStats();
         if (details.manaCost > stats.mana) {
             this.didUseSpell = false;
+
+            if (actor === globals.Game?.player) {
+                displayMessage(`You don't have enough mana to cast ${details.displayName}`);
+            }
+
             return;
         }
 
