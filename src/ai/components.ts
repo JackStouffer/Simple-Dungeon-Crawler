@@ -7,7 +7,7 @@ import { PassableCallback } from "../rot/path/path";
 import globals from "../globals";
 import { GoalData, ActionData, ObjectDataDetails, ObjectData } from "../data";
 import { Planner, ActionList, PlannerWorldState } from "./planner";
-import { Command, goToLocationCommand, noOpCommand } from "../commands";
+import { Command, GoToLocationCommand, NoOpCommand } from "../commands";
 import { GameMap, isBlocked, PathNode, isSightBlocked } from "../map";
 import { GameObject } from "../object";
 import { displayMessage } from "../ui";
@@ -314,7 +314,7 @@ export class PlanningAI implements AIComponent {
         if (plan !== null) {
             return ActionData[plan].updateFunction(this, map, gameObjects, pathNodes);
         } else {
-            return noOpCommand();
+            return new NoOpCommand(true);
         }
     }
 }
@@ -362,7 +362,11 @@ export class ConfusedAI implements AIComponent {
             } while (blocks === true);
 
             this.turns--;
-            return goToLocationCommand([[newX, newY]], globals.Game.map, globals.Game.gameObjects);
+            return new GoToLocationCommand(
+                [[newX, newY]],
+                globals.Game.map,
+                globals.Game.gameObjects
+            );
         } else {
             if (this.owner === globals.Game.player) {
                 displayMessage("You are no longer confused");
@@ -371,7 +375,7 @@ export class ConfusedAI implements AIComponent {
             }
 
             this.owner.ai = this.oldAI;
-            return noOpCommand(true);
+            return new NoOpCommand(true);
         }
     }
 }
@@ -424,7 +428,7 @@ export class ChestAI implements AIComponent {
             this.owner.graphics.bgColor = this.bgColor;
         }
 
-        return noOpCommand(true);
+        return new NoOpCommand(true);
     }
 }
 
@@ -455,7 +459,7 @@ export class DroppedItemAI implements AIComponent {
             globals.Game.removeObject(this.owner);
         }
 
-        return noOpCommand(true);
+        return new NoOpCommand(true);
     }
 }
 
@@ -493,6 +497,6 @@ export class RemoveAfterNTurns implements AIComponent {
         }
 
         this.turns--;
-        return noOpCommand(true);
+        return new NoOpCommand(true);
     }
 }

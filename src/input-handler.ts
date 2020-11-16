@@ -2,16 +2,15 @@ import globals from "./globals";
 import input from "./input";
 import {
     Command,
-    goToLocationCommand,
-    openInventoryCommand,
-    getItemCommand,
-    openSpellsCommand,
-    useItemCommand,
-    useSpellCommand,
-    noOpCommand,
-    interactCommand,
     getActorMovementPath,
-    rotateReticleCommand
+    GoToLocationCommand,
+    OpenInventoryCommand,
+    OpenSpellsCommand,
+    UseItemCommand,
+    UseSpellCommand,
+    NoOpCommand,
+    InteractCommand,
+    RotateReticleCommand
 } from "./commands";
 import { GameObject } from "./object";
 import { InventoryItemDetails } from "./inventory";
@@ -91,11 +90,10 @@ export class PlayerInputHandler implements InputHandler {
         this.itemForTarget = null;
         this.spellForTarget = null;
         this.keyCommands = [
-            { key: "i", description: "Inventory", command: openInventoryCommand() },
-            { key: "g", description: "Get Item", command: getItemCommand() },
-            { key: "m", description: "Spell Menu", command: openSpellsCommand() },
-            { key: "r", description: "Rotate Reticle", command: rotateReticleCommand() },
-            { key: "x", description: "Do Nothing", command: noOpCommand(true) }
+            { key: "i", description: "Inventory", command: new OpenInventoryCommand() },
+            { key: "m", description: "Spell Menu", command: new OpenSpellsCommand() },
+            { key: "r", description: "Rotate Target Reticle", command: new RotateReticleCommand() },
+            { key: "x", description: "Do Nothing", command: new NoOpCommand(true) }
         ];
     }
 
@@ -170,7 +168,7 @@ export class PlayerInputHandler implements InputHandler {
                         objects
                     );
                     if (target !== null && target !== this.owner) {
-                        return interactCommand(target);
+                        return new InteractCommand(target);
                     }
                 }
 
@@ -182,7 +180,7 @@ export class PlayerInputHandler implements InputHandler {
                     objects
                 );
                 if (path !== null) {
-                    return goToLocationCommand(
+                    return new GoToLocationCommand(
                         path,
                         map,
                         objects
@@ -209,9 +207,9 @@ export class PlayerInputHandler implements InputHandler {
 
             let command: Nullable<Command> = null;
             if (this.itemForTarget !== null) {
-                command = useItemCommand(this.itemForTarget.id, position, map, objects);
+                command = new UseItemCommand(this.itemForTarget.id, position, map, objects);
             } else if (this.spellForTarget !== null) {
-                command = useSpellCommand(
+                command = new UseSpellCommand(
                     this.spellForTarget.id,
                     position,
                     map,

@@ -4,11 +4,11 @@ import { RNG, DIRS, Path } from "../rot/index";
 
 import {
     Command,
-    useItemCommand,
-    useSpellCommand,
-    goToLocationCommand,
-    interactCommand,
-    noOpCommand
+    UseItemCommand,
+    UseSpellCommand,
+    GoToLocationCommand,
+    InteractCommand,
+    NoOpCommand
 } from "../commands";
 import {
     AIComponent,
@@ -101,7 +101,7 @@ export function wanderAction(ai: AIComponent, map: GameMap, gameObjects: GameObj
         ({ blocks, object } = isBlocked(map, gameObjects, newX, newY));
     } while (blocks === true || object !== null);
 
-    return goToLocationCommand([[newX, newY]], map, gameObjects);
+    return new GoToLocationCommand([[newX, newY]], map, gameObjects);
 }
 
 /**
@@ -140,7 +140,7 @@ export function patrolAction(
         ai.patrolTarget = get(sortedNodes, "[0]", null);
     }
     if (ai.patrolTarget === null) {
-        return noOpCommand(true);
+        return new NoOpCommand(true);
     }
 
     let path: Nullable<number[][]> = getStepsTowardsTarget(
@@ -154,7 +154,7 @@ export function patrolAction(
         ai.patrolTarget = pathNodes.get(ai.patrolTarget.next) ?? null;
 
         if (ai.patrolTarget === null) {
-            return noOpCommand(true);
+            return new NoOpCommand(true);
         }
 
         path = getStepsTowardsTarget(
@@ -166,10 +166,10 @@ export function patrolAction(
     }
     // give up
     if (path === null) {
-        return noOpCommand(true);
+        return new NoOpCommand(true);
     }
 
-    return goToLocationCommand(path, map, gameObjects);
+    return new GoToLocationCommand(path, map, gameObjects);
 }
 
 /**
@@ -197,14 +197,14 @@ export function chaseAction(
         maxTilesPerMove
     );
     if (path === null) {
-        return noOpCommand(true);
+        return new NoOpCommand(true);
     }
 
     if (path === null) {
-        return noOpCommand(true);
+        return new NoOpCommand(true);
     }
 
-    return goToLocationCommand(path, map, gameObjects);
+    return new GoToLocationCommand(path, map, gameObjects);
 }
 
 /**
@@ -228,7 +228,7 @@ export function chaseWeight(ai: PlanningAI): number {
 export function meleeAttackAction(ai: PlanningAI): Command {
     if (ai.owner === null) { throw new Error("No owner on AI for meleeAttackAction"); }
     if (ai.target === null) { throw new Error("Cannot perform meleeAttackAction without a target"); }
-    return interactCommand(ai.target);
+    return new InteractCommand(ai.target);
 }
 
 /**
@@ -245,8 +245,10 @@ export function useHealingItemAction(ai: PlanningAI): Command {
         .getItems()
         .filter(i => i.type === ItemType.HealSelf)
         .sort((a, b) => a.value! - b.value!)[0];
+
     displayMessage(`${ai.owner.name} used a ${item.displayName}`);
-    return useItemCommand(item.id);
+
+    return new UseItemCommand(item.id);
 }
 
 /**
@@ -263,8 +265,10 @@ export function useManaItemAction(ai: PlanningAI): Command {
         .getItems()
         .filter(i => i.type === ItemType.AddManaSelf)
         .sort((a, b) => a.value! - b.value!)[0];
+
     displayMessage(`${ai.owner.name} used a ${item.displayName}`);
-    return useItemCommand(item.id);
+
+    return new UseItemCommand(item.id);
 }
 
 /**
@@ -286,6 +290,6 @@ export function castSpellAction(spellID: string) {
             throw new Error(`${ai.owner.name} does not know spell ${spellID}`);
         }
 
-        return useSpellCommand(spellID, ai.target, map, gameObjects);
+        return new UseSpellCommand(spellID, ai.target, map, gameObjects);
     };
 }

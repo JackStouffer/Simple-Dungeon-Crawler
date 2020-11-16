@@ -14,18 +14,16 @@ import { Nullable } from "./util";
  * returns a boolean representing if the actor took up their turn
  * or not.
  */
-export type Command = (actor: GameObject) => boolean;
-
-/**
- * Command that does nothing. Useful for passing a turn
- * @param {boolean} shouldAct if the command should take a turn
- * @returns {Command} a command which does nothing
- */
-export function noOpCommand(shouldAct: boolean = true) {
-    return function (): boolean {
-        return shouldAct;
-    };
+export interface Command {
+    usedTurn: () => boolean;
+    isFinished: () => boolean;
+    execute: (dt: DOMHighResTimeStamp, object: GameObject) => void;
 }
+
+// TODO: rethink commands to be actual objects that have a finished
+// state, set to true when animation completed. Tieing together
+// both movement logic an animation logic here. Might be a problem
+// for reuse.
 
 export function getActorMovementPath(
     x: number,
@@ -79,37 +77,74 @@ export function getActorMovementPath(
 }
 
 /**
- * Move the game object to a specific point on the map
- * @param {number} x the x coordinate to move to
- * @param {number} y the y coordinate to move to
- * @returns {Command} a command for movement
+ * Command that does nothing. Useful for passing a turn
  */
-export function goToLocationCommand(
-    path: number[][],
-    map: GameMap,
-    gameObjects: GameObject[]
-): Command {
-    return function(actor: GameObject): boolean {
-        const destination = path[path.length - 1];
+export class NoOpCommand implements Command {
+    private readonly usesTurn: boolean;
+
+    constructor(usesTurn: boolean) {
+        this.usesTurn = usesTurn;
+    }
+
+    usedTurn(): boolean {
+        return this.usesTurn;
+    }
+
+    isFinished(): boolean {
+        return true;
+    }
+
+    execute(): void {
+        return;
+    }
+}
+
+/**
+ * Move the game object to a specific point on the map
+ */
+export class GoToLocationCommand implements Command {
+    private readonly usesTurn: boolean = true;
+    private readonly path: number[][];
+    private readonly map: GameMap;
+    private readonly gameObjects: GameObject[];
+    private done: boolean = false;
+
+    constructor(path: number[][], map: GameMap, gameObjects: GameObject[]) {
+        this.path = path;
+        this.map = map;
+        this.gameObjects = gameObjects;
+    }
+
+    usedTurn(): boolean {
+        return true;
+    }
+
+    isFinished(): boolean {
+        return this.done;
+    }
+
+    execute(deltaTime: DOMHighResTimeStamp, actor: GameObject): void {
+        const destination = this.path[0];
         const { blocks } = isBlocked(
-            map,
-            gameObjects,
+            this.map,
+            this.gameObjects,
             destination[0],
             destination[1]
         );
         if (blocks === true) {
-            return false;
+            this.done = true;
+            return;
         }
 
         const triggerMap: Map<string, GameObject> = new Map();
-        gameObjects
+        this.gameObjects
             .filter(o => o.trigger)
             .forEach(o => {
                 triggerMap.set(`${o.x},${o.y}`, o);
             });
 
-        for (let i = 0; i < path.length; i++) {
-            const spot = path[i];
+        for (let i = 0; i < this.path.length; i++) {
+            const spot = this.path[i];
             const object = triggerMap.get(`${spot[0]},${spot[1]}`);
             if (object !== null && object !== undefined && object.trigger !== null) {
                 object.trigger.trigger(actor);
@@ -118,127 +153,221 @@ export function goToLocationCommand(
 
         actor.x = destination[0];
         actor.y = destination[1];
-        return true;
-    };
+        this.path.shift();
+        if (this.path.length === 0) {
+            this.done = true;
+        }
+
+        return;
+    }
 }
 
 /**
  * Interact with the target, either calling the interactable or
  * attacking the fighter
- * @param {GameObject} target the object to interact with
- * @returns {Command} a command for interacting
  */
-export function interactCommand(target: GameObject): Command {
-    return function(actor: GameObject): boolean {
-        if (target.interactable !== null) {
-            target.interactable.interact(actor);
-            return true;
+export class InteractCommand implements Command {
+    private interacted: boolean = true;
+    private readonly target: GameObject;
+
+    constructor(target: GameObject) {
+        this.target = target;
+    }
+
+    usedTurn(): boolean {
+        return this.interacted;
+    }
+
+    isFinished(): boolean {
+        return true;
+    }
+
+    execute(deltaTime: DOMHighResTimeStamp, actor: GameObject): void {
+        if (this.target.interactable !== null) {
+            this.target.interactable.interact(actor);
+            this.interacted = true;
+            return;
         }
 
-        if (actor.fighter !== null && target.fighter !== null) {
-            actor.fighter.attack(target);
-            return true;
+        if (actor.fighter !== null && this.target.fighter !== null) {
+            actor.fighter.attack(this.target);
+            this.interacted = true;
+            return;
         }
 
-        return false;
-    };
+        this.interacted = false;
+    }
 }
 
 /**
  * Generates a function to put the game into the inventory_menu state.
  * @return {Function} A function which always returns false
  */
-export function openInventoryCommand(): Command {
-    return function(): boolean {
+export class OpenInventoryCommand implements Command {
+    usedTurn(): boolean {
+        return false;
+    }
+
+    isFinished(): boolean {
+        return true;
+    }
+
+    execute(): void {
         if (globals.Game === null) { throw new Error("Global Game object is null"); }
         if (globals.gameEventEmitter === null) { throw new Error("Global gameEventEmitter is null"); }
 
         globals.gameEventEmitter.emit("ui.openInventory");
         globals.Game.state = GameState.InventoryMenu;
-        return false;
-    };
+    }
 }
 
 /**
  * Generate a function which puts the game into spell_menu state.
  * @returns {Function} A function which always returns false
  */
-export function openSpellsCommand(): Command {
-    return function(): boolean {
+export class OpenSpellsCommand implements Command {
+    usedTurn(): boolean {
+        return false;
+    }
+
+    isFinished(): boolean {
+        return true;
+    }
+
+    execute(): void {
         if (globals.Game === null) { throw new Error("Global Game object is null"); }
         if (globals.gameEventEmitter === null) { throw new Error("Global gameEventEmitter is null"); }
 
         globals.gameEventEmitter.emit("ui.openSpells");
         globals.Game.state = GameState.SpellMenu;
-        return false;
-    };
+    }
 }
 
 /**
  * Create a command function to use an item in the object's inventory
  * and call its use function.
- * @param {string} itemID The id of the item to use
- * @returns {Function} A command function which takes an object as a param
  */
-export function useItemCommand(
-    itemID: string,
-    target: Nullable<Point> = null,
-    map: Nullable<GameMap> = null,
-    objects: Nullable<GameObject[]> = null
-): Command {
-    return function (actor: GameObject): boolean {
-        if (actor.inventory === null) { return false; }
-        if (!actor.inventory.hasItem(itemID)) { return false; }
+export class UseItemCommand implements Command {
+    private didUseItem: boolean = true;
+    private readonly itemID: string;
+    private readonly target: Nullable<Point> = null;
+    private readonly map: Nullable<GameMap> = null;
+    private readonly objects: Nullable<GameObject[]> = null;
 
-        const itemDetails = ItemData[itemID];
-        const used = itemDetails.useFunc(itemDetails, actor, target, map, objects, null);
+    constructor(
+        itemID: string,
+        target: Nullable<Point> = null,
+        map: Nullable<GameMap> = null,
+        objects: Nullable<GameObject[]> = null) {
+        this.itemID = itemID;
+        this.target = target;
+        this.map = map;
+        this.objects = objects;
+    }
+
+    usedTurn(): boolean {
+        return this.didUseItem;
+    }
+
+    isFinished(): boolean {
+        return true;
+    }
+
+    execute(deltaTime: DOMHighResTimeStamp, actor: GameObject): void {
+        if (actor.inventory === null) { throw new Error("Cannot use an item without an inventory"); }
+        if (!actor.inventory.hasItem(this.itemID)) { throw new Error(`Cannot use ${this.itemID}, not in inventory`); }
+
+        const itemDetails = ItemData[this.itemID];
+        const used = itemDetails.useFunc(
+            itemDetails,
+            actor,
+            this.target,
+            this.map,
+            this.objects,
+            null
+        );
 
         if (used) {
-            actor.inventory.useItem(itemID);
-            return true;
+            actor.inventory.useItem(this.itemID);
+            this.didUseItem = true;
+            return;
         }
 
-        return false;
-    };
+        this.didUseItem = false;
+        return;
+    }
 }
 
 /**
  * Create a command function to cast a spell in the known spells
  * and call its use function.
- * @param {string} spellID The id of the spell to use
- * @returns {Function} A command function which takes an object as a param
  */
-export function useSpellCommand(
-    spellID: string,
-    target: Nullable<Point> = null,
-    map: Nullable<GameMap> = null,
-    objects: Nullable<GameObject[]> = null,
-    rotation: Nullable<number> = null
-): Command {
-    return function (actor: GameObject): boolean {
-        if (actor.fighter === null) { return false; }
-        if (!actor.fighter.hasSpell(spellID)) { return false; }
+export class UseSpellCommand implements Command {
+    didUseSpell: boolean = false;
+    spellID: string;
+    target: Nullable<Point> = null;
+    map: Nullable<GameMap> = null;
+    objects: Nullable<GameObject[]> = null;
+    rotation: Nullable<number> = null;
 
-        const details = SpellData[spellID];
+    constructor(
+        spellID: string,
+        target: Nullable<Point> = null,
+        map: Nullable<GameMap> = null,
+        objects: Nullable<GameObject[]> = null,
+        rotation: Nullable<number> = null
+    ) {
+        this.spellID = spellID;
+        this.target = target;
+        this.map = map;
+        this.objects = objects;
+        this.rotation = rotation;
+    }
+
+    usedTurn(): boolean {
+        return this.didUseSpell;
+    }
+
+    isFinished(): boolean {
+        return true;
+    }
+
+    execute(deltaTime: DOMHighResTimeStamp, actor: GameObject): void {
+        if (actor.fighter === null) { return; }
+        if (!actor.fighter.hasSpell(this.spellID)) { return; }
+
+        const details = SpellData[this.spellID];
         const stats = actor.fighter.getEffectiveStats();
         if (details.manaCost > stats.mana) {
-            return false;
+            this.didUseSpell = false;
+            return;
         }
 
-        const used = details.useFunc(details, actor, target, map, objects, rotation);
-        if (used) {
+        this.didUseSpell = details.useFunc(
+            details,
+            actor,
+            this.target,
+            this.map,
+            this.objects,
+            this.rotation
+        );
+        if (this.didUseSpell) {
             actor.fighter.useMana(details.manaCost);
-            return true;
         }
-
-        return false;
-    };
+    }
 }
 
+export class RotateReticleCommand implements Command {
+    usedTurn(): boolean {
+        return false;
+    }
 
-export function rotateReticleCommand(): Command {
-    return function (actor: GameObject): boolean {
-        if (actor.inputHandler === null) { return false; }
+    isFinished(): boolean {
+        return true;
+    }
+
+    execute(deltaTime: DOMHighResTimeStamp, actor: GameObject): void {
+        if (actor.inputHandler === null) { return; }
 
         switch(actor.inputHandler.reticleRotation) {
             case 0:
@@ -256,6 +385,6 @@ export function rotateReticleCommand(): Command {
             default: break;
         }
 
-        return false;
-    };
+        return;
+    }
 }

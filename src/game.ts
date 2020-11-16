@@ -22,9 +22,9 @@ import {
 import { Camera } from "./camera";
 import { createObject, GameObject } from "./object";
 import {
-    useItemCommand,
     Command,
-    useSpellCommand
+    UseItemCommand,
+    UseSpellCommand
 } from "./commands";
 import { WIDTH, HEIGHT, GameState, LevelName, ItemType, SpellType } from "./data";
 import input from "./input";
@@ -73,6 +73,7 @@ export class SimpleDungeonCrawler {
     scheduler: SpeedScheduler;
     player: GameObject;
     currentActor: Nullable<GameObject>;
+    currentCommand: Nullable<Command>;
     gameObjects: GameObject[];
     map: GameMap;
     pathNodes: Map<number, PathNode>;
@@ -89,6 +90,7 @@ export class SimpleDungeonCrawler {
         this.display = null;
         this.player = createObject("player", 1, 1);
         this.currentActor = null;
+        this.currentCommand = null;
         this.scheduler = new SpeedScheduler();
         this.gameObjects = [];
         this.map = [];
@@ -305,40 +307,33 @@ export class SimpleDungeonCrawler {
     /**
      * Read the current inputs and act on them according to the game state
      */
-    handleInput(): boolean {
+    handleInput(): void {
         if (globals.gameEventEmitter === null) { throw new Error("Global gameEventEmitter cannot be null"); }
-
-        let acted: boolean = false;
+        if (this.player === null || this.player.inputHandler === null) {
+            throw new Error("Cannot handel input without a player or an input handler");
+        }
 
         if (this.state === GameState.Gameplay) {
             if (input.isDown("Escape")) {
                 globals.gameEventEmitter.emit("ui.openKeybinding");
                 this.state = GameState.PauseMenu;
-                return acted;
+                return;
             }
 
-            for (let i = 0; i < this.gameObjects.length; i++) {
-                const object = this.gameObjects[i];
-                if (object.inputHandler !== null) {
-                    const command: Nullable<Command> = object.inputHandler.handleInput(
-                        this.map, this.gameObjects
-                    );
-                    if (command !== null) {
-                        acted = command(object);
-                    }
-                    return acted;
-                }
-            }
+            this.currentCommand = this.player.inputHandler.handleInput(
+                this.map, this.gameObjects
+            );
+            return;
         } else if (this.state === GameState.PauseMenu) {
             if (input.isDown("Escape")) {
                 globals.gameEventEmitter.emit("ui.closeKeybinding");
                 this.state = GameState.Gameplay;
                 this.keyBindingMenu.resetState();
-                return acted;
+                return;
             }
 
             if (this.player.inputHandler === null) {
-                return acted;
+                return;
             }
 
             this.keyBindingMenu.handleInput(this.player.inputHandler.keyCommands);
@@ -347,11 +342,11 @@ export class SimpleDungeonCrawler {
                 globals.gameEventEmitter.emit("ui.closeInventory");
                 this.state = GameState.Gameplay;
                 this.inventoryMenu.resetState();
-                return acted;
+                return;
             }
 
             if (this.player.inventory === null) {
-                return acted;
+                return;
             }
 
             const item: Nullable<InventoryItemDetails> = this.inventoryMenu.handleInput(
@@ -359,8 +354,6 @@ export class SimpleDungeonCrawler {
             );
 
             if (item !== null) {
-                let command: Nullable<Command> = null;
-
                 switch (item.type) {
                     case ItemType.HealSelf:
                     case ItemType.AddManaSelf:
@@ -369,11 +362,9 @@ export class SimpleDungeonCrawler {
                     case ItemType.WildDamageScroll:
                         this.state = GameState.Gameplay;
 
-                        command = useItemCommand(item.id, null, this.map, this.gameObjects);
-                        acted = command(this.player);
-                        if (!acted) {
-                            this.state = GameState.InventoryMenu;
-                        }
+                        this.currentCommand = new UseItemCommand(
+                            item.id, null, this.map, this.gameObjects
+                        );
                         break;
                     // Items that need to be targeted
                     case ItemType.DamageScroll:
@@ -396,11 +387,11 @@ export class SimpleDungeonCrawler {
                 globals.gameEventEmitter.emit("ui.closeSpells");
                 this.state = GameState.Gameplay;
                 this.spellSelectionMenu.resetState();
-                return acted;
+                return;
             }
 
             if (this.player.fighter === null) {
-                return acted;
+                return;
             }
 
             const spell: Nullable<SpellFighterDetails> = this.spellSelectionMenu.handleInput(
@@ -408,8 +399,6 @@ export class SimpleDungeonCrawler {
             );
 
             if (spell !== null) {
-                let command: Nullable<Command> = null;
-
                 switch (spell.type) {
                     case SpellType.Effect:
                     case SpellType.HealSelf:
@@ -417,11 +406,9 @@ export class SimpleDungeonCrawler {
                     case SpellType.WildDamage:
                         this.state = GameState.Gameplay;
 
-                        command = useSpellCommand(spell.id, null, this.map, this.gameObjects);
-                        acted = command(this.player);
-                        if (!acted) {
-                            this.state = GameState.SpellMenu;
-                        }
+                        this.currentCommand = new UseSpellCommand(
+                            spell.id, null, this.map, this.gameObjects
+                        );
                         break;
                     case SpellType.DamageOther:
                         this.state = GameState.Gameplay;
@@ -454,7 +441,7 @@ export class SimpleDungeonCrawler {
             }
         }
 
-        return acted;
+        return;
     }
 
     mainLoop(timestamp: DOMHighResTimeStamp): void {
@@ -463,18 +450,33 @@ export class SimpleDungeonCrawler {
         this.deltaTime = timestamp - this.lastTimestamp;
         this.lastTimestamp = timestamp;
 
-        const acted = this.handleInput();
-        if (acted === true) {
-            if (this.processAI) {
-                do {
-                    this.currentActor = this.scheduler.next();
-                    if (this.currentActor === null) { continue; }
+        if (this.currentActor === null) { this.currentActor = this.scheduler.next(); }
 
-                    this.currentActor.act(this.map, this.gameObjects, this.pathNodes);
-                } while (this.currentActor !== this.player);
+        if (this.currentActor !== null && this.currentCommand === null) {
+            if (this.currentActor === this.player) {
+                this.handleInput();
+                this.totalTurns++;
+            } else {
+                if (this.processAI) {
+                    this.currentCommand = this.currentActor.act(
+                        this.map,
+                        this.gameObjects,
+                        this.pathNodes
+                    );
+                }
+            }
+        }
+
+        if (this.currentCommand !== null && this.currentActor !== null) {
+            this.currentCommand.execute(this.deltaTime, this.currentActor);
+        }
+
+        if (this.currentCommand !== null && this.currentCommand.isFinished()) {
+            if (this.currentCommand.usedTurn()) {
+                this.currentActor = this.scheduler.next();
             }
 
-            this.totalTurns++;
+            this.currentCommand = null;
         }
 
         if (this.player.fighter === null || this.player.fighter.getEffectiveStats().hp <= 0) {

@@ -47,7 +47,7 @@ import {
 import { createBurnEffect } from "./effects";
 import { AIComponent } from "./ai/components";
 import { GameObject } from "./object";
-import { Command } from "./commands";
+import { Command, NoOpCommand } from "./commands";
 import { PathNode } from "./map";
 import { Nullable } from "./util";
 
@@ -1153,7 +1153,7 @@ export const ObjectData: { [key: string]: ObjectDataDetails } = {
         input: null,
         ai: "planning_ai",
         removeAfterNTurns: null,
-        sightRange: 10,
+        sightRange: 8,
         maxTilesPerMove: 5,
         loseTrackAfterNTurns: 6,
         spells: [
@@ -1621,7 +1621,7 @@ export const ActionData: { [key: string]: Action } = {
     "guard": {
         preconditions: { targetPositionKnown: false },
         postconditions: { targetPositionKnown: true },
-        updateFunction: () => { return () => true; },
+        updateFunction: () => { return new NoOpCommand(true); },
         weight: () => 1
     },
     "patrol": {
@@ -1663,25 +1663,25 @@ export const ActionData: { [key: string]: Action } = {
     "reposition": {
         preconditions: { inDangerousArea: true },
         postconditions: { inDangerousArea: false },
-        updateFunction: () => { return () => true; },
+        updateFunction: () => { return new NoOpCommand(true); },
         weight: () => 1
     },
     "runAway": {
         preconditions: { afraid: true },
         postconditions: { afraid: false },
-        updateFunction: () => { return () => true; },
+        updateFunction: () => { return new NoOpCommand(true); },
         weight: () => 1
     },
     "cower": {
         preconditions: { afraid: false, cowering: false },
         postconditions: { cowering: true },
-        updateFunction: () => { return () => true; },
+        updateFunction: () => { return new NoOpCommand(true); },
         weight: () => 1
     },
     "goToFallbackPosition": {
         preconditions: { atFallbackPosition: false },
         postconditions: { atFallbackPosition: true },
-        updateFunction: () => { return () => true; },
+        updateFunction: () => { return new NoOpCommand(true); },
         weight: () => 1
     }
 };

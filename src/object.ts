@@ -26,6 +26,7 @@ import { displayMessage } from "./ui";
 import { GameMap, PathNode } from "./map";
 import { EventTrigger, FireTrigger, TriggerComponent } from "./trigger";
 import { Nullable } from "./util";
+import { Command, NoOpCommand } from "./commands";
 
 /**
  * Base class representing all objects in the game. Uses the
@@ -237,21 +238,20 @@ export class GameObject implements SpeedActor {
      * @param pathNodes map of nodes by id
      * @returns {boolean} did the object use up their turn
      */
-    act(map: GameMap, gameObjects: GameObject[], pathNodes: Map<number, PathNode>): boolean {
-        let acted: boolean = true;
-
-        if (this.ai !== null) {
-            const command = this.ai.act(map, gameObjects, pathNodes);
-            if (command !== null) {
-                acted = command(this);
-            }
-        }
-
+    act(
+        map: GameMap,
+        gameObjects: GameObject[],
+        pathNodes: Map<number, PathNode>
+    ): Command {
         if (this.fighter !== null) {
             this.fighter.act();
         }
 
-        return acted;
+        if (this.ai !== null) {
+            return this.ai.act(map, gameObjects, pathNodes);
+        }
+
+        return new NoOpCommand(true);
     }
 }
 
