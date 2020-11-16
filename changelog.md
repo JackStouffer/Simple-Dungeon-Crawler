@@ -1,8 +1,12 @@
 # Changelog
 
-## Version 9
+## Version 10
 
 _In Development_
+
+## Version 9
+
+_November 15, 2020_
 
 * Gameplay
   * Movement is now done with the mouse and you can move multiple tiles in a turn
@@ -32,6 +36,8 @@ _In Development_
   * Changed command architecture to allow command execution to span multiple frames 
 * Graphical Changes
   * Can now see actors moving between tiles until they reach their destination
+  * Added targeting reticle when casting spells
+  * Added movement path indicator when moving the mouse
 
 ## Version 8
 

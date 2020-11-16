@@ -1,6 +1,6 @@
 {
   "name": "simple-dungeon-crawler",
-  "version": "9.0.0",
+  "version": "10.0.0",
   "description": "A simple dungeon crawling game with console graphics",
   "private": true,
   "scripts": {
