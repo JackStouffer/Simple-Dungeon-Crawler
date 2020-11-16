@@ -5,24 +5,33 @@
 _In Development_
 
 * Gameplay
-  * AI now uses Goal Oriented Action Planning for decision making
-    * Enemies will use health potions or spells if they're low health
-    * Enemies will use mana potions if they're low mana
-    * Enemies will attack with spells if they know them
-    * Enemies will try to regain sight of the player if they lose them
-    * Enemies will eventually lose the player after so many turns not knowing their location
+  * Movement is now done with the mouse and you can move multiple tiles in a turn
+  * Enemies will use health potions or spells if they're low health
+  * Enemies will use mana potions if they're low mana
+  * Enemies will attack with spells if they know them
+  * Enemies will try to regain sight of the player if they lose them
+  * Enemies will eventually lose the player after so many turns not knowing their location
   * Added bandits
   * Added bandit mages that attack with spells
   * Walking on top of campfires now damages you
   * Added Wall of Fire spell that spawns a line of fire tiles that damage things that walk through them
+  * Added Wall of Ice spell
+    * Spawns a line of ice blocks
+    * Block your sight
+    * Can be broken
 * Technical
+  * AI now uses Goal Oriented Action Planning for decision making
   * Convert project to Typescript
+  * Use strict null checks in the Typescript project
   * Modify game loop to remove async/await code to more align with a traditional infinite loop
     * Got the game running at 60fps
     * Added input handling code per-frame
   * Fixed bugs that were using fighter's stats without calling `getEffectiveStats`
   * Fix tests buy using proxyquire for mocking
   * Added edge weights to A* path finding to help enemies avoid dangerous areas
+  * Changed command architecture to allow command execution to span multiple frames 
+* Graphical Changes
+  * Can now see actors moving between tiles until they reach their destination
 
 ## Version 8
 
