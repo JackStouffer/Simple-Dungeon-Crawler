@@ -14,7 +14,6 @@ export interface InventoryItemDetails {
 export interface InventoryComponent {
     owner: Nullable<GameObject>;
 
-    setOwner: (owner: Nullable<GameObject>) => void;
     getItems: () => InventoryItemDetails[];
     addItem: (id: string, count?: number) => boolean;
     useItem: (id: string) => void;
@@ -33,15 +32,6 @@ export class BasicInventory implements InventoryComponent {
         // Uses the Map in order to make sure the
         // key order is consistent across browsers
         this.inventory = new Map();
-    }
-
-    /**
-     * Set the reference back to the entity.
-     * @param {GameObject} owner The component owner
-     * @returns {void}
-     */
-    setOwner(owner: Nullable<GameObject>) {
-        this.owner = owner;
     }
 
     /**

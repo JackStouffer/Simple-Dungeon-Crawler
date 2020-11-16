@@ -70,7 +70,6 @@ export interface InputHandler {
     itemForTarget: Nullable<InventoryItemDetails>;
     spellForTarget: Nullable<SpellFighterDetails>;
 
-    setOwner: (owner: Nullable<GameObject>) => void;
     handleInput: (map: GameMap, objects: GameObject[]) => Nullable<Command>;
     getTargetingReticle: () => Point[];
 }
@@ -95,10 +94,6 @@ export class PlayerInputHandler implements InputHandler {
             { key: "r", description: "Rotate Target Reticle", command: new RotateReticleCommand() },
             { key: "x", description: "Do Nothing", command: new NoOpCommand(true) }
         ];
-    }
-
-    setOwner(owner: Nullable<GameObject>): void {
-        this.owner = owner;
     }
 
     /**

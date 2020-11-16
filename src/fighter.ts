@@ -20,7 +20,6 @@ export interface FighterComponent {
     level: number;
     experienceGiven?: number;
 
-    setOwner: (owner: Nullable<GameObject>) => void;
     act: () => void;
     attack: (target: GameObject) => void;
     getEffectiveStats: () => FighterStats;
@@ -105,10 +104,6 @@ export class BasicFighter implements FighterComponent, SpeedActor {
         this.damageAffinity = data.damageAffinity;
 
         this.knownSpells = new Set();
-    }
-
-    setOwner(owner: Nullable<GameObject>) {
-        this.owner = owner;
     }
 
     /**

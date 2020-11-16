@@ -83,7 +83,7 @@ export class GameObject implements SpeedActor {
      */
     setGraphics(graphics: Nullable<GraphicsComponent>): void {
         if (graphics === null && this.graphics !== null) {
-            this.graphics.setOwner(null);
+            this.graphics.owner = null;
             this.graphics = null;
             return;
         }
@@ -92,7 +92,7 @@ export class GameObject implements SpeedActor {
             return;
         }
 
-        graphics.setOwner(this);
+        graphics.owner = this;
         this.graphics = graphics;
     }
 
@@ -102,7 +102,7 @@ export class GameObject implements SpeedActor {
      */
     setLighting(lighting: Nullable<LightingComponent>): void {
         if (lighting === null && this.lighting !== null) {
-            this.lighting.setOwner(null);
+            this.lighting.owner = null;
             this.lighting = null;
             return;
         }
@@ -111,7 +111,7 @@ export class GameObject implements SpeedActor {
             return;
         }
 
-        lighting.setOwner(this);
+        lighting.owner = this;
         this.lighting = lighting;
     }
 
@@ -119,9 +119,9 @@ export class GameObject implements SpeedActor {
      * Give this object an fighter
      * @param ai {FighterComponent} The fighter instance
      */
-    setFighter(fighter: (FighterComponent & SpeedActor) | null): void {
+    setFighter(fighter: Nullable<FighterComponent & SpeedActor>): void {
         if (fighter === null && this.fighter !== null) {
-            this.fighter.setOwner(null);
+            this.fighter.owner = null;
             this.fighter = null;
             return;
         }
@@ -130,7 +130,7 @@ export class GameObject implements SpeedActor {
             return;
         }
 
-        fighter.setOwner(this);
+        fighter.owner = this;
         this.fighter = fighter;
     }
 
@@ -138,7 +138,7 @@ export class GameObject implements SpeedActor {
      * Give this object an AI
      * @param ai {AIComponent} The AI instance
      */
-    setAI(ai: AIComponent | null): void {
+    setAI(ai: Nullable<AIComponent>): void {
         if (ai === null && this.ai !== null) {
             this.ai.setOwner(null);
             this.ai = null;
@@ -157,9 +157,9 @@ export class GameObject implements SpeedActor {
      * Give this object inventory
      * @param ai {InventoryComponent} The inventory component instance
      */
-    setInventory(inventory: InventoryComponent | null): void {
+    setInventory(inventory: Nullable<InventoryComponent>): void {
         if (inventory === null && this.inventory !== null) {
-            this.inventory.setOwner(null);
+            this.inventory.owner = null;
             this.inventory = null;
             return;
         }
@@ -168,7 +168,7 @@ export class GameObject implements SpeedActor {
             return;
         }
 
-        inventory.setOwner(this);
+        inventory.owner = this;
         this.inventory = inventory;
     }
 
@@ -176,9 +176,9 @@ export class GameObject implements SpeedActor {
      * Give this object interaction
      * @param ai {InteractableComponent} The interactable component instance
      */
-    setInteractable(interactable: InteractableComponent | null): void {
+    setInteractable(interactable: Nullable<InteractableComponent>): void {
         if (interactable === null && this.interactable !== null) {
-            this.interactable.setOwner(null);
+            this.interactable.owner = null;
             this.interactable = null;
             return;
         }
@@ -187,13 +187,13 @@ export class GameObject implements SpeedActor {
             return;
         }
 
-        interactable.setOwner(this);
+        interactable.owner = this;
         this.interactable = interactable;
     }
 
-    setInputHandler(handler: InputHandler | null): void {
+    setInputHandler(handler: Nullable<InputHandler>): void {
         if (handler === null && this.inputHandler !== null) {
-            this.inputHandler.setOwner(null);
+            this.inputHandler.owner = null;
             this.inputHandler = null;
             return;
         }
@@ -202,11 +202,11 @@ export class GameObject implements SpeedActor {
             return;
         }
 
-        handler.setOwner(this);
+        handler.owner = this;
         this.inputHandler = handler;
     }
 
-    setTrigger(trigger: TriggerComponent | null): void {
+    setTrigger(trigger: Nullable<TriggerComponent>): void {
         if (trigger === null && this.trigger !== null) {
             this.trigger.owner = null;
             this.trigger = null;

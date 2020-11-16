@@ -12,7 +12,6 @@ import { Nullable } from "./util";
  */
 export interface InteractableComponent {
     owner: Nullable<GameObject>;
-    setOwner: (owner: Nullable<GameObject>) => void;
     interact: (user: GameObject) => void;
     setLevel?: (name: string) => void;
     setSpell?: (name: string) => void;
@@ -27,10 +26,6 @@ export class GiveItemsInteractable implements InteractableComponent {
 
     constructor() {
         this.owner = null;
-    }
-
-    setOwner(owner: Nullable<GameObject>) {
-        this.owner = owner;
     }
 
     interact(user: GameObject) {

@@ -15,7 +15,6 @@ export interface GraphicsComponent {
     bgColor: string;
     owner: Nullable<GameObject>;
 
-    setOwner: (owner: Nullable<GameObject>) => void;
     draw: (display: Display, camera: Camera, map: GameMap, objects: GameObject[]) => void;
 }
 
@@ -45,10 +44,6 @@ export class BasicGraphics implements GraphicsComponent {
         this.fgColor = data.fgColor;
         this.bgColor = data.bgColor;
         this.owner = null;
-    }
-
-    setOwner(owner: Nullable<GameObject>) {
-        this.owner = owner;
     }
 
     draw(display: Display, camera: Camera, map: GameMap) {
@@ -82,10 +77,6 @@ export class TransparencyGraphics implements GraphicsComponent {
         this.char = data.char;
         this.fgColor = data.fgColor;
         this.owner = null;
-    }
-
-    setOwner(owner: Nullable<GameObject>) {
-        this.owner = owner;
     }
 
     /**
@@ -151,10 +142,6 @@ export class PlayerGraphics implements GraphicsComponent {
         this.char = data.char;
         this.fgColor = data.fgColor;
         this.owner = null;
-    }
-
-    setOwner(owner: Nullable<GameObject>) {
-        this.owner = owner;
     }
 
     /**
@@ -267,10 +254,6 @@ export class DrawAfterSeen implements GraphicsComponent {
         this.fgColor = data.fgColor;
         this.bgColor = data.bgColor;
         this.owner = null;
-    }
-
-    setOwner(owner: Nullable<GameObject>) {
-        this.owner = owner;
     }
 
     draw(display: Display, camera: Camera, map: GameMap) {
