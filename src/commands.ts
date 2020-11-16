@@ -5,7 +5,6 @@ import { createPassableCallback } from "./ai/components";
 import { SpellData, ItemData, GameState, ObjectData } from "./data";
 import { GameMap, isBlocked, distanceBetweenObjects, getObjectsAtLocation, Point } from "./map";
 import { GameObject } from "./object";
-import { displayMessage } from "./ui";
 import { Nullable } from "./util";
 
 /**
@@ -146,35 +145,14 @@ export function interactCommand(target: GameObject): Command {
 }
 
 /**
- * Generates a function which checks the actor's tile to see if there
- * is an object with an id of dropped_item. If there is, interact with
- * the game object. If not, do nothing but display a message.
- *
- * @param {GameObject} actor The game object to manipulate
- * @returns {Function} A function which returns true if an object was picked up, false otherwise
- */
-export function getItemCommand(): Command {
-    return function(actor): boolean {
-        const items = globals.Game.gameObjects.filter((item: GameObject) => {
-            return item.type === "dropped_item" && item.x === actor.x && item.y === actor.y;
-        });
-
-        if (items.length > 0) {
-            items[0].interactable.interact(actor);
-            return true;
-        }
-
-        displayMessage("There's no item to pick up");
-        return false;
-    };
-}
-
-/**
  * Generates a function to put the game into the inventory_menu state.
  * @return {Function} A function which always returns false
  */
 export function openInventoryCommand(): Command {
     return function(): boolean {
+        if (globals.Game === null) { throw new Error("Global Game object is null"); }
+        if (globals.gameEventEmitter === null) { throw new Error("Global gameEventEmitter is null"); }
+
         globals.gameEventEmitter.emit("ui.openInventory");
         globals.Game.state = GameState.InventoryMenu;
         return false;
@@ -187,6 +165,9 @@ export function openInventoryCommand(): Command {
  */
 export function openSpellsCommand(): Command {
     return function(): boolean {
+        if (globals.Game === null) { throw new Error("Global Game object is null"); }
+        if (globals.gameEventEmitter === null) { throw new Error("Global gameEventEmitter is null"); }
+
         globals.gameEventEmitter.emit("ui.openSpells");
         globals.Game.state = GameState.SpellMenu;
         return false;

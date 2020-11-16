@@ -8,6 +8,13 @@ let mouseDownEvent: Nullable<MouseEvent> = null;
 let mouseMoveEvent: Nullable<MouseEvent> = null;
 
 function init(): void {
+    if (globals.window === null ||
+        globals.window === undefined ||
+        globals.Game === null ||
+        globals.Game === undefined ||
+        globals.Game.canvas === null
+    ) { throw new Error("Cannot init input without the globals initialized"); }
+
     globals.window.addEventListener("keydown", function (e: KeyboardEvent) {
         e.preventDefault();
         pressed.add(e.key);
@@ -66,7 +73,11 @@ function getFirstKeyPressed(): Nullable<string> {
  * @returns {Point} the position in the game world
  */
 function getLeftMouseDown(): Nullable<Point> {
-    if (mouseDownEvent === null) { return null; }
+    if (globals.Game === null ||
+        globals.Game === undefined ||
+        globals.Game.display === null ||
+        mouseDownEvent === null
+    ) { return null; }
 
     const pos = globals.Game.display.eventToPosition(mouseDownEvent);
     return globals.Game.gameCamera.screenToWorld(pos[0], pos[1]);
@@ -78,7 +89,12 @@ function getLeftMouseDown(): Nullable<Point> {
  * @returns {Point} the position in the game world
  */
 function getMousePosition(): Nullable<Point> {
-    if (mouseMoveEvent === null) { return null; }
+    if (globals.Game === null ||
+        globals.Game === undefined ||
+        globals.Game.display === null ||
+        mouseMoveEvent === null
+    ) { return null; }
+
     const pos = globals.Game.display.eventToPosition(mouseMoveEvent);
     return globals.Game.gameCamera.screenToWorld(pos[0], pos[1]);
 }

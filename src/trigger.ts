@@ -47,6 +47,8 @@ export class EventTrigger implements TriggerComponent {
     }
 
     trigger(actor: GameObject): void {
+        if (globals.gameEventEmitter === null) { throw new Error("Global gameEventEmitter object is null"); }
+
         if (actor.type === "player" && this.eventName !== null) {
             globals.gameEventEmitter.emit(this.eventName);
         }

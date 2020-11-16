@@ -24,7 +24,7 @@ export function drawUI(
     player: GameObject,
     gameObjects: GameObject[],
     map: GameMap
-) {
+): void {
     if (player.fighter === null) { throw new Error("Player must have a fighter"); }
     if (player.inputHandler === null) { throw new Error("Player must have a inputHandler"); }
 
@@ -58,7 +58,7 @@ export function drawUI(
         return;
     }
 
-    if (target === null) {
+    if (target === null || target.name === null) {
         display.drawText(1, HEIGHT - UI_HEIGHT + 4, `%c{white}%b{blue}${tile.name}`);
     } else if (target.ai !== null && target.fighter !== null) {
         const targetStats = target.fighter.getEffectiveStats();
@@ -74,8 +74,13 @@ export enum MessageType {
     Critical
 }
 
-export function displayMessage(text: string, type: MessageType = MessageType.Default) {
+export function displayMessage(text: string, type: MessageType = MessageType.Default): void {
+    if (globals.document === null) { throw new Error("Global document object is null"); }
+    if (globals.Game === null) { throw new Error("Global Game object is null"); }
+
     const log = globals.document.getElementById("log");
+    if (log === null) { throw new Error("Can't find log list element"); }
+
     const el = document.createElement("div");
     const p = document.createElement("p");
     const small = document.createElement("p");
@@ -115,6 +120,9 @@ export class InventoryMenu {
     }
 
     draw(inventoryItems: InventoryItemDetails[]) {
+        if (globals.Game === null) { throw new Error("Global Game object is null"); }
+        if (globals.Game.display === null) { throw new Error("Cannot draw InventoryMenu when display is null"); }
+
         // add four for header
         const height = inventoryItems.length + UI_HEIGHT;
 
@@ -142,6 +150,8 @@ export class InventoryMenu {
     }
 
     handleInput(inventoryItems: InventoryItemDetails[]): Nullable<InventoryItemDetails> {
+        if (globals.gameEventEmitter === null) { throw new Error("Global gameEventEmitter is null"); }
+
         if (input.isDown("Enter")) {
             globals.gameEventEmitter.emit("ui.select");
             return inventoryItems[this.currentSelection];
@@ -170,11 +180,14 @@ export class SpellSelectionMenu {
         this.allowedKeys = new Set(["ArrowDown", "ArrowUp", "Enter"]);
     }
 
-    resetState() {
+    resetState(): void {
         this.currentSelection = 0;
     }
 
-    draw(spells: SpellFighterDetails[]) {
+    draw(spells: SpellFighterDetails[]): void {
+        if (globals.Game === null) { throw new Error("Global Game object is null"); }
+        if (globals.Game.display === null) { throw new Error("Cannot draw InventoryMenu when display is null"); }
+
         // add four for header
         const height = spells.length + UI_HEIGHT;
 
@@ -226,6 +239,8 @@ export class SpellSelectionMenu {
     }
 
     handleInput(spells: SpellFighterDetails[]): Nullable<SpellFighterDetails> {
+        if (globals.gameEventEmitter === null) { throw new Error("Global gameEventEmitter is null"); }
+
         if (input.isDown("Enter")) {
             globals.gameEventEmitter.emit("ui.select");
             return spells[this.currentSelection];
@@ -262,6 +277,9 @@ export class KeyBindingMenu {
     }
 
     draw(keyCommands: KeyCommand[]): void {
+        if (globals.Game === null) { throw new Error("Global Game object is null"); }
+        if (globals.Game.display === null) { throw new Error("Cannot draw InventoryMenu when display is null"); }
+
         // add one for header
         const height = keyCommands.length + UI_HEIGHT + 4;
         const width = WIDTH;
@@ -305,6 +323,8 @@ export class KeyBindingMenu {
     }
 
     handleInput(keyCommands: KeyCommand[]): void {
+        if (globals.gameEventEmitter === null) { throw new Error("Global gameEventEmitter is null"); }
+
         if (this.state === "selection") {
             if (input.isDown("Escape")) {
                 globals.gameEventEmitter.emit("ui.select");

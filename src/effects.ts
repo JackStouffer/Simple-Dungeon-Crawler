@@ -119,6 +119,8 @@ export class StatisticEffect {
  */
 export function createBurnEffect(victim: GameObject, damage: number, turns: number): StatusEffect {
     function act(owner: GameObject) {
+        if (globals.Game === null) { throw new Error("Global Game object is null"); }
+
         if (owner.fighter !== null) {
             owner.fighter.takeDamage(damage, false, DamageType.Fire);
         }

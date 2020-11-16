@@ -1,2 +1,30 @@
-const globals: any = {};
+import { EventEmitter } from "events";
+import { SimpleDungeonCrawler } from "./game";
+import { Nullable } from "./util";
+
+interface MyWindow extends Window {
+    Game?: SimpleDungeonCrawler;
+    giveAllItems?: () => void;
+    giveAllSpells?: () => void;
+    toggleAI?: () => void;
+    togglePlayerFOV?: () => void;
+    startGameLoop?: () => void;
+    stopGameLoop?: () => void;
+}
+
+interface Globals {
+    Game: Nullable<SimpleDungeonCrawler>;
+    animationFrameID: Nullable<number>;
+    gameEventEmitter: Nullable<EventEmitter>;
+    document: Nullable<Document>;
+    window: Nullable<MyWindow>;
+}
+
+const globals: Globals = {
+    Game: null,
+    animationFrameID: null,
+    gameEventEmitter: null,
+    document: null,
+    window: null
+};
 export default globals;

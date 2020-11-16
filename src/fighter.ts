@@ -116,6 +116,8 @@ export class BasicFighter implements FighterComponent, SpeedActor {
      * run effects.
      */
     act() {
+        if (globals.Game === null) { throw new Error("Global Game object is null"); }
+
         const effectiveStats = this.getEffectiveStats();
 
         const levelUpEXP = LEVEL_UP_BASE + (this.level * LEVEL_UP_FACTOR);
@@ -312,6 +314,8 @@ export class BasicFighter implements FighterComponent, SpeedActor {
      * @returns {Boolean} If the spell was successfully learned
      */
     addSpellById(id: string): boolean {
+        if (globals.Game === null) { throw new Error("Global Game object is null"); }
+        if (globals.gameEventEmitter === null) { throw new Error("Global gameEventEmitter object is null"); }
         if (!(id in SpellData)) { throw new Error(`${id} is not a valid spell id`); }
         if (this.knownSpells.has(id)) { return false; }
 

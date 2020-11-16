@@ -34,6 +34,8 @@ export class GiveItemsInteractable implements InteractableComponent {
     }
 
     interact(user: GameObject) {
+        if (globals.Game === null) { throw new Error("Global game object is null"); }
+        if (globals.gameEventEmitter === null) { throw new Error("Global gameEventEmitter object is null"); }
         if (this.owner === null) { throw new Error("Can't interact without an owner"); }
 
         if (this.owner.inventory !== null && user.inventory !== null) {
@@ -115,6 +117,8 @@ export class DoorInteractable implements InteractableComponent {
     }
 
     interact() {
+        if (globals.Game === null) { throw new Error("Global game object is null"); }
+        if (globals.gameEventEmitter === null) { throw new Error("Global gameEventEmitter object is null"); }
         if (this.owner === null) { throw new Error("Can't interact without an owner"); }
 
         globals.gameEventEmitter.emit("door.open");
@@ -143,6 +147,8 @@ export class LoadLevelInteractable implements InteractableComponent {
     }
 
     interact(): void {
+        if (globals.Game === null) { throw new Error("Global game object is null"); }
+        if (globals.gameEventEmitter === null) { throw new Error("Global gameEventEmitter object is null"); }
         if (this.owner === null) { throw new Error("Can't interact without an owner"); }
 
         if (this.levelName === null) {

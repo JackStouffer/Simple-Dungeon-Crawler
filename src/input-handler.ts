@@ -148,6 +148,7 @@ export class PlayerInputHandler implements InputHandler {
     }
 
     handleInput(map: GameMap, objects: GameObject[]): Nullable<Command> {
+        if (globals.gameEventEmitter === null) { throw new Error("Global gameEventEmitter cannot be null"); }
         if (this.owner === null) { throw new Error("Can't handle input without an owner"); }
 
         if (this.state === PlayerState.Combat) {

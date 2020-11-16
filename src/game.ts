@@ -82,6 +82,8 @@ export class SimpleDungeonCrawler {
     spellSelectionMenu: SpellSelectionMenu;
 
     constructor() {
+        if (globals.document === null) { throw new Error("Global document cannot be null"); }
+
         this.state = GameState.OpeningCinematic;
         this.canvas = null;
         this.display = null;
@@ -103,9 +105,14 @@ export class SimpleDungeonCrawler {
             forceSquareRatio: true
         });
         this.canvas = this.display.getContainer();
-        globals.document.getElementById("canvas").prepend(this.canvas);
+        if (this.canvas === null) { throw new Error("this.canvas cannot be null"); }
 
-        const loading = globals.document.getElementById("loading");
+        const canvasContainer: Nullable<HTMLElement> = globals.document.getElementById("canvas");
+        if (canvasContainer === null) { throw new Error("this.canvas cannot be null"); }
+        canvasContainer.prepend(this.canvas);
+
+        const loading: Nullable<HTMLElement> = globals.document.getElementById("loading");
+        if (loading === null || loading.parentNode === null) { throw new Error("this.canvas cannot be null"); }
         loading.parentNode.removeChild(loading);
 
         this.keyBindingMenu = new KeyBindingMenu();
@@ -115,6 +122,8 @@ export class SimpleDungeonCrawler {
     }
 
     reset(): void {
+        if (globals.document === null) { throw new Error("Global document cannot be null"); }
+
         this.player = createObject("player", 1, 1);
         this.map = [];
         this.gameObjects = [];
@@ -126,10 +135,13 @@ export class SimpleDungeonCrawler {
         this.loadLevel("forrest_001");
 
         const log = globals.document.getElementById("log");
+        if (log === null) { return; }
         log.innerHTML = "";
     }
 
     async startGameplay(): Promise<void> {
+        if (globals.gameEventEmitter === null) { throw new Error("Global gameEventEmitter cannot be null"); }
+
         if (this.display !== null) {
             this.display.drawText(WIDTH - (WIDTH - 28), 22, "%c{white}Loading Sounds");
         }
@@ -273,6 +285,8 @@ export class SimpleDungeonCrawler {
      * @param name {string} the name of the level to load
      */
     loadLevel(name: LevelName): void {
+        if (globals.gameEventEmitter === null) { throw new Error("Global gameEventEmitter cannot be null"); }
+
         const { map, playerLocation, objects, pathNodes } = loadTiledMap(name);
         this.map = map;
         objects.push(this.player);
@@ -292,6 +306,8 @@ export class SimpleDungeonCrawler {
      * Read the current inputs and act on them according to the game state
      */
     handleInput(): boolean {
+        if (globals.gameEventEmitter === null) { throw new Error("Global gameEventEmitter cannot be null"); }
+
         let acted: boolean = false;
 
         if (this.state === GameState.Gameplay) {

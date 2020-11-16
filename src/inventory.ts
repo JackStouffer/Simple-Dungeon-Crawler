@@ -81,6 +81,8 @@ export class BasicInventory implements InventoryComponent {
      * @returns {boolean} If the item was successfully added
      */
     addItem(id: string, count: number = 1): boolean {
+        if (globals.Game === null) { throw new Error("Global Game object is null"); }
+        if (globals.gameEventEmitter === null) { throw new Error("Global gameEventEmitter object is null"); }
         if (this.owner === null) { throw new Error("Tried to add an item on a ownerless inventory"); }
         if (!(id in ItemData)) { throw new Error(`${id} is not a valid item id`); }
 

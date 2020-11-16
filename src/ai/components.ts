@@ -43,6 +43,8 @@ export function createVisibilityCallback(ai: PlanningAI): VisibilityCallback {
  */
 export function createPassableCallback(owner: GameObject): PassableCallback {
     return function(x: number, y: number) {
+        if (globals.Game === null) { throw new Error("Global game object is null"); }
+
         // own space is passable
         if (owner.x === x && owner.y === y) {
             return true;
@@ -61,6 +63,8 @@ export function createPassableCallback(owner: GameObject): PassableCallback {
  */
 export function createPassableSightCallback(owner: GameObject): PassableCallback {
     return function(x: number, y: number) {
+        if (globals.Game === null) { throw new Error("Global game object is null"); }
+
         // own space is passable
         if (owner.x === x && owner.y === y) {
             return true;
@@ -113,6 +117,8 @@ export class PlanningAI implements AIComponent {
     isAtFallbackPosition: boolean;
 
     constructor(data: ObjectDataDetails) {
+        if (globals.Game === null) { throw new Error("Global game object is null"); }
+
         this.owner = null;
         this.target = globals.Game.player;
         // TODO: order received from superior
@@ -339,6 +345,7 @@ export class ConfusedAI implements AIComponent {
     }
 
     act(): Command {
+        if (globals.Game === null) { throw new Error("Global game object is null"); }
         if (this.owner === null) { throw new Error("ConfusedAI must have an owner to act"); }
 
         if (this.turns > 0) {
@@ -440,6 +447,7 @@ export class DroppedItemAI implements AIComponent {
     }
 
     act(): Command {
+        if (globals.Game === null) { throw new Error("Global game object is null"); }
         if (this.owner === null) { throw new Error("DroppedItemAI must have an owner to act"); }
         if (this.owner.inventory === null) { throw new Error("DroppedItemAI must have an inventory to act"); }
 
@@ -477,6 +485,7 @@ export class RemoveAfterNTurns implements AIComponent {
     }
 
     act(): Command {
+        if (globals.Game === null) { throw new Error("Global game object is null"); }
         if (this.owner === null) { throw new Error("Can't interact without an owner"); }
 
         if (this.turns <= 0) {

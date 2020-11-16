@@ -28,6 +28,7 @@ export type SkillFunction = (
  * @param {GameObject} user The object using the item
  */
 export function castHeal(item: ItemDataDetails | SpellDataDetails, user: GameObject) {
+    if (globals.Game === null) { throw new Error("Global game object is null"); }
     if (item.value === null) { throw new Error("Item does not have a healing value"); }
     if (user.fighter === null) { throw new Error("Cannot heal a user without a fighter"); }
 
@@ -58,6 +59,7 @@ export function castIncreaseMana(
     item: ItemDataDetails | SpellDataDetails,
     user: GameObject
 ): boolean {
+    if (globals.Game === null) { throw new Error("Global game object is null"); }
     if (item.value === null) { throw new Error("Item does not have a value"); }
     if (user.fighter === null) { throw new Error("Cannot increase mana on a user without a fighter"); }
 
@@ -123,6 +125,7 @@ export function castWildDamageSpell(
     map: Nullable<GameMap>,
     objects: Nullable<GameObject[]>
 ): boolean {
+    if (globals.Game === null) { throw new Error("Global game object is null"); }
     if (item.value === null) { throw new Error("Item does not have a value"); }
     if (map === null) { throw new Error("Map cannot be null for castDamageSpell"); }
     if (objects === null) { throw new Error("Objects cannot be null for castDamageSpell"); }
@@ -173,6 +176,8 @@ export function castConfuse(
 }
 
 export function castClairvoyance(): boolean {
+    if (globals.Game === null) { throw new Error("Global game object is null"); }
+
     displayMessage("You have been granted Clairvoyance");
     setAllToExplored(globals.Game.map);
     return true;
@@ -236,6 +241,7 @@ function castWall(
     rotation: Nullable<number>,
     objectId: string
 ): boolean {
+    if (globals.Game === null) { throw new Error("Global game object is null"); }
     if (target === null) { throw new Error("Target cannot be null for castWall"); }
     if (map === null) { throw new Error("Map cannot be null for castWall"); }
     if (objects === null) { throw new Error("Objects cannot be null for castWall"); }

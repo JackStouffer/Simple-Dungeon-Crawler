@@ -29,6 +29,8 @@ import { Nullable } from "../util";
 import globals from "../globals";
 
 function weightCallback(x: number, y: number): number {
+    if (globals.Game === null) { throw new Error("Global game object is null"); }
+
     const objects = getObjectsAtLocation(globals.Game.gameObjects, x, y);
     // if (objects.length > 0) { console.log(objects); }
     return objects.length > 0 ? 20 : 0;

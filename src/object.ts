@@ -434,6 +434,8 @@ export function createObject(id: string, x: number = 0, y: number = 0): GameObje
  * @return {void}
  */
 export function enemyDeathCallback(target: GameObject): void {
+    if (globals.Game === null) { throw new Error("Global game object is null"); }
+
     displayMessage(target.name + " has been killed");
 
     target.name = `Remains of a ${target.name}`;
@@ -460,6 +462,9 @@ export function enemyDeathCallback(target: GameObject): void {
  * @return {void}
  */
 export function removeDeathCallback(target: GameObject): void {
+    if (globals.Game === null) { throw new Error("Global game object is null"); }
+    if (globals.gameEventEmitter === null) { throw new Error("Global gameEventEmitter object is null"); }
+
     if (target.inventory !== null && target.inventory.getItems().length > 0) {
         globals.gameEventEmitter.emit("tutorial.pickUpItem");
 
