@@ -247,11 +247,13 @@ export class GameObject implements SpeedActor {
             this.fighter.act();
         }
 
+        let ret: Nullable<Command> = null;
         if (this.ai !== null) {
-            return this.ai.act(map, gameObjects, pathNodes);
+            ret = this.ai.act(map, gameObjects, pathNodes);
+        } else {
+            ret = new NoOpCommand(true);
         }
-
-        return new NoOpCommand(true);
+        return ret;
     }
 }
 

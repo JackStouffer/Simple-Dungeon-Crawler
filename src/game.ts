@@ -23,6 +23,7 @@ import { Camera } from "./camera";
 import { createObject, GameObject } from "./object";
 import {
     Command,
+    NoOpCommand,
     UseItemCommand,
     UseSpellCommand
 } from "./commands";
@@ -77,9 +78,9 @@ export class SimpleDungeonCrawler {
     map: GameMap;
     pathNodes: Map<number, PathNode>;
 
-    keyBindingMenu: KeyBindingMenu;
-    inventoryMenu: InventoryMenu;
-    spellSelectionMenu: SpellSelectionMenu;
+    private readonly keyBindingMenu: KeyBindingMenu;
+    private readonly inventoryMenu: InventoryMenu;
+    private readonly spellSelectionMenu: SpellSelectionMenu;
 
     constructor() {
         if (globals.document === null) { throw new Error("Global document cannot be null"); }
@@ -454,7 +455,6 @@ export class SimpleDungeonCrawler {
         if (this.currentActor !== null && this.currentCommand === null) {
             if (this.currentActor === this.player) {
                 this.handleInput();
-                this.totalTurns++;
             } else {
                 if (this.processAI) {
                     this.currentCommand = this.currentActor.act(
@@ -462,6 +462,8 @@ export class SimpleDungeonCrawler {
                         this.gameObjects,
                         this.pathNodes
                     );
+                } else {
+                    this.currentCommand = new NoOpCommand(true);
                 }
             }
         }
@@ -476,6 +478,7 @@ export class SimpleDungeonCrawler {
             }
 
             this.currentCommand = null;
+            this.totalTurns++;
         }
 
         if (this.player.fighter === null || this.player.fighter.getEffectiveStats().hp <= 0) {

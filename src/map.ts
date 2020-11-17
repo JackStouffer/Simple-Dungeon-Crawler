@@ -125,7 +125,7 @@ export function loadTiledMap(level: LevelName) {
         throw new Error(`No node layer in map ${level}`);
     }
 
-    const translated = tileLayer.data.map((tile: any) => {
+    const translated = tileLayer.data.map((tile: number) => {
         if (!(tile in TileData)) { throw new Error(`${tile} is not valid tile`); }
 
         const data = TileData[tile];

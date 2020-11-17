@@ -75,16 +75,18 @@ export const LEVEL_UP_FACTOR = 150;
 /**
  * Damage type enum.
  *
- * Fire: weak to water
- * Electric: weak to nature
- * Water: weak to electric
- * Nature: weak to fire
+ * Fire: weak to water, strong against nature
+ * Electric: weak to nature, strong against water
+ * Water: weak to electric, nature, strong against fire
+ * Nature: weak to fire, ice, strong against water
+ * Ice: weak to physical, strong against nature
  */
 export enum DamageType {
     Physical,
     Fire,
     Electric,
     Water,
+    Ice,
     Nature
 }
 
@@ -252,8 +254,27 @@ export interface DamageAffinityMap {
     [DamageType.Fire]: Affinity;
     [DamageType.Electric]: Affinity;
     [DamageType.Water]: Affinity;
+    [DamageType.Ice]: Affinity;
     [DamageType.Nature]: Affinity;
 }
+
+const normalTypeDamageValues: DamageAffinityMap = {
+    [DamageType.Physical]: Affinity.normal,
+    [DamageType.Fire]: Affinity.normal,
+    [DamageType.Electric]: Affinity.normal,
+    [DamageType.Water]: Affinity.normal,
+    [DamageType.Nature]: Affinity.normal,
+    [DamageType.Ice]: Affinity.normal
+};
+
+const waterTypeDamageValues: DamageAffinityMap = {
+    [DamageType.Physical]: Affinity.normal,
+    [DamageType.Fire]: Affinity.strong,
+    [DamageType.Electric]: Affinity.weak,
+    [DamageType.Water]: Affinity.strong,
+    [DamageType.Nature]: Affinity.normal,
+    [DamageType.Ice]: Affinity.weak
+};
 
 export interface InventoryPoolProbabilities {
     itemID: string;
@@ -470,8 +491,9 @@ export const ObjectData: { [key: string]: ObjectDataDetails } = {
             [DamageType.Physical]: Affinity.normal,
             [DamageType.Fire]: Affinity.weak,
             [DamageType.Electric]: Affinity.normal,
-            [DamageType.Water]: Affinity.normal,
-            [DamageType.Nature]: Affinity.normal
+            [DamageType.Water]: Affinity.strong,
+            [DamageType.Nature]: Affinity.normal,
+            [DamageType.Ice]: Affinity.strong
         },
         inventory: "basic_inventory",
         input: null,
@@ -516,7 +538,8 @@ export const ObjectData: { [key: string]: ObjectDataDetails } = {
             [DamageType.Fire]: Affinity.weak,
             [DamageType.Electric]: Affinity.normal,
             [DamageType.Water]: Affinity.normal,
-            [DamageType.Nature]: Affinity.normal
+            [DamageType.Nature]: Affinity.normal,
+            [DamageType.Ice]: Affinity.strong
         },
         input: null,
         lighting: null,
@@ -711,11 +734,12 @@ export const ObjectData: { [key: string]: ObjectDataDetails } = {
         defense: 0,
         onDeath: DeathType.RemoveFromWorld,
         damageAffinity: {
-            [DamageType.Physical]: Affinity.normal,
+            [DamageType.Physical]: Affinity.weak,
             [DamageType.Fire]: Affinity.weak,
             [DamageType.Electric]: Affinity.normal,
-            [DamageType.Water]: Affinity.nullified,
-            [DamageType.Nature]: Affinity.normal
+            [DamageType.Water]: Affinity.strong,
+            [DamageType.Nature]: Affinity.strong,
+            [DamageType.Ice]: Affinity.nullified
         },
         inventoryPool: [],
         inventory: null,
@@ -835,6 +859,80 @@ export const ObjectData: { [key: string]: ObjectDataDetails } = {
         trigger: "event",
         triggerValue: null
     },
+    "shallow_water": {
+        name: "Water",
+        blocks: false,
+        blocksSight: false,
+        graphics: "basic_graphics",
+        char: "~",
+        fgColor: "blue",
+        bgColor: "lightblue",
+        emptyColor: null,
+        lighting: null,
+        lightingColor: null,
+        lightingRange: null,
+        ai: null,
+        removeAfterNTurns: null,
+        sightRange: null,
+        loseTrackAfterNTurns: null,
+        spells: null,
+        actions: null,
+        input: null,
+        inventory: null,
+        fighter: null,
+        speed: BASE_SPEED,
+        maxTilesPerMove: null,
+        interactable: null,
+        level: null,
+        experience: null,
+        experienceGiven: null,
+        maxHp: null,
+        maxMana: null,
+        strength: null,
+        defense: null,
+        damageAffinity: null,
+        onDeath: null,
+        inventoryPool: null,
+        trigger: null,
+        triggerValue: null
+    },
+    "water": {
+        name: "Deep Water",
+        blocks: false,
+        blocksSight: false,
+        graphics: "basic_graphics",
+        char: "~",
+        fgColor: "lightblue",
+        bgColor: "blue",
+        emptyColor: null,
+        lighting: null,
+        lightingColor: null,
+        lightingRange: null,
+        ai: null,
+        removeAfterNTurns: null,
+        sightRange: null,
+        loseTrackAfterNTurns: null,
+        spells: null,
+        actions: null,
+        input: null,
+        inventory: null,
+        fighter: null,
+        speed: BASE_SPEED,
+        maxTilesPerMove: null,
+        interactable: null,
+        level: null,
+        experience: null,
+        experienceGiven: null,
+        maxHp: null,
+        maxMana: null,
+        strength: null,
+        defense: null,
+        damageAffinity: null,
+        onDeath: null,
+        inventoryPool: null,
+        trigger: null,
+        triggerValue: null
+    },
     "player": {
         name: "The Player",
         graphics: "player_graphics",
@@ -866,13 +964,7 @@ export const ObjectData: { [key: string]: ObjectDataDetails } = {
         maxMana: 100,
         strength: 3,
         defense: 1,
-        damageAffinity: {
-            [DamageType.Physical]: Affinity.normal,
-            [DamageType.Fire]: Affinity.normal,
-            [DamageType.Electric]: Affinity.normal,
-            [DamageType.Water]: Affinity.normal,
-            [DamageType.Nature]: Affinity.normal
-        },
+        damageAffinity: normalTypeDamageValues,
         onDeath: DeathType.Default,
         inventoryPool: null,
         trigger: null,
@@ -914,13 +1006,7 @@ export const ObjectData: { [key: string]: ObjectDataDetails } = {
         maxMana: 0,
         strength: 3,
         defense: 1,
-        damageAffinity: {
-            [DamageType.Physical]: Affinity.normal,
-            [DamageType.Fire]: Affinity.normal,
-            [DamageType.Electric]: Affinity.normal,
-            [DamageType.Water]: Affinity.normal,
-            [DamageType.Nature]: Affinity.normal
-        },
+        damageAffinity: normalTypeDamageValues,
         inventoryPool: [
             {
                 itemID: "health_potion_weak",
@@ -964,13 +1050,7 @@ export const ObjectData: { [key: string]: ObjectDataDetails } = {
         strength: 7,
         defense: 4,
         speed: BASE_SPEED,
-        damageAffinity: {
-            [DamageType.Physical]: Affinity.normal,
-            [DamageType.Fire]: Affinity.normal,
-            [DamageType.Electric]: Affinity.normal,
-            [DamageType.Water]: Affinity.normal,
-            [DamageType.Nature]: Affinity.normal
-        },
+        damageAffinity: normalTypeDamageValues,
         inventoryPool: [
             {
                 itemID: "health_potion_weak",
@@ -1023,13 +1103,7 @@ export const ObjectData: { [key: string]: ObjectDataDetails } = {
         interactable: null,
         blocks: true,
         blocksSight: false,
-        damageAffinity: {
-            [DamageType.Physical]: Affinity.normal,
-            [DamageType.Fire]: Affinity.normal,
-            [DamageType.Electric]: Affinity.normal,
-            [DamageType.Water]: Affinity.normal,
-            [DamageType.Nature]: Affinity.normal
-        },
+        damageAffinity: normalTypeDamageValues,
         inventoryPool: [],
         onDeath: DeathType.Default,
         lighting: null,
@@ -1071,13 +1145,7 @@ export const ObjectData: { [key: string]: ObjectDataDetails } = {
         maxMana: 0,
         strength: 2,
         defense: 1,
-        damageAffinity: {
-            [DamageType.Physical]: Affinity.normal,
-            [DamageType.Fire]: Affinity.strong,
-            [DamageType.Electric]: Affinity.weak,
-            [DamageType.Water]: Affinity.nullified,
-            [DamageType.Nature]: Affinity.normal
-        },
+        damageAffinity: waterTypeDamageValues,
         inventoryPool: [],
         onDeath: DeathType.Default,
         lighting: null,
@@ -1123,13 +1191,7 @@ export const ObjectData: { [key: string]: ObjectDataDetails } = {
         maxMana: 0,
         strength: 2,
         defense: 1,
-        damageAffinity: {
-            [DamageType.Physical]: Affinity.normal,
-            [DamageType.Fire]: Affinity.normal,
-            [DamageType.Electric]: Affinity.normal,
-            [DamageType.Water]: Affinity.normal,
-            [DamageType.Nature]: Affinity.normal
-        },
+        damageAffinity: normalTypeDamageValues,
         inventoryPool: [
             {
                 itemID: "health_potion_weak",
@@ -1180,13 +1242,7 @@ export const ObjectData: { [key: string]: ObjectDataDetails } = {
         strength: 2,
         defense: 1,
         speed: BASE_SPEED,
-        damageAffinity: {
-            [DamageType.Physical]: Affinity.normal,
-            [DamageType.Fire]: Affinity.normal,
-            [DamageType.Electric]: Affinity.normal,
-            [DamageType.Water]: Affinity.normal,
-            [DamageType.Nature]: Affinity.normal
-        },
+        damageAffinity: normalTypeDamageValues,
         inventory: "basic_inventory",
         interactable: null,
         blocks: true,

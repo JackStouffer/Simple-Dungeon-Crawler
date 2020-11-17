@@ -27,7 +27,7 @@ export type SkillFunction = (
  * @param {Object} item The item data
  * @param {GameObject} user The object using the item
  */
-export function castHeal(item: ItemDataDetails | SpellDataDetails, user: GameObject) {
+export function castHeal(item: ItemDataDetails | SpellDataDetails, user: GameObject): boolean {
     if (globals.Game === null) { throw new Error("Global game object is null"); }
     if (item.value === null) { throw new Error("Item does not have a healing value"); }
     if (user.fighter === null) { throw new Error("Cannot heal a user without a fighter"); }
@@ -37,7 +37,7 @@ export function castHeal(item: ItemDataDetails | SpellDataDetails, user: GameObj
         if (user === globals.Game.player) {
             displayMessage("You are already at full health.");
         } else {
-            displayMessage(user.name + " tries and fails to take a health potion");
+            displayMessage(`${user.name} tries and fails to take a health potion`);
         }
 
         return false;
@@ -96,7 +96,7 @@ export function castDamageSpell(
         return false;
     }
     if (object.fighter === null) {
-        displayMessage(`${object.name} isn't attackable`);
+        displayMessage(`${object.name} isn't attack-able`);
         return false;
     }
 
