@@ -303,7 +303,7 @@ export function isBlocked(map: GameMap, objects: GameObject[], x: number, y: num
  * @returns {boolean} Does the spot block sight
  */
 export function isSightBlocked(map: GameMap, objects: GameObject[], x: number, y: number): boolean {
-    if (!Array.isArray(map) || map.length === 0 || !Array.isArray(map[0])) { throw new Error("Bad map data"); }
+    if (map.length === 0) { throw new Error("Bad map data"); }
 
     if (x < 0 || y < 0 || x >= map[0].length || y >= map.length || map[y][x].blocksSight) {
         return true;

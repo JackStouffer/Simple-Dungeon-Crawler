@@ -177,6 +177,9 @@ export class PlanningAI implements AIComponent {
         }
     }
 
+    /**
+     * used for getting a nice string for the ui
+     */
     getStateName(): string {
         switch (this.currentAction) {
             case "wander":
@@ -250,7 +253,7 @@ export class PlanningAI implements AIComponent {
 
         this.planner.setStartState(worldState);
 
-        const stateStack = [];
+        const stateStack: { [key: string]: boolean }[] = [];
         if (this.currentOrder === "attack") {
             stateStack.push({ targetKilled: true });
         }
