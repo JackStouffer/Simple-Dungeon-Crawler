@@ -1,8 +1,8 @@
+import { get } from "lodash";
 import { Entity, World } from "ape-ecs";
 
 import { Display, RNG } from "./rot/index";
 import { toRGB, fromString, multiply } from "./rot/color";
-import { get } from "lodash";
 
 import {
     COLOR_AMBIENT_LIGHT,
@@ -10,7 +10,10 @@ import {
     COLOR_DARK_GROUND,
     COLOR_INVISIBLE_GROUND,
     LevelData,
-    TileData, WIDTH, HEIGHT, LevelName, InteractableType
+    TileData,
+    WIDTH,
+    HEIGHT,
+    LevelName
 } from "./data";
 import {
     createEntity,
@@ -89,8 +92,6 @@ export type GameMap = Tile[][];
 
 /**
  * Load a Tiled map using its name.
- * @param {String} level The name of the level
- * @returns {Object}     The map 2d array, player location, and game objects array
  */
 export function loadTiledMap(ecs: World, level: LevelName) {
     if (!(level in LevelData)) { throw new Error(`${level} is not a valid level`); }
@@ -98,7 +99,7 @@ export function loadTiledMap(ecs: World, level: LevelName) {
     const sourceData = LevelData[level];
     const tileSize: number = sourceData.tileheight;
     const map: GameMap = [];
-    let playerLocation: number[] = [0, 0];
+    let playerLocation: [number, number] = [0, 0];
 
     const tileLayer = get(sourceData.layers.filter((l: any) => l.name === "Tile Layer"), "[0]");
     const objectLayer = get(sourceData.layers.filter((l: any) => l.name === "Object Layer"), "[0]");
@@ -200,16 +201,12 @@ export function loadTiledMap(ecs: World, level: LevelName) {
 
                     if (levelName !== null) {
                         entity.addComponent({
-                            type: "InteractableTypeComponent",
-                            interactableType: InteractableType.LoadLevel
+                            type: "LoadLevelComponent",
+                            levelName
                         });
                     }
 
                     if (spellId !== null) {
-                        entity.addComponent({
-                            type: "InteractableTypeComponent",
-                            interactableType: InteractableType.GiveSpells
-                        });
                         entity.addComponent({
                             type: "SpellsComponent",
                             knownSpells: new Set([spellId])

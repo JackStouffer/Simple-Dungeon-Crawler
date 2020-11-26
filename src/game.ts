@@ -519,8 +519,11 @@ export class SimpleDungeonCrawler {
 
         if (this.currentCommand !== null && this.currentCommand.isFinished()) {
             if (this.currentCommand.usedTurn()) {
+                if (this.currentActor === this.player) {
+                    this.ecs.runSystems("postCommand");
+                }
+
                 this.currentActor = this.scheduler.next();
-                this.ecs.runSystems("postCommand");
             }
 
             this.currentCommand = null;

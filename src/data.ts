@@ -331,7 +331,7 @@ export const ObjectData: { [key: string]: ObjectDataDetails } = {
                 GraphicsComponent: {
                     char: "\u1882",
                     fgColor: "white",
-                    bgColor: "brown",
+                    bgColor: "brown"
                 },
                 TypeComponent: {
                     entityType: "door"
@@ -403,6 +403,11 @@ export const ObjectData: { [key: string]: ObjectDataDetails } = {
                 },
                 InteractableTypeComponent: {
                     interactableType: InteractableType.GiveItems
+                },
+                FlammableComponent: {
+                    onFire: false,
+                    fireDamage: 0,
+                    turnsLeft: 0
                 }
             }
         }
@@ -435,6 +440,11 @@ export const ObjectData: { [key: string]: ObjectDataDetails } = {
                     [DamageType.Water]: Affinity.strong,
                     [DamageType.Nature]: Affinity.normal,
                     [DamageType.Ice]: Affinity.strong
+                },
+                FlammableComponent: {
+                    onFire: false,
+                    fireDamage: 0,
+                    turnsLeft: 0
                 }
             }
         }
@@ -467,6 +477,11 @@ export const ObjectData: { [key: string]: ObjectDataDetails } = {
                     [DamageType.Water]: Affinity.strong,
                     [DamageType.Nature]: Affinity.normal,
                     [DamageType.Ice]: Affinity.strong
+                },
+                FlammableComponent: {
+                    onFire: false,
+                    fireDamage: 0,
+                    turnsLeft: 0
                 }
             }
         }
@@ -555,14 +570,16 @@ export const ObjectData: { [key: string]: ObjectDataDetails } = {
                     range: 4,
                     lightingType: LightingType.TwoPass
                 },
-                FlammableComponent: {
-                    onFire: true
-                },
                 RemoveAfterNTurnsComponent: {
-                    turns: 5
+                    turnsLeft: 5
                 },
                 TriggerTypeComponent: {
                     triggerType: TriggerType.Fire
+                },
+                FireTriggerComponent: {
+                    effectTurns: 5,
+                    effectDamage: 5,
+                    damage: 15
                 }
             }
         }
@@ -667,6 +684,10 @@ export const ObjectData: { [key: string]: ObjectDataDetails } = {
                 },
                 TriggerTypeComponent: {
                     triggerType: TriggerType.ShallowWater
+                },
+                FreezableComponent: {
+                    frozen: false,
+                    turnsLeft: 0
                 }
             }
         }
@@ -687,6 +708,10 @@ export const ObjectData: { [key: string]: ObjectDataDetails } = {
                 },
                 TriggerTypeComponent: {
                     triggerType: TriggerType.DeepWater
+                },
+                FreezableComponent: {
+                    frozen: false,
+                    turnsLeft: 0
                 }
             }
         }
@@ -738,7 +763,16 @@ export const ObjectData: { [key: string]: ObjectDataDetails } = {
                     experience: 0,
                     experienceGiven: 0
                 },
-                DamageAffinityComponent: normalTypeDamageValues
+                DamageAffinityComponent: normalTypeDamageValues,
+                FlammableComponent: {
+                    onFire: false,
+                    fireDamage: 0,
+                    turnsLeft: 0
+                },
+                FreezableComponent: {
+                    frozen: false,
+                    turnsLeft: 0
+                }
             }
         }
     },
@@ -802,7 +836,16 @@ export const ObjectData: { [key: string]: ObjectDataDetails } = {
                     experience: 0,
                     experienceGiven: 50
                 },
-                DamageAffinityComponent: normalTypeDamageValues
+                DamageAffinityComponent: normalTypeDamageValues,
+                FlammableComponent: {
+                    onFire: false,
+                    fireDamage: 0,
+                    turnsLeft: 0
+                },
+                FreezableComponent: {
+                    frozen: false,
+                    turnsLeft: 0
+                }
             }
         }
     },
@@ -869,7 +912,16 @@ export const ObjectData: { [key: string]: ObjectDataDetails } = {
                     experience: 0,
                     experienceGiven: 500
                 },
-                DamageAffinityComponent: normalTypeDamageValues
+                DamageAffinityComponent: normalTypeDamageValues,
+                FlammableComponent: {
+                    onFire: false,
+                    fireDamage: 0,
+                    turnsLeft: 0
+                },
+                FreezableComponent: {
+                    frozen: false,
+                    turnsLeft: 0
+                }
             }
         }
     },
@@ -927,7 +979,16 @@ export const ObjectData: { [key: string]: ObjectDataDetails } = {
                     experience: 0,
                     experienceGiven: 10
                 },
-                DamageAffinityComponent: normalTypeDamageValues
+                DamageAffinityComponent: normalTypeDamageValues,
+                FlammableComponent: {
+                    onFire: false,
+                    fireDamage: 0,
+                    turnsLeft: 0
+                },
+                FreezableComponent: {
+                    frozen: false,
+                    turnsLeft: 0
+                }
             }
         }
     },
@@ -985,7 +1046,11 @@ export const ObjectData: { [key: string]: ObjectDataDetails } = {
                     experience: 0,
                     experienceGiven: 10
                 },
-                DamageAffinityComponent: waterTypeDamageValues
+                DamageAffinityComponent: waterTypeDamageValues,
+                FreezableComponent: {
+                    frozen: false,
+                    turnsLeft: 0
+                }
             }
         }
     },
@@ -1050,7 +1115,16 @@ export const ObjectData: { [key: string]: ObjectDataDetails } = {
                     experience: 0,
                     experienceGiven: 10
                 },
-                DamageAffinityComponent: normalTypeDamageValues
+                DamageAffinityComponent: normalTypeDamageValues,
+                FlammableComponent: {
+                    onFire: false,
+                    fireDamage: 0,
+                    turnsLeft: 0
+                },
+                FreezableComponent: {
+                    frozen: false,
+                    turnsLeft: 0
+                }
             }
         }
     },
@@ -1120,7 +1194,16 @@ export const ObjectData: { [key: string]: ObjectDataDetails } = {
                     experience: 0,
                     experienceGiven: 10
                 },
-                DamageAffinityComponent: normalTypeDamageValues
+                DamageAffinityComponent: normalTypeDamageValues,
+                FlammableComponent: {
+                    onFire: false,
+                    fireDamage: 0,
+                    turnsLeft: 0
+                },
+                FreezableComponent: {
+                    frozen: false,
+                    turnsLeft: 0
+                }
             }
         }
     }

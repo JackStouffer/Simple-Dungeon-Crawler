@@ -2,12 +2,27 @@ import { World, Component, Entity, EntityRef, System, Query } from "ape-ecs";
 
 import { RNG } from "./rot/index";
 
-import { Affinity, BASE_SPEED, DamageType, DeathType, InteractableType, LightingType, ObjectData, SpellDataDetails, TriggerType } from "./data";
+import {
+    Affinity,
+    BASE_SPEED,
+    DamageType,
+    DeathType,
+    InteractableType,
+    LightingType,
+    ObjectData,
+    SpellDataDetails,
+    TriggerType
+} from "./data";
 import { Nullable } from "./util";
 import { KeyCommand, PlayerState } from "./input-handler";
 import { InventoryItemDetails } from "./inventory";
 import { Planner, PlannerWorldState } from "./ai/planner";
-import { NoOpCommand, OpenInventoryCommand, OpenSpellsCommand, RotateReticleCommand } from "./commands";
+import {
+    NoOpCommand,
+    OpenInventoryCommand,
+    OpenSpellsCommand,
+    RotateReticleCommand
+} from "./commands";
 import { createPlanner } from "./ai/components";
 
 export class PositionComponent extends Component {
