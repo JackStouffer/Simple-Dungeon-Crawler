@@ -6,6 +6,8 @@ import { SpeedComponent } from "../../entity";
  * Speed-based scheduler
  */
 export default class EntityScheduler extends Scheduler<Entity> {
+    _current: Entity;
+
     add(item: Entity, repeat: boolean) {
         const speedData = item.getOne(SpeedComponent);
         const speed = speedData?.speed ?? 1;
@@ -16,7 +18,9 @@ export default class EntityScheduler extends Scheduler<Entity> {
 
     next() {
         if (this._current !== null && this._repeat.indexOf(this._current) !== -1) {
-            this._queue.add(this._current, 1/this._current.getSpeed());
+            const speedData = this._current.getOne(SpeedComponent);
+            const speed = speedData?.speed ?? 1;
+            this._queue.add(this._current, 1 / speed);
         }
         return super.next();
     }

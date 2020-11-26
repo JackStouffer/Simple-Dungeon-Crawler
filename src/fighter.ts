@@ -32,7 +32,6 @@ import {
 } from "./entity";
 import { displayMessage, MessageType } from "./ui";
 import { assertUnreachable } from "./util";
-import EntityScheduler from "./rot/scheduler/ecs";
 
 /**
  * Find all entities with HitPointsComponents and when hp is <= 0,
@@ -154,14 +153,13 @@ export class DeathSystem extends System {
  * SpeedComponent.
  */
 export class UpdateSchedulerSystem extends System {
-    private scheduler: EntityScheduler;
-
-    init(scheduler: EntityScheduler) {
+    init() {
         this.subscribe("SpeedComponent");
-        this.scheduler = scheduler;
     }
 
     update() {
+        if (globals.Game === null) { throw new Error("Game object is null"); }
+
         for (let i = 0; i < this.changes.length; i++) {
             const change = this.changes[i];
             const entity = this.world.getEntity(change.entity);
@@ -169,10 +167,10 @@ export class UpdateSchedulerSystem extends System {
 
             switch (change.op) {
                 case "add":
-                    this.scheduler.add(entity, true);
+                    globals.Game.scheduler.add(entity, true);
                     break;
                 case "destroy":
-                    this.scheduler.remove(entity);
+                    globals.Game.scheduler.remove(entity);
                     break;
                 case "change":
                 case "addRef":

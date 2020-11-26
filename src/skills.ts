@@ -7,7 +7,6 @@ import { GameMap, getRandomFighterWithinRange, isBlocked, Point, setAllToExplore
 import { displayMessage } from "./ui";
 import { DamageType, ItemDataDetails, SpellDataDetails, StatusEffectType } from "./data";
 import {
-    ConfusedAIComponent,
     createEntity,
     DisplayNameComponent,
     FlammableComponent,
@@ -210,7 +209,7 @@ export function castConfuse(
     }
 
     entity.addComponent({
-        type: ConfusedAIComponent,
+        type: "ConfusedAIComponent",
         turnsLeft: item.value
     });
     return true;
@@ -248,7 +247,7 @@ export function castHaste(
     }
 
     user.addComponent({
-        type: SpeedEffectComponent,
+        type: "SpeedEffectComponent",
         name: "Haste",
         stat: "speed",
         modifierType: "multiply",
@@ -306,7 +305,7 @@ export function castSlow(
     displayMessage(`Spell hits and slows ${displayName.name}`);
 
     user.addComponent({
-        type: SpeedEffectComponent,
+        type: "SpeedEffectComponent",
         name: "Slow",
         stat: "speed",
         modifierType: "multiply",

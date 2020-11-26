@@ -14,6 +14,7 @@ export class PositionComponent extends Component {
     x: number;
     y: number;
 
+    static typeName = "PositionComponent";
     static properties = {
         x: 0,
         y: 0
@@ -45,6 +46,20 @@ export class GraphicsComponent extends Component {
         char: "",
         bgColor: null,
         fgColor: null
+    }
+}
+
+export class ChestGraphicsComponent extends Component {
+    char: string;
+    fgColor: string;
+    bgColor: string;
+    emptyColor: string;
+
+    static properties = {
+        char: "*",
+        bgColor: "white",
+        fgColor: "brown",
+        emptyColor: "purple"
     }
 }
 
@@ -213,6 +228,7 @@ export class PlannerAIComponent extends Component {
     knowsTargetPosition: boolean;
     hasTargetInSight: boolean;
 
+    static typeName = "PlannerAIComponent";
     static properties = {
         target: EntityRef,
         sightRange: 7,
@@ -394,11 +410,11 @@ export function createEntity(
     const entity = ecs.createEntity(data.staticallyKnownComponents);
 
     if (x !== null && y !== null && entity.has(PositionComponent) === false) {
-        entity.addComponent({ type: PositionComponent, x, y });
+        entity.addComponent({ type: "PositionComponent", x, y });
     }
 
     if (data.spells !== undefined && entity.has(SpellsComponent) === false) {
-        entity.addComponent({ type: SpellsComponent, knownSpells: new Set(data.spells) });
+        entity.addComponent({ type: "SpellsComponent", knownSpells: new Set(data.spells) });
     }
 
     if (data?.addInventory === true && entity.has(InventoryComponent) === false) {
@@ -412,7 +428,7 @@ export function createEntity(
             }
         }
 
-        entity.addComponent({ type: InventoryComponent, inventory });
+        entity.addComponent({ type: "InventoryComponent", inventory });
     }
 
     if (data?.addInput === true && entity.has(InputHandlingComponent) === false) {
@@ -424,7 +440,7 @@ export function createEntity(
         ];
 
         entity.addComponent({
-            type: InputHandlingComponent,
+            type: "InputHandlingComponent",
             state: PlayerState.Combat,
             reticleRotation: 0,
             keyCommands,
@@ -438,7 +454,7 @@ export function createEntity(
         const { goals, planner } = createPlanner(actions);
 
         entity.addComponent({
-            type: PlannerAIComponent,
+            type: "PlannerAIComponent",
             sightRange: data?.sightRange ?? 5,
             planner,
             previousWorldState: {},

@@ -336,7 +336,7 @@ export const ObjectData: { [key: string]: ObjectDataDetails } = {
                 TypeComponent: {
                     entityType: "door"
                 },
-                InteractableComponent: {
+                InteractableTypeComponent: {
                     interactableType: InteractableType.Door
                 }
             }
@@ -357,7 +357,7 @@ export const ObjectData: { [key: string]: ObjectDataDetails } = {
                 TypeComponent: {
                     entityType: "door"
                 },
-                InteractableComponent: {
+                InteractableTypeComponent: {
                     interactableType: InteractableType.LoadLevel
                 }
             }
@@ -367,7 +367,7 @@ export const ObjectData: { [key: string]: ObjectDataDetails } = {
         staticallyKnownComponents: {
             tags: ["blocks", "drawAfterSeen"],
             c: {
-                DisplayName: {
+                DisplayNameComponent: {
                     name: "Stairs"
                 },
                 GraphicsComponent: {
@@ -378,7 +378,7 @@ export const ObjectData: { [key: string]: ObjectDataDetails } = {
                 TypeComponent: {
                     entityType: "door"
                 },
-                InteractableComponent: {
+                InteractableTypeComponent: {
                     interactableType: InteractableType.LoadLevel
                 }
             }
@@ -392,15 +392,16 @@ export const ObjectData: { [key: string]: ObjectDataDetails } = {
                 DisplayNameComponent: {
                     name: "Chest"
                 },
+                TypeComponent: {
+                    entityType: "chest"
+                },
                 ChestGraphicsComponent: {
                     char: "*",
                     fgColor: "white",
                     bgColor: "brown",
+                    emptyColor: "purple"
                 },
-                TypeComponent: {
-                    entityType: "chest"
-                },
-                InteractableComponent: {
+                InteractableTypeComponent: {
                     interactableType: InteractableType.GiveItems
                 }
             }
@@ -418,6 +419,7 @@ export const ObjectData: { [key: string]: ObjectDataDetails } = {
                     char: "\u2612",
                     fgColor: "white",
                     bgColor: "brown",
+                    emptyColor: "purple",
                 },
                 TypeComponent: {
                     entityType: "chest"
@@ -446,7 +448,7 @@ export const ObjectData: { [key: string]: ObjectDataDetails } = {
                 DisplayNameComponent: {
                     name: "Wooden Barrel"
                 },
-                ChestGraphicsComponent: {
+                GraphicsComponent: {
                     char: "\u232D",
                     fgColor: "white",
                     bgColor: "brown",
@@ -505,7 +507,7 @@ export const ObjectData: { [key: string]: ObjectDataDetails } = {
                 LightingComponent: {
                     color: "yellow",
                     range: 4,
-                    type: LightingType.TwoPass
+                    lightingType: LightingType.TwoPass
                 }
             }
         }
@@ -527,9 +529,9 @@ export const ObjectData: { [key: string]: ObjectDataDetails } = {
                 LightingComponent: {
                     color: "orange",
                     range: 6,
-                    type: LightingType.TwoPass
+                    lightingType: LightingType.TwoPass
                 },
-                TriggerComponent: {
+                TriggerTypeComponent: {
                     triggerType: TriggerType.Fire
                 }
             }
@@ -552,13 +554,16 @@ export const ObjectData: { [key: string]: ObjectDataDetails } = {
                 LightingComponent: {
                     color: "orange",
                     range: 4,
-                    type: LightingType.TwoPass
+                    lightingType: LightingType.TwoPass
                 },
                 FlammableComponent: {
                     onFire: true
                 },
                 RemoveAfterNTurnsComponent: {
                     turns: 5
+                },
+                TriggerTypeComponent: {
+                    triggerType: TriggerType.Fire
                 }
             }
         }
@@ -608,7 +613,7 @@ export const ObjectData: { [key: string]: ObjectDataDetails } = {
                     fgColor: "white",
                     bgColor: "brown"
                 },
-                InteractableComponent: {
+                InteractableTypeComponent: {
                     interactableType: InteractableType.GiveItems
                 }
             }
@@ -629,7 +634,7 @@ export const ObjectData: { [key: string]: ObjectDataDetails } = {
                     fgColor: "black",
                     bgColor: "gold",
                 },
-                InteractableComponent: {
+                InteractableTypeComponent: {
                     interactableType: InteractableType.GiveSpells
                 }
             }
@@ -641,7 +646,7 @@ export const ObjectData: { [key: string]: ObjectDataDetails } = {
                 TypeComponent: {
                     entityType: "event_trigger"
                 },
-                TriggerComponent: {
+                TriggerTypeComponent: {
                     triggerType: TriggerType.Event
                 }
             }
@@ -661,7 +666,7 @@ export const ObjectData: { [key: string]: ObjectDataDetails } = {
                     fgColor: "blue",
                     bgColor: "lightblue",
                 },
-                TriggerComponent: {
+                TriggerTypeComponent: {
                     triggerType: TriggerType.ShallowWater
                 }
             }
@@ -681,7 +686,7 @@ export const ObjectData: { [key: string]: ObjectDataDetails } = {
                     fgColor: "lightblue",
                     bgColor: "blue"
                 },
-                TriggerComponent: {
+                TriggerTypeComponent: {
                     triggerType: TriggerType.DeepWater
                 }
             }
@@ -693,6 +698,7 @@ export const ObjectData: { [key: string]: ObjectDataDetails } = {
         spells: [],
         staticallyKnownComponents: {
             tags: ["blocks"],
+            id: "player",
             c: {
                 TypeComponent: {
                     entityType: "player"
@@ -708,7 +714,7 @@ export const ObjectData: { [key: string]: ObjectDataDetails } = {
                 LightingComponent: {
                     color: "white",
                     range: 7,
-                    type: LightingType.Player
+                    lightingType: LightingType.Player
                 },
                 HitPointsComponent: {
                     hp: 100,
@@ -726,7 +732,9 @@ export const ObjectData: { [key: string]: ObjectDataDetails } = {
                     defense: 1,
                     criticalChance: 0.05,
                     criticalDamageMultiplier: 1.5,
-                    ailmentSusceptibility: 0.1,
+                    ailmentSusceptibility: 0.1
+                },
+                LevelComponent: {
                     level: 1,
                     experience: 0,
                     experienceGiven: 0
@@ -786,6 +794,11 @@ export const ObjectData: { [key: string]: ObjectDataDetails } = {
                     criticalChance: 0.05,
                     criticalDamageMultiplier: 1.5,
                     ailmentSusceptibility: 0.1,
+                    level: 3,
+                    experience: 0,
+                    experienceGiven: 50
+                },
+                LevelComponent: {
                     level: 3,
                     experience: 0,
                     experienceGiven: 50
@@ -850,7 +863,9 @@ export const ObjectData: { [key: string]: ObjectDataDetails } = {
                     defense: 4,
                     criticalChance: 0.05,
                     criticalDamageMultiplier: 1.5,
-                    ailmentSusceptibility: 0.1,
+                    ailmentSusceptibility: 0.1
+                },
+                LevelComponent: {
                     level: 10,
                     experience: 0,
                     experienceGiven: 500
@@ -964,7 +979,9 @@ export const ObjectData: { [key: string]: ObjectDataDetails } = {
                     defense: 1,
                     criticalChance: 0.05,
                     criticalDamageMultiplier: 1.5,
-                    ailmentSusceptibility: 0.1,
+                    ailmentSusceptibility: 0.1
+                },
+                LevelComponent: {
                     level: 1,
                     experience: 0,
                     experienceGiven: 10
@@ -1027,7 +1044,9 @@ export const ObjectData: { [key: string]: ObjectDataDetails } = {
                     defense: 1,
                     criticalChance: 0.05,
                     criticalDamageMultiplier: 1.5,
-                    ailmentSusceptibility: 0.1,
+                    ailmentSusceptibility: 0.1
+                },
+                LevelComponent: {
                     level: 1,
                     experience: 0,
                     experienceGiven: 10
@@ -1067,7 +1086,7 @@ export const ObjectData: { [key: string]: ObjectDataDetails } = {
                 TypeComponent: {
                     entityType: "bandit_mage"
                 },
-                DisplayName: {
+                DisplayNameComponent: {
                     name: "Bandit Mage"
                 },
                 GraphicsComponent: {
@@ -1095,7 +1114,9 @@ export const ObjectData: { [key: string]: ObjectDataDetails } = {
                     defense: 1,
                     criticalChance: 0.05,
                     criticalDamageMultiplier: 1.5,
-                    ailmentSusceptibility: 0.1,
+                    ailmentSusceptibility: 0.1
+                },
+                LevelComponent: {
                     level: 5,
                     experience: 0,
                     experienceGiven: 10

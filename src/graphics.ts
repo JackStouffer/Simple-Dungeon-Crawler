@@ -1,30 +1,24 @@
 import { Entity, Query, System } from "ape-ecs";
 
-import Display from "./rot/display/display";
-
 import {
+    ChestGraphicsComponent,
     GraphicsComponent,
     InputHandlingComponent,
+    InventoryComponent,
     PositionComponent,
     SpeedComponent
 } from "./entity";
 import input from "./input";
-import { distanceBetweenPoints, GameMap, getEntitiesAtLocation } from "./map";
-import { Camera } from "./camera";
+import { distanceBetweenPoints, getEntitiesAtLocation } from "./map";
 import { getTargetingReticle, PlayerState } from "./input-handler";
 import { getActorMovementPath } from "./commands";
+import { getItems } from "./inventory";
+import globals from "./globals";
 
 export class DrawSystem extends System {
     private graphicsQuery: Query;
-    private display: Display;
-    private map: GameMap;
-    private camera: Camera;
 
-    init(display: Display, gameCamera: Camera, map: GameMap) {
-        this.display = display;
-        this.map = map;
-        this.camera = gameCamera;
-
+    init() {
         this.graphicsQuery = this
             .createQuery()
             .fromAll(GraphicsComponent, PositionComponent)
@@ -36,7 +30,7 @@ export class DrawSystem extends System {
      * belong to the entity "id". If no objects, return the tile color
      */
     getTransparencyBackground(pos: PositionComponent, entities: Set<Entity>, id: string) {
-        let ret: string = this.map[pos.y][pos.x].lightingColor;
+        let ret: string = globals.Game!.map[pos.y][pos.x].lightingColor;
         const entitiesAtLocation = getEntitiesAtLocation(this.world, pos.x, pos.y);
         if (entitiesAtLocation.length > 0) {
             for (let i = 0; i < entitiesAtLocation.length; i++) {
@@ -59,9 +53,9 @@ export class DrawSystem extends System {
      * x and y coordinates if the tile it's on is visible.
      */
     draw(pos: PositionComponent, graphics: GraphicsComponent): void {
-        if (this.map[pos.y][pos.x].isVisibleAndLit()) {
-            const { x, y } = this.camera.worldToScreen(pos.x, pos.y);
-            this.display.draw(x, y, graphics.char, graphics.fgColor, graphics.bgColor);
+        if (globals.Game!.map[pos.y][pos.x].isVisibleAndLit()) {
+            const { x, y } = globals.Game!.gameCamera.worldToScreen(pos.x, pos.y);
+            globals.Game!.display!.draw(x, y, graphics.char, graphics.fgColor, graphics.bgColor);
         }
     }
 
@@ -78,10 +72,10 @@ export class DrawSystem extends System {
         entities: Set<Entity>,
         id: string
     ): void {
-        if (this.map[pos.y][pos.x].isVisibleAndLit()) {
+        if (globals.Game!.map[pos.y][pos.x].isVisibleAndLit()) {
             const bgColor = this.getTransparencyBackground(pos, entities, id);
-            const { x, y } = this.camera.worldToScreen(pos.x, pos.y);
-            this.display.draw(
+            const { x, y } = globals.Game!.gameCamera.worldToScreen(pos.x, pos.y);
+            globals.Game!.display!.draw(
                 x,
                 y,
                 graphics.char,
@@ -92,9 +86,9 @@ export class DrawSystem extends System {
     }
 
     drawAfterSeen(pos: PositionComponent, graphics: GraphicsComponent): void {
-        if (this.map[pos.y][pos.x].explored) {
-            const { x, y } = this.camera.worldToScreen(pos.x, pos.y);
-            this.display.draw(x, y, graphics.char, graphics.fgColor, graphics.bgColor);
+        if (globals.Game!.map[pos.y][pos.x].explored) {
+            const { x, y } = globals.Game!.gameCamera.worldToScreen(pos.x, pos.y);
+            globals.Game!.display!.draw(x, y, graphics.char, graphics.fgColor, graphics.bgColor);
         }
     }
 
@@ -118,11 +112,11 @@ export class DrawSystem extends System {
             throw new Error("Player missing speed or input data");
         }
 
-        if (this.map[pos.y][pos.x].isVisibleAndLit()) {
+        if (globals.Game!.map[pos.y][pos.x].isVisibleAndLit()) {
             const bgColor = this.getTransparencyBackground(pos, entities, player.id);
-            const { x, y } = this.camera.worldToScreen(pos.x, pos.y);
+            const { x, y } = globals.Game!.gameCamera.worldToScreen(pos.x, pos.y);
 
-            this.display.draw(
+            globals.Game!.display!.draw(
                 x,
                 y,
                 graphics.char,
@@ -142,34 +136,39 @@ export class DrawSystem extends System {
                         pos,
                         mousePosition,
                         speedData.maxTilesPerMove,
-                        this.map,
+                        globals.Game!.map,
                     );
                     if (path === null) { return; }
 
                     for (let i = 0; i < path.length; i++) {
                         const step = path[i];
-                        const { x, y } = this.camera.worldToScreen(step[0], step[1]);
-                        this.display.draw(x, y, "", "yellow", "yellow");
+                        const { x, y } = globals.Game!.gameCamera.worldToScreen(step[0], step[1]);
+                        globals.Game!.display!.draw(x, y, "", "yellow", "yellow");
                     }
                 }
             } else if (inputStateData.state === PlayerState.Target) {
                 const targetArea = getTargetingReticle(inputStateData);
 
                 for (let i = 0; i < targetArea.length; i++) {
-                    if (targetArea[i].x >= this.map[0].length ||
-                       targetArea[i].y >= this.map.length ||
-                       this.map[targetArea[i].y][targetArea[i].x].visible === false) {
+                    if (targetArea[i].x >= globals.Game!.map[0].length ||
+                       targetArea[i].y >= globals.Game!.map.length ||
+                       globals.Game!.map[targetArea[i].y][targetArea[i].x].visible === false) {
                         return;
                     }
 
-                    const { x, y } = this.camera.worldToScreen(targetArea[i].x, targetArea[i].y);
-                    this.display.draw(x, y, "X", "black", "yellow");
+                    const { x, y } = globals
+                        .Game!
+                        .gameCamera
+                        .worldToScreen(targetArea[i].x, targetArea[i].y);
+                    globals.Game!.display!.draw(x, y, "X", "black", "yellow");
                 }
             }
         }
     }
 
     update() {
+        if (globals.Game === null) { throw new Error("Global game is null"); }
+
         const entities = this.graphicsQuery.execute();
         for (const entity of entities) {
             const graphicData = entity.getOne(GraphicsComponent);
@@ -187,6 +186,37 @@ export class DrawSystem extends System {
                 this.drawWithTransparency(pos, graphicData, entities, entity.id);
             } else {
                 this.draw(pos, graphicData);
+            }
+        }
+    }
+}
+
+export class DrawChestsSystem extends System {
+    private chestGraphics: Query;
+
+    init() {
+        this.chestGraphics = this
+            .createQuery()
+            .fromAll(ChestGraphicsComponent, PositionComponent, InventoryComponent)
+            .persist();
+    }
+
+    update() {
+        if (globals.Game === null) { throw new Error("Global game is null"); }
+
+        const entities = this.chestGraphics.execute();
+        for (const entity of entities) {
+            const pos = entity.getOne(PositionComponent)!;
+
+            if (globals.Game.map[pos.y][pos.x].explored) {
+                const graphics = entity.getOne(ChestGraphicsComponent)!;
+                const inventory = entity.getOne(InventoryComponent)!;
+                const bgColor = getItems(inventory).length > 0 ?
+                    graphics.bgColor :
+                    graphics.emptyColor;
+
+                const { x, y } = globals.Game.gameCamera.worldToScreen(pos.x, pos.y);
+                globals.Game.display!.draw(x, y, graphics.char, graphics.fgColor, bgColor);
             }
         }
     }

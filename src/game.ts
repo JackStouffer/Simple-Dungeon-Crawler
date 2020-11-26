@@ -55,7 +55,8 @@ import {
     EventTriggerComponent,
     RemoveAfterNTurnsComponent,
     RemoveAfterNTurnsSystem,
-    LoadLevelComponent
+    LoadLevelComponent,
+    ChestGraphicsComponent
 } from "./entity";
 import {
     Command,
@@ -89,7 +90,7 @@ import {
 import { getItems, InventoryItemDetails } from "./inventory";
 import { assertUnreachable, Nullable } from "./util";
 import { DeathSystem, getEffectiveHitPointData, getKnownSpells, LevelUpSystem, UpdateEffectsSystem, UpdateSchedulerSystem } from "./fighter";
-import { DrawSystem } from "./graphics";
+import { DrawChestsSystem, DrawSystem } from "./graphics";
 import { LightingSystem } from "./lighting";
 import { UpdateTriggerMapSystem } from "./trigger";
 import { OnFireSystem } from "./effects";
@@ -126,7 +127,6 @@ export class SimpleDungeonCrawler {
         this.state = GameState.OpeningCinematic;
         this.canvas = null;
         this.display = null;
-        this.player = createEntity(this.ecs, "player", 1, 1);
         this.currentActor = null;
         this.currentCommand = null;
         this.scheduler = new EntityScheduler();
@@ -158,55 +158,11 @@ export class SimpleDungeonCrawler {
         this.inventoryMenu = new InventoryMenu();
         this.spellSelectionMenu = new SpellSelectionMenu();
         this.gameCamera = new Camera();
-
         this.ecs = new World({
             trackChanges: true,
             entityPool: 100,
             cleanupPools: true
         });
-        this.ecs.registerTags("blocks", "blocksSight", "input");
-        this.ecs.registerComponent(PositionComponent, 100);
-        this.ecs.registerComponent(TypeComponent, 100);
-        this.ecs.registerComponent(DisplayNameComponent, 100);
-        this.ecs.registerComponent(GraphicsComponent, 100);
-        this.ecs.registerComponent(LightingComponent, 20);
-        this.ecs.registerComponent(InventoryComponent, 20);
-        this.ecs.registerComponent(HitPointsComponent, 50);
-        this.ecs.registerComponent(HitPointsEffectComponent, 50);
-        this.ecs.registerComponent(SpeedComponent, 50);
-        this.ecs.registerComponent(SpeedEffectComponent, 50);
-        this.ecs.registerComponent(StatsComponent, 50);
-        this.ecs.registerComponent(StatsEffectComponent, 50);
-        this.ecs.registerComponent(LevelComponent, 20);
-        this.ecs.registerComponent(DamageAffinityComponent, 50);
-        this.ecs.registerComponent(SpellsComponent, 20);
-        this.ecs.registerComponent(PlannerAIComponent, 20);
-        this.ecs.registerComponent(LoseTargetAIComponent, 20);
-        this.ecs.registerComponent(FearAIComponent, 20);
-        this.ecs.registerComponent(FallbackAIComponent, 50);
-        this.ecs.registerComponent(PatrolAIComponent, 50);
-        this.ecs.registerComponent(PatrolPathComponent, 50);
-        this.ecs.registerComponent(ConfusedAIComponent, 10);
-        this.ecs.registerComponent(InputHandlingComponent, 1);
-        this.ecs.registerComponent(FreezableComponent, 50);
-        this.ecs.registerComponent(FlammableComponent, 50);
-        this.ecs.registerComponent(TriggerTypeComponent, 50);
-        this.ecs.registerComponent(FireTriggerComponent, 20);
-        this.ecs.registerComponent(EventTriggerComponent, 20);
-        this.ecs.registerComponent(InteractableTypeComponent, 50);
-        this.ecs.registerComponent(LoadLevelComponent, 10);
-        this.ecs.registerComponent(RemoveAfterNTurnsComponent, 10);
-
-        this.ecs.registerSystem("frame", DrawSystem, [this.display, this.gameCamera, this.map]);
-
-        this.ecs.registerSystem("postCommand", UpdateEffectsSystem);
-        this.ecs.registerSystem("postCommand", OnFireSystem);
-        this.ecs.registerSystem("postCommand", LevelUpSystem);
-        this.ecs.registerSystem("postCommand", RemoveAfterNTurnsSystem);
-        this.ecs.registerSystem("postCommand", DeathSystem);
-        this.ecs.registerSystem("postCommand", UpdateSchedulerSystem, [this.scheduler]);
-        this.ecs.registerSystem("postCommand", UpdateTriggerMapSystem, [this.triggerMap]);
-        this.ecs.registerSystem("postCommand", LightingSystem, [this.map]);
     }
 
     reset(): void {
@@ -248,6 +204,54 @@ export class SimpleDungeonCrawler {
         }
 
         loadEventualSounds();
+
+        this.ecs.registerTags("blocks", "blocksSight", "drawAfterSeen", "input");
+        this.ecs.registerComponent(PositionComponent, 100);
+        this.ecs.registerComponent(TypeComponent, 100);
+        this.ecs.registerComponent(DisplayNameComponent, 100);
+        this.ecs.registerComponent(GraphicsComponent, 100);
+        this.ecs.registerComponent(ChestGraphicsComponent, 10);
+        this.ecs.registerComponent(LightingComponent, 20);
+        this.ecs.registerComponent(InventoryComponent, 20);
+        this.ecs.registerComponent(HitPointsComponent, 50);
+        this.ecs.registerComponent(HitPointsEffectComponent, 50);
+        this.ecs.registerComponent(SpeedComponent, 50);
+        this.ecs.registerComponent(SpeedEffectComponent, 50);
+        this.ecs.registerComponent(StatsComponent, 50);
+        this.ecs.registerComponent(StatsEffectComponent, 50);
+        this.ecs.registerComponent(LevelComponent, 20);
+        this.ecs.registerComponent(DamageAffinityComponent, 50);
+        this.ecs.registerComponent(SpellsComponent, 20);
+        this.ecs.registerComponent(PlannerAIComponent, 20);
+        this.ecs.registerComponent(LoseTargetAIComponent, 20);
+        this.ecs.registerComponent(FearAIComponent, 20);
+        this.ecs.registerComponent(FallbackAIComponent, 50);
+        this.ecs.registerComponent(PatrolAIComponent, 50);
+        this.ecs.registerComponent(PatrolPathComponent, 50);
+        this.ecs.registerComponent(ConfusedAIComponent, 10);
+        this.ecs.registerComponent(InputHandlingComponent, 1);
+        this.ecs.registerComponent(FreezableComponent, 50);
+        this.ecs.registerComponent(FlammableComponent, 50);
+        this.ecs.registerComponent(TriggerTypeComponent, 50);
+        this.ecs.registerComponent(FireTriggerComponent, 20);
+        this.ecs.registerComponent(EventTriggerComponent, 20);
+        this.ecs.registerComponent(InteractableTypeComponent, 50);
+        this.ecs.registerComponent(LoadLevelComponent, 10);
+        this.ecs.registerComponent(RemoveAfterNTurnsComponent, 10);
+
+        this.ecs.registerSystem("frame", DrawSystem);
+        this.ecs.registerSystem("frame", DrawChestsSystem);
+
+        this.ecs.registerSystem("postCommand", UpdateEffectsSystem);
+        this.ecs.registerSystem("postCommand", OnFireSystem);
+        this.ecs.registerSystem("postCommand", LevelUpSystem);
+        this.ecs.registerSystem("postCommand", RemoveAfterNTurnsSystem);
+        this.ecs.registerSystem("postCommand", DeathSystem);
+        this.ecs.registerSystem("postCommand", UpdateSchedulerSystem);
+        this.ecs.registerSystem("postCommand", UpdateTriggerMapSystem);
+        this.ecs.registerSystem("postCommand", LightingSystem);
+
+        this.player = createEntity(this.ecs, "player", 1, 1);
 
         globals.gameEventEmitter.on("ui.openInventory", playOpenInventory);
         globals.gameEventEmitter.on("ui.closeInventory", playCloseInventory);
@@ -306,7 +310,7 @@ export class SimpleDungeonCrawler {
                 this.gameCamera.update(this.map);
 
                 drawMap(this.display, this.gameCamera, this.map);
-
+                this.ecs.runSystems("frame");
                 drawStatusBar(this.display, this.ecs, this.map);
                 break;
             case GameState.PauseMenu:
@@ -515,6 +519,7 @@ export class SimpleDungeonCrawler {
         if (this.currentCommand !== null && this.currentCommand.isFinished()) {
             if (this.currentCommand.usedTurn()) {
                 this.currentActor = this.scheduler.next();
+                this.ecs.runSystems("postCommand");
             }
 
             this.currentCommand = null;
@@ -528,6 +533,7 @@ export class SimpleDungeonCrawler {
 
         this.render();
         input.clearInputs();
+        this.ecs.tick();
     }
 
     getTurnNumber(): number {

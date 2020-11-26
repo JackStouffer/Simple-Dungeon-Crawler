@@ -62,7 +62,7 @@ export function getActorMovementPath(
             return null;
         }
 
-        if (isBlocked(ecs, map, origin.x, origin.y).blocks === true) {
+        if (isBlocked(ecs, map, destination.x, destination.y).blocks === true) {
             return null;
         }
 

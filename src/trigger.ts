@@ -6,14 +6,13 @@ import { EventTriggerComponent, FireTriggerComponent, FlammableComponent, Positi
 import { takeDamage } from "./fighter";
 
 export class UpdateTriggerMapSystem extends System {
-    triggerMap: Map<string, Entity>
-
-    init(triggerMap: Map<string, Entity>) {
-        this.subscribe("TriggerComponent");
-        this.triggerMap = triggerMap;
+    init() {
+        this.subscribe("TriggerTypeComponent");
     }
 
     update() {
+        if (globals.Game === null) { throw new Error("Global game object is null"); }
+
         for (let i = 0; i < this.changes.length; i++) {
             const change = this.changes[i];
             const entity = this.world.getEntity(change.entity);
@@ -23,10 +22,10 @@ export class UpdateTriggerMapSystem extends System {
 
             switch (change.op) {
                 case "add":
-                    this.triggerMap.set(`${pos.x},${pos.y}`, entity);
+                    globals.Game.triggerMap.set(`${pos.x},${pos.y}`, entity);
                     break;
                 case "destroy":
-                    this.triggerMap.delete(`${pos.x},${pos.y}`);
+                    globals.Game.triggerMap.delete(`${pos.x},${pos.y}`);
                     break;
                 case "change":
                 case "addRef":

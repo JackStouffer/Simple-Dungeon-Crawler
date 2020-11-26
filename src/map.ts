@@ -14,16 +14,9 @@ import {
 } from "./data";
 import {
     createEntity,
-    EventTriggerComponent,
-    FallbackAIComponent,
     HitPointsComponent,
-    InteractableTypeComponent,
-    PatrolAIComponent,
-    PatrolPathComponent,
     PlannerAIComponent,
-    PositionComponent,
-    SpellsComponent,
-    TriggerTypeComponent
+    PositionComponent
 } from "./entity";
 import { Camera } from "./camera";
 import { Nullable } from "./util";
@@ -165,7 +158,7 @@ export function loadTiledMap(ecs: World, level: LevelName) {
         const next = nextId !== null ? ecs.getEntity(nextId) : null;
         if (next !== null) {
             entity.addComponent({
-                type: PatrolPathComponent,
+                type: "PatrolPathComponent",
                 next
             });
         }
@@ -174,8 +167,7 @@ export function loadTiledMap(ecs: World, level: LevelName) {
     objectLayer.objects.forEach((o: any) => {
         if (o.point !== undefined) {
             if (o.type === "object") {
-                const id = o.id,
-                    type = findProperty(o, "objectType"),
+                const type = findProperty(o, "objectType"),
                     inventory = findProperty(o, "inventory"),
                     levelName = findProperty(o, "levelName"),
                     spellId = findProperty(o, "spellId"),
@@ -184,7 +176,7 @@ export function loadTiledMap(ecs: World, level: LevelName) {
                     event = findProperty(o, "event");
 
                 if (type === null) {
-                    throw new Error(`No id for ${o.name}`);
+                    throw new Error(`No type for ${o.name}`);
                 }
 
                 if (type === "player") {
@@ -194,8 +186,7 @@ export function loadTiledMap(ecs: World, level: LevelName) {
                         ecs,
                         type,
                         Math.floor(o.x / tileSize),
-                        Math.floor(o.y / tileSize),
-                        id
+                        Math.floor(o.y / tileSize)
                     );
 
                     if (inventory !== null) {
@@ -209,18 +200,18 @@ export function loadTiledMap(ecs: World, level: LevelName) {
 
                     if (levelName !== null) {
                         entity.addComponent({
-                            type: InteractableTypeComponent,
+                            type: "InteractableTypeComponent",
                             interactableType: InteractableType.LoadLevel
                         });
                     }
 
                     if (spellId !== null) {
                         entity.addComponent({
-                            type: InteractableTypeComponent,
+                            type: "InteractableTypeComponent",
                             interactableType: InteractableType.GiveSpells
                         });
                         entity.addComponent({
-                            type: SpellsComponent,
+                            type: "SpellsComponent",
                             knownSpells: new Set([spellId])
                         });
                     }
@@ -229,7 +220,7 @@ export function loadTiledMap(ecs: World, level: LevelName) {
                         const target = ecs.getEntity(patrolTarget.toString());
                         if (target === undefined) { throw new Error(`Patrol target ${patrolTarget} is not initialized`); }
                         entity.addComponent({
-                            type: PatrolAIComponent,
+                            type: "PatrolAIComponent",
                             patrolTarget: target
                         });
 
@@ -249,7 +240,7 @@ export function loadTiledMap(ecs: World, level: LevelName) {
                         const fallback = ecs.getEntity(fallbackPosition.toString());
                         if (fallback === undefined) { throw new Error(`Fallback target ${fallbackPosition} is not initialized`); }
                         entity.addComponent({
-                            type: FallbackAIComponent,
+                            type: "FallbackAIComponent",
                             isAtFallbackPosition: false,
                             fallbackPosition: fallback
                         });
@@ -266,11 +257,11 @@ export function loadTiledMap(ecs: World, level: LevelName) {
 
                     if (type === "event_trigger" && event !== null) {
                         entity.addComponent({
-                            type: TriggerTypeComponent,
+                            type: "TriggerTypeComponent",
                             triggerType: "event"
                         });
                         entity.addComponent({
-                            type: EventTriggerComponent,
+                            type: "EventTriggerComponent",
                             event
                         });
                     }

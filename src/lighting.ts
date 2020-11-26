@@ -26,68 +26,65 @@ function createReflectivityCallback(map: GameMap): ReflectivityCallback {
  */
 export class LightingSystem extends System {
     private mainQuery: Query;
-    private map: GameMap;
 
-    init(map: GameMap) {
-        if (globals.Game === null) {
-            throw new Error("Missing properties on global Game object required for lighting");
-        }
-
-        this.map = map;
+    init() {
         this.mainQuery = this.createQuery()
             .fromAll(LightingComponent, PositionComponent)
             .persist();
     }
 
     computePlayerLighting(pos: PositionComponent, light: LightingComponent) {
-        // so it can be accessed in the closure
-        const map = this.map;
-
         const sightFov = new FOV.PreciseShadowcasting(
             createPassableSightCallback(pos)
         );
         sightFov.compute(pos.x, pos.y, WIDTH + 2, function(x, y) {
-            if (x < 0 || y < 0 || y >= map.length || x >= map[y].length) {
+            if (x < 0 ||
+                y < 0 ||
+                y >= globals.Game!.map.length ||
+                x >= globals.Game!.map[y].length) {
                 return;
             }
-            map[y][x].explored = true;
-            map[y][x].visible = true;
-            map[y][x].lightingColor = light.color;
+            globals.Game!.map[y][x].explored = true;
+            globals.Game!.map[y][x].visible = true;
+            globals.Game!.map[y][x].lightingColor = light.color;
         });
     }
 
     computePlayerIndoorLighting(pos: PositionComponent, light: LightingComponent) {
-        // so it can be accessed in the closure
-        const map = this.map;
-
         function lightingCallback(x: number, y: number, color: Color) {
-            if (x < 0 || y < 0 || y >= map.length || x >= map[y].length) {
+            if (x < 0 ||
+                y < 0 ||
+                y >= globals.Game!.map.length ||
+                x >= globals.Game!.map[y].length) {
                 return;
             }
-            map[y][x].lightingColor = toRGB(
+            globals.Game!.map[y][x].lightingColor = toRGB(
                 add(
-                    fromString(map[y][x].lightingColor),
+                    fromString(globals.Game!.map[y][x].lightingColor),
                     color
                 )
             );
-            map[y][x].explored = true;
+            globals.Game!.map[y][x].explored = true;
         }
 
         const sightFov = new FOV.PreciseShadowcasting(
             createPassableSightCallback(pos)
         );
         sightFov.compute(pos.x, pos.y, 50, function(x, y) {
-            if (x < 0 || y < 0 || y >= map.length || x >= map[y].length) {
+            if (x < 0 ||
+                y < 0 ||
+                y >= globals.Game!.map.length ||
+                x >= globals.Game!.map[y].length) {
                 return;
             }
-            map[y][x].visible = true;
+            globals.Game!.map[y][x].visible = true;
         });
 
         const lightingFov = new FOV.PreciseShadowcasting(
             createPassableSightCallback(pos)
         );
         const lighting = new Lighting(
-            createReflectivityCallback(map),
+            createReflectivityCallback(globals.Game!.map),
             { range: light.range, passes: 2 }
         );
         lighting.setFOV(lightingFov);
@@ -96,16 +93,16 @@ export class LightingSystem extends System {
     }
 
     computeReflectivityLighting(pos: PositionComponent, light: LightingComponent) {
-        // so it can be accessed in the closure
-        const map = this.map;
-
         function lightingCallback(x: number, y: number, color: Color) {
-            if (x < 0 || y < 0 || y >= map.length || x >= map[y].length) {
+            if (x < 0 ||
+                y < 0 ||
+                y >= globals.Game!.map.length ||
+                x >= globals.Game!.map[y].length) {
                 return;
             }
-            map[y][x].lightingColor = toRGB(
+            globals.Game!.map[y][x].lightingColor = toRGB(
                 add(
-                    fromString(map[y][x].lightingColor),
+                    fromString(globals.Game!.map[y][x].lightingColor),
                     color
                 )
             );
@@ -115,14 +112,14 @@ export class LightingSystem extends System {
             createPassableSightCallback(pos)
         );
         const lighting = new Lighting(
-            createReflectivityCallback(map),
+            createReflectivityCallback(globals.Game!.map),
             { range: light.range, passes: 2 }
         );
         lighting.setFOV(fov);
         lighting.setLight(pos.x, pos.y, light.color);
         lighting.compute(lightingCallback);
         // For some reason the tile you're on doesn't get lit
-        map[pos.y][pos.x].lightingColor = light.color;
+        globals.Game!.map[pos.y][pos.x].lightingColor = light.color;
     }
 
     update() {
@@ -131,7 +128,7 @@ export class LightingSystem extends System {
         }
 
         if (globals.Game.isLightingEnabled) {
-            resetVisibility(this.map);
+            resetVisibility(globals.Game.map);
             const entities = this.mainQuery.execute();
             for (const entity of entities) {
                 const positionData = entity.getOne(PositionComponent)!;
@@ -151,7 +148,7 @@ export class LightingSystem extends System {
                 }
             }
         } else {
-            setAllToExplored(this.map, true, true);
+            setAllToExplored(globals.Game.map, true, true);
         }
     }
 }
