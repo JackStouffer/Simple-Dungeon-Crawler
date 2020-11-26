@@ -415,11 +415,10 @@ export const ObjectData: { [key: string]: ObjectDataDetails } = {
                 DisplayNameComponent: {
                     name: "Wooden Crate"
                 },
-                ChestGraphicsComponent: {
+                GraphicsComponent: {
                     char: "\u2612",
                     fgColor: "white",
-                    bgColor: "brown",
-                    emptyColor: "purple",
+                    bgColor: "brown"
                 },
                 TypeComponent: {
                     entityType: "chest"
@@ -697,8 +696,8 @@ export const ObjectData: { [key: string]: ObjectDataDetails } = {
         addInput: true,
         spells: [],
         staticallyKnownComponents: {
-            tags: ["blocks"],
             id: "player",
+            tags: ["blocks", "input"],
             c: {
                 TypeComponent: {
                     entityType: "player"

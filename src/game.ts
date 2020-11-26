@@ -90,7 +90,7 @@ import {
 import { getItems, InventoryItemDetails } from "./inventory";
 import { assertUnreachable, Nullable } from "./util";
 import { DeathSystem, getEffectiveHitPointData, getKnownSpells, LevelUpSystem, UpdateEffectsSystem, UpdateSchedulerSystem } from "./fighter";
-import { DrawChestsSystem, DrawSystem } from "./graphics";
+import { DrawChestsSystem, DrawPlayerSystem, DrawSystem } from "./graphics";
 import { LightingSystem } from "./lighting";
 import { UpdateTriggerMapSystem } from "./trigger";
 import { OnFireSystem } from "./effects";
@@ -239,8 +239,10 @@ export class SimpleDungeonCrawler {
         this.ecs.registerComponent(LoadLevelComponent, 10);
         this.ecs.registerComponent(RemoveAfterNTurnsComponent, 10);
 
+        this.ecs.registerSystem("frame", LightingSystem);
         this.ecs.registerSystem("frame", DrawSystem);
         this.ecs.registerSystem("frame", DrawChestsSystem);
+        this.ecs.registerSystem("frame", DrawPlayerSystem);
 
         this.ecs.registerSystem("postCommand", UpdateEffectsSystem);
         this.ecs.registerSystem("postCommand", OnFireSystem);
@@ -249,7 +251,6 @@ export class SimpleDungeonCrawler {
         this.ecs.registerSystem("postCommand", DeathSystem);
         this.ecs.registerSystem("postCommand", UpdateSchedulerSystem);
         this.ecs.registerSystem("postCommand", UpdateTriggerMapSystem);
-        this.ecs.registerSystem("postCommand", LightingSystem);
 
         this.player = createEntity(this.ecs, "player", 1, 1);
 
