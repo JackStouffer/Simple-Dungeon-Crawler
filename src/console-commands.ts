@@ -1,5 +1,8 @@
 import globals from "./globals";
 import { ItemData, SpellData } from "./data";
+import { InventoryComponent, SpellsComponent } from "./entity";
+import { addItem } from "./inventory";
+import { addSpellById } from "./fighter";
 
 /**
  * Start the game loop
@@ -29,10 +32,11 @@ export function stopGameLoop(): void {
  */
 export function giveAllItems(): void {
     if (globals.Game === null) { throw new Error("Global game object is null"); }
-    if (globals.Game.player.inventory === null) { throw new Error("Global player inventory is null"); }
+    const inventoryData = globals.Game.player.getOne(InventoryComponent);
+    if (inventoryData === undefined) { throw new Error("Global player does not have an inventory"); }
 
     for (const key in ItemData) {
-        globals.Game.player.inventory.addItem(key);
+        addItem(inventoryData, key);
     }
 }
 
@@ -41,10 +45,11 @@ export function giveAllItems(): void {
  */
 export function giveAllSpells(): void {
     if (globals.Game === null) { throw new Error("Global game object is null"); }
-    if (globals.Game.player.fighter === null) { throw new Error("Global player inventory is null"); }
+    const spellData = globals.Game.player.getOne(SpellsComponent);
+    if (spellData === undefined) { throw new Error("Global player cannot learn spells"); }
 
     for (const key in SpellData) {
-        globals.Game.player.fighter.addSpellById(key);
+        addSpellById(globals.Game.player, key);
     }
 }
 

@@ -1,6 +1,8 @@
 import { EventEmitter } from "events";
+import { Entity, World } from "ape-ecs";
+
 import { Display } from "./rot/index";
-import { default as SpeedScheduler } from "./rot/scheduler/speed";
+import EntityScheduler from "./rot/scheduler/ecs";
 
 import globals from "./globals";
 import {
@@ -20,7 +22,41 @@ import {
     playBoxBreak
 } from "./audio";
 import { Camera } from "./camera";
-import { createObject, GameObject } from "./object";
+import {
+    createEntity,
+    PositionComponent,
+    TypeComponent,
+    DisplayNameComponent,
+    GraphicsComponent,
+    LightingComponent,
+    InventoryComponent,
+    HitPointsComponent,
+    SpeedComponent,
+    StatsComponent,
+    SpellsComponent,
+    PlannerAIComponent,
+    LoseTargetAIComponent,
+    FearAIComponent,
+    FallbackAIComponent,
+    PatrolAIComponent,
+    PatrolPathComponent,
+    InputHandlingComponent,
+    FreezableComponent,
+    FlammableComponent,
+    TriggerTypeComponent,
+    InteractableTypeComponent,
+    StatsEffectComponent,
+    SpeedEffectComponent,
+    HitPointsEffectComponent,
+    LevelComponent,
+    DamageAffinityComponent,
+    FireTriggerComponent,
+    ConfusedAIComponent,
+    EventTriggerComponent,
+    RemoveAfterNTurnsComponent,
+    RemoveAfterNTurnsSystem,
+    LoadLevelComponent
+} from "./entity";
 import {
     Command,
     NoOpCommand,
@@ -29,20 +65,17 @@ import {
 } from "./commands";
 import { WIDTH, HEIGHT, GameState, LevelName, ItemType, SpellType, SpellDataDetails } from "./data";
 import input from "./input";
-import { PlayerState } from "./input-handler";
+import { handleInput, PlayerState } from "./input-handler";
 import {
     GameMap,
     drawMap,
-    resetVisibility,
-    loadTiledMap,
-    PathNode,
-    setAllToExplored
+    loadTiledMap
 } from "./map";
 import {
-    drawUI,
     KeyBindingMenu,
     InventoryMenu,
     SpellSelectionMenu,
+    drawStatusBar,
 } from "./ui";
 import {
     explainMovement,
@@ -53,12 +86,18 @@ import {
     explainSpellMenu,
     explainPickUpItem
 } from "./tutorials";
-import { InventoryItemDetails } from "./inventory";
+import { getItems, InventoryItemDetails } from "./inventory";
 import { assertUnreachable, Nullable } from "./util";
+import { DeathSystem, getEffectiveHitPointData, getKnownSpells, LevelUpSystem, UpdateEffectsSystem, UpdateSchedulerSystem } from "./fighter";
+import { DrawSystem } from "./graphics";
+import { LightingSystem } from "./lighting";
+import { UpdateTriggerMapSystem } from "./trigger";
+import { OnFireSystem } from "./effects";
 
 globals.gameEventEmitter = new EventEmitter();
 
 export class SimpleDungeonCrawler {
+    ecs: World;
     state: GameState;
     totalTurns: number;
     canvas: Nullable<HTMLElement>;
@@ -70,13 +109,12 @@ export class SimpleDungeonCrawler {
     lastTimestamp: DOMHighResTimeStamp;
     deltaTime: DOMHighResTimeStamp;
 
-    scheduler: SpeedScheduler;
-    player: GameObject;
-    currentActor: Nullable<GameObject>;
+    scheduler: EntityScheduler;
+    player: Entity;
+    currentActor: Nullable<Entity>;
     currentCommand: Nullable<Command>;
-    gameObjects: GameObject[];
     map: GameMap;
-    pathNodes: Map<number, PathNode>;
+    triggerMap: Map<string, Entity>;
 
     private readonly keyBindingMenu: KeyBindingMenu;
     private readonly inventoryMenu: InventoryMenu;
@@ -88,13 +126,12 @@ export class SimpleDungeonCrawler {
         this.state = GameState.OpeningCinematic;
         this.canvas = null;
         this.display = null;
-        this.player = createObject("player", 1, 1);
+        this.player = createEntity(this.ecs, "player", 1, 1);
         this.currentActor = null;
         this.currentCommand = null;
-        this.scheduler = new SpeedScheduler();
-        this.gameObjects = [];
+        this.scheduler = new EntityScheduler();
         this.map = [];
-        this.pathNodes = new Map();
+        this.triggerMap = new Map();
         this.totalTurns = 1;
 
         this.processAI = true;
@@ -121,18 +158,70 @@ export class SimpleDungeonCrawler {
         this.inventoryMenu = new InventoryMenu();
         this.spellSelectionMenu = new SpellSelectionMenu();
         this.gameCamera = new Camera();
+
+        this.ecs = new World({
+            trackChanges: true,
+            entityPool: 100,
+            cleanupPools: true
+        });
+        this.ecs.registerTags("blocks", "blocksSight", "input");
+        this.ecs.registerComponent(PositionComponent, 100);
+        this.ecs.registerComponent(TypeComponent, 100);
+        this.ecs.registerComponent(DisplayNameComponent, 100);
+        this.ecs.registerComponent(GraphicsComponent, 100);
+        this.ecs.registerComponent(LightingComponent, 20);
+        this.ecs.registerComponent(InventoryComponent, 20);
+        this.ecs.registerComponent(HitPointsComponent, 50);
+        this.ecs.registerComponent(HitPointsEffectComponent, 50);
+        this.ecs.registerComponent(SpeedComponent, 50);
+        this.ecs.registerComponent(SpeedEffectComponent, 50);
+        this.ecs.registerComponent(StatsComponent, 50);
+        this.ecs.registerComponent(StatsEffectComponent, 50);
+        this.ecs.registerComponent(LevelComponent, 20);
+        this.ecs.registerComponent(DamageAffinityComponent, 50);
+        this.ecs.registerComponent(SpellsComponent, 20);
+        this.ecs.registerComponent(PlannerAIComponent, 20);
+        this.ecs.registerComponent(LoseTargetAIComponent, 20);
+        this.ecs.registerComponent(FearAIComponent, 20);
+        this.ecs.registerComponent(FallbackAIComponent, 50);
+        this.ecs.registerComponent(PatrolAIComponent, 50);
+        this.ecs.registerComponent(PatrolPathComponent, 50);
+        this.ecs.registerComponent(ConfusedAIComponent, 10);
+        this.ecs.registerComponent(InputHandlingComponent, 1);
+        this.ecs.registerComponent(FreezableComponent, 50);
+        this.ecs.registerComponent(FlammableComponent, 50);
+        this.ecs.registerComponent(TriggerTypeComponent, 50);
+        this.ecs.registerComponent(FireTriggerComponent, 20);
+        this.ecs.registerComponent(EventTriggerComponent, 20);
+        this.ecs.registerComponent(InteractableTypeComponent, 50);
+        this.ecs.registerComponent(LoadLevelComponent, 10);
+        this.ecs.registerComponent(RemoveAfterNTurnsComponent, 10);
+
+        this.ecs.registerSystem("frame", DrawSystem, [this.display, this.gameCamera, this.map]);
+
+        this.ecs.registerSystem("postCommand", UpdateEffectsSystem);
+        this.ecs.registerSystem("postCommand", OnFireSystem);
+        this.ecs.registerSystem("postCommand", LevelUpSystem);
+        this.ecs.registerSystem("postCommand", RemoveAfterNTurnsSystem);
+        this.ecs.registerSystem("postCommand", DeathSystem);
+        this.ecs.registerSystem("postCommand", UpdateSchedulerSystem, [this.scheduler]);
+        this.ecs.registerSystem("postCommand", UpdateTriggerMapSystem, [this.triggerMap]);
+        this.ecs.registerSystem("postCommand", LightingSystem, [this.map]);
     }
 
     reset(): void {
         if (globals.document === null) { throw new Error("Global document cannot be null"); }
+        this.ecs.entities.forEach((v) => {
+            v.destroy();
+        });
 
-        this.player = createObject("player", 1, 1);
+        this.player = createEntity(this.ecs, "player", 1, 1);
         this.map = [];
-        this.gameObjects = [];
         this.totalTurns = 1;
         this.scheduler.clear();
         this.scheduler.add(this.player, true);
         this.gameCamera.follow(this.player);
+
 
         this.loadLevel("forrest_001");
 
@@ -201,66 +290,33 @@ export class SimpleDungeonCrawler {
         if (this.display === null) { throw new Error("Cannot render without a display"); }
         if (this.player === null) { throw new Error("Cannot render without a player"); }
 
+        const inputHandlerData = this.player.getOne(InputHandlingComponent);
+        const inventoryData = this.player.getOne(InventoryComponent);
+        const spellsData = this.player.getOne(SpellsComponent);
+
+        if (inputHandlerData === undefined ||
+            inventoryData === undefined ||
+            spellsData === undefined) {
+            throw new Error("Missing data on player");
+        }
+
         switch (this.state) {
             case GameState.Gameplay:
                 this.display.clear();
                 this.gameCamera.update(this.map);
 
-                if (this.isLightingEnabled) {
-                    resetVisibility(this.map);
-                    for (let i = 0; i < this.gameObjects.length; i++) {
-                        const obj = this.gameObjects[i];
-                        if (obj.lighting !== null) {
-                            obj.lighting.compute(this.map);
-                        }
-                    }
-                } else {
-                    setAllToExplored(this.map, true, true);
-                }
-
                 drawMap(this.display, this.gameCamera, this.map);
 
-                this.gameObjects
-                    .filter(o => o.graphics !== null)
-                    // Make sure objects with fighters cannot be drawn over
-                    .sort((a, b) => {
-                        if (a.fighter === null && b.fighter !== null) {
-                            return -1;
-                        }
-                        if (a.fighter === null && b.fighter === null) {
-                            return -1;
-                        }
-                        if (a.fighter !== null && b.fighter === null) {
-                            return 1;
-                        }
-                        return 0;
-                    })
-                    .forEach(o => o.graphics!.draw(
-                        this.display!,
-                        this.gameCamera,
-                        this.map,
-                        this.gameObjects
-                    ));
-
-                drawUI(this.display!, this.player, this.gameObjects, this.map);
+                drawStatusBar(this.display, this.ecs, this.map);
                 break;
             case GameState.PauseMenu:
-                if (this.player.inputHandler === null) {
-                    break;
-                }
-                this.keyBindingMenu.draw(this.player.inputHandler.keyCommands);
+                this.keyBindingMenu.draw(inputHandlerData.keyCommands);
                 break;
             case GameState.InventoryMenu:
-                if (this.player.inventory === null) {
-                    break;
-                }
-                this.inventoryMenu.draw(this.player.inventory.getItems());
+                this.inventoryMenu.draw(getItems(inventoryData));
                 break;
             case GameState.SpellMenu:
-                if (this.player.fighter === null) {
-                    break;
-                }
-                this.spellSelectionMenu.draw(this.player.fighter.getKnownSpells());
+                this.spellSelectionMenu.draw(getKnownSpells(spellsData));
                 break;
             case GameState.OpeningCinematic:
                 this.display.clear();
@@ -289,17 +345,18 @@ export class SimpleDungeonCrawler {
     loadLevel(name: LevelName): void {
         if (globals.gameEventEmitter === null) { throw new Error("Global gameEventEmitter cannot be null"); }
 
-        const { map, playerLocation, objects, pathNodes } = loadTiledMap(name);
-        this.map = map;
-        objects.push(this.player);
-        this.gameObjects = objects;
-        this.pathNodes = pathNodes;
-
-        this.player.x = playerLocation[0];
-        this.player.y = playerLocation[1];
-
         this.scheduler.clear();
-        this.gameObjects.forEach(e => this.scheduler.add(e, true));
+
+        const { map, playerLocation } = loadTiledMap(this.ecs, name);
+        this.map = map;
+
+        const playerPos = this.player.getOne(PositionComponent);
+        if (playerPos === undefined) { throw new Error("Player doesn't have a PositionComponent"); }
+        playerPos.x = playerLocation[0];
+        playerPos.y = playerLocation[1];
+        playerPos.update();
+
+        this.ecs.runSystems("postCommand");
 
         globals.gameEventEmitter.emit("level.loaded", name);
     }
@@ -309,8 +366,14 @@ export class SimpleDungeonCrawler {
      */
     handleInput(): void {
         if (globals.gameEventEmitter === null) { throw new Error("Global gameEventEmitter cannot be null"); }
-        if (this.player === null || this.player.inputHandler === null) {
-            throw new Error("Cannot handel input without a player or an input handler");
+        const inputHandlerState = this.player.getOne(InputHandlingComponent);
+        const playerInventory = this.player.getOne(InventoryComponent);
+        const playerSpells = this.player.getOne(SpellsComponent);
+
+        if (inputHandlerState === undefined ||
+            playerInventory === undefined ||
+            playerSpells === undefined) {
+            throw new Error("player is missing data in handleInput");
         }
 
         if (this.state === GameState.Gameplay) {
@@ -320,9 +383,7 @@ export class SimpleDungeonCrawler {
                 return;
             }
 
-            this.currentCommand = this.player.inputHandler.handleInput(
-                this.map, this.gameObjects
-            );
+            this.currentCommand = handleInput(this.ecs, this.map, this.triggerMap, this.player);
             return;
         } else if (this.state === GameState.PauseMenu) {
             if (input.isDown("Escape")) {
@@ -332,11 +393,7 @@ export class SimpleDungeonCrawler {
                 return;
             }
 
-            if (this.player.inputHandler === null) {
-                return;
-            }
-
-            this.keyBindingMenu.handleInput(this.player.inputHandler.keyCommands);
+            this.keyBindingMenu.handleInput(inputHandlerState.keyCommands);
         } else if (this.state === GameState.InventoryMenu) {
             if (input.isDown("Escape")) {
                 globals.gameEventEmitter.emit("ui.closeInventory");
@@ -345,12 +402,8 @@ export class SimpleDungeonCrawler {
                 return;
             }
 
-            if (this.player.inventory === null) {
-                return;
-            }
-
             const item: Nullable<InventoryItemDetails> = this.inventoryMenu.handleInput(
-                this.player.inventory.getItems()
+                getItems(playerInventory)
             );
 
             if (item !== null) {
@@ -363,7 +416,7 @@ export class SimpleDungeonCrawler {
                         this.state = GameState.Gameplay;
 
                         this.currentCommand = new UseItemCommand(
-                            item.id, null, this.map, this.gameObjects
+                            item.id, this.ecs, null, this.map, null
                         );
                         break;
                     // Items that need to be targeted
@@ -371,12 +424,9 @@ export class SimpleDungeonCrawler {
                     case ItemType.SlowOther:
                     case ItemType.ConfuseScroll:
                         this.state = GameState.Gameplay;
-
-                        if (this.player.inputHandler === null) {
-                            break;
-                        }
-                        this.player.inputHandler.itemForTarget = item;
-                        this.player.inputHandler.state = PlayerState.Target;
+                        inputHandlerState.itemForTarget = item;
+                        inputHandlerState.state = PlayerState.Target;
+                        inputHandlerState.update();
                         break;
                     default:
                         assertUnreachable(item.type);
@@ -390,12 +440,8 @@ export class SimpleDungeonCrawler {
                 return;
             }
 
-            if (this.player.fighter === null) {
-                return;
-            }
-
             const spell: Nullable<SpellDataDetails> = this.spellSelectionMenu.handleInput(
-                this.player.fighter.getKnownSpells()
+                getKnownSpells(playerSpells)
             );
 
             if (spell !== null) {
@@ -407,17 +453,14 @@ export class SimpleDungeonCrawler {
                         this.state = GameState.Gameplay;
 
                         this.currentCommand = new UseSpellCommand(
-                            spell.id, null, this.map, this.gameObjects
+                            spell.id, this.ecs, null, this.map, null
                         );
                         break;
                     case SpellType.DamageOther:
                         this.state = GameState.Gameplay;
-
-                        if (this.player.inputHandler === null) {
-                            break;
-                        }
-                        this.player.inputHandler.spellForTarget = spell;
-                        this.player.inputHandler.state = PlayerState.Target;
+                        inputHandlerState.spellForTarget = spell;
+                        inputHandlerState.state = PlayerState.Target;
+                        inputHandlerState.update();
                         break;
                     default:
                         assertUnreachable(spell.type);
@@ -457,11 +500,8 @@ export class SimpleDungeonCrawler {
                 this.handleInput();
             } else {
                 if (this.processAI) {
-                    this.currentCommand = this.currentActor.act(
-                        this.map,
-                        this.gameObjects,
-                        this.pathNodes
-                    );
+                    // TODO AI command creation
+                    this.currentCommand = new NoOpCommand(true);
                 } else {
                     this.currentCommand = new NoOpCommand(true);
                 }
@@ -481,29 +521,13 @@ export class SimpleDungeonCrawler {
             this.totalTurns++;
         }
 
-        if (this.player.fighter === null || this.player.fighter.getEffectiveStats().hp <= 0) {
+        const hpData = getEffectiveHitPointData(this.player);
+        if (hpData === null || hpData.hp <= 0) {
             this.state = GameState.LoseCinematic;
         }
 
         this.render();
         input.clearInputs();
-    }
-
-    addObject(object: GameObject): void {
-        this.gameObjects.push(object);
-        this.scheduler.add(this.gameObjects[this.gameObjects.length - 1], true);
-    }
-
-    /**
-     * Remove an object from the world
-     * @param  {GameObject} object The object to remove
-     * @return {void}
-     */
-    removeObject(object: GameObject): void {
-        // could use an object pool or a linked list to speed up this operation
-        // but that seems overkill for this
-        this.gameObjects.splice(this.gameObjects.indexOf(object), 1);
-        this.scheduler.remove(object);
     }
 
     getTurnNumber(): number {

@@ -1,6 +1,8 @@
+import { Entity, World } from "ape-ecs";
+
 import { Display, RNG } from "./rot/index";
 import { toRGB, fromString, multiply } from "./rot/color";
-import { isNil, get } from "lodash";
+import { get } from "lodash";
 
 import {
     COLOR_AMBIENT_LIGHT,
@@ -8,12 +10,24 @@ import {
     COLOR_DARK_GROUND,
     COLOR_INVISIBLE_GROUND,
     LevelData,
-    TileData, WIDTH, HEIGHT, LevelName
+    TileData, WIDTH, HEIGHT, LevelName, InteractableType
 } from "./data";
-import { createObject, GameObject } from "./object";
+import {
+    createEntity,
+    EventTriggerComponent,
+    FallbackAIComponent,
+    HitPointsComponent,
+    InteractableTypeComponent,
+    PatrolAIComponent,
+    PatrolPathComponent,
+    PlannerAIComponent,
+    PositionComponent,
+    SpellsComponent,
+    TriggerTypeComponent
+} from "./entity";
 import { Camera } from "./camera";
 import { Nullable } from "./util";
-import { EventTrigger } from "./trigger";
+import { createPlanner } from "./ai/components";
 
 export class Tile {
     name: string;
@@ -64,21 +78,6 @@ export class Tile {
     }
 }
 
-export class PathNode {
-    pathName: string;
-    x: number;
-    y: number;
-    next: number;
-    distance: number;
-
-    constructor(pathName: string, x: number, y: number, next: number) {
-        this.pathName = pathName;
-        this.x = x;
-        this.y = y;
-        this.next = next;
-    }
-}
-
 function findProperty(o: any, name: string): any {
     if (o.properties === undefined || o.properties.length === 0) { return null; }
 
@@ -100,15 +99,12 @@ export type GameMap = Tile[][];
  * @param {String} level The name of the level
  * @returns {Object}     The map 2d array, player location, and game objects array
  */
-export function loadTiledMap(level: LevelName) {
+export function loadTiledMap(ecs: World, level: LevelName) {
     if (!(level in LevelData)) { throw new Error(`${level} is not a valid level`); }
 
     const sourceData = LevelData[level];
     const tileSize: number = sourceData.tileheight;
     const map: GameMap = [];
-    const objects: GameObject[] = [];
-    const pathNodes: Map<number, PathNode> = new Map();
-    const fallbackNodes = new Map();
     let playerLocation: number[] = [0, 0];
 
     const tileLayer = get(sourceData.layers.filter((l: any) => l.name === "Tile Layer"), "[0]");
@@ -145,14 +141,45 @@ export function loadTiledMap(level: LevelName) {
         map.push(translated.slice(i, i + sourceData.width));
     }
 
+    // First create all of the nodes
+    nodeLayer.objects.forEach((o: any) => {
+        ecs.createEntity({
+            id: o.id.toString(10),
+            c: {
+                PositionComponent: {
+                    x: Math.floor(o.x / tileSize),
+                    y: Math.floor(o.y / tileSize)
+                }
+            }
+        });
+    });
+
+    // Do this is two passes because each node could reference
+    // another node so make sure all of the nodes are created
+    // before we try to create the references
+    nodeLayer.objects.forEach((o: any) => {
+        const entity = ecs.getEntity(o.id.toString());
+        if (entity === undefined) { throw new Error(`Node ${o.id} not initialized in level load`); }
+
+        const nextId = findProperty(o, "next");
+        const next = nextId !== null ? ecs.getEntity(nextId) : null;
+        if (next !== null) {
+            entity.addComponent({
+                type: PatrolPathComponent,
+                next
+            });
+        }
+    });
+
     objectLayer.objects.forEach((o: any) => {
         if (o.point !== undefined) {
             if (o.type === "object") {
-                const type = findProperty(o, "objectType"),
+                const id = o.id,
+                    type = findProperty(o, "objectType"),
                     inventory = findProperty(o, "inventory"),
                     levelName = findProperty(o, "levelName"),
                     spellId = findProperty(o, "spellId"),
-                    pathName = findProperty(o, "pathName"),
+                    patrolTarget = findProperty(o, "patrolTarget"),
                     fallbackPosition = findProperty(o, "fallbackPosition"),
                     event = findProperty(o, "event");
 
@@ -163,54 +190,90 @@ export function loadTiledMap(level: LevelName) {
                 if (type === "player") {
                     playerLocation = [Math.floor(o.x / tileSize), Math.floor(o.y / tileSize)];
                 } else {
-                    const obj: GameObject = createObject(
+                    const entity: Entity = createEntity(
+                        ecs,
                         type,
                         Math.floor(o.x / tileSize),
                         Math.floor(o.y / tileSize),
+                        id
                     );
 
-                    // different if statement because of typescript's weird semantic
-                    // analysis around null checks
-                    if (obj.inventory !== null) {
-                        if (inventory !== null && inventory !== "") {
-                            inventory
-                                .split(",")
-                                .forEach((i: string) => obj.inventory!.addItem(i));
-                        }
+                    if (inventory !== null) {
+                        const items: Map<string, number> = new Map();
+                        inventory.split(",").forEach((i: string) => items.set(i, 1));
+                        entity.addComponent({
+                            type: "InventoryComponent",
+                            inventory: items
+                        });
                     }
 
-                    if (levelName !== null &&
-                        obj.interactable !== null &&
-                        obj.interactable.setLevel !== undefined) {
-                        obj.interactable.setLevel(levelName);
+                    if (levelName !== null) {
+                        entity.addComponent({
+                            type: InteractableTypeComponent,
+                            interactableType: InteractableType.LoadLevel
+                        });
                     }
 
-                    if (spellId !== null &&
-                        obj.interactable !== null &&
-                        obj.interactable.setSpell !== undefined) {
-                        obj.interactable.setSpell(spellId);
+                    if (spellId !== null) {
+                        entity.addComponent({
+                            type: InteractableTypeComponent,
+                            interactableType: InteractableType.GiveSpells
+                        });
+                        entity.addComponent({
+                            type: SpellsComponent,
+                            knownSpells: new Set([spellId])
+                        });
                     }
 
-                    if (pathName !== null &&
-                        obj.ai !== null &&
-                        obj.ai.setPatrolPath !== undefined) {
-                        obj.ai.setPatrolPath(pathName);
+                    if (patrolTarget !== null) {
+                        const target = ecs.getEntity(patrolTarget.toString());
+                        if (target === undefined) { throw new Error(`Patrol target ${patrolTarget} is not initialized`); }
+                        entity.addComponent({
+                            type: PatrolAIComponent,
+                            patrolTarget: target
+                        });
+
+                        // recreate the planner
+                        const aiState = entity.getOne(PlannerAIComponent);
+                        if (aiState === undefined) { throw new Error("Trying to set patrol target without an ai"); }
+                        aiState.actions.delete("wander");
+                        aiState.actions.delete("guard");
+                        aiState.actions.add("patrol");
+                        const { goals, planner } = createPlanner(aiState.actions);
+                        aiState.goals = goals;
+                        aiState.planner = planner;
+                        aiState.update();
                     }
 
-                    if (fallbackPosition !== null &&
-                        obj.ai !== null &&
-                        obj.ai.setFallbackPosition !== undefined) {
-                        obj.ai.setFallbackPosition(fallbackPosition);
+                    if (fallbackPosition !== null) {
+                        const fallback = ecs.getEntity(fallbackPosition.toString());
+                        if (fallback === undefined) { throw new Error(`Fallback target ${fallbackPosition} is not initialized`); }
+                        entity.addComponent({
+                            type: FallbackAIComponent,
+                            isAtFallbackPosition: false,
+                            fallbackPosition: fallback
+                        });
+
+                        // recreate the planner
+                        const aiState = entity.getOne(PlannerAIComponent);
+                        if (aiState === undefined) { throw new Error("Trying to set fallback position without an ai"); }
+                        aiState.actions.add("goToFallbackPosition");
+                        const { goals, planner } = createPlanner(aiState.actions);
+                        aiState.goals = goals;
+                        aiState.planner = planner;
+                        aiState.update();
                     }
 
-                    if (type === "event_trigger" &&
-                        event !== null &&
-                        obj.trigger !== null) {
-                        const trigger = obj.trigger as EventTrigger;
-                        trigger.eventName = event;
+                    if (type === "event_trigger" && event !== null) {
+                        entity.addComponent({
+                            type: TriggerTypeComponent,
+                            triggerType: "event"
+                        });
+                        entity.addComponent({
+                            type: EventTriggerComponent,
+                            event
+                        });
                     }
-
-                    objects.push(obj);
                 }
             } else {
                 throw new Error(`Unrecognized object type ${o.type}`);
@@ -218,41 +281,7 @@ export function loadTiledMap(level: LevelName) {
         }
     });
 
-    nodeLayer.objects.forEach((o: any) => {
-        const x = Math.floor(o.x / tileSize),
-            y = Math.floor(o.y / tileSize);
-
-        if (o.type === "path_node") {
-            const next = findProperty(o, "next"),
-                pathName = findProperty(o, "pathName");
-            pathNodes.set(o.id, new PathNode(pathName, x, y, next));
-        } else if (o.type === "fallback_node") {
-            fallbackNodes.set(o.id, { x, y });
-        } else {
-            throw new Error(`Unrecognized object type ${o.type}`);
-        }
-    });
-
-    return { map, playerLocation, objects, pathNodes, fallbackNodes };
-}
-
-/**
- * Return a random pair of x and y coordinates which
- * is non-blocking and does not have a blocking GameObject
- * on it.
- * @param {Array} map     The 2D map array
- * @param {Array} objects An array of GameObjects
- * @returns {Object}      The x and y coordinates
- */
-export function findEmptySpace(map: GameMap, objects: GameObject[]): Point {
-    let x = 0, y = 0;
-    let blocks = true;
-    while (blocks) {
-        x = Math.floor(RNG.getUniform() * map[0].length);
-        y = Math.floor(RNG.getUniform() * map.length);
-        ({ blocks } = isBlocked(map, objects, x, y));
-    }
-    return { x, y };
+    return { map, playerLocation };
 }
 
 /**
@@ -262,12 +291,26 @@ export function findEmptySpace(map: GameMap, objects: GameObject[]): Point {
  * @param {Number} y The y coordinate
  * @returns {Array} An array of GameObjects
  */
-export function getObjectsAtLocation(objects: GameObject[], x: number, y: number): GameObject[] {
-    return objects.filter(object => object.x === x && object.y === y);
+export function getEntitiesAtLocation(
+    ecs: World,
+    x: number,
+    y: number
+): Entity[] {
+    const entities = ecs.createQuery().fromAll(PositionComponent).execute();
+    if (entities === undefined) { return []; }
+    const ret = [];
+
+    for (const entity of entities) {
+        const pos = entity.getOne(PositionComponent)!;
+        if (pos.x === x && pos.y === y) {
+            ret.push(entity);
+        }
+    }
+    return ret;
 }
 
 interface BlocksResult {
-    object: Nullable<GameObject>;
+    entity: Nullable<Entity>;
     blocks: boolean;
 }
 
@@ -282,16 +325,33 @@ interface BlocksResult {
  * @param {number} x The x coordinate to check
  * @param {number} y The y coordinate to check
  */
-export function isBlocked(map: GameMap, objects: GameObject[], x: number, y: number): BlocksResult {
+export function isBlocked(
+    ecs: World,
+    map: GameMap,
+    x: number,
+    y: number
+): BlocksResult {
     if (map.length === 0) { throw new Error("Bad map data"); }
 
     if (x < 0 || y < 0 || x >= map[0].length || y >= map.length || map[y][x].blocks) {
-        return { object: null, blocks: true };
+        return { entity: null, blocks: true };
     }
 
-    const object = objects.filter(o => o.x === x && o.y === y)[0];
-    return object !== undefined ?
-        { object, blocks: object.blocks } : { object: null, blocks: false };
+    const entities = ecs.createQuery().fromAll(PositionComponent, "blocks").execute();
+
+    let entity: Entity | undefined;
+    for (const e of entities) {
+        const pos = e.getOne(PositionComponent);
+        if (pos !== undefined && pos.x === x && pos.y === y) {
+            entity = e;
+            break;
+        }
+    }
+
+    if (entity !== undefined) {
+        return { entity, blocks: entity.tags.has("blocks") };
+    }
+    return { entity: null, blocks: false };
 }
 
 /**
@@ -302,16 +362,17 @@ export function isBlocked(map: GameMap, objects: GameObject[], x: number, y: num
  * @param {number} y The y coordinate to check
  * @returns {boolean} Does the spot block sight
  */
-export function isSightBlocked(map: GameMap, objects: GameObject[], x: number, y: number): boolean {
+export function isSightBlocked(ecs: World, map: GameMap, x: number, y: number): boolean {
     if (map.length === 0) { throw new Error("Bad map data"); }
 
     if (x < 0 || y < 0 || x >= map[0].length || y >= map.length || map[y][x].blocksSight) {
         return true;
     }
 
-    const o = getObjectsAtLocation(objects, x, y);
-    for (let i = 0; i < o.length; i++) {
-        if (o[i].blocksSight) {
+    const entities = ecs.createQuery().fromAll(PositionComponent, "blocksSight").execute();
+    for (const e of entities) {
+        const pos = e.getOne(PositionComponent)!;
+        if (pos.x === x && pos.y === y) {
             return true;
         }
     }
@@ -371,12 +432,12 @@ export interface Point {
 }
 
 /**
- * Find the distance between two GameObjects
- * @param  {Point} a An object
- * @param  {Point} b An object
- * @return {number}       The distance
+ * Find the distance between two points
+ * @param  {Point} a A point
+ * @param  {Point} b A point
+ * @return {number} The distance
  */
-export function distanceBetweenObjects(a: Point, b: Point): number {
+export function distanceBetweenPoints(a: Point, b: Point): number {
     const dx = b.x - a.x;
     const dy = b.y - a.y;
     return Math.sqrt(dx ** 2 + dy ** 2);
@@ -393,18 +454,25 @@ export function distanceBetweenObjects(a: Point, b: Point): number {
  * @return {GameObject}              The closest actor
  */
 export function getRandomFighterWithinRange(
+    ecs: World,
     map: GameMap,
-    actors: GameObject[],
-    origin: GameObject,
+    origin: PositionComponent,
     maxDistance: number
-): Nullable<GameObject> {
-    const possibleActors = actors
-        .filter(a => !isNil(a.fighter))
-        .filter(a => !isNil(a.ai))
-        .filter(a => a !== origin)
-        .filter(a => distanceBetweenObjects(origin, a) <= maxDistance);
+): Nullable<Entity> {
+    const entities = ecs
+        .createQuery()
+        .fromAll(PositionComponent, HitPointsComponent, PlannerAIComponent)
+        .execute();
 
-    return possibleActors.length > 0 ? RNG.getItem(possibleActors) : null;
+    const possible = [];
+    for (const e of entities) {
+        const pos = e.getOne(PositionComponent)!;
+        if (pos !== origin && distanceBetweenPoints(origin, pos) <= maxDistance) {
+            possible.push(e);
+        }
+    }
+
+    return possible.length > 0 ? RNG.getItem(possible) : null;
 }
 
 /**

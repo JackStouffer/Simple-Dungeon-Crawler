@@ -1,12 +1,26 @@
+import { Entity, World } from "ape-ecs";
+
 import Path from "./rot/path/index";
 
 import globals from "./globals";
 import { createPassableCallback } from "./ai/components";
-import { SpellData, ItemData, GameState, ObjectData } from "./data";
-import { GameMap, isBlocked, distanceBetweenObjects, getObjectsAtLocation, Point } from "./map";
-import { GameObject } from "./object";
-import { Nullable } from "./util";
+import { SpellData, ItemData, GameState, TriggerType, InteractableType } from "./data";
+import { GameMap, isBlocked, distanceBetweenPoints, Point } from "./map";
+import { assertUnreachable, Nullable } from "./util";
 import { displayMessage } from "./ui";
+import {
+    HitPointsComponent,
+    InputHandlingComponent,
+    InteractableTypeComponent,
+    InventoryComponent,
+    PositionComponent,
+    StatsComponent,
+    TriggerTypeComponent
+} from "./entity";
+import { attack, getEffectiveStatData, hasSpell, useMana } from "./fighter";
+import { hasItem, useItem } from "./inventory";
+import { deepWaterTrigger, eventTrigger, fireTrigger, shallowWaterTrigger } from "./trigger";
+import { giveItemsInteract, giveSpellsInteract, doorInteract, levelLoadInteract } from "./interactable";
 
 /**
  * Command design pattern that encapsulates an action that a
@@ -18,7 +32,7 @@ import { displayMessage } from "./ui";
 export interface Command {
     usedTurn: () => boolean;
     isFinished: () => boolean;
-    execute: (dt: DOMHighResTimeStamp, object: GameObject) => void;
+    execute: (dt: DOMHighResTimeStamp, actor: Entity) => void;
 }
 
 // TODO: rethink commands to be actual objects that have a finished
@@ -27,37 +41,28 @@ export interface Command {
 // for reuse.
 
 export function getActorMovementPath(
-    x: number,
-    y: number,
-    actor: GameObject,
-    map: GameMap,
-    objects: GameObject[]
+    ecs: World,
+    origin: Point,
+    destination: Point,
+    maxTilesPerMove: number,
+    map: GameMap
 ): Nullable<number[][]> {
-    if (ObjectData[actor.type].maxTilesPerMove === null) {
-        throw new Error(`Missing maxTilesPerMove for ${actor.type}`);
-    }
-    const maxTilesPerMove = ObjectData[actor.type].maxTilesPerMove!;
-
     // quick distance check to cut down the number of
     // AStar calcs
-    if (distanceBetweenObjects({ x, y }, actor) < maxTilesPerMove * 2) {
+    if (distanceBetweenPoints(destination, origin) < maxTilesPerMove * 2) {
         const aStar = new Path.AStar(
-            x,
-            y,
-            createPassableCallback(actor),
+            destination.x,
+            destination.y,
+            createPassableCallback(origin),
             () => 0,
             { topology: 8 }
         );
 
-        if (y >= map.length ||
-            x >= map[0].length ||
-            map[y][x].blocks) {
+        if (destination.y >= map.length || destination.x >= map[0].length) {
             return null;
         }
 
-        if (getObjectsAtLocation(objects, x, y)
-            .filter(o => o.blocks && o !== actor)
-            .length > 0) {
+        if (isBlocked(ecs, map, origin.x, origin.y).blocks === true) {
             return null;
         }
 
@@ -65,7 +70,7 @@ export function getActorMovementPath(
         function pathCallback(x: number, y: number) {
             path.push([x, y]);
         }
-        aStar.compute(actor.x, actor.y, pathCallback);
+        aStar.compute(origin.x, origin.y, pathCallback);
 
         if (path.length === 0 || path.length > maxTilesPerMove) { return null; }
 
@@ -107,13 +112,15 @@ export class GoToLocationCommand implements Command {
     private readonly usesTurn: boolean = true;
     private readonly path: number[][];
     private readonly map: GameMap;
-    private readonly gameObjects: GameObject[];
+    private readonly ecs: World;
+    private readonly triggerMap: Map<string, Entity>;
     private done: boolean = false;
 
-    constructor(path: number[][], map: GameMap, gameObjects: GameObject[]) {
+    constructor(path: number[][], ecs: World, map: GameMap, triggerMap: Map<string, Entity>) {
         this.path = path;
+        this.ecs = ecs;
         this.map = map;
-        this.gameObjects = gameObjects;
+        this.triggerMap = triggerMap;
     }
 
     usedTurn(): boolean {
@@ -124,11 +131,11 @@ export class GoToLocationCommand implements Command {
         return this.done;
     }
 
-    execute(deltaTime: DOMHighResTimeStamp, actor: GameObject): void {
+    execute(deltaTime: DOMHighResTimeStamp, actor: Entity): void {
         const destination = this.path[0];
         const { blocks } = isBlocked(
+            this.ecs,
             this.map,
-            this.gameObjects,
             destination[0],
             destination[1]
         );
@@ -137,23 +144,37 @@ export class GoToLocationCommand implements Command {
             return;
         }
 
-        const triggerMap: Map<string, GameObject> = new Map();
-        this.gameObjects
-            .filter(o => o.trigger)
-            .forEach(o => {
-                triggerMap.set(`${o.x},${o.y}`, o);
-            });
-
-        for (let i = 0; i < this.path.length; i++) {
-            const spot = this.path[i];
-            const object = triggerMap.get(`${spot[0]},${spot[1]}`);
-            if (object !== null && object !== undefined && object.trigger !== null) {
-                object.trigger.trigger(actor);
+        const triggerEntity = this.triggerMap.get(`${destination[0]},${destination[1]}`);
+        if (triggerEntity !== undefined) {
+            const triggerData = triggerEntity.getOne(TriggerTypeComponent);
+            const triggerPosData = triggerEntity.getOne(PositionComponent);
+            if (triggerData !== undefined &&
+                triggerPosData !== undefined) {
+                switch (triggerData.triggerType) {
+                    case TriggerType.Event:
+                        eventTrigger(actor, triggerEntity);
+                        break;
+                    case TriggerType.Fire:
+                        fireTrigger(actor, triggerEntity);
+                        break;
+                    case TriggerType.ShallowWater:
+                        shallowWaterTrigger(actor, triggerEntity);
+                        break;
+                    case TriggerType.DeepWater:
+                        deepWaterTrigger(actor, triggerEntity);
+                        break;
+                    default:
+                        assertUnreachable(triggerData.triggerType);
+                }
             }
         }
 
-        actor.x = destination[0];
-        actor.y = destination[1];
+        const pos = actor.getOne(PositionComponent);
+        if (pos === undefined) { throw new Error(`Entity ${actor.id} does not have a position for GoToLocationCommand`); }
+        pos.x = destination[0];
+        pos.y = destination[1];
+        pos.update();
+
         this.path.shift();
         if (this.path.length === 0) {
             this.done = true;
@@ -169,9 +190,9 @@ export class GoToLocationCommand implements Command {
  */
 export class InteractCommand implements Command {
     private interacted: boolean = true;
-    private readonly target: GameObject;
+    private readonly target: Entity;
 
-    constructor(target: GameObject) {
+    constructor(target: Entity) {
         this.target = target;
     }
 
@@ -183,15 +204,35 @@ export class InteractCommand implements Command {
         return true;
     }
 
-    execute(deltaTime: DOMHighResTimeStamp, actor: GameObject): void {
-        if (this.target.interactable !== null) {
-            this.target.interactable.interact(actor);
+    execute(deltaTime: DOMHighResTimeStamp, actor: Entity): void {
+        const actorStats = actor.getOne(StatsComponent);
+        const interactableData = this.target.getOne(InteractableTypeComponent);
+        const hpData = this.target.getOne(HitPointsComponent);
+
+        if (interactableData !== undefined) {
+            switch (interactableData.interactableType) {
+                case InteractableType.Door:
+                    doorInteract(actor, this.target);
+                    break;
+                case InteractableType.GiveItems:
+                    giveItemsInteract(actor, this.target);
+                    break;
+                case InteractableType.GiveSpells:
+                    giveSpellsInteract(actor, this.target);
+                    break;
+                case InteractableType.LoadLevel:
+                    levelLoadInteract(actor, this.target);
+                    break;
+                default:
+                    assertUnreachable(interactableData.interactableType);
+            }
+
             this.interacted = true;
             return;
         }
 
-        if (actor.fighter !== null && this.target.fighter !== null) {
-            actor.fighter.attack(this.target);
+        if (hpData !== undefined && actorStats !== undefined) {
+            attack(actor, this.target);
             this.interacted = true;
             return;
         }
@@ -250,20 +291,23 @@ export class OpenSpellsCommand implements Command {
  */
 export class UseItemCommand implements Command {
     private didUseItem: boolean = true;
+    private readonly ecs: World;
     private readonly itemID: string;
     private readonly target: Nullable<Point> = null;
     private readonly map: Nullable<GameMap> = null;
-    private readonly objects: Nullable<GameObject[]> = null;
+    private readonly rotation: Nullable<number> = null;
 
     constructor(
         itemID: string,
+        ecs: World,
         target: Nullable<Point> = null,
         map: Nullable<GameMap> = null,
-        objects: Nullable<GameObject[]> = null) {
+        rotation: Nullable<number> = null) {
         this.itemID = itemID;
         this.target = target;
         this.map = map;
-        this.objects = objects;
+        this.ecs = ecs;
+        this.rotation = rotation;
     }
 
     usedTurn(): boolean {
@@ -274,22 +318,23 @@ export class UseItemCommand implements Command {
         return true;
     }
 
-    execute(deltaTime: DOMHighResTimeStamp, actor: GameObject): void {
-        if (actor.inventory === null) { throw new Error("Cannot use an item without an inventory"); }
-        if (!actor.inventory.hasItem(this.itemID)) { throw new Error(`Cannot use ${this.itemID}, not in inventory`); }
+    execute(deltaTime: DOMHighResTimeStamp, actor: Entity): void {
+        const actorInventory = actor.getOne(InventoryComponent);
+        if (actorInventory === undefined) { throw new Error("Cannot use an item without an inventory"); }
+        if (!hasItem(actorInventory, this.itemID)) { throw new Error(`Cannot use ${this.itemID}, not in inventory`); }
 
         const itemDetails = ItemData[this.itemID];
         const used = itemDetails.useFunc(
+            this.ecs,
             itemDetails,
             actor,
             this.target,
             this.map,
-            this.objects,
             null
         );
 
         if (used) {
-            actor.inventory.useItem(this.itemID);
+            useItem(actorInventory, this.itemID);
             this.didUseItem = true;
             return;
         }
@@ -304,24 +349,24 @@ export class UseItemCommand implements Command {
  * and call its use function.
  */
 export class UseSpellCommand implements Command {
-    didUseSpell: boolean = false;
-    spellID: string;
-    target: Nullable<Point> = null;
-    map: Nullable<GameMap> = null;
-    objects: Nullable<GameObject[]> = null;
-    rotation: Nullable<number> = null;
+    private didUseSpell: boolean = false;
+    private readonly ecs: World;
+    private readonly spellID: string;
+    private readonly target: Nullable<Point> = null;
+    private readonly map: Nullable<GameMap> = null;
+    private readonly rotation: Nullable<number> = null;
 
     constructor(
         spellID: string,
+        ecs: World,
         target: Nullable<Point> = null,
         map: Nullable<GameMap> = null,
-        objects: Nullable<GameObject[]> = null,
         rotation: Nullable<number> = null
     ) {
         this.spellID = spellID;
+        this.ecs = ecs;
         this.target = target;
         this.map = map;
-        this.objects = objects;
         this.rotation = rotation;
     }
 
@@ -333,13 +378,14 @@ export class UseSpellCommand implements Command {
         return true;
     }
 
-    execute(deltaTime: DOMHighResTimeStamp, actor: GameObject): void {
-        if (actor.fighter === null) { return; }
-        if (!actor.fighter.hasSpell(this.spellID)) { return; }
+    execute(deltaTime: DOMHighResTimeStamp, actor: Entity): void {
+        if (hasSpell(actor, this.spellID) === false) { return; }
 
         const details = SpellData[this.spellID];
-        const stats = actor.fighter.getEffectiveStats();
-        if (details.manaCost > stats.mana) {
+        const effectiveStats = getEffectiveStatData(actor);
+        if (effectiveStats === null) { return; }
+
+        if (details.manaCost > effectiveStats.mana) {
             this.didUseSpell = false;
 
             if (actor === globals.Game?.player) {
@@ -350,15 +396,17 @@ export class UseSpellCommand implements Command {
         }
 
         this.didUseSpell = details.useFunc(
+            this.ecs,
             details,
             actor,
             this.target,
             this.map,
-            this.objects,
             this.rotation
         );
+
         if (this.didUseSpell) {
-            actor.fighter.useMana(details.manaCost);
+            const statData = actor.getOne(StatsComponent)!;
+            useMana(statData, details.manaCost);
         }
     }
 }
@@ -372,24 +420,27 @@ export class RotateReticleCommand implements Command {
         return true;
     }
 
-    execute(deltaTime: DOMHighResTimeStamp, actor: GameObject): void {
-        if (actor.inputHandler === null) { return; }
+    execute(deltaTime: DOMHighResTimeStamp, actor: Entity): void {
+        const inputHandlerState = actor.getOne(InputHandlingComponent);
+        if (inputHandlerState === undefined) { return; }
 
-        switch(actor.inputHandler.reticleRotation) {
+        switch(inputHandlerState.reticleRotation) {
             case 0:
-                actor.inputHandler.reticleRotation = 90;
+                inputHandlerState.reticleRotation = 90;
                 break;
             case 90:
-                actor.inputHandler.reticleRotation = 180;
+                inputHandlerState.reticleRotation = 180;
                 break;
             case 180:
-                actor.inputHandler.reticleRotation = 270;
+                inputHandlerState.reticleRotation = 270;
                 break;
             case 270:
-                actor.inputHandler.reticleRotation = 0;
+                inputHandlerState.reticleRotation = 0;
                 break;
             default: break;
         }
+
+        inputHandlerState.update();
 
         return;
     }

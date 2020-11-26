@@ -5,13 +5,14 @@ import { VisibilityCallback } from "../rot/fov/fov";
 import { PassableCallback } from "../rot/path/path";
 
 import globals from "../globals";
-import { GoalData, ActionData, ObjectDataDetails, ObjectData } from "../data";
+import { GoalData, ActionData } from "../data";
 import { Planner, ActionList, PlannerWorldState } from "./planner";
 import { Command, GoToLocationCommand, NoOpCommand } from "../commands";
-import { GameMap, isBlocked, PathNode, isSightBlocked } from "../map";
-import { GameObject } from "../object";
+import { GameMap, isBlocked, isSightBlocked, Point } from "../map";
+import { ConfusedAIComponent, DisplayNameComponent, LoseTargetAIComponent, PlannerAIComponent, PositionComponent } from "../entity";
 import { displayMessage } from "../ui";
 import { Nullable } from "../util";
+import { Entity, World } from "ape-ecs";
 
 
 /**
@@ -22,13 +23,15 @@ import { Nullable } from "../util";
  * @param {GameObject} owner The game object to be used with this function
  * @return {VisibilityCallback} the callback
  */
-export function createVisibilityCallback(ai: PlanningAI): VisibilityCallback {
-    return function(x: number, y: number, r: number, visibility: number) {
-        if (ai.target === null) { return; }
+export function createVisibilityCallback(ai: PlannerAIComponent): VisibilityCallback {
+    const targetPos = ai.target?.getOne(PositionComponent);
 
-        if (x === ai.target.x && y === ai.target.y && visibility > 0) {
+    return function(x: number, y: number, r: number, visibility: number) {
+        if (targetPos === undefined) { return; }
+        if (x === targetPos.x && y === targetPos.y && visibility > 0) {
             ai.knowsTargetPosition = true;
             ai.hasTargetInSight = true;
+            ai.update();
         }
     };
 }
@@ -41,15 +44,15 @@ export function createVisibilityCallback(ai: PlanningAI): VisibilityCallback {
  * @param  {GameObject} owner The game object to be used with this function
  * @return {Function}         the callback
  */
-export function createPassableCallback(owner: GameObject): PassableCallback {
+export function createPassableCallback(origin: Point): PassableCallback {
     return function(x: number, y: number) {
         if (globals.Game === null) { throw new Error("Global game object is null"); }
 
         // own space is passable
-        if (owner.x === x && owner.y === y) {
+        if (origin.x === x && origin.y === y) {
             return true;
         }
-        const { blocks } = isBlocked(globals.Game.map, globals.Game.gameObjects, x, y);
+        const { blocks } = isBlocked(globals.Game.ecs, globals.Game.map, x, y);
         return !blocks;
     };
 }
@@ -61,445 +64,233 @@ export function createPassableCallback(owner: GameObject): PassableCallback {
  * @param  {GameObject} owner The game object to be used with this function
  * @return {Function}         the callback
  */
-export function createPassableSightCallback(owner: GameObject): PassableCallback {
+export function createPassableSightCallback(origin: PositionComponent): PassableCallback {
     return function(x: number, y: number) {
         if (globals.Game === null) { throw new Error("Global game object is null"); }
 
         // own space is passable
-        if (owner.x === x && owner.y === y) {
+        if (origin.x === x && origin.y === y) {
             return true;
         }
-        return isSightBlocked(globals.Game.map, globals.Game.gameObjects, x, y) === false;
+        return isSightBlocked(globals.Game.ecs, globals.Game.map, x, y) === false;
     };
 }
 
-export interface AIComponent {
-    owner: Nullable<GameObject>;
+export function createPlanner(actions: Set<string>) {
+    const goals: Set<string> = new Set();
+    const actionList = new ActionList();
 
-    setOwner: (owner: Nullable<GameObject>) => void;
-    getStateName: () => string;
-    act: (
-        map: GameMap,
-        gameObjects: GameObject[],
-        pathNodes: Map<number, PathNode>
-    ) => Command;
-    setPatrolPath?: (name: string) => void;
-    setFallbackPosition?: (name: number) => void;
+    for (const action of actions) {
+        const actionData = ActionData[action];
+        const preconditions = Object.keys(actionData.preconditions);
+        const postconditions = Object.keys(actionData.postconditions);
+
+        // Get the needed list of goals from the pre and post conditions
+        // of the list of actions
+        for (let j = 0; j < preconditions.length; j++) {
+            goals.add(preconditions[j]);
+        }
+        for (let k = 0; k < postconditions.length; k++) {
+            goals.add(postconditions[k]);
+        }
+
+        actionList.addCondition(action, actionData.preconditions);
+        actionList.addReaction(action, actionData.postconditions);
+        // TODO
+        // actionList.setWeight(action, actionData.weight());
+    }
+
+    const planner = new Planner(...goals.values());
+    planner.setActionList(actionList);
+
+    return { planner, goals };
 }
 
-export class PlanningAI implements AIComponent {
-    owner: Nullable<GameObject>;
+/**
+ * used for getting a nice string for the ui
+ */
+export function getStateName(aiState: PlannerAIComponent): string {
+    switch (aiState.currentAction) {
+        case "wander":
+        case "guard":
+        case "patrol":
+            return aiState.currentAction;
+        case "goToEnemy":
+        case "meleeAttack":
+            return "attacking";
+        default:
+            return "";
+    }
+}
 
-    // REFACTOR ME, should be a set of facts that an AI knows about,
-    // some AIs can know more possible facts than others, returns false
-    // if they don't track that fact
-    sightRange: number;
-    target: Nullable<GameObject>;
-    pathName: Nullable<string>;
-    patrolTarget: Nullable<PathNode>;
-    fear: number;
-    fearThreshold: number;
-    lowHealthThreshold: number;
-    lowManaThreshold: number;
-    currentOrder: string;
-    fallbackPosition: Nullable<number>;
+export function generateWorldState(aiState: PlannerAIComponent): PlannerWorldState {
+    const state: PlannerWorldState = {};
 
-    private previousWorldState: PlannerWorldState;
-    private currentAction: Nullable<string>;
-    private readonly goals: Set<string>;
-    private readonly actions: Set<string>;
-    private planner: Planner;
-    private turnsWithTargetOutOfSight: number;
-
-    knowsTargetPosition: boolean;
-    hasTargetInSight: boolean;
-    isCowering: boolean;
-    isAtFallbackPosition: boolean;
-
-    constructor(data: ObjectDataDetails) {
-        if (globals.Game === null) { throw new Error("Global game object is null"); }
-
-        this.owner = null;
-        this.target = globals.Game.player;
-        // TODO: order received from superior
-        this.currentOrder = "attack";
-        this.fear = 0;
-        this.fearThreshold = 10;
-        this.lowHealthThreshold = .25;
-        this.lowManaThreshold = .25;
-        this.sightRange = data.sightRange ?? 0;
-        this.pathName = null;
-        this.patrolTarget = null;
-        this.fallbackPosition = null;
-        this.turnsWithTargetOutOfSight = 0;
-
-        this.knowsTargetPosition = false;
-        this.hasTargetInSight = false;
-        this.isCowering = false;
-        this.isAtFallbackPosition = false;
-
-        this.previousWorldState = {};
-        this.currentAction = null;
-        this.goals = new Set();
-        this.actions = new Set(data.actions);
+    for (const goal of aiState.goals) {
+        const goalData = GoalData[goal];
+        state[goal] = goalData.resolver(aiState.entity);
     }
 
-    createPlanner() {
-        const actionList = new ActionList();
+    return state;
+}
 
-        for (const action of this.actions) {
-            const actionData = ActionData[action];
-            const preconditions = Object.keys(actionData.preconditions);
-            const postconditions = Object.keys(actionData.postconditions);
+/**
+ * Set the world state and the weights of the actions on the
+ * planner
+ */
+export function getPlan(aiState: PlannerAIComponent): Nullable<string> {
+    const displayName = aiState.entity.getOne(DisplayNameComponent);
+    if (displayName === undefined) { throw new Error(`Entity ${aiState.entity.id} is missing a DisplayNameComponent`); }
 
-            // Get the needed list of goals from the pre and post conditions
-            // of the list of actions
-            for (let j = 0; j < preconditions.length; j++) {
-                this.goals.add(preconditions[j]);
-            }
-            for (let k = 0; k < postconditions.length; k++) {
-                this.goals.add(postconditions[k]);
-            }
+    const worldState = generateWorldState(aiState);
 
-            actionList.addCondition(action, actionData.preconditions);
-            actionList.addReaction(action, actionData.postconditions);
-            actionList.setWeight(action, actionData.weight(this));
-        }
+    const loseTrackData = aiState.entity.getOne(LoseTargetAIComponent);
+    // Lose knowledge of the target's position if the target
+    // is out of sight for seven turns
+    if (loseTrackData !== undefined &&
+        worldState.targetInLineOfSight === false &&
+        aiState.knowsTargetPosition
+    ) {
+        loseTrackData.turnsWithTargetOutOfSight++;
 
-        this.planner = new Planner(...this.goals.values());
-        this.planner.setActionList(actionList);
-    }
-
-    setOwner(owner: Nullable<GameObject>) {
-        this.owner = owner;
-        if (owner !== null) {
-            this.createPlanner();
-        }
-    }
-
-    /**
-     * used for getting a nice string for the ui
-     */
-    getStateName(): string {
-        switch (this.currentAction) {
-            case "wander":
-            case "guard":
-            case "patrol":
-                return this.currentAction;
-            case "goToEnemy":
-            case "meleeAttack":
-                return "attacking";
-            default:
-                return "";
-        }
-    }
-
-    setPatrolPath(name: string) {
-        this.pathName = name;
-        this.actions.delete("wander");
-        this.actions.delete("guard");
-        this.actions.add("patrol");
-        this.createPlanner();
-    }
-
-    setFallbackPosition(nodeID: number) {
-        this.fallbackPosition = nodeID;
-        this.actions.add("goToFallbackPosition");
-        this.createPlanner();
-    }
-
-    generateWorldState(): PlannerWorldState {
-        const state: PlannerWorldState = {};
-
-        for (const goal of this.goals) {
-            const goalData = GoalData[goal];
-            state[goal] = goalData.resolver(this);
-        }
-
-        return state;
-    }
-
-    /**
-     * Set the world state and the weights of the actions on the
-     * planner
-     */
-    getPlan(): Nullable<string> {
-        if (this.owner === null) { throw new Error("Cannot create a plan without an owner"); }
-
-        const worldState = this.generateWorldState();
-
-        // Lose knowledge of the target's position if the target
-        // is out of sight for seven turns
-        if (worldState.targetInLineOfSight === false && this.knowsTargetPosition) {
-            this.turnsWithTargetOutOfSight++;
-        }
-
-        const loseTrackAfterNTurns = ObjectData[this.owner.type].loseTrackAfterNTurns;
-        if (this.turnsWithTargetOutOfSight === loseTrackAfterNTurns) {
-            this.knowsTargetPosition = false;
-            this.turnsWithTargetOutOfSight = 0;
+        if (loseTrackData.turnsWithTargetOutOfSight === loseTrackData.loseTrackAfterNTurns) {
+            aiState.knowsTargetPosition = false;
+            loseTrackData.turnsWithTargetOutOfSight = 0;
             worldState.targetPositionKnown = false;
-            displayMessage(`${this.owner.name} lost track of you`);
+            displayMessage(`${displayName.name} lost track of you`);
         }
 
-        if (isEqual(this.previousWorldState, worldState)) {
-            return this.currentAction;
-        }
+        loseTrackData.update();
+    }
 
-        if (this.previousWorldState.targetPositionKnown === false &&
-            worldState.targetPositionKnown === true) {
-            displayMessage(`${this.owner.name} saw you`);
-        }
+    if (isEqual(aiState.previousWorldState, worldState)) {
+        return aiState.currentAction;
+    }
 
-        this.planner.setStartState(worldState);
+    if (aiState.previousWorldState.targetPositionKnown === false &&
+        worldState.targetPositionKnown === true) {
+        displayMessage(`${displayName.name} saw you`);
+    }
 
-        const stateStack: { [key: string]: boolean }[] = [];
-        if (this.currentOrder === "attack") {
-            stateStack.push({ targetKilled: true });
-        }
-        if (worldState.lowMana === true) {
-            stateStack.push({ lowMana: false });
-        }
-        if (worldState.lowHealth === true) {
-            stateStack.push({ lowHealth: false });
-        }
-        if (worldState.inDangerousArea === true) {
-            stateStack.push({ inDangerousArea: false });
-        }
-        if (this.currentOrder === "fallback" && this.goals.has("atFallbackPosition")) {
-            stateStack.push({ atFallbackPosition: true });
-        }
-        if (worldState.afraid === true) {
-            stateStack.push({ cowering: true });
-        }
+    aiState.planner.setStartState(worldState);
+
+    const stateStack: { [key: string]: boolean }[] = [];
+    if (aiState.currentOrder === "attack") {
+        stateStack.push({ targetKilled: true });
+    }
+    if (worldState.lowMana === true) {
+        stateStack.push({ lowMana: false });
+    }
+    if (worldState.lowHealth === true) {
+        stateStack.push({ lowHealth: false });
+    }
+    if (worldState.inDangerousArea === true) {
+        stateStack.push({ inDangerousArea: false });
+    }
+    if (aiState.currentOrder === "fallback" && aiState.goals.has("atFallbackPosition")) {
+        stateStack.push({ atFallbackPosition: true });
+    }
+    if (worldState.afraid === true) {
+        stateStack.push({ cowering: true });
+    }
+
+    do {
+        aiState.planner.setGoalState(stateStack.pop());
+        const plan = aiState.planner.calculate();
+        aiState.currentAction = get(plan, "['0'].name", null);
+    } while (stateStack.length > 0 && aiState.currentAction === null);
+
+    aiState.previousWorldState = worldState;
+    return aiState.currentAction;
+}
+
+/**
+ * Make a plan and return a command to fulfil the first step.
+ * @param map {GameMap} The current map
+ * @param gameObjects {GameObject[]} The world's game objects
+ * @param pathNodes {Map<number, PathNode>} The map's nodes
+ * @returns {Command} a command function
+ */
+export function plannerAIGenerateCommand(
+    ecs: World,
+    ai: Entity,
+    map: GameMap,
+    triggerMap: Map<string, Entity>
+): Command {
+    const aiState = ai.getOne(PlannerAIComponent);
+    const pos = ai.getOne(PositionComponent);
+    if (pos === undefined || aiState === undefined) {
+        throw new Error(`Entity ${ai.id} is missing a position component`);
+    }
+
+    // compute the FOV to see if the player is sighted
+    const fov = new FOV.PreciseShadowcasting(createPassableSightCallback(pos));
+    fov.compute(
+        pos.x,
+        pos.y,
+        aiState.sightRange,
+        createVisibilityCallback(aiState)
+    );
+
+    const plan = getPlan(aiState);
+
+    // Assume we've lost sight of the target after every turn,
+    // so that when the visibility callback sets the flag to true,
+    // iff the target is seen, we get the right behavior
+    aiState.hasTargetInSight = false;
+
+    if (plan !== null) {
+        return ActionData[plan].updateFunction(ecs, aiState, map, triggerMap);
+    } else {
+        return new NoOpCommand(true);
+    }
+}
+
+export function confusedAIGenerateCommand(
+    ecs: World,
+    entity: Entity,
+    map: GameMap,
+    triggerMap: Map<string, Entity>
+): Command {
+    const confusedState = entity.getOne(ConfusedAIComponent);
+    if (confusedState === undefined) { throw new Error(`Entity ${entity.id} is missing a ConfusedAIComponent`); }
+    const pos = entity.getOne(PositionComponent);
+    const displayName = entity.getOne(DisplayNameComponent);
+    if (pos === undefined || displayName === undefined) {
+        throw new Error(`Entity ${entity.id} is missing a data`);
+    }
+
+    confusedState.turnsLeft--;
+
+    if (confusedState.turnsLeft > 0) {
+        let blocks: boolean = true;
+        let newX: number = 0;
+        let newY: number = 0;
+        let dir: number = RNG.getItem([0, 1, 2, 3, 4, 5, 6, 7]) ?? 0;
 
         do {
-            this.planner.setGoalState(stateStack.pop());
-            const plan = this.planner.calculate();
-            this.currentAction = get(plan, "['0'].name", null);
-        } while (stateStack.length > 0 && this.currentAction === null);
+            dir = RNG.getItem([0, 1, 2, 3, 4, 5, 6, 7]) ?? 0;
+            newX = pos.x + DIRS[8][dir][0];
+            newY = pos.y + DIRS[8][dir][1];
+            ({ blocks } = isBlocked(ecs, map, newX, newY));
+        } while (blocks === true);
 
-        this.previousWorldState = worldState;
-        return this.currentAction;
-    }
-
-    /**
-     * Make a plan and return a command to fulfil the first step.
-     * @param map {GameMap} The current map
-     * @param gameObjects {GameObject[]} The world's game objects
-     * @param pathNodes {Map<number, PathNode>} The map's nodes
-     * @returns {Command} a command function
-     */
-    act(
-        map: GameMap,
-        gameObjects: GameObject[],
-        pathNodes: Map<number, PathNode>
-    ): Command {
-        if (this.owner === null) { throw new Error("Planning AI must have an owner to act"); }
-        if (this.owner.fighter === null) { throw new Error("Planning AI must have a fighter"); }
-
-        // compute the FOV to see if the player is sighted
-        const fov = new FOV.PreciseShadowcasting(createPassableSightCallback(this.owner));
-        fov.compute(
-            this.owner.x,
-            this.owner.y,
-            this.sightRange,
-            createVisibilityCallback(this)
+        confusedState.update();
+        return new GoToLocationCommand(
+            [[newX, newY]],
+            ecs,
+            map,
+            triggerMap
         );
+    } else {
+        confusedState.destroy();
 
-        const plan = this.getPlan();
-
-        // Assume we've lost sight of the target after every turn,
-        // so that when the visibility callback sets the flag to true,
-        // iff the target is seen, we get the right behavior
-        this.hasTargetInSight = false;
-
-        if (plan !== null) {
-            return ActionData[plan].updateFunction(this, map, gameObjects, pathNodes);
+        if (entity === globals.Game!.player) {
+            displayMessage("You are no longer confused");
         } else {
-            return new NoOpCommand(true);
-        }
-    }
-}
-
-/**
- * AI component which stores the previous AI from the owner.
- * Goes in random directions for the specified number of act
- * calls. Then, replaces itself on the owner with the previous
- * AI component on the owner.
- */
-export class ConfusedAI implements AIComponent {
-    owner: Nullable<GameObject>;
-    oldAI: AIComponent;
-    turns: number;
-
-    constructor(currentAI: AIComponent, turns: number) {
-        this.owner = null;
-        this.oldAI = currentAI;
-        this.turns = turns;
-    }
-
-    setOwner(owner: Nullable<GameObject>) {
-        this.owner = owner;
-    }
-
-    getStateName(): string {
-        return "confused";
-    }
-
-    act(): Command {
-        if (globals.Game === null) { throw new Error("Global game object is null"); }
-        if (this.owner === null) { throw new Error("ConfusedAI must have an owner to act"); }
-
-        if (this.turns > 0) {
-            let blocks: boolean = true;
-            let newX: number = 0;
-            let newY: number = 0;
-            let dir: number = RNG.getItem([0, 1, 2, 3, 4, 5, 6, 7]) ?? 0;
-
-            do {
-                dir = RNG.getItem([0, 1, 2, 3, 4, 5, 6, 7]) ?? 0;
-                newX = this.owner.x + DIRS[8][dir][0];
-                newY = this.owner.y + DIRS[8][dir][1];
-                ({ blocks } = isBlocked(globals.Game.map, globals.Game.gameObjects, newX, newY));
-            } while (blocks === true);
-
-            this.turns--;
-            return new GoToLocationCommand(
-                [[newX, newY]],
-                globals.Game.map,
-                globals.Game.gameObjects
-            );
-        } else {
-            if (this.owner === globals.Game.player) {
-                displayMessage("You are no longer confused");
-            } else {
-                displayMessage(`${this.owner.name} is no longer confused`);
-            }
-
-            this.owner.ai = this.oldAI;
-            return new NoOpCommand(true);
-        }
-    }
-}
-
-/**
- * AI which changes the background color of the object when the inventory
- * component is empty
- */
-export class ChestAI implements AIComponent {
-    owner: Nullable<GameObject>;
-    bgColor: string;
-    emptyColor: string;
-
-    constructor(data: ObjectDataDetails) {
-        if (data.bgColor === null) {
-            throw new Error("Missing data bgColor on ChestAI ctor");
-        }
-        if (data.emptyColor === null) {
-            throw new Error("Missing data emptyColor on ChestAI ctor");
+            displayMessage(`${displayName.name} is no longer confused`);
         }
 
-        this.owner = null;
-        this.bgColor = data.bgColor;
-        this.emptyColor = data.emptyColor;
-    }
-
-    setOwner(owner: Nullable<GameObject>) {
-        this.owner = owner;
-    }
-
-    getStateName(): string {
-        if (this.owner === null) { throw new Error("ChestAI must have an owner to getStateName"); }
-        if (this.owner.graphics === null) { throw new Error("ChestAI must have graphics to getStateName"); }
-
-        if (this.owner.graphics.bgColor === this.emptyColor) {
-            return "empty";
-        } else {
-            return "closed";
-        }
-    }
-
-    act(): Command {
-        if (this.owner === null) { throw new Error("ChestAI must have an owner to act"); }
-        if (this.owner.inventory === null) { throw new Error("ChestAI must have an inventory to act"); }
-        if (this.owner.graphics === null) { throw new Error("ChestAI must have graphics to act"); }
-
-        if (this.owner.inventory.getItems().length === 0) {
-            this.owner.graphics.bgColor = this.emptyColor;
-        } else {
-            this.owner.graphics.bgColor = this.bgColor;
-        }
-
-        return new NoOpCommand(true);
-    }
-}
-
-/**
- * AI which removes the owner from the game when the inventory is empty
- */
-export class DroppedItemAI implements AIComponent {
-    owner: Nullable<GameObject>;
-
-    constructor() {
-        this.owner = null;
-    }
-
-    setOwner(owner: Nullable<GameObject>) {
-        this.owner = owner;
-    }
-
-    getStateName(): string {
-        return "";
-    }
-
-    act(): Command {
-        if (globals.Game === null) { throw new Error("Global game object is null"); }
-        if (this.owner === null) { throw new Error("DroppedItemAI must have an owner to act"); }
-        if (this.owner.inventory === null) { throw new Error("DroppedItemAI must have an inventory to act"); }
-
-        if (this.owner.inventory.getItems().length === 0) {
-            globals.Game.removeObject(this.owner);
-        }
-
-        return new NoOpCommand(true);
-    }
-}
-
-/**
- * Interaction component removes owner to give the appearance of opening
- * when interacting
- */
-export class RemoveAfterNTurns implements AIComponent {
-    private turns: number;
-    owner: Nullable<GameObject>;
-
-    constructor(data: ObjectDataDetails) {
-        if (data.removeAfterNTurns === null) {
-            throw new Error("RemoveAfterNTurns needs removeAfterNTurns set on the data");
-        }
-
-        this.owner = null;
-        this.turns = data.removeAfterNTurns;
-    }
-
-    getStateName(): string {
-        return `Turns Left: ${this.turns}`;
-    }
-
-    setOwner(owner: Nullable<GameObject>): void {
-        this.owner = owner;
-    }
-
-    act(): Command {
-        if (globals.Game === null) { throw new Error("Global game object is null"); }
-        if (this.owner === null) { throw new Error("Can't interact without an owner"); }
-
-        if (this.turns <= 0) {
-            globals.Game.removeObject(this.owner);
-        }
-
-        this.turns--;
         return new NoOpCommand(true);
     }
 }

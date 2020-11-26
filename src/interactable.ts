@@ -1,158 +1,79 @@
+import { Entity } from "ape-ecs";
+
 import globals from "./globals";
 import { ItemData, SpellData } from "./data";
+import { SpellsComponent, InventoryComponent, TypeComponent, LoadLevelComponent } from "./entity";
+import { addItem, getItems, useItem } from "./inventory";
 import { displayMessage } from "./ui";
-import { GameObject } from "./object";
-import { Nullable } from "./util";
+import { addSpellById } from "./fighter";
 
-/**
- * Interactables are any object which does something when
- * the user clicks on it. Examples would be chests, which
- * give items, or switches which open gates, or doors which
- * open.
- */
-export interface InteractableComponent {
-    owner: Nullable<GameObject>;
-    interact: (user: GameObject) => void;
-    setLevel?: (name: string) => void;
-    setSpell?: (name: string) => void;
-}
+export function giveItemsInteract(actor: Entity, interactable: Entity) {
+    const actorInventory = actor.getOne(InventoryComponent);
+    const interactableInventory = interactable.getOne(InventoryComponent);
 
-/**
- * Component gives all the items in the inventory of the GameObject
- * to the user when interacted with
- */
-export class GiveItemsInteractable implements InteractableComponent {
-    owner: Nullable<GameObject>;
+    if (globals.Game === null) { throw new Error("Global game object is null"); }
+    if (globals.gameEventEmitter === null) { throw new Error("Global gameEventEmitter object is null"); }
 
-    constructor() {
-        this.owner = null;
-    }
+    if (actorInventory !== undefined && interactableInventory !== undefined) {
+        const items = getItems(interactableInventory);
+        if (items.length > 0) {
+            for (let i = 0; i < items.length; i++) {
+                const item = items[i];
+                displayMessage(`Found a ${ItemData[item.id].displayName}`);
+                addItem(actorInventory, item.id, item.count);
+                useItem(interactableInventory, item.id);
+            }
 
-    interact(user: GameObject) {
-        if (globals.Game === null) { throw new Error("Global game object is null"); }
-        if (globals.gameEventEmitter === null) { throw new Error("Global gameEventEmitter object is null"); }
-        if (this.owner === null) { throw new Error("Can't interact without an owner"); }
-
-        if (this.owner.inventory !== null && user.inventory !== null) {
-            const items = this.owner.inventory.getItems();
-            if (items.length > 0) {
-                for (let i = 0; i < items.length; i++) {
-                    const item = items[i];
-                    displayMessage("Found a " + ItemData[item.id].displayName);
-                    user.inventory.addItem(item.id, item.count);
-                    this.owner.inventory.useItem(item.id);
-                }
-
-                if (user === globals.Game.player && this.owner.type === "chest") {
-                    globals.gameEventEmitter.emit("chest.open");
-                }
-            } else {
-                displayMessage("Empty");
+            const interactableEntityType = interactable.getOne(TypeComponent);
+            if (actor === globals.Game.player && interactableEntityType?.type === "chest") {
+                globals.gameEventEmitter.emit("chest.open");
             }
         } else {
-            throw new Error(`Missing inventory on ${this.owner.name} or ${user.name}`);
+            displayMessage("Empty");
+        }
+    } else {
+        throw new Error(`Missing inventory on ${actor.id} or ${interactable.id}`);
+    }
+}
+
+export function giveSpellsInteract(actor: Entity, interactable: Entity): void {
+    const spellData = interactable.getOne(SpellsComponent);
+    if (spellData === undefined) {
+        throw new Error(`Entity ${interactable.id} is missing a SpellsComponent`);
+    }
+
+    for (const spell of spellData.knownSpells.values()) {
+        const res = addSpellById(actor, spell);
+        if (actor === globals.Game?.player) {
+            if (res) {
+                displayMessage(`You learned a new spell: ${SpellData[spell].displayName}`);
+            } else {
+                displayMessage(`You already know ${SpellData[spell].displayName}`);
+            }
         }
     }
 }
 
-/**
- * Interaction component that adds a spell to the user's spell list
- */
-export class GiveSpellInteractable implements InteractableComponent {
-    owner: Nullable<GameObject>;
-    spellId: string;
+export function doorInteract(actor: Entity, interactable: Entity): void {
+    if (globals.gameEventEmitter === null) { throw new Error("Global gameEventEmitter object is null"); }
 
-    constructor() {
-        this.owner = null;
-        this.spellId = "";
-    }
-
-    setOwner(owner: Nullable<GameObject>): void {
-        this.owner = owner;
-    }
-
-    setSpell(id: string): void {
-        this.spellId = id;
-    }
-
-    interact(user: GameObject): void {
-        if (user.fighter === null) { return; }
-
-        if (this.spellId === null) {
-            throw new Error("No spell id given");
-        }
-
-        if (!(this.spellId in SpellData)) {
-            throw new Error(`${this.spellId} is not a valid spell`);
-        }
-
-        const res = user.fighter.addSpellById(this.spellId);
-        const data = SpellData[this.spellId];
-        if (res) {
-            displayMessage(`You learned a new spell: ${data.displayName}`);
-        } else {
-            displayMessage(`You already know ${data.displayName}`);
-        }
-    }
+    globals.gameEventEmitter.emit("door.open");
+    interactable.destroy();
 }
 
-/**
- * Interaction component removes owner to give the appearance of opening
- * when interacting
- */
-export class DoorInteractable implements InteractableComponent {
-    owner: Nullable<GameObject>;
-
-    constructor() {
-        this.owner = null;
+export function levelLoadInteract(actor: Entity, interactable: Entity): void {
+    const loadLevelData = interactable.getOne(LoadLevelComponent);
+    const typeData = interactable.getOne(TypeComponent);
+    if (loadLevelData === undefined) {
+        throw new Error("No level name has been set for load");
     }
 
-    setOwner(owner: Nullable<GameObject>) {
-        this.owner = owner;
-    }
+    if (globals.Game === null) { throw new Error("Global game object is null"); }
+    if (globals.gameEventEmitter === null) { throw new Error("Global gameEventEmitter object is null"); }
 
-    interact() {
-        if (globals.Game === null) { throw new Error("Global game object is null"); }
-        if (globals.gameEventEmitter === null) { throw new Error("Global gameEventEmitter object is null"); }
-        if (this.owner === null) { throw new Error("Can't interact without an owner"); }
+    globals.Game.loadLevel(loadLevelData.levelName);
 
+    if (typeData?.entityType === "load_door") {
         globals.gameEventEmitter.emit("door.open");
-        globals.Game.removeObject(this.owner);
-    }
-}
-
-/**
- * Interaction component that calls Game.nextLevel when interacted with
- */
-export class LoadLevelInteractable implements InteractableComponent {
-    owner: Nullable<GameObject>;
-    levelName: string;
-
-    constructor() {
-        this.owner = null;
-        this.levelName = "";
-    }
-
-    setLevel(name: string) {
-        this.levelName = name;
-    }
-
-    setOwner(owner: Nullable<GameObject>) {
-        this.owner = owner;
-    }
-
-    interact(): void {
-        if (globals.Game === null) { throw new Error("Global game object is null"); }
-        if (globals.gameEventEmitter === null) { throw new Error("Global gameEventEmitter object is null"); }
-        if (this.owner === null) { throw new Error("Can't interact without an owner"); }
-
-        if (this.levelName === null) {
-            throw new Error("No level name has been set for load");
-        }
-        globals.Game.loadLevel(this.levelName);
-
-        if (this.owner.type === "load_door") {
-            globals.gameEventEmitter.emit("door.open");
-        }
     }
 }
