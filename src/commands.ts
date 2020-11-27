@@ -183,10 +183,10 @@ export class GoToLocationCommand implements Command {
                         fireTrigger(actor, triggerEntity);
                         break;
                     case TriggerType.ShallowWater:
-                        shallowWaterTrigger(actor, triggerEntity);
+                        shallowWaterTrigger();
                         break;
                     case TriggerType.DeepWater:
-                        deepWaterTrigger(actor, triggerEntity);
+                        deepWaterTrigger();
                         break;
                     default:
                         assertUnreachable(triggerData.triggerType);

@@ -201,6 +201,9 @@ export class Tile {
     }
 }
 
+/**
+ * Searches through the properties on a tiled object and returns the value
+ */
 function findProperty(o: any, name: string): any {
     if (o.properties === undefined || o.properties.length === 0) { return null; }
 
@@ -436,15 +439,10 @@ interface BlocksResult {
 }
 
 /**
- * Returns an object with two keys, object and blocks. Object
- * will be the GameObject on the tile if there is one, and null
+ * Returns an entity with two keys, entity and blocks. entity
+ * will be the Entity on the tile if there is one, and null
  * otherwise. Blocks is true if either the tile or the object on
  * the tile blocks, false otherwise.
- *
- * @param {GameMap} map The map 2D array
- * @param {GameObject[]} objects An array of GameObjects
- * @param {number} x The x coordinate to check
- * @param {number} y The y coordinate to check
  */
 export function isBlocked(
     ecs: World,
@@ -477,8 +475,6 @@ export function isBlocked(
 
 /**
  * Returns true if space blocks sight, false otherwise.
- * @param {GameMap} map The 2D map array
- * @param {GameObject[]} objects An array of GameObjects
  * @param {number} x The x coordinate to check
  * @param {number} y The y coordinate to check
  * @returns {boolean} Does the spot block sight
@@ -503,7 +499,7 @@ export function isSightBlocked(ecs: World, map: GameMap, x: number, y: number): 
 
 /**
  * Draw a tile given the tile data and the coordinates.
- * @param {Object} display The ROT.js display object
+ * @param {Display} display The ROT.js display object
  * @param {Tile} tile The tile to draw
  * @param {Number} x The x coordinate
  * @param {Number} y The y coordinate

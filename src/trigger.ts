@@ -75,10 +75,12 @@ export function eventTrigger(actor: Entity, trigger: Entity): void {
     }
 }
 
-export function shallowWaterTrigger(actor: Entity, trigger: Entity): void {
-    console.log(`Actor ${actor.id} stepped in shallow water ${trigger.id}`);
+export function shallowWaterTrigger(): void {
+    // TODO
+    return;
 }
 
-export function deepWaterTrigger(actor: Entity, trigger: Entity): void {
-    console.log(`Actor ${actor.id} stepped in deep water ${trigger.id}`);
+export function deepWaterTrigger(): void {
+    // TODO
+    return;
 }

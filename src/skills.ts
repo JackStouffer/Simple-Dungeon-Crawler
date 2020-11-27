@@ -296,9 +296,6 @@ export function castHaste(
 /**
  * Half the target's fighter speed stat for value number
  * of turns. Does not stack.
- *
- * @param {Object} item The item data
- * @param {GameObject} user The object using the item
  */
 export function castSlow(
     ecs: World,
@@ -351,6 +348,11 @@ export function castSlow(
     return true;
 }
 
+/**
+ * Spawn a bunch of entities with the given ID in shape defined
+ * by the item's details. Used for the wall of fire and wall of
+ * ice spells.
+ */
 function castWall(
     ecs: World,
     item: ItemDataDetails | SpellDataDetails,
@@ -440,6 +442,10 @@ export function castFireWall(
     );
 }
 
+/**
+ * Map of item IDs and their data, including a function pointer
+ * to the implementation of the item's behavior
+ */
 export const ItemData: { [key: string]: ItemDataDetails } = {
     "health_potion_weak": {
         displayName: "Weak Potion of Healing",

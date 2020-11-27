@@ -43,6 +43,11 @@ function getTransparencyBackground(
     return ret;
 }
 
+/**
+ * Draw all entities with a GraphicsComponent and a PositionComponent,
+ * also takes into account entities with transparent background, correctly
+ * drawing the right background color based on the objects on that tile.
+ */
 export class DrawSystem extends System {
     private graphicsQuery: Query;
 
@@ -121,6 +126,11 @@ export class DrawSystem extends System {
     }
 }
 
+/**
+ * Draw all chests which have a ChestGraphicsComponent, a PositionComponent,
+ * and an InventoryComponent. Looks in the inventory and changes the background
+ * color if it's empty.
+ */
 export class DrawChestsSystem extends System {
     private chestGraphics: Query;
 

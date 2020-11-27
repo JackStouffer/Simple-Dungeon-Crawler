@@ -7,6 +7,9 @@ import { displayMessage } from "./ui";
 import { addSpellById } from "./fighter";
 import { ItemData, SpellData } from "./skills";
 
+/**
+ * Give the actor all of the items in the interactable's inventory
+ */
 export function giveItemsInteract(actor: Entity, interactable: Entity) {
     const actorInventory = actor.getOne(InventoryComponent);
     const interactableInventory = interactable.getOne(InventoryComponent);
@@ -36,6 +39,9 @@ export function giveItemsInteract(actor: Entity, interactable: Entity) {
     }
 }
 
+/**
+ * Give the actor all of the spells in the interactable's known spells
+ */
 export function giveSpellsInteract(actor: Entity, interactable: Entity): void {
     const spellData = interactable.getOne(SpellsComponent);
     if (spellData === undefined) {
@@ -54,6 +60,9 @@ export function giveSpellsInteract(actor: Entity, interactable: Entity): void {
     }
 }
 
+/**
+ * Simply removes the interactable from the world and plays a sound
+ */
 export function doorInteract(actor: Entity, interactable: Entity): void {
     if (globals.gameEventEmitter === null) { throw new Error("Global gameEventEmitter object is null"); }
 

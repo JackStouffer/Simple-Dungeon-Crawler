@@ -4,6 +4,11 @@
 
 _In Development_
 
+* Gameplay
+  * Replaced burn status with on fire status
+* Technical
+  * Refactor to Entity Component System design rather than the Unity-style Entity with plugin components
+
 ## Version 9
 
 _November 15, 2020_
