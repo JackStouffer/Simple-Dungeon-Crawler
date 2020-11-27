@@ -6,7 +6,10 @@ import { displayMessage } from "./ui";
 import {
     DisplayNameComponent,
     FlammableComponent,
-    HitPointsComponent
+    HitPointsComponent,
+    HitPointsEffectComponent,
+    SpeedEffectComponent,
+    StatsEffectComponent
 } from "./entity";
 import { takeDamage } from "./fighter";
 
@@ -49,6 +52,95 @@ export class OnFireSystem extends System {
                     const displayName = entity.getOne(DisplayNameComponent);
                     if (displayName === undefined) { continue; }
                     displayMessage(`${displayName.name} took ${flammableData.fireDamage} damage from being on fire`);
+                }
+            }
+        }
+    }
+}
+
+/**
+ * System to reduce the turn count of all effects on entities. If the
+ * turn count reaches zero, then destroy the effect.
+ */
+export class UpdateHitPointsEffectsSystem extends System {
+    private hitPointsEffectQuery: Query;
+
+    init() {
+        this.hitPointsEffectQuery = this.createQuery()
+            .fromAll(HitPointsEffectComponent)
+            .persist();
+    }
+
+    update() {
+        const hpEffects = this.hitPointsEffectQuery.execute();
+
+        for (const entity of hpEffects) {
+            const effects = entity.getComponents(HitPointsEffectComponent);
+            for (const effect of effects) {
+                effect.turnsLeft -= 1;
+                if (effect.turnsLeft === 0) {
+                    effect.destroy();
+                } else {
+                    effect.update();
+                }
+            }
+        }
+    }
+}
+
+/**
+ * System to reduce the turn count of all effects on entities. If the
+ * turn count reaches zero, then destroy the effect.
+ */
+export class UpdateStatsEffectsSystem extends System {
+    private statsEffectQuery: Query;
+
+    init() {
+        this.statsEffectQuery = this.createQuery()
+            .fromAll(StatsEffectComponent)
+            .persist();
+    }
+
+    update() {
+        const statsEffects = this.statsEffectQuery.execute();
+        for (const entity of statsEffects) {
+            const effects = entity.getComponents(StatsEffectComponent);
+            for (const effect of effects) {
+                effect.turnsLeft -= 1;
+                if (effect.turnsLeft === 0) {
+                    effect.destroy();
+                } else {
+                    effect.update();
+                }
+            }
+        }
+    }
+}
+
+/**
+ * System to reduce the turn count of all effects on entities. If the
+ * turn count reaches zero, then destroy the effect.
+ */
+export class UpdateSpeedEffectsSystem extends System {
+    private speedEffectQuery: Query;
+
+    init() {
+        this.speedEffectQuery = this.createQuery()
+            .fromAll(SpeedEffectComponent)
+            .persist();
+    }
+
+    update() {
+        const speedEffects = this.speedEffectQuery.execute();
+        for (const entity of speedEffects) {
+            const effects = entity.getComponents(SpeedEffectComponent);
+            for (const effect of effects) {
+                effect.turnsLeft--;
+                if (effect.turnsLeft === 0) {
+                    entity.removeComponent(effect);
+                    effect.destroy();
+                } else {
+                    effect.update();
                 }
             }
         }

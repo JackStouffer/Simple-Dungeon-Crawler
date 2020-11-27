@@ -89,11 +89,16 @@ import {
 } from "./tutorials";
 import { getItems, InventoryItemDetails } from "./inventory";
 import { assertUnreachable, Nullable } from "./util";
-import { DeathSystem, getEffectiveHitPointData, getKnownSpells, LevelUpSystem, UpdateEffectsSystem, UpdateSchedulerSystem } from "./fighter";
+import { DeathSystem, getEffectiveHitPointData, getKnownSpells, LevelUpSystem, UpdateSchedulerSystem } from "./fighter";
 import { DrawChestsSystem, DrawPlayerSystem, DrawSystem } from "./graphics";
 import { LightingSystem } from "./lighting";
 import { UpdateTriggerMapSystem } from "./trigger";
-import { OnFireSystem } from "./effects";
+import {
+    OnFireSystem,
+    UpdateHitPointsEffectsSystem,
+    UpdateStatsEffectsSystem,
+    UpdateSpeedEffectsSystem
+} from "./effects";
 import { generateAICommand } from "./ai/commands";
 import { SpellDataDetails } from "./skills";
 
@@ -246,10 +251,12 @@ export class SimpleDungeonCrawler {
         this.ecs.registerSystem("frame", DrawChestsSystem);
         this.ecs.registerSystem("frame", DrawPlayerSystem);
 
-        this.ecs.registerSystem("postCommand", UpdateEffectsSystem);
+        this.ecs.registerSystem("postCommand", RemoveAfterNTurnsSystem);
+        this.ecs.registerSystem("postCommand", UpdateHitPointsEffectsSystem);
+        this.ecs.registerSystem("postCommand", UpdateStatsEffectsSystem);
+        this.ecs.registerSystem("postCommand", UpdateSpeedEffectsSystem);
         this.ecs.registerSystem("postCommand", OnFireSystem);
         this.ecs.registerSystem("postCommand", LevelUpSystem);
-        this.ecs.registerSystem("postCommand", RemoveAfterNTurnsSystem);
         this.ecs.registerSystem("postCommand", DeathSystem);
         this.ecs.registerSystem("postCommand", UpdateSchedulerSystem);
         this.ecs.registerSystem("postCommand", UpdateTriggerMapSystem);
