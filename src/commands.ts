@@ -3,24 +3,47 @@ import { Entity, World } from "ape-ecs";
 import Path from "./rot/path/index";
 
 import globals from "./globals";
-import { createPassableCallback } from "./ai/commands";
-import { SpellData, ItemData, GameState, TriggerType, InteractableType } from "./data";
+import { GameState } from "./data";
 import { GameMap, isBlocked, distanceBetweenPoints, Point } from "./map";
 import { assertUnreachable, Nullable } from "./util";
 import { displayMessage } from "./ui";
 import {
     HitPointsComponent,
     InputHandlingComponent,
+    InteractableType,
     InteractableTypeComponent,
     InventoryComponent,
     PositionComponent,
     StatsComponent,
+    TriggerType,
     TriggerTypeComponent
 } from "./entity";
 import { attack, getEffectiveStatData, hasSpell, useMana } from "./fighter";
 import { hasItem, useItem } from "./inventory";
 import { deepWaterTrigger, eventTrigger, fireTrigger, shallowWaterTrigger } from "./trigger";
 import { giveItemsInteract, giveSpellsInteract, doorInteract, levelLoadInteract } from "./interactable";
+import { PassableCallback } from "./rot/path/path";
+import { ItemData, SpellData } from "./skills";
+
+/**
+ * Creates a function which returns if an x and y coordinate
+ * represents a passable spot on the map.
+ *
+ * @param  {GameObject} owner The game object to be used with this function
+ * @return {Function}         the callback
+ */
+export function createPassableCallback(origin: Point): PassableCallback {
+    return function(x: number, y: number) {
+        if (globals.Game === null) { throw new Error("Global game object is null"); }
+
+        // own space is passable
+        if (origin.x === x && origin.y === y) {
+            return true;
+        }
+        const { blocks } = isBlocked(globals.Game.ecs, globals.Game.map, x, y);
+        return !blocks;
+    };
+}
 
 /**
  * Command design pattern that encapsulates an action that a

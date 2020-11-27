@@ -1,7 +1,8 @@
 import globals from "./globals";
-import { ItemData, ItemType } from "./data";
+import { ItemType } from "./data";
 import { Nullable } from "./util";
 import { InventoryComponent } from "./entity";
+import { ItemData } from "./skills";
 
 export interface InventoryItemDetails {
     id: string;

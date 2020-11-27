@@ -6,11 +6,9 @@ import {
     UseSpellCommand,
     GoToLocationCommand,
     InteractCommand,
-    NoOpCommand
-} from "../commands";
-import {
+    NoOpCommand,
     createPassableCallback
-} from "./commands";
+} from "../commands";
 import {
     DisplayNameComponent,
     InventoryComponent,
@@ -28,13 +26,14 @@ import {
     isBlocked,
 } from "../map";
 import { displayMessage } from "../ui";
-import { ItemType } from "../data";
+import { ItemType, SpellType } from "../data";
 import { Nullable } from "../util";
 import globals from "../globals";
 import { Entity, World } from "ape-ecs";
 import { WeightCallback } from "../rot/path/path";
 import { getItems } from "../inventory";
 import { getKnownSpells } from "../fighter";
+import { SpellData } from "../skills";
 
 function generateWeightCallback(ecs: World): WeightCallback {
     return function (x: number, y: number): number {
@@ -308,4 +307,124 @@ export function castSpellAction(spellID: string) {
 
         return new UseSpellCommand(spellID, ecs, targetPos, map);
     };
+}
+
+interface Action {
+    preconditions: { [key: string]: boolean },
+    postconditions: { [key: string]: boolean }
+    updateFunction: (
+        ecs: World,
+        ai: PlannerAIComponent,
+        map: GameMap,
+        triggerMap: Map<string, Entity>
+    ) => Command,
+    weight: (aiState: PlannerAIComponent) => number
+}
+
+/**
+ * Action data by the action's name. An action is something which
+ * satisfies goal, thereby changing the world state. Defines
+ * which state variables are changed, the function to perform the
+ * action, and the cost (weight) of the action.
+ */
+export const ActionData: { [key: string]: Action } = {
+    "wander": {
+        preconditions: { targetPositionKnown: false },
+        postconditions: { targetPositionKnown: true },
+        updateFunction: wanderAction,
+        weight: () => 1
+    },
+    "guard": {
+        preconditions: { targetPositionKnown: false },
+        postconditions: { targetPositionKnown: true },
+        updateFunction: () => { return new NoOpCommand(true); },
+        weight: () => 1
+    },
+    "patrol": {
+        preconditions: { targetPositionKnown: false },
+        postconditions: { targetPositionKnown: true },
+        updateFunction: patrolAction,
+        weight: () => 1
+    },
+    "chase": {
+        preconditions: { targetPositionKnown: true, targetInLineOfSight: false },
+        postconditions: { targetInLineOfSight: true },
+        updateFunction: chaseAction,
+        weight: () => 1
+    },
+    "useManaItem": {
+        preconditions: { lowMana: true, hasManaItem: true },
+        postconditions: { lowMana: false },
+        updateFunction: useManaItemAction,
+        weight: () => 1
+    },
+    "useHealingItem": {
+        preconditions: { lowHealth: true, hasHealingItem: true },
+        postconditions: { lowHealth: false },
+        updateFunction: useHealingItemAction,
+        weight: () => 1
+    },
+    "goToEnemy": {
+        preconditions: { targetPositionKnown: true, nextToTarget: false },
+        postconditions: { nextToTarget: true },
+        updateFunction: chaseAction,
+        weight: chaseWeight
+    },
+    "meleeAttack": {
+        preconditions: { nextToTarget: true, targetKilled: false },
+        postconditions: { targetKilled: true },
+        updateFunction: meleeAttackAction,
+        weight: () => 1
+    },
+    "reposition": {
+        preconditions: { inDangerousArea: true },
+        postconditions: { inDangerousArea: false },
+        updateFunction: () => { return new NoOpCommand(true); },
+        weight: () => 1
+    },
+    "runAway": {
+        preconditions: { afraid: true },
+        postconditions: { afraid: false },
+        updateFunction: () => { return new NoOpCommand(true); },
+        weight: () => 1
+    },
+    "cower": {
+        preconditions: { afraid: false, cowering: false },
+        postconditions: { cowering: true },
+        updateFunction: () => { return new NoOpCommand(true); },
+        weight: () => 1
+    },
+    "goToFallbackPosition": {
+        preconditions: { atFallbackPosition: false },
+        postconditions: { atFallbackPosition: true },
+        updateFunction: () => { return new NoOpCommand(true); },
+        weight: () => 1
+    }
+};
+
+// Dynamically add spells to goals and actions
+for (const key in SpellData) {
+    const data = SpellData[key];
+    // capitalize the first letter
+    const goal = `enoughManaFor_${key}`;
+    const action = `castSpell_${key}`;
+    if (data.type === SpellType.DamageOther) {
+        ActionData[action] = {
+            preconditions: {
+                [goal]: true,
+                targetInLineOfSight: true,
+                targetKilled: false
+            },
+            postconditions: { targetKilled: true },
+            updateFunction: castSpellAction(key),
+            weight: () => 1
+        };
+    } else if (data.type === SpellType.HealSelf) {
+        ActionData[action] = {
+            preconditions: { lowHealth: true, [goal]: true },
+            postconditions: { lowHealth: false },
+            updateFunction: castSpellAction(key),
+            weight: () => 1
+        };
+    }
 }

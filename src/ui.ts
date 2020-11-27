@@ -9,8 +9,7 @@ import {
     UI_HEIGHT,
     LEVEL_UP_BASE,
     LEVEL_UP_FACTOR,
-    SpellType,
-    SpellDataDetails
+    SpellType
 } from "./data";
 import input from "./input";
 import { PlayerState, KeyCommand } from "./input-handler";
@@ -19,6 +18,7 @@ import { InventoryItemDetails } from "./inventory";
 import { getEffectiveHitPointData, getEffectiveStatData } from "./fighter";
 import { GameMap, getEntitiesAtLocation } from "./map";
 import { assertUnreachable, Nullable } from "./util";
+import { SpellDataDetails } from "./skills";
 
 export function drawStatusBar(
     display: Display,

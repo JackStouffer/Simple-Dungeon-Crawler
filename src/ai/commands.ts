@@ -6,11 +6,11 @@ import { VisibilityCallback } from "../rot/fov/fov";
 import { PassableCallback } from "../rot/path/path";
 
 import globals from "../globals";
-import { ActionData } from "../data";
 import { Planner, ActionList, PlannerWorldState } from "./planner";
 import { Command, GoToLocationCommand, NoOpCommand } from "../commands";
 import { GoalData } from "./goals";
-import { GameMap, isBlocked, isSightBlocked, Point } from "../map";
+import { ActionData } from "./actions";
+import { GameMap, isBlocked, isSightBlocked } from "../map";
 import {
     ConfusedAIComponent,
     DisplayNameComponent,
@@ -40,27 +40,6 @@ export function createVisibilityCallback(ai: PlannerAIComponent): VisibilityCall
             ai.hasTargetInSight = true;
             ai.update();
         }
-    };
-}
-
-
-/**
- * Creates a function which returns if an x and y coordinate
- * represents a passable spot on the map.
- *
- * @param  {GameObject} owner The game object to be used with this function
- * @return {Function}         the callback
- */
-export function createPassableCallback(origin: Point): PassableCallback {
-    return function(x: number, y: number) {
-        if (globals.Game === null) { throw new Error("Global game object is null"); }
-
-        // own space is passable
-        if (origin.x === x && origin.y === y) {
-            return true;
-        }
-        const { blocks } = isBlocked(globals.Game.ecs, globals.Game.map, x, y);
-        return !blocks;
     };
 }
 

@@ -12,10 +12,6 @@ import * as durdwin_001 from "./maps/durdwin_001";
 import * as dev_room from "./maps/dev_room";
 
 import {
-    WIDTH,
-    HEIGHT
-} from "./data";
-import {
     createEntity,
     HitPointsComponent,
     PatrolPathComponent,
@@ -506,7 +502,7 @@ export function isSightBlocked(ecs: World, map: GameMap, x: number, y: number): 
  * @param {Number} y The y coordinate
  */
 export function drawTile(display: Display, tile: Tile, x: number, y: number): void {
-    if (x > WIDTH || x < 0 || y > HEIGHT || y < 0) {
+    if (x > display._options.width || x < 0 || y > display._options.height || y < 0) {
         return;
     }
 

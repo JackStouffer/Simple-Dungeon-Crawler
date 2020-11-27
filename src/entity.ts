@@ -1,4 +1,4 @@
-import { World, Component, Entity, EntityRef, System, Query } from "ape-ecs";
+import { World, Component, Entity, EntityRef, System, Query, IEntityConfig } from "ape-ecs";
 import { assignIn } from "lodash";
 
 import { RNG } from "./rot/index";
@@ -8,11 +8,7 @@ import {
     BASE_SPEED,
     DamageType,
     DeathType,
-    InteractableType,
-    LightingType,
-    ObjectData,
-    SpellDataDetails,
-    TriggerType
+    LightingType
 } from "./data";
 import { Nullable, randomIntFromInterval } from "./util";
 import { KeyCommand, PlayerState } from "./input-handler";
@@ -25,6 +21,48 @@ import {
     RotateReticleCommand
 } from "./commands";
 import { createPlanner } from "./ai/commands";
+import { SpellDataDetails } from "./skills";
+
+export interface DamageAffinityMap {
+    [DamageType.Physical]: Affinity;
+    [DamageType.Fire]: Affinity;
+    [DamageType.Electric]: Affinity;
+    [DamageType.Water]: Affinity;
+    [DamageType.Ice]: Affinity;
+    [DamageType.Nature]: Affinity;
+}
+
+const normalTypeDamageValues: DamageAffinityMap = {
+    [DamageType.Physical]: Affinity.normal,
+    [DamageType.Fire]: Affinity.normal,
+    [DamageType.Electric]: Affinity.normal,
+    [DamageType.Water]: Affinity.normal,
+    [DamageType.Nature]: Affinity.normal,
+    [DamageType.Ice]: Affinity.normal
+};
+
+const waterTypeDamageValues: DamageAffinityMap = {
+    [DamageType.Physical]: Affinity.normal,
+    [DamageType.Fire]: Affinity.strong,
+    [DamageType.Electric]: Affinity.weak,
+    [DamageType.Water]: Affinity.strong,
+    [DamageType.Nature]: Affinity.normal,
+    [DamageType.Ice]: Affinity.weak
+};
+
+export enum InteractableType {
+    LoadLevel,
+    Door,
+    GiveItems,
+    GiveSpells
+}
+
+export enum TriggerType {
+    Event,
+    Fire,
+    ShallowWater,
+    DeepWater
+}
 
 export class PositionComponent extends Component {
     x: number;
@@ -405,6 +443,926 @@ export class RemoveAfterNTurnsComponent extends Component {
     static properties = {
         turnsLeft: 0
     };
+}
+
+export interface InventoryPoolProbabilities {
+    itemID: string;
+    probability: number;
+}
+
+interface ObjectDataDetails {
+    // Inventory, spells, actions, and input are not defined in the
+    // static data because they require containers to be initialized
+    addInventory?: boolean;
+    addInput?: boolean;
+    addPlannerAI?: boolean;
+    sightRange?: number;
+    spells?: string[];
+    actions?: string[];
+    inventoryPool?: InventoryPoolProbabilities[];
+    staticallyKnownComponents: IEntityConfig;
+}
+
+const ObjectData: { [key: string]: ObjectDataDetails } = {
+    "door": {
+        staticallyKnownComponents: {
+            tags: ["blocks", "blocksSight"],
+            c: {
+                DisplayNameComponent: {
+                    name: "Door"
+                },
+                GraphicsComponent: {
+                    char: "\u1882",
+                    fgColor: "white",
+                    bgColor: "brown"
+                },
+                TypeComponent: {
+                    entityType: "door"
+                },
+                InteractableTypeComponent: {
+                    interactableType: InteractableType.Door
+                }
+            }
+        }
+    },
+    "load_door": {
+        staticallyKnownComponents: {
+            tags: ["blocks", "blocksSight", "drawAfterSeen"],
+            c: {
+                DisplayNameComponent: {
+                    name: "Door to new area"
+                },
+                GraphicsComponent: {
+                    char: "\u1882",
+                    fgColor: "white",
+                    bgColor: "black",
+                },
+                TypeComponent: {
+                    entityType: "door"
+                },
+                InteractableTypeComponent: {
+                    interactableType: InteractableType.LoadLevel
+                }
+            }
+        }
+    },
+    "stairs": {
+        staticallyKnownComponents: {
+            tags: ["blocks", "drawAfterSeen"],
+            c: {
+                DisplayNameComponent: {
+                    name: "Stairs"
+                },
+                GraphicsComponent: {
+                    char: "\u1750",
+                    fgColor: "white",
+                    bgColor: "black",
+                },
+                TypeComponent: {
+                    entityType: "door"
+                },
+                InteractableTypeComponent: {
+                    interactableType: InteractableType.LoadLevel
+                }
+            }
+        }
+    },
+    "chest": {
+        addInventory: true,
+        staticallyKnownComponents: {
+            tags: ["blocks", "drawAfterSeen"],
+            c: {
+                DisplayNameComponent: {
+                    name: "Chest"
+                },
+                TypeComponent: {
+                    entityType: "chest"
+                },
+                ChestGraphicsComponent: {
+                    char: "*",
+                    fgColor: "white",
+                    bgColor: "brown",
+                    emptyColor: "purple"
+                },
+                InteractableTypeComponent: {
+                    interactableType: InteractableType.GiveItems
+                },
+                FlammableComponent: {
+                    onFire: false,
+                    fireDamage: 0,
+                    turnsLeft: 0
+                }
+            }
+        }
+    },
+    "crate": {
+        addInventory: true,
+        staticallyKnownComponents: {
+            tags: ["blocks"],
+            c: {
+                DisplayNameComponent: {
+                    name: "Wooden Crate"
+                },
+                GraphicsComponent: {
+                    char: "\u2612",
+                    fgColor: "white",
+                    bgColor: "brown"
+                },
+                TypeComponent: {
+                    entityType: "chest"
+                },
+                HitPointsComponent: {
+                    hp: 5,
+                    maxHp: 5,
+                    onDeath: DeathType.RemoveFromWorld,
+                },
+                DamageAffinityComponent: {
+                    [DamageType.Physical]: Affinity.normal,
+                    [DamageType.Fire]: Affinity.weak,
+                    [DamageType.Electric]: Affinity.normal,
+                    [DamageType.Water]: Affinity.strong,
+                    [DamageType.Nature]: Affinity.normal,
+                    [DamageType.Ice]: Affinity.strong
+                },
+                FlammableComponent: {
+                    onFire: false,
+                    fireDamage: 0,
+                    turnsLeft: 0
+                }
+            }
+        }
+    },
+    "barrel": {
+        addInventory: true,
+        staticallyKnownComponents: {
+            tags: ["blocks"],
+            c: {
+                DisplayNameComponent: {
+                    name: "Wooden Barrel"
+                },
+                GraphicsComponent: {
+                    char: "\u232D",
+                    fgColor: "white",
+                    bgColor: "brown",
+                },
+                TypeComponent: {
+                    entityType: "chest"
+                },
+                HitPointsComponent: {
+                    hp: 5,
+                    maxHp: 5,
+                    onDeath: DeathType.RemoveFromWorld,
+                },
+                DamageAffinityComponent: {
+                    [DamageType.Physical]: Affinity.normal,
+                    [DamageType.Fire]: Affinity.weak,
+                    [DamageType.Electric]: Affinity.normal,
+                    [DamageType.Water]: Affinity.strong,
+                    [DamageType.Nature]: Affinity.normal,
+                    [DamageType.Ice]: Affinity.strong
+                },
+                FlammableComponent: {
+                    onFire: false,
+                    fireDamage: 0,
+                    turnsLeft: 0
+                }
+            }
+        }
+    },
+    "dead_body": {
+        staticallyKnownComponents: {
+            c: {
+                TypeComponent: {
+                    entityType: "dead_body"
+                },
+                DisplayNameComponent: {
+                    name: "Dead Body"
+                },
+                GraphicsComponent: {
+                    char: "%",
+                    fgColor: "black",
+                    bgColor: "red"
+                }
+            }
+        }
+    },
+    "lantern": {
+        staticallyKnownComponents: {
+            tags: ["blocks"],
+            c: {
+                TypeComponent: {
+                    entityType: "lantern"
+                },
+                DisplayNameComponent: {
+                    name: "Small Lantern"
+                },
+                GraphicsComponent: {
+                    char: "\u16E1",
+                    fgColor: "black",
+                    bgColor: "yellow",
+                },
+                LightingComponent: {
+                    color: "yellow",
+                    range: 4,
+                    lightingType: LightingType.TwoPass
+                }
+            }
+        }
+    },
+    "campfire": {
+        staticallyKnownComponents: {
+            c: {
+                TypeComponent: {
+                    entityType: "campfire"
+                },
+                DisplayNameComponent: {
+                    name: "Small Campfire"
+                },
+                GraphicsComponent: {
+                    char: "\u0436",
+                    fgColor: "black",
+                    bgColor: "orange",
+                },
+                LightingComponent: {
+                    color: "orange",
+                    range: 6,
+                    lightingType: LightingType.TwoPass
+                },
+                TriggerTypeComponent: {
+                    triggerType: TriggerType.Fire
+                },
+                FireTriggerComponent: {
+                    effectTurns: 3,
+                    effectDamage: 3,
+                    damage: 10
+                }
+            }
+        }
+    },
+    "fire_effect": {
+        staticallyKnownComponents: {
+            c: {
+                TypeComponent: {
+                    entityType: "fire_effect"
+                },
+                DisplayNameComponent: {
+                    name: "Fire"
+                },
+                GraphicsComponent: {
+                    char: "\u0436",
+                    fgColor: "black",
+                    bgColor: "orange"
+                },
+                LightingComponent: {
+                    color: "orange",
+                    range: 4,
+                    lightingType: LightingType.TwoPass
+                },
+                RemoveAfterNTurnsComponent: {
+                    turnsLeft: 5
+                },
+                TriggerTypeComponent: {
+                    triggerType: TriggerType.Fire
+                },
+                FireTriggerComponent: {
+                    effectTurns: 5,
+                    effectDamage: 5,
+                    damage: 15
+                }
+            }
+        }
+    },
+    "ice_wall": {
+        staticallyKnownComponents: {
+            tags: ["blocks", "blocksSight"],
+            c: {
+                TypeComponent: {
+                    entityType: "ice_wall"
+                },
+                DisplayNameComponent: {
+                    name: "Ice Wall"
+                },
+                GraphicsComponent: {
+                    char: "\u2042",
+                    fgColor: "black",
+                    bgColor: "lightblue",
+                },
+                HitPointsComponent: {
+                    hp: 10,
+                    maxHp: 10,
+                    onDeath: DeathType.RemoveFromWorld,
+                },
+                DamageAffinityComponent: {
+                    [DamageType.Physical]: Affinity.weak,
+                    [DamageType.Fire]: Affinity.weak,
+                    [DamageType.Electric]: Affinity.normal,
+                    [DamageType.Water]: Affinity.strong,
+                    [DamageType.Nature]: Affinity.strong,
+                    [DamageType.Ice]: Affinity.nullified
+                }
+            }
+        }
+    },
+    "dropped_item": {
+        staticallyKnownComponents: {
+            c: {
+                TypeComponent: {
+                    entityType: "dropped_item"
+                },
+                DisplayNameComponent: {
+                    name: "Dropped Item"
+                },
+                GraphicsComponent: {
+                    char: "!",
+                    fgColor: "white",
+                    bgColor: "brown"
+                },
+                InteractableTypeComponent: {
+                    interactableType: InteractableType.GiveItems
+                }
+            }
+        }
+    },
+    "magic_shrine": {
+        staticallyKnownComponents: {
+            tags: ["blocks", "blocksSight"],
+            c: {
+                TypeComponent: {
+                    entityType: "magic_shrine"
+                },
+                DisplayNameComponent: {
+                    name: "Magicka Shrine"
+                },
+                GraphicsComponent: {
+                    char: "\u06DE",
+                    fgColor: "black",
+                    bgColor: "gold",
+                },
+                InteractableTypeComponent: {
+                    interactableType: InteractableType.GiveSpells
+                }
+            }
+        }
+    },
+    "event_trigger": {
+        staticallyKnownComponents: {
+            c: {
+                TypeComponent: {
+                    entityType: "event_trigger"
+                },
+                TriggerTypeComponent: {
+                    triggerType: TriggerType.Event
+                }
+            }
+        }
+    },
+    "shallow_water": {
+        staticallyKnownComponents: {
+            c: {
+                TypeComponent: {
+                    entityType: "shallow_water"
+                },
+                DisplayNameComponent: {
+                    name: "Water"
+                },
+                GraphicsComponent: {
+                    char: "~",
+                    fgColor: "blue",
+                    bgColor: "lightblue",
+                },
+                TriggerTypeComponent: {
+                    triggerType: TriggerType.ShallowWater
+                },
+                FreezableComponent: {
+                    frozen: false,
+                    turnsLeft: 0
+                }
+            }
+        }
+    },
+    "water": {
+        staticallyKnownComponents: {
+            c: {
+                TypeComponent: {
+                    entityType: "water"
+                },
+                DisplayNameComponent: {
+                    name: "Deep Water"
+                },
+                GraphicsComponent: {
+                    char: "~",
+                    fgColor: "lightblue",
+                    bgColor: "blue"
+                },
+                TriggerTypeComponent: {
+                    triggerType: TriggerType.DeepWater
+                },
+                FreezableComponent: {
+                    frozen: false,
+                    turnsLeft: 0
+                }
+            }
+        }
+    },
+    "player": {
+        addInventory: true,
+        addInput: true,
+        spells: [],
+        staticallyKnownComponents: {
+            id: "player",
+            tags: ["blocks", "input"],
+            c: {
+                TypeComponent: {
+                    entityType: "player"
+                },
+                DisplayNameComponent: {
+                    name: "The Player"
+                },
+                GraphicsComponent: {
+                    char: "@",
+                    fgColor: "blue",
+                    bgColor: null
+                },
+                LightingComponent: {
+                    color: "white",
+                    range: 7,
+                    lightingType: LightingType.Player
+                },
+                HitPointsComponent: {
+                    hp: 100,
+                    maxHp: 100,
+                    onDeath: DeathType.Default
+                },
+                SpeedComponent: {
+                    speed: BASE_SPEED,
+                    maxTilesPerMove: 7
+                },
+                StatsComponent: {
+                    mana: 100,
+                    maxMana: 100,
+                    strength: 5,
+                    defense: 1,
+                    criticalChance: 0.05,
+                    criticalDamageMultiplier: 1.5,
+                    ailmentSusceptibility: 0.1
+                },
+                LevelComponent: {
+                    level: 1,
+                    experience: 0,
+                    experienceGiven: 0
+                },
+                DamageAffinityComponent: normalTypeDamageValues,
+                FlammableComponent: {
+                    onFire: false,
+                    fireDamage: 0,
+                    turnsLeft: 0
+                },
+                FreezableComponent: {
+                    frozen: false,
+                    turnsLeft: 0
+                }
+            }
+        }
+    },
+    "goblin": {
+        addInventory: true,
+        addPlannerAI: true,
+        sightRange: 7,
+        actions: [
+            "wander",
+            "chase",
+            "goToEnemy",
+            "meleeAttack"
+        ],
+        inventoryPool: [
+            {
+                itemID: "health_potion_weak",
+                probability: 0.25
+            }
+        ],
+        staticallyKnownComponents: {
+            tags: ["blocks"],
+            c: {
+                TypeComponent: {
+                    entityType: "goblin"
+                },
+                DisplayNameComponent: {
+                    name: "Goblin"
+                },
+                GraphicsComponent: {
+                    char: "G",
+                    fgColor: "green",
+                    bgColor: null
+                },
+                LoseTargetAIComponent: {
+                    turnsWithTargetOutOfSight: 0,
+                    loseTrackAfterNTurns: 6
+                },
+                SpeedComponent: {
+                    speed: BASE_SPEED,
+                    maxTilesPerMove: 5
+                },
+                HitPointsComponent: {
+                    hp: 30,
+                    maxHp: 30,
+                    onDeath: DeathType.Default
+                },
+                StatsComponent: {
+                    mana: 0,
+                    maxMana: 0,
+                    strength: 3,
+                    defense: 1,
+                    criticalChance: 0.05,
+                    criticalDamageMultiplier: 1.5,
+                    ailmentSusceptibility: 0.1
+                },
+                LevelComponent: {
+                    level: 3,
+                    experience: 0,
+                    experienceGiven: 50
+                },
+                DamageAffinityComponent: normalTypeDamageValues,
+                FlammableComponent: {
+                    onFire: false,
+                    fireDamage: 0,
+                    turnsLeft: 0
+                },
+                FreezableComponent: {
+                    frozen: false,
+                    turnsLeft: 0
+                }
+            }
+        }
+    },
+    "goblin_brute": {
+        addInventory: true,
+        addPlannerAI: true,
+        sightRange: 10,
+        actions: [
+            "guard",
+            "chase",
+            "useHealingItem",
+            "goToEnemy",
+            "reposition",
+            "meleeAttack"
+        ],
+        inventoryPool: [
+            {
+                itemID: "health_potion_weak",
+                probability: 0.25
+            },
+            {
+                itemID: "health_potion",
+                probability: 0.1
+            }
+        ],
+        staticallyKnownComponents: {
+            tags: ["blocks"],
+            c: {
+                TypeComponent: {
+                    entityType: "goblin_brute"
+                },
+                DisplayNameComponent: {
+                    name: "Goblin Brute"
+                },
+                GraphicsComponent: {
+                    char: "G",
+                    fgColor: "green",
+                    bgColor: "red"
+                },
+                LoseTargetAIComponent: {
+                    turnsWithTargetOutOfSight: 0,
+                    loseTrackAfterNTurns: 6
+                },
+                SpeedComponent: {
+                    speed: BASE_SPEED,
+                    maxTilesPerMove: 5
+                },
+                HitPointsComponent: {
+                    hp: 100,
+                    maxHp: 100,
+                    onDeath: DeathType.Default
+                },
+                StatsComponent: {
+                    mana: 0,
+                    maxMana: 0,
+                    strength: 7,
+                    defense: 4,
+                    criticalChance: 0.05,
+                    criticalDamageMultiplier: 1.5,
+                    ailmentSusceptibility: 0.1
+                },
+                LevelComponent: {
+                    level: 10,
+                    experience: 0,
+                    experienceGiven: 500
+                },
+                DamageAffinityComponent: normalTypeDamageValues,
+                FlammableComponent: {
+                    onFire: false,
+                    fireDamage: 0,
+                    turnsLeft: 0
+                },
+                FreezableComponent: {
+                    frozen: false,
+                    turnsLeft: 0
+                }
+            }
+        }
+    },
+    "rat": {
+        addPlannerAI: true,
+        sightRange: 5,
+        actions: [
+            "wander",
+            "chase",
+            "goToEnemy",
+            "meleeAttack"
+        ],
+        staticallyKnownComponents: {
+            c: {
+                TypeComponent: {
+                    entityType: "rat"
+                },
+                DisplayNameComponent: {
+                    name: "Rat"
+                },
+                GraphicsComponent: {
+                    char: "r",
+                    fgColor: "brown",
+                    bgColor: null
+                },
+                LoseTargetAIComponent: {
+                    turnsWithTargetOutOfSight: 0,
+                    loseTrackAfterNTurns: 6
+                },
+                FearAIComponent: {
+                    fear: 0,
+                    isAfraidThreshold: 10,
+                    isCowering: false
+                },
+                SpeedComponent: {
+                    speed: BASE_SPEED,
+                    maxTilesPerMove: 4
+                },
+                HitPointsComponent: {
+                    hp: 10,
+                    maxHp: 10,
+                    onDeath: DeathType.Default
+                },
+                StatsComponent: {
+                    mana: 0,
+                    maxMana: 0,
+                    strength: 2,
+                    defense: 1,
+                    criticalChance: 0.05,
+                    criticalDamageMultiplier: 1.5,
+                    ailmentSusceptibility: 0.1
+                },
+                LevelComponent: {
+                    level: 1,
+                    experience: 0,
+                    experienceGiven: 10
+                },
+                DamageAffinityComponent: normalTypeDamageValues,
+                FlammableComponent: {
+                    onFire: false,
+                    fireDamage: 0,
+                    turnsLeft: 0
+                },
+                FreezableComponent: {
+                    frozen: false,
+                    turnsLeft: 0
+                }
+            }
+        }
+    },
+    "water_sprite": {
+        addPlannerAI: true,
+        sightRange: 9,
+        actions: [
+            "wander",
+            "chase",
+            "goToEnemy",
+            "meleeAttack"
+        ],
+        staticallyKnownComponents: {
+            c: {
+                TypeComponent: {
+                    entityType: "water_sprite"
+                },
+                DisplayNameComponent: {
+                    name: "Water Sprite"
+                },
+                GraphicsComponent: {
+                    char: "s",
+                    fgColor: "white",
+                    bgColor: "blue",
+                },
+                LoseTargetAIComponent: {
+                    turnsWithTargetOutOfSight: 0,
+                    loseTrackAfterNTurns: 6
+                },
+                FearAIComponent: {
+                    fear: 0,
+                    isAfraidThreshold: 10,
+                    isCowering: false
+                },
+                SpeedComponent: {
+                    speed: BASE_SPEED,
+                    maxTilesPerMove: 7
+                },
+                HitPointsComponent: {
+                    hp: 10,
+                    maxHp: 10,
+                    onDeath: DeathType.Default
+                },
+                StatsComponent: {
+                    mana: 0,
+                    maxMana: 0,
+                    strength: 2,
+                    defense: 1,
+                    criticalChance: 0.05,
+                    criticalDamageMultiplier: 1.5,
+                    ailmentSusceptibility: 0.1
+                },
+                LevelComponent: {
+                    level: 1,
+                    experience: 0,
+                    experienceGiven: 10
+                },
+                DamageAffinityComponent: waterTypeDamageValues,
+                FreezableComponent: {
+                    frozen: false,
+                    turnsLeft: 0
+                }
+            }
+        }
+    },
+    "bandit": {
+        addInventory: true,
+        addPlannerAI: true,
+        sightRange: 10,
+        actions: [
+            "guard",
+            "chase",
+            "useHealingItem",
+            "goToEnemy",
+            "reposition",
+            "runAway",
+            "cower",
+            "meleeAttack"
+        ],
+        inventoryPool: [
+            {
+                itemID: "health_potion_weak",
+                probability: 0.25
+            }
+        ],
+        staticallyKnownComponents: {
+            tags: ["blocks"],
+            c: {
+                TypeComponent: {
+                    entityType: "bandit"
+                },
+                DisplayNameComponent: {
+                    name: "Bandit"
+                },
+                GraphicsComponent: {
+                    char: "b",
+                    fgColor: "white",
+                    bgColor: "brown",
+                },
+                LoseTargetAIComponent: {
+                    turnsWithTargetOutOfSight: 0,
+                    loseTrackAfterNTurns: 6
+                },
+                SpeedComponent: {
+                    speed: BASE_SPEED,
+                    maxTilesPerMove: 5
+                },
+                HitPointsComponent: {
+                    hp: 30,
+                    maxHp: 30,
+                    onDeath: DeathType.Default
+                },
+                StatsComponent: {
+                    mana: 0,
+                    maxMana: 0,
+                    strength: 2,
+                    defense: 1,
+                    criticalChance: 0.05,
+                    criticalDamageMultiplier: 1.5,
+                    ailmentSusceptibility: 0.1
+                },
+                LevelComponent: {
+                    level: 1,
+                    experience: 0,
+                    experienceGiven: 10
+                },
+                DamageAffinityComponent: normalTypeDamageValues,
+                FlammableComponent: {
+                    onFire: false,
+                    fireDamage: 0,
+                    turnsLeft: 0
+                },
+                FreezableComponent: {
+                    frozen: false,
+                    turnsLeft: 0
+                }
+            }
+        }
+    },
+    "bandit_mage": {
+        addInventory: true,
+        addPlannerAI: true,
+        sightRange: 8,
+        spells: [
+            "fireball",
+            "lesser_heal"
+        ],
+        actions: [
+            "wander",
+            "chase",
+            "useHealingItem",
+            "useManaItem",
+            "goToEnemy",
+            "reposition",
+            "runAway",
+            "cower",
+            "meleeAttack"
+        ],
+        inventoryPool: [
+            {
+                itemID: "health_potion_weak",
+                probability: 0.25
+            }
+        ],
+        staticallyKnownComponents: {
+            tags: ["blocks"],
+            c: {
+                TypeComponent: {
+                    entityType: "bandit_mage"
+                },
+                DisplayNameComponent: {
+                    name: "Bandit Mage"
+                },
+                GraphicsComponent: {
+                    char: "b",
+                    fgColor: "white",
+                    bgColor: "blue",
+                },
+                LoseTargetAIComponent: {
+                    turnsWithTargetOutOfSight: 0,
+                    loseTrackAfterNTurns: 6
+                },
+                SpeedComponent: {
+                    speed: BASE_SPEED,
+                    maxTilesPerMove: 5
+                },
+                HitPointsComponent: {
+                    hp: 30,
+                    maxHp: 30,
+                    onDeath: DeathType.Default
+                },
+                StatsComponent: {
+                    mana: 100,
+                    maxMana: 100,
+                    strength: 2,
+                    defense: 1,
+                    criticalChance: 0.05,
+                    criticalDamageMultiplier: 1.5,
+                    ailmentSusceptibility: 0.1
+                },
+                LevelComponent: {
+                    level: 5,
+                    experience: 0,
+                    experienceGiven: 10
+                },
+                DamageAffinityComponent: normalTypeDamageValues,
+                FlammableComponent: {
+                    onFire: false,
+                    fireDamage: 0,
+                    turnsLeft: 0
+                },
+                FreezableComponent: {
+                    frozen: false,
+                    turnsLeft: 0
+                }
+            }
+        }
+    }
+};
+
+// Dynamically add spells to actions
+for (const objectID in ObjectData) {
+    const data = ObjectData[objectID];
+    if (data.spells !== undefined && data.actions !== undefined) {
+        for (let i = 0; i < data.spells.length; i++) {
+            const spell = data.spells[i];
+            data.actions.push(`castSpell_${spell}`);
+        }
+    }
 }
 
 /**

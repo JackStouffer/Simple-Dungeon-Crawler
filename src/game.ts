@@ -64,7 +64,7 @@ import {
     UseItemCommand,
     UseSpellCommand
 } from "./commands";
-import { WIDTH, HEIGHT, GameState, ItemType, SpellType, SpellDataDetails } from "./data";
+import { WIDTH, HEIGHT, GameState, ItemType, SpellType } from "./data";
 import input from "./input";
 import { handleInput, PlayerState } from "./input-handler";
 import {
@@ -95,6 +95,7 @@ import { LightingSystem } from "./lighting";
 import { UpdateTriggerMapSystem } from "./trigger";
 import { OnFireSystem } from "./effects";
 import { generateAICommand } from "./ai/commands";
+import { SpellDataDetails } from "./skills";
 
 globals.gameEventEmitter = new EventEmitter();
 

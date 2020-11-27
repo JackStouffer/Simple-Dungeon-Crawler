@@ -1,11 +1,11 @@
 import { Entity } from "ape-ecs";
 
 import globals from "./globals";
-import { ItemData, SpellData } from "./data";
 import { SpellsComponent, InventoryComponent, TypeComponent, LoadLevelComponent } from "./entity";
 import { addItem, getItems, useItem } from "./inventory";
 import { displayMessage } from "./ui";
 import { addSpellById } from "./fighter";
+import { ItemData, SpellData } from "./skills";
 
 export function giveItemsInteract(actor: Entity, interactable: Entity) {
     const actorInventory = actor.getOne(InventoryComponent);

@@ -8,11 +8,8 @@ import {
     LEVEL_UP_BASE,
     LEVEL_UP_FACTOR,
     DamageType,
-    SpellData,
     SpellType,
-    SpellDataDetails,
-    DeathType,
-    ObjectData
+    DeathType
 } from "./data";
 import {
     createEntity,
@@ -32,6 +29,7 @@ import {
 } from "./entity";
 import { displayMessage, MessageType } from "./ui";
 import { assertUnreachable } from "./util";
+import { SpellData, SpellDataDetails } from "./skills";
 
 /**
  * Find all entities with HitPointsComponents and when hp is <= 0,
@@ -65,11 +63,10 @@ export class DeathSystem extends System {
         target.removeTag("blocksSight");
 
         const graphicData = target.getOne(GraphicsComponent);
-        const deadBodyData = ObjectData["dead_body"]?.staticallyKnownComponents?.c?.GraphicsComponent;
-        if (graphicData !== undefined && deadBodyData !== undefined) {
-            graphicData.char = deadBodyData.char;
-            graphicData.fgColor = deadBodyData.fgColor;
-            graphicData.bgColor = deadBodyData.bgColor;
+        if (graphicData !== undefined) {
+            graphicData.char = "%";
+            graphicData.fgColor = "black";
+            graphicData.bgColor = "red";
             graphicData.update();
         }
 

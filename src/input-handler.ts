@@ -11,7 +11,6 @@ import {
     InteractCommand
 } from "./commands";
 import { distanceBetweenPoints, getEntitiesAtLocation, GameMap, Point } from "./map";
-import { SpellData } from "./data";
 import { Nullable } from "./util";
 import {
     HitPointsComponent,
@@ -20,6 +19,7 @@ import {
     PositionComponent,
     SpeedComponent
 } from "./entity";
+import { SpellData } from "./skills";
 
 export interface KeyCommand {
     key: string;

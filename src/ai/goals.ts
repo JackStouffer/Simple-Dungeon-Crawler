@@ -1,5 +1,5 @@
 import { Entity } from "ape-ecs";
-import { ItemType, SpellData, SpellType } from "../data";
+import { ItemType, SpellType } from "../data";
 import {
     FallbackAIComponent,
     FearAIComponent,
@@ -10,6 +10,7 @@ import {
 import { getEffectiveHitPointData, getEffectiveStatData } from "../fighter";
 import { getItems } from "../inventory";
 import { distanceBetweenPoints } from "../map";
+import { SpellData } from "../skills";
 
 export function resolveTargetPositionKnown(ai: Entity): boolean {
     const aiState = ai.getOne(PlannerAIComponent);

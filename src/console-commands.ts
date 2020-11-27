@@ -1,9 +1,9 @@
 import globals from "./globals";
-import { ItemData, SpellData } from "./data";
 import { InventoryComponent, SpellsComponent } from "./entity";
 import { addItem } from "./inventory";
 import { addSpellById } from "./fighter";
 import { Entity } from "ape-ecs";
+import { ItemData, SpellData } from "./skills";
 
 /**
  * Start the game loop

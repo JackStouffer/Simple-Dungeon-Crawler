@@ -5,7 +5,7 @@ import { RNG } from "./rot/index";
 import globals from "./globals";
 import { GameMap, getRandomFighterWithinRange, isBlocked, Point, setAllToExplored } from "./map";
 import { displayMessage } from "./ui";
-import { DamageType, ItemDataDetails, SpellDataDetails, StatusEffectType } from "./data";
+import { DamageType, ItemType, SpellType, StatusEffectType } from "./data";
 import {
     createEntity,
     DisplayNameComponent,
@@ -20,6 +20,35 @@ import {
 import { randomIntFromInterval, Nullable } from "./util";
 import { mouseTarget } from "./input-handler";
 import { addMana, getEffectiveHitPointData, getEffectiveStatData, heal, takeDamage } from "./fighter";
+
+interface Area {
+    width: number;
+    height: number;
+}
+
+export interface ItemDataDetails {
+    displayName: string,
+    type: ItemType,
+    value: Nullable<number>,
+    damageType?: DamageType;
+    statusEffect?: StatusEffectType;
+    areaOfEffect?: Area;
+
+    useFunc: SkillFunction;
+}
+
+export interface SpellDataDetails {
+    id: string;
+    displayName: string;
+    manaCost: number;
+    type: SpellType;
+    value: Nullable<number>;
+    damageType?: DamageType;
+    statusEffect?: StatusEffectType;
+    areaOfEffect?: Area;
+
+    useFunc: SkillFunction;
+}
 
 export type SkillFunction = (
     ecs: World,
@@ -410,3 +439,271 @@ export function castFireWall(
         "fire_effect"
     );
 }
+
+
+
+export const ItemData: { [key: string]: ItemDataDetails } = {
+    "health_potion_weak": {
+        displayName: "Weak Potion of Healing",
+        value: 25,
+        type: ItemType.HealSelf,
+        useFunc: castHeal
+    },
+    "health_potion": {
+        displayName: "Potion of Healing",
+        value: 50,
+        type: ItemType.HealSelf,
+        useFunc: castHeal
+    },
+    "health_potion_strong": {
+        displayName: "Strong Potion of Healing",
+        value: 100,
+        type: ItemType.HealSelf,
+        useFunc: castHeal
+    },
+    "mana_potion_weak": {
+        displayName: "Weak Potion of Mana",
+        value: 25,
+        type: ItemType.AddManaSelf,
+        useFunc: castIncreaseMana
+    },
+    "lightning_scroll_weak": {
+        displayName: "Weak Scroll of Lightning",
+        value: 20,
+        type: ItemType.DamageScroll,
+        damageType: DamageType.Electric,
+        useFunc: castDamageSpell
+    },
+    "lightning_scroll": {
+        displayName: "Scroll of Lightning",
+        value: 50,
+        type: ItemType.DamageScroll,
+        damageType: DamageType.Electric,
+        useFunc: castDamageSpell
+    },
+    "lightning_scroll_strong": {
+        displayName: "Strong Scroll of Lightning",
+        value: 100,
+        type: ItemType.DamageScroll,
+        damageType: DamageType.Electric,
+        useFunc: castDamageSpell
+    },
+    "fireball_scroll_weak": {
+        displayName: "Weak Scroll of Fire",
+        value: 20,
+        type: ItemType.DamageScroll,
+        damageType: DamageType.Fire,
+        useFunc: castDamageSpell,
+        statusEffect: StatusEffectType.OnFire
+    },
+    "fireball_scroll": {
+        displayName: "Scroll of Fire",
+        value: 50,
+        type: ItemType.DamageScroll,
+        damageType: DamageType.Fire,
+        useFunc: castDamageSpell,
+        statusEffect: StatusEffectType.OnFire
+    },
+    "fireball_scroll_strong": {
+        displayName: "Strong Scroll of Fire",
+        value: 100,
+        type: ItemType.DamageScroll,
+        damageType: DamageType.Fire,
+        useFunc: castDamageSpell,
+        statusEffect: StatusEffectType.OnFire
+    },
+    "lightning_scroll_weak_wild": {
+        displayName: "Weak Scroll of Wild Lightning",
+        value: 50,
+        type: ItemType.WildDamageScroll,
+        damageType: DamageType.Electric,
+        useFunc: castWildDamageSpell
+    },
+    "lightning_scroll_wild": {
+        displayName: "Scroll of Wild Lightning",
+        value: 100,
+        type: ItemType.WildDamageScroll,
+        damageType: DamageType.Electric,
+        useFunc: castWildDamageSpell,
+    },
+    "lightning_scroll_strong_wild": {
+        displayName: "Strong Scroll of Wild Lightning",
+        value: 150,
+        type: ItemType.WildDamageScroll,
+        damageType: DamageType.Electric,
+        useFunc: castWildDamageSpell
+    },
+    "fireball_scroll_weak_wild": {
+        displayName: "Weak Scroll of Wild Fire",
+        value: 50,
+        type: ItemType.WildDamageScroll,
+        damageType: DamageType.Fire,
+        useFunc: castWildDamageSpell,
+        statusEffect: StatusEffectType.OnFire
+    },
+    "fireball_scroll_wild": {
+        displayName: "Scroll of Wild Fire",
+        value: 100,
+        type: ItemType.WildDamageScroll,
+        damageType: DamageType.Fire,
+        useFunc: castWildDamageSpell,
+        statusEffect: StatusEffectType.OnFire
+    },
+    "fireball_scroll_strong_wild": {
+        displayName: "Strong Scroll of Wild Fire",
+        value: 150,
+        type: ItemType.WildDamageScroll,
+        damageType: DamageType.Fire,
+        useFunc: castWildDamageSpell,
+        statusEffect: StatusEffectType.OnFire
+    },
+    "confuse_scroll": {
+        displayName: "Scroll of Confuse Enemy",
+        value: 8,
+        type: ItemType.ConfuseScroll,
+        useFunc: castConfuse,
+    },
+    "clairvoyance_scroll": {
+        displayName: "Scroll of Clairvoyance",
+        value: null,
+        type: ItemType.ClairvoyanceScroll,
+        useFunc: castClairvoyance
+    },
+    "haste_potion_weak": {
+        displayName: "Weak Potion of Haste",
+        value: 5,
+        type: ItemType.HasteSelf,
+        useFunc: castHaste,
+    },
+    "slow_poison_weak": {
+        displayName: "Weak Poison of Slow",
+        value: 5,
+        type: ItemType.SlowOther,
+        useFunc: castSlow
+    }
+};
+
+/**
+ * Defines all the properties of a spell: the name, mana cost,
+ * damage values, damage type, and the function to execute.
+ */
+export const SpellData: { [key: string]: SpellDataDetails } = {
+    "lightning_bolt": {
+        id: "lightning_bolt",
+        displayName: "Lightning Bolt",
+        manaCost: 10,
+        value: 20,
+        type: SpellType.DamageOther,
+        damageType: DamageType.Electric,
+        useFunc: castDamageSpell
+    },
+    "wild_lightning_bolt": {
+        id: "wild_lightning_bolt",
+        displayName: "Wild Lightning Bolt",
+        manaCost: 10,
+        value: 30,
+        type: SpellType.WildDamage,
+        damageType: DamageType.Electric,
+        useFunc: castWildDamageSpell
+    },
+    "fireball": {
+        id: "fireball",
+        displayName: "Fireball",
+        manaCost: 50,
+        value: 20,
+        type: SpellType.DamageOther,
+        damageType: DamageType.Fire,
+        useFunc: castDamageSpell,
+        statusEffect: StatusEffectType.OnFire
+    },
+    "wild_fireball": {
+        id: "wild_fireball",
+        displayName: "Wild Fireball",
+        manaCost: 10,
+        value: 30,
+        type: SpellType.WildDamage,
+        damageType: DamageType.Fire,
+        useFunc: castWildDamageSpell
+    },
+    "confuse": {
+        id: "confuse",
+        displayName: "Confuse",
+        manaCost: 20,
+        value: 8,
+        type: SpellType.DamageOther,
+        useFunc: castConfuse
+    },
+    "clairvoyance": {
+        id: "clairvoyance",
+        displayName: "Clairvoyance",
+        manaCost: 20,
+        value: null,
+        type: SpellType.Passive,
+        useFunc: castClairvoyance
+    },
+    "lesser_heal": {
+        id: "lesser_heal",
+        displayName: "Lesser Heal",
+        manaCost: 10,
+        value: 25,
+        type: SpellType.HealSelf,
+        useFunc: castHeal
+    },
+    "heal": {
+        id: "heal",
+        displayName: "Heal",
+        manaCost: 30,
+        value: 50,
+        type: SpellType.HealSelf,
+        useFunc: castHeal
+    },
+    "greater_heal": {
+        id: "greater_heal",
+        displayName: "Greater Heal",
+        manaCost: 50,
+        value: 100,
+        type: SpellType.HealSelf,
+        useFunc: castHeal
+    },
+    "lesser_haste": {
+        id: "lesser_haste",
+        displayName: "Lesser Haste",
+        manaCost: 30,
+        value: 10,
+        type: SpellType.Effect,
+        useFunc: castHaste
+    },
+    "lesser_slow": {
+        id: "lesser_slow",
+        displayName: "Lesser Slow",
+        manaCost: 30,
+        value: 10,
+        type: SpellType.DamageOther,
+        useFunc: castSlow
+    },
+    "fire_wall": {
+        id: "fire_wall",
+        displayName: "Wall of Fire",
+        manaCost: 30,
+        value: 10,
+        type: SpellType.DamageOther,
+        damageType: DamageType.Fire,
+        areaOfEffect: {
+            width: 1,
+            height: 6
+        },
+        useFunc: castFireWall
+    },
+    "ice_wall": {
+        id: "ice_wall",
+        displayName: "Wall of Ice",
+        manaCost: 30,
+        value: null,
+        type: SpellType.DamageOther,
+        areaOfEffect: {
+            width: 1,
+            height: 6
+        },
+        useFunc: castIceWall
+    }
+};
