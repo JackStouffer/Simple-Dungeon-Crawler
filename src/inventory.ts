@@ -84,13 +84,14 @@ export function addItem(inventory: InventoryComponent, id: string, count: number
  * @returns {void}
  */
 export function useItem(inventory: InventoryComponent, id: string): void {
-    if (hasItem(inventory, id)) {
+    if (!hasItem(inventory, id)) {
         throw new Error(`Item ${id} not in inventory`);
     }
 
-    inventory.inventory.set(id, inventory.inventory.get(id)! - 1);
-
-    if (inventory.inventory.get(id) === 0) {
+    const count = inventory.inventory.get(id)! - 1;
+    if (count === 0) {
         inventory.inventory.delete(id);
+    } else {
+        inventory.inventory.set(id, count);
     }
 }

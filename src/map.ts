@@ -14,6 +14,7 @@ import * as dev_room from "./maps/dev_room";
 import {
     createEntity,
     HitPointsComponent,
+    InventoryComponent,
     PatrolPathComponent,
     PlannerAIComponent,
     PositionComponent
@@ -319,10 +320,16 @@ export function loadTiledMap(ecs: World, level: LevelName) {
                     if (inventory !== null) {
                         const items: Map<string, number> = new Map();
                         inventory.split(",").forEach((i: string) => items.set(i, 1));
-                        entity.addComponent({
-                            type: "InventoryComponent",
-                            inventory: items
-                        });
+
+                        const existingInventory = entity.getOne(InventoryComponent);
+                        if (existingInventory === undefined) {
+                            entity.addComponent({
+                                type: "InventoryComponent",
+                                inventory: items
+                            });
+                        } else {
+                            existingInventory.inventory = items;
+                        }
                     }
 
                     if (levelName !== null) {
