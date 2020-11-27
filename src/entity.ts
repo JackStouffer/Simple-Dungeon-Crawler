@@ -1,4 +1,5 @@
 import { World, Component, Entity, EntityRef, System, Query } from "ape-ecs";
+import { assignIn } from "lodash";
 
 import { RNG } from "./rot/index";
 
@@ -13,7 +14,7 @@ import {
     SpellDataDetails,
     TriggerType
 } from "./data";
-import { Nullable } from "./util";
+import { Nullable, randomIntFromInterval } from "./util";
 import { KeyCommand, PlayerState } from "./input-handler";
 import { InventoryItemDetails } from "./inventory";
 import { Planner, PlannerWorldState } from "./ai/planner";
@@ -247,6 +248,7 @@ export class PlannerAIComponent extends Component {
     static properties = {
         target: EntityRef,
         sightRange: 7,
+        planner: null,
         previousWorldState: {},
         currentAction: null,
         currentOrder: "attack",
@@ -413,16 +415,16 @@ export function createEntity(
     type: string,
     x: Nullable<number>,
     y: Nullable<number>,
-    id?: number
+    id?: string
 ): Entity {
     if (!(type in ObjectData)) { throw new Error(`${type} is not valid object id`); }
 
-    const data = ObjectData[type];
-    if (id !== undefined) {
-        data.staticallyKnownComponents.id = id.toString(10);
-    }
+    let hash = randomIntFromInterval(1, 2147483647);
+    hash = hash & hash; // Convert to 32bit integer
+    const entityId = id ?? `${type}-${hash.toString(16)}`;
 
-    const entity = ecs.createEntity(data.staticallyKnownComponents);
+    const data = ObjectData[type];
+    const entity = ecs.createEntity(assignIn({}, { id: entityId }, data.staticallyKnownComponents));
 
     if (x !== null && y !== null && entity.has(PositionComponent) === false) {
         entity.addComponent({ type: "PositionComponent", x, y });
@@ -472,6 +474,7 @@ export function createEntity(
             type: "PlannerAIComponent",
             sightRange: data?.sightRange ?? 5,
             planner,
+            target: ecs.getEntity("player"), // TODO: generic target selection
             previousWorldState: {},
             currentAction: null,
             currentOrder: "attack",

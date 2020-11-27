@@ -6,7 +6,8 @@ import {
     toggleAI,
     togglePlayerFOV,
     startGameLoop,
-    stopGameLoop
+    stopGameLoop,
+    getEntity
 } from "./console-commands";
 
 globals.window = window;
@@ -20,5 +21,6 @@ globals.window.toggleAI = toggleAI;
 globals.window.togglePlayerFOV = togglePlayerFOV;
 globals.window.startGameLoop = startGameLoop;
 globals.window.stopGameLoop = stopGameLoop;
+globals.window.getEntity = getEntity;
 
 globals.Game.startGameplay();

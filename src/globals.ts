@@ -1,3 +1,4 @@
+import { Entity } from "ape-ecs";
 import { EventEmitter } from "events";
 import { SimpleDungeonCrawler } from "./game";
 import { Nullable } from "./util";
@@ -10,6 +11,7 @@ interface MyWindow extends Window {
     togglePlayerFOV?: () => void;
     startGameLoop?: () => void;
     stopGameLoop?: () => void;
+    getEntity?: (id: string) => Entity | undefined;
 }
 
 interface Globals {

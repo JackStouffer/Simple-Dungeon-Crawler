@@ -3,6 +3,7 @@ import { ItemData, SpellData } from "./data";
 import { InventoryComponent, SpellsComponent } from "./entity";
 import { addItem } from "./inventory";
 import { addSpellById } from "./fighter";
+import { Entity } from "ape-ecs";
 
 /**
  * Start the game loop
@@ -69,4 +70,10 @@ export function togglePlayerFOV(): void {
     if (globals.Game === null) { throw new Error("Global game object is null"); }
 
     globals.Game.isLightingEnabled = !(globals.Game.isLightingEnabled as boolean);
+}
+
+export function getEntity(id: string): Entity | undefined {
+    if (globals.Game === null) { throw new Error("Global game object is null"); }
+
+    return globals.Game.ecs.getEntity(id);
 }

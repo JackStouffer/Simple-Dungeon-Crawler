@@ -15,6 +15,7 @@ import {
     DisplayNameComponent,
     InventoryComponent,
     PatrolAIComponent,
+    PatrolPathComponent,
     PlannerAIComponent,
     PositionComponent,
     SpeedComponent,
@@ -144,7 +145,9 @@ export function patrolAction(
     );
     // try the next node
     if (path === null) {
-        patrolState.patrolTarget = patrolState.patrolTarget.next;
+        const next = patrolState.patrolTarget.getOne(PatrolPathComponent);
+        if (next === undefined) { throw new Error(`Missing patrol link on node ${patrolState.patrolTarget.id}`); }
+        patrolState.patrolTarget = next.next;
 
         if (patrolState.patrolTarget === null) {
             return new NoOpCommand(true);

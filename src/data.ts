@@ -547,6 +547,11 @@ export const ObjectData: { [key: string]: ObjectDataDetails } = {
                 },
                 TriggerTypeComponent: {
                     triggerType: TriggerType.Fire
+                },
+                FireTriggerComponent: {
+                    effectTurns: 3,
+                    effectDamage: 3,
+                    damage: 10
                 }
             }
         }
@@ -826,10 +831,7 @@ export const ObjectData: { [key: string]: ObjectDataDetails } = {
                     defense: 1,
                     criticalChance: 0.05,
                     criticalDamageMultiplier: 1.5,
-                    ailmentSusceptibility: 0.1,
-                    level: 3,
-                    experience: 0,
-                    experienceGiven: 50
+                    ailmentSusceptibility: 0.1
                 },
                 LevelComponent: {
                     level: 3,

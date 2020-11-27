@@ -94,6 +94,7 @@ import { DrawChestsSystem, DrawPlayerSystem, DrawSystem } from "./graphics";
 import { LightingSystem } from "./lighting";
 import { UpdateTriggerMapSystem } from "./trigger";
 import { OnFireSystem } from "./effects";
+import { plannerAIGenerateCommand } from "./ai/components";
 
 globals.gameEventEmitter = new EventEmitter();
 
@@ -351,6 +352,7 @@ export class SimpleDungeonCrawler {
         if (globals.gameEventEmitter === null) { throw new Error("Global gameEventEmitter cannot be null"); }
 
         this.scheduler.clear();
+        this.scheduler.add(this.player, true);
 
         const { map, playerLocation } = loadTiledMap(this.ecs, name);
         this.map = map;
@@ -498,15 +500,21 @@ export class SimpleDungeonCrawler {
         this.deltaTime = timestamp - this.lastTimestamp;
         this.lastTimestamp = timestamp;
 
-        if (this.currentActor === null) { this.currentActor = this.scheduler.next(); }
+        if (this.currentActor === null) {
+            this.currentActor = this.scheduler.next();
+        }
 
         if (this.currentActor !== null && this.currentCommand === null) {
             if (this.currentActor === this.player) {
                 this.handleInput();
             } else {
                 if (this.processAI) {
-                    // TODO AI command creation
-                    this.currentCommand = new NoOpCommand(true);
+                    this.currentCommand = plannerAIGenerateCommand(
+                        this.ecs,
+                        this.currentActor,
+                        this.map,
+                        this.triggerMap
+                    );
                 } else {
                     this.currentCommand = new NoOpCommand(true);
                 }

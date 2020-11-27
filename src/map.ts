@@ -18,6 +18,7 @@ import {
 import {
     createEntity,
     HitPointsComponent,
+    PatrolPathComponent,
     PlannerAIComponent,
     PositionComponent
 } from "./entity";
@@ -155,13 +156,13 @@ export function loadTiledMap(ecs: World, level: LevelName) {
         const entity = ecs.getEntity(o.id.toString());
         if (entity === undefined) { throw new Error(`Node ${o.id} not initialized in level load`); }
 
-        const nextId = findProperty(o, "next");
-        const next = nextId !== null ? ecs.getEntity(nextId) : null;
+        const nextId = findProperty(o, "next") as number;
+        const next = nextId !== null ? ecs.getEntity(nextId.toString(10)) : null;
         if (next !== null) {
-            entity.addComponent({
-                type: "PatrolPathComponent",
-                next
-            });
+            const comp = entity.addComponent({
+                type: "PatrolPathComponent"
+            }) as PatrolPathComponent;
+            comp!.next = next;
         }
     });
 
@@ -169,12 +170,12 @@ export function loadTiledMap(ecs: World, level: LevelName) {
         if (o.point !== undefined) {
             if (o.type === "object") {
                 const type = findProperty(o, "objectType"),
-                    inventory = findProperty(o, "inventory"),
-                    levelName = findProperty(o, "levelName"),
+                    inventory = findProperty(o, "inventory") as string,
+                    levelName = findProperty(o, "levelName") as string,
                     spellId = findProperty(o, "spellId"),
                     patrolTarget = findProperty(o, "patrolTarget"),
                     fallbackPosition = findProperty(o, "fallbackPosition"),
-                    event = findProperty(o, "event");
+                    event = findProperty(o, "event") as string;
 
                 if (type === null) {
                     throw new Error(`No type for ${o.name}`);
