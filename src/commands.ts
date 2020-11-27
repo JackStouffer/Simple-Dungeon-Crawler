@@ -3,7 +3,7 @@ import { Entity, World } from "ape-ecs";
 import Path from "./rot/path/index";
 
 import globals from "./globals";
-import { createPassableCallback } from "./ai/components";
+import { createPassableCallback } from "./ai/commands";
 import { SpellData, ItemData, GameState, TriggerType, InteractableType } from "./data";
 import { GameMap, isBlocked, distanceBetweenPoints, Point } from "./map";
 import { assertUnreachable, Nullable } from "./util";

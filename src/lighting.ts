@@ -5,7 +5,7 @@ import { Color, toRGB, add, fromString } from "./rot/color";
 import { ReflectivityCallback } from "./rot/lighting";
 
 import globals from "./globals";
-import { createPassableSightCallback } from "./ai/components";
+import { createPassableSightCallback } from "./ai/commands";
 import { LightingType, WIDTH } from "./data";
 import { LightingComponent, PositionComponent } from "./entity";
 import { GameMap, resetVisibility, setAllToExplored } from "./map";

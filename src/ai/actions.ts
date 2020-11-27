@@ -10,7 +10,7 @@ import {
 } from "../commands";
 import {
     createPassableCallback
-} from "./components";
+} from "./commands";
 import {
     DisplayNameComponent,
     InventoryComponent,

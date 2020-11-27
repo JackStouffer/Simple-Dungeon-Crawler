@@ -24,7 +24,7 @@ import {
 } from "./entity";
 import { Camera } from "./camera";
 import { Nullable } from "./util";
-import { createPlanner } from "./ai/components";
+import { createPlanner } from "./ai/commands";
 
 export class Tile {
     name: string;
@@ -169,12 +169,12 @@ export function loadTiledMap(ecs: World, level: LevelName) {
     objectLayer.objects.forEach((o: any) => {
         if (o.point !== undefined) {
             if (o.type === "object") {
-                const type = findProperty(o, "objectType"),
+                const type = findProperty(o, "objectType") as string,
                     inventory = findProperty(o, "inventory") as string,
                     levelName = findProperty(o, "levelName") as string,
-                    spellId = findProperty(o, "spellId"),
-                    patrolTarget = findProperty(o, "patrolTarget"),
-                    fallbackPosition = findProperty(o, "fallbackPosition"),
+                    spellId = findProperty(o, "spellId") as string,
+                    patrolTarget = findProperty(o, "patrolTarget") as number,
+                    fallbackPosition = findProperty(o, "fallbackPosition") as number,
                     event = findProperty(o, "event") as string;
 
                 if (type === null) {

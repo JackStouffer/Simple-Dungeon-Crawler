@@ -1,4 +1,5 @@
 import { isEqual, get } from "lodash";
+import { Entity, World } from "ape-ecs";
 
 import { DIRS, RNG, FOV } from "../rot/index";
 import { VisibilityCallback } from "../rot/fov/fov";
@@ -9,10 +10,15 @@ import { GoalData, ActionData } from "../data";
 import { Planner, ActionList, PlannerWorldState } from "./planner";
 import { Command, GoToLocationCommand, NoOpCommand } from "../commands";
 import { GameMap, isBlocked, isSightBlocked, Point } from "../map";
-import { ConfusedAIComponent, DisplayNameComponent, LoseTargetAIComponent, PlannerAIComponent, PositionComponent } from "../entity";
+import {
+    ConfusedAIComponent,
+    DisplayNameComponent,
+    LoseTargetAIComponent,
+    PlannerAIComponent,
+    PositionComponent
+} from "../entity";
 import { displayMessage } from "../ui";
 import { Nullable } from "../util";
-import { Entity, World } from "ape-ecs";
 
 
 /**
@@ -293,4 +299,24 @@ export function confusedAIGenerateCommand(
 
         return new NoOpCommand(true);
     }
+}
+
+export function generateAICommand(
+    ecs: World,
+    ai: Entity,
+    map: GameMap,
+    triggerMap: Map<string, Entity>
+): Command {
+    const aiState = ai.getOne(PlannerAIComponent);
+    const confusedState = ai.getOne(ConfusedAIComponent);
+
+    if (confusedState !== undefined) {
+        return confusedAIGenerateCommand(ecs, ai, map, triggerMap);
+    }
+
+    if (aiState !== undefined) {
+        return plannerAIGenerateCommand(ecs, ai, map, triggerMap);
+    }
+
+    throw new Error(`Missing AI state on entity ${ai.id}`);
 }

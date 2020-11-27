@@ -24,7 +24,7 @@ import {
     OpenSpellsCommand,
     RotateReticleCommand
 } from "./commands";
-import { createPlanner } from "./ai/components";
+import { createPlanner } from "./ai/commands";
 
 export class PositionComponent extends Component {
     x: number;

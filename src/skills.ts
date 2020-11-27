@@ -212,6 +212,12 @@ export function castConfuse(
         type: "ConfusedAIComponent",
         turnsLeft: item.value
     });
+
+    const name = entity.getOne(DisplayNameComponent);
+    if (name !== undefined) {
+        displayMessage(`${name.name} is now confused`);
+    }
+
     return true;
 }
 

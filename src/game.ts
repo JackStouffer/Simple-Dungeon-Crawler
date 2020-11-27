@@ -94,7 +94,7 @@ import { DrawChestsSystem, DrawPlayerSystem, DrawSystem } from "./graphics";
 import { LightingSystem } from "./lighting";
 import { UpdateTriggerMapSystem } from "./trigger";
 import { OnFireSystem } from "./effects";
-import { plannerAIGenerateCommand } from "./ai/components";
+import { generateAICommand } from "./ai/commands";
 
 globals.gameEventEmitter = new EventEmitter();
 
@@ -509,7 +509,7 @@ export class SimpleDungeonCrawler {
                 this.handleInput();
             } else {
                 if (this.processAI) {
-                    this.currentCommand = plannerAIGenerateCommand(
+                    this.currentCommand = generateAICommand(
                         this.ecs,
                         this.currentActor,
                         this.map,
