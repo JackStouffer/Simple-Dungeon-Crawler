@@ -5,8 +5,7 @@ import {
     GraphicsComponent,
     InputHandlingComponent,
     InventoryComponent,
-    PositionComponent,
-    SpeedComponent
+    PositionComponent
 } from "./entity";
 import input from "./input";
 import { distanceBetweenPoints, getEntitiesAtLocation } from "./map";
@@ -14,6 +13,7 @@ import { getTargetingReticle, PlayerState } from "./input-handler";
 import { getActorMovementPath } from "./commands";
 import { getItems } from "./inventory";
 import globals from "./globals";
+import { getEffectiveSpeedData } from "./fighter";
 
 /**
  * Grab the first background color of an object on the position that doesn't
@@ -179,10 +179,10 @@ export class DrawPlayerSystem extends System {
         for (const entity of entities) {
             const pos = entity.getOne(PositionComponent)!;
             const inputStateData = entity.getOne(InputHandlingComponent);
-            const speedData = entity.getOne(SpeedComponent);
+            const speedData = getEffectiveSpeedData(entity);
             const graphics = entity.getOne(GraphicsComponent);
 
-            if (speedData === undefined ||
+            if (speedData === null ||
                 inputStateData === undefined ||
                 graphics === undefined) {
                 throw new Error("Player missing speed or input data");

@@ -399,6 +399,9 @@ export function getEffectiveSpeedData(entity: Entity) {
         newStats = calculateStatModifier(e, newStats);
     });
 
+    newStats.maxTilesPerMove = Math.max(1, newStats.maxTilesPerMove);
+    newStats.speed = Math.max(1, newStats.speed);
+
     return newStats;
 }
 

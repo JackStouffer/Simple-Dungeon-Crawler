@@ -20,7 +20,7 @@ import {
     StatsComponent,
     TriggerTypeComponent
 } from "./entity";
-import { attack, getEffectiveStatData, hasSpell, useMana } from "./fighter";
+import { attack, getEffectiveSpeedData, getEffectiveStatData, hasSpell, useMana } from "./fighter";
 import { hasItem, useItem } from "./inventory";
 import { deepWaterTrigger, eventTrigger, fireTrigger, shallowWaterTrigger } from "./trigger";
 import { giveItemsInteract, giveSpellsInteract, doorInteract, levelLoadInteract } from "./interactable";
@@ -134,11 +134,12 @@ export class NoOpCommand implements Command {
  * Move the game object to a specific point on the map
  */
 export class GoToLocationCommand implements Command {
-    private readonly usesTurn: boolean = true;
     private readonly path: number[][];
     private readonly map: GameMap;
     private readonly ecs: World;
     private readonly triggerMap: Map<string, Entity>;
+    private tilesMoved: number = 0;
+    private readonly usesTurn: boolean = true;
     private done: boolean = false;
 
     constructor(path: number[][], ecs: World, map: GameMap, triggerMap: Map<string, Entity>) {
@@ -169,6 +170,15 @@ export class GoToLocationCommand implements Command {
             return;
         }
 
+        const pos = actor.getOne(PositionComponent);
+        if (pos === undefined) { throw new Error(`Entity ${actor.id} does not have a position for GoToLocationCommand`); }
+        pos.x = destination[0];
+        pos.y = destination[1];
+        pos.update();
+        this.tilesMoved++;
+
+        this.path.shift();
+
         const triggerEntity = this.triggerMap.get(`${destination[0]},${destination[1]}`);
         if (triggerEntity !== undefined) {
             const triggerData = triggerEntity.getOne(TriggerTypeComponent);
@@ -183,10 +193,10 @@ export class GoToLocationCommand implements Command {
                         fireTrigger(actor, triggerEntity);
                         break;
                     case TriggerType.ShallowWater:
-                        shallowWaterTrigger();
+                        shallowWaterTrigger(actor);
                         break;
                     case TriggerType.DeepWater:
-                        deepWaterTrigger();
+                        deepWaterTrigger(actor);
                         break;
                     default:
                         assertUnreachable(triggerData.triggerType);
@@ -194,13 +204,14 @@ export class GoToLocationCommand implements Command {
             }
         }
 
-        const pos = actor.getOne(PositionComponent);
-        if (pos === undefined) { throw new Error(`Entity ${actor.id} does not have a position for GoToLocationCommand`); }
-        pos.x = destination[0];
-        pos.y = destination[1];
-        pos.update();
+        // check for max movement differences in case one of the
+        // triggers changed it
+        const speedData = getEffectiveSpeedData(actor);
+        if (speedData !== null && speedData.maxTilesPerMove <= this.tilesMoved) {
+            this.done = true;
+            return;
+        }
 
-        this.path.shift();
         if (this.path.length === 0) {
             this.done = true;
         }

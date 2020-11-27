@@ -2,8 +2,9 @@ import { System, Entity } from "ape-ecs";
 
 import globals from "./globals";
 import { DamageType } from "./constants";
-import { EventTriggerComponent, FireTriggerComponent, FlammableComponent, PositionComponent, TypeComponent } from "./entity";
+import { EventTriggerComponent, FireTriggerComponent, FlammableComponent, PositionComponent, SpeedComponent, TypeComponent } from "./entity";
 import { takeDamage } from "./fighter";
+import { displayMessage } from "./ui";
 
 export class UpdateTriggerMapSystem extends System {
     init() {
@@ -75,12 +76,44 @@ export function eventTrigger(actor: Entity, trigger: Entity): void {
     }
 }
 
-export function shallowWaterTrigger(): void {
-    // TODO
-    return;
+export function shallowWaterTrigger(actor: Entity): void {
+    // Put the fire out if the actor is on fire
+    const flammableData = actor.getOne(FlammableComponent);
+    if (flammableData !== undefined && flammableData.onFire) {
+        flammableData.onFire = false;
+        flammableData.turnsLeft = 0;
+        flammableData.fireDamage = 0;
+        flammableData.update();
+
+        if (actor === globals.Game?.player) {
+            displayMessage("The water doused you");
+        }
+    }
 }
 
-export function deepWaterTrigger(): void {
-    // TODO
-    return;
+export function deepWaterTrigger(actor: Entity): void {
+    // Put the fire out if the actor is on fire
+    const flammableData = actor.getOne(FlammableComponent);
+    if (flammableData !== undefined && flammableData.onFire) {
+        flammableData.onFire = false;
+        flammableData.turnsLeft = 0;
+        flammableData.fireDamage = 0;
+        flammableData.update();
+
+        if (actor === globals.Game?.player) {
+            displayMessage("The water doused you");
+        }
+    }
+
+    // Slow the player down to simulate swimming
+    const speedData = actor.getOne(SpeedComponent);
+    if (speedData !== undefined) {
+        actor.addComponent({
+            type: "SpeedEffectComponent",
+            stat: "maxTilesPerMove",
+            modifierType: "multiply",
+            turnsLeft: 1,
+            value: 0.1
+        });
+    }
 }

@@ -37,8 +37,6 @@ export enum PlayerState {
  * has an interactable or fighter. If there is no object, return null.
  * @param {Point} mousePosition - The mouse position
  * @param {GameMap} map - The current game map
- * @param {GameObject[]} gameObjects - The objects on the map
- * @return {Nullable<GameObject>} A game object
  */
 export function mouseTarget(
     ecs: World,
