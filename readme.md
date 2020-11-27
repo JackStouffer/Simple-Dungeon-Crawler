@@ -45,8 +45,9 @@ npm run test
 * Potions
 * Magic scrolls
 * Multiple levels loaded and connected from Tiled maps
-* Monsters with basic AI, like rats and goblins
-* Two pass lighting and sight FOVs
+* Planning monster AI that can attack and also use items and spells
+* Two pass lighting
+* Sight FOVs for AIs and fog of war for the player
 * Intractable world items like chests, boxes, and doors
 * Some scenery like tables, lanterns, fires, chairs, and cabinets
 * Keybinding for keyboard controls
