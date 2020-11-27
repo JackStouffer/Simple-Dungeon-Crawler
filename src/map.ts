@@ -456,7 +456,7 @@ export function isBlocked(
         return { entity: null, blocks: true };
     }
 
-    const entities = ecs.createQuery().fromAll(PositionComponent, "blocks").execute();
+    const entities = ecs.createQuery().fromAll(PositionComponent).execute();
 
     let entity: Entity | undefined;
     for (const e of entities) {
