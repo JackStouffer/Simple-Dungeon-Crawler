@@ -1,5 +1,5 @@
 import { Entity } from "ape-ecs";
-import { ItemType, SpellData } from "../data";
+import { ItemType, SpellData, SpellType } from "../data";
 import {
     FallbackAIComponent,
     FearAIComponent,
@@ -107,4 +107,71 @@ export function resolveAtFallbackPosition(ai: Entity): boolean {
 export function resolveHasArrows(): boolean {
     // FIXME
     return false;
+}
+
+export interface GoalDataDetails {
+    resolver: (ai: Entity) => boolean
+}
+
+/**
+ * A set of world state variables and the functions used
+ * to determine if they're true. Used in the planner.
+ */
+export const GoalData: { [key: string]: GoalDataDetails } = {
+    "targetPositionKnown": {
+        resolver: resolveTargetPositionKnown
+    },
+    "targetInLineOfSight": {
+        resolver: resolveTargetInLOS
+    },
+    "nextToTarget": {
+        resolver: resolveNextToTarget
+    },
+    "lowMana": {
+        resolver: resolveLowMana
+    },
+    "lowHealth": {
+        resolver: resolveLowHealth
+    },
+    "hasArrows": {
+        resolver: resolveHasArrows
+    },
+    "hasManaItem": {
+        resolver: resolveHasManaItem
+    },
+    "hasHealingItem": {
+        resolver: resolveHasHealingItem
+    },
+    "inDangerousArea": {
+        resolver: resolveInDangerousArea
+    },
+    "targetKilled": {
+        resolver: resolveTargetKilled
+    },
+    "afraid": {
+        resolver: resolveAfraid
+    },
+    "cowering": {
+        resolver: resolveCowering
+    },
+    "atFallbackPosition": {
+        resolver: resolveAtFallbackPosition
+    }
+};
+
+
+// Dynamically add spells to goals and actions
+for (const key in SpellData) {
+    const data = SpellData[key];
+    // capitalize the first letter
+    const goal = `enoughManaFor_${key}`;
+    if (data.type === SpellType.DamageOther) {
+        GoalData[goal] = {
+            resolver: resolveEnoughManaForSpellGenerator(key)
+        };
+    } else if (data.type === SpellType.HealSelf) {
+        GoalData[goal] = {
+            resolver: resolveEnoughManaForSpellGenerator(key)
+        };
+    }
 }

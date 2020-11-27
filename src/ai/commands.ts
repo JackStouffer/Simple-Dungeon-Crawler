@@ -6,9 +6,10 @@ import { VisibilityCallback } from "../rot/fov/fov";
 import { PassableCallback } from "../rot/path/path";
 
 import globals from "../globals";
-import { GoalData, ActionData } from "../data";
+import { ActionData } from "../data";
 import { Planner, ActionList, PlannerWorldState } from "./planner";
 import { Command, GoToLocationCommand, NoOpCommand } from "../commands";
+import { GoalData } from "./goals";
 import { GameMap, isBlocked, isSightBlocked, Point } from "../map";
 import {
     ConfusedAIComponent,

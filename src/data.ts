@@ -1,28 +1,5 @@
-// @ts-expect-error
-import * as forrest_001 from "./maps/forrest_001";
-// @ts-expect-error
-import * as durdwin_001 from "./maps/durdwin_001";
-// @ts-expect-error
-import * as dev_room from "./maps/dev_room";
-
 import { Entity, IEntityConfig, World } from "ape-ecs";
 
-import {
-    resolveTargetPositionKnown,
-    resolveTargetInLOS,
-    resolveNextToTarget,
-    resolveEnoughManaForSpellGenerator,
-    resolveLowHealth,
-    resolveLowMana,
-    resolveHasManaItem,
-    resolveHasHealingItem,
-    resolveInDangerousArea,
-    resolveTargetKilled,
-    resolveAfraid,
-    resolveCowering,
-    resolveAtFallbackPosition,
-    resolveHasArrows
-} from "./ai/goals";
 import {
     wanderAction,
     patrolAction,
@@ -56,14 +33,6 @@ export const HEIGHT = 38;
 export const UI_HEIGHT = 6;
 export const WORLD_WIDTH = WIDTH;
 export const WORLD_HEIGHT = HEIGHT - UI_HEIGHT - 1;
-
-export const COLOR_INVISIBLE_WALL = "black";
-export const COLOR_DARK_WALL = "rgb(20, 20, 20)";
-export const COLOR_LIGHT_WALL = "#352620";
-export const COLOR_INVISIBLE_GROUND = "black";
-export const COLOR_DARK_GROUND = "rgb(50, 50, 50)";
-export const COLOR_LIGHT_GROUND = "white";
-export const COLOR_AMBIENT_LIGHT = "rgb(50, 50, 50)";
 
 export const MAP_FILLED_SPACE = "#";
 export const MAP_EMPTY_SPACE = ".";
@@ -159,121 +128,6 @@ export enum TriggerType {
     ShallowWater,
     DeepWater
 }
-
-export interface TileDataDetails {
-    name: string;
-    char: string;
-    fgColor: string;
-    bgColor: string;
-    fgColorExplored: string;
-    bgColorExplored: string;
-    blocks: boolean;
-    blocksSight: boolean;
-    reflectivity: number;
-}
-
-export const TileData: { [key: number]: TileDataDetails } = {
-    780: {
-        name: "Gravestone",
-        char: "\u07E1",
-        fgColor: "white",
-        bgColor: "brown",
-        fgColorExplored: "white",
-        bgColorExplored: "black",
-        blocks: true,
-        blocksSight: false,
-        reflectivity: 0.18
-    },
-    900: {
-        name: "empty ground",
-        char: "",
-        fgColor: COLOR_LIGHT_GROUND,
-        bgColor: COLOR_LIGHT_GROUND,
-        fgColorExplored: COLOR_DARK_GROUND,
-        bgColorExplored: COLOR_DARK_GROUND,
-        blocks: false,
-        blocksSight: false,
-        reflectivity: 0.18
-    },
-    980: {
-        name: "A stove",
-        char: "\u233B",
-        fgColor: "black",
-        bgColor: "brown",
-        fgColorExplored: "white",
-        bgColorExplored: "black",
-        blocks: true,
-        blocksSight: false,
-        reflectivity: 0.18
-    },
-    1048: {
-        name: "A wall",
-        char: "",
-        fgColor: COLOR_LIGHT_WALL,
-        bgColor: COLOR_LIGHT_WALL,
-        fgColorExplored: COLOR_DARK_WALL,
-        bgColorExplored: COLOR_DARK_WALL,
-        blocks: true,
-        blocksSight: true,
-        reflectivity: 0.18
-    },
-    1165: {
-        name: "A tree",
-        char: "\u1278",
-        fgColor: "lightgreen",
-        bgColor: "darkgreen",
-        fgColorExplored: "grey",
-        bgColorExplored: "black",
-        blocks: true,
-        blocksSight: true,
-        reflectivity: 0.18
-    },
-    1543: {
-        name: "bed",
-        char: "\u2583",
-        fgColor: "gold",
-        bgColor: "white",
-        fgColorExplored: "white",
-        bgColorExplored: "black",
-        blocks: true,
-        blocksSight: false,
-        reflectivity: 0.18
-    },
-    2710: {
-        name: "A table",
-        char: "\u03A0",
-        fgColor: "tan",
-        bgColor: "brown",
-        fgColorExplored: "white",
-        bgColorExplored: "black",
-        blocks: true,
-        blocksSight: false,
-        reflectivity: 0.18
-    },
-    2869: {
-        name: "A chair",
-        char: "\u043F",
-        fgColor: "black",
-        bgColor: "brown",
-        fgColorExplored: "white",
-        bgColorExplored: "black",
-        blocks: true,
-        blocksSight: false,
-        reflectivity: 0.18
-    },
-    2936: {
-        name: "A cabinet",
-        char: "\u2339",
-        fgColor: "black",
-        bgColor: "brown",
-        fgColorExplored: "white",
-        bgColorExplored: "black",
-        blocks: true,
-        blocksSight: false,
-        reflectivity: 0.18
-    }
-};
-Object.freeze(TileData);
 
 export interface DamageAffinityMap {
     [DamageType.Physical]: Affinity;
@@ -1506,56 +1360,6 @@ export const SpellData: { [key: string]: SpellDataDetails } = {
     }
 };
 
-export interface GoalDataDetails {
-    resolver: (ai: Entity) => boolean
-}
-
-/**
- * A set of world state variables and the functions used
- * to determine if they're true. Used in the planner.
- */
-export const GoalData: { [key: string]: GoalDataDetails } = {
-    "targetPositionKnown": {
-        resolver: resolveTargetPositionKnown
-    },
-    "targetInLineOfSight": {
-        resolver: resolveTargetInLOS
-    },
-    "nextToTarget": {
-        resolver: resolveNextToTarget
-    },
-    "lowMana": {
-        resolver: resolveLowMana
-    },
-    "lowHealth": {
-        resolver: resolveLowHealth
-    },
-    "hasArrows": {
-        resolver: resolveHasArrows
-    },
-    "hasManaItem": {
-        resolver: resolveHasManaItem
-    },
-    "hasHealingItem": {
-        resolver: resolveHasHealingItem
-    },
-    "inDangerousArea": {
-        resolver: resolveInDangerousArea
-    },
-    "targetKilled": {
-        resolver: resolveTargetKilled
-    },
-    "afraid": {
-        resolver: resolveAfraid
-    },
-    "cowering": {
-        resolver: resolveCowering
-    },
-    "atFallbackPosition": {
-        resolver: resolveAtFallbackPosition
-    }
-};
-
 export interface Action {
     preconditions: { [key: string]: boolean },
     postconditions: { [key: string]: boolean }
@@ -1656,9 +1460,6 @@ for (const key in SpellData) {
     const goal = `enoughManaFor_${key}`;
     const action = `castSpell_${key}`;
     if (data.type === SpellType.DamageOther) {
-        GoalData[goal] = {
-            resolver: resolveEnoughManaForSpellGenerator(key)
-        };
         ActionData[action] = {
             preconditions: {
                 [goal]: true,
@@ -1670,9 +1471,6 @@ for (const key in SpellData) {
             weight: () => 1
         };
     } else if (data.type === SpellType.HealSelf) {
-        GoalData[goal] = {
-            resolver: resolveEnoughManaForSpellGenerator(key)
-        };
         ActionData[action] = {
             preconditions: { lowHealth: true, [goal]: true },
             postconditions: { lowHealth: false },
@@ -1692,11 +1490,3 @@ for (const objectID in ObjectData) {
         }
     }
 }
-
-export const LevelData: { [key: string]: any } = {
-    forrest_001,
-    durdwin_001,
-    dev_room
-};
-
-export type LevelName = keyof typeof LevelData;

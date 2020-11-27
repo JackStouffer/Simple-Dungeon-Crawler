@@ -7,7 +7,6 @@ import {
     WIDTH,
     HEIGHT,
     UI_HEIGHT,
-    MAP_FILLED_SPACE,
     LEVEL_UP_BASE,
     LEVEL_UP_FACTOR,
     SpellType,
@@ -43,7 +42,7 @@ export function drawStatusBar(
 
     for (let x = 0; x < WIDTH; x++) {
         for (let y = 0; y < UI_HEIGHT; y++) {
-            display.draw(x, HEIGHT - (UI_HEIGHT - y), MAP_FILLED_SPACE, "blue", "blue");
+            display.draw(x, HEIGHT - (UI_HEIGHT - y), "#", "blue", "blue");
         }
     }
 

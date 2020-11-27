@@ -1,4 +1,4 @@
-import { Entity, Query, System } from "ape-ecs";
+import { Query, System } from "ape-ecs";
 
 import globals from "./globals";
 import { DamageType } from "./data";

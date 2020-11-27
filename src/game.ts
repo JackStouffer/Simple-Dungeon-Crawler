@@ -64,7 +64,7 @@ import {
     UseItemCommand,
     UseSpellCommand
 } from "./commands";
-import { WIDTH, HEIGHT, GameState, LevelName, ItemType, SpellType, SpellDataDetails } from "./data";
+import { WIDTH, HEIGHT, GameState, ItemType, SpellType, SpellDataDetails } from "./data";
 import input from "./input";
 import { handleInput, PlayerState } from "./input-handler";
 import {
@@ -348,7 +348,7 @@ export class SimpleDungeonCrawler {
      * Load a tiled map into the game world
      * @param name {string} the name of the level to load
      */
-    loadLevel(name: LevelName): void {
+    loadLevel(name: string): void {
         if (globals.gameEventEmitter === null) { throw new Error("Global gameEventEmitter cannot be null"); }
 
         this.scheduler.clear();

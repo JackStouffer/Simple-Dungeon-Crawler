@@ -4,16 +4,16 @@ import { Entity, World } from "ape-ecs";
 import { Display, RNG } from "./rot/index";
 import { toRGB, fromString, multiply } from "./rot/color";
 
+// @ts-expect-error
+import * as forrest_001 from "./maps/forrest_001";
+// @ts-expect-error
+import * as durdwin_001 from "./maps/durdwin_001";
+// @ts-expect-error
+import * as dev_room from "./maps/dev_room";
+
 import {
-    COLOR_AMBIENT_LIGHT,
-    COLOR_INVISIBLE_WALL,
-    COLOR_DARK_GROUND,
-    COLOR_INVISIBLE_GROUND,
-    LevelData,
-    TileData,
     WIDTH,
-    HEIGHT,
-    LevelName
+    HEIGHT
 } from "./data";
 import {
     createEntity,
@@ -25,6 +25,135 @@ import {
 import { Camera } from "./camera";
 import { Nullable } from "./util";
 import { createPlanner } from "./ai/commands";
+
+const COLOR_INVISIBLE_WALL = "black";
+const COLOR_INVISIBLE_GROUND = "black";
+const COLOR_DARK_GROUND = "rgb(50, 50, 50)";
+const COLOR_AMBIENT_LIGHT = "rgb(50, 50, 50)";
+
+const LevelData: { [key: string]: any } = {
+    forrest_001,
+    durdwin_001,
+    dev_room
+};
+
+type LevelName = keyof typeof LevelData;
+
+interface TileDataDetails {
+    name: string;
+    char: string;
+    fgColor: string;
+    bgColor: string;
+    fgColorExplored: string;
+    bgColorExplored: string;
+    blocks: boolean;
+    blocksSight: boolean;
+    reflectivity: number;
+}
+
+const TileData: { [key: number]: TileDataDetails } = {
+    780: {
+        name: "Gravestone",
+        char: "\u07E1",
+        fgColor: "white",
+        bgColor: "brown",
+        fgColorExplored: "white",
+        bgColorExplored: "black",
+        blocks: true,
+        blocksSight: false,
+        reflectivity: 0.18
+    },
+    900: {
+        name: "empty ground",
+        char: "",
+        fgColor: "white",
+        bgColor: "white",
+        fgColorExplored: "rgb(50, 50, 50)",
+        bgColorExplored: "rgb(50, 50, 50)",
+        blocks: false,
+        blocksSight: false,
+        reflectivity: 0.18
+    },
+    980: {
+        name: "A stove",
+        char: "\u233B",
+        fgColor: "black",
+        bgColor: "brown",
+        fgColorExplored: "white",
+        bgColorExplored: "black",
+        blocks: true,
+        blocksSight: false,
+        reflectivity: 0.18
+    },
+    1048: {
+        name: "A wall",
+        char: "",
+        fgColor: "#352620",
+        bgColor: "#352620",
+        fgColorExplored: "black",
+        bgColorExplored: "black",
+        blocks: true,
+        blocksSight: true,
+        reflectivity: 0.18
+    },
+    1165: {
+        name: "A tree",
+        char: "\u1278",
+        fgColor: "lightgreen",
+        bgColor: "darkgreen",
+        fgColorExplored: "grey",
+        bgColorExplored: "black",
+        blocks: true,
+        blocksSight: true,
+        reflectivity: 0.18
+    },
+    1543: {
+        name: "bed",
+        char: "\u2583",
+        fgColor: "gold",
+        bgColor: "white",
+        fgColorExplored: "white",
+        bgColorExplored: "black",
+        blocks: true,
+        blocksSight: false,
+        reflectivity: 0.18
+    },
+    2710: {
+        name: "A table",
+        char: "\u03A0",
+        fgColor: "tan",
+        bgColor: "brown",
+        fgColorExplored: "white",
+        bgColorExplored: "black",
+        blocks: true,
+        blocksSight: false,
+        reflectivity: 0.18
+    },
+    2869: {
+        name: "A chair",
+        char: "\u043F",
+        fgColor: "black",
+        bgColor: "brown",
+        fgColorExplored: "white",
+        bgColorExplored: "black",
+        blocks: true,
+        blocksSight: false,
+        reflectivity: 0.18
+    },
+    2936: {
+        name: "A cabinet",
+        char: "\u2339",
+        fgColor: "black",
+        bgColor: "brown",
+        fgColorExplored: "white",
+        bgColorExplored: "black",
+        blocks: true,
+        blocksSight: false,
+        reflectivity: 0.18
+    }
+};
+Object.freeze(TileData);
+
 
 export class Tile {
     name: string;
