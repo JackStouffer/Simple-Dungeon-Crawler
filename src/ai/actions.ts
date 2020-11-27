@@ -1,5 +1,3 @@
-import { get } from "lodash";
-
 import { RNG, DIRS, Path } from "../rot/index";
 
 import {
@@ -8,32 +6,43 @@ import {
     UseSpellCommand,
     GoToLocationCommand,
     InteractCommand,
-    NoOpCommand
+    NoOpCommand,
+    createPassableCallback
 } from "../commands";
 import {
-    AIComponent,
-    createPassableCallback,
-    PlanningAI
-} from "./components";
-import { GameObject } from "../object";
+    DisplayNameComponent,
+    InventoryComponent,
+    PatrolAIComponent,
+    PatrolPathComponent,
+    PlannerAIComponent,
+    PositionComponent,
+    SpeedComponent,
+    SpellsComponent
+} from "../entity";
 import {
-    distanceBetweenObjects,
+    distanceBetweenPoints,
     GameMap,
-    getObjectsAtLocation,
+    getEntitiesAtLocation,
     isBlocked,
-    PathNode,
 } from "../map";
 import { displayMessage } from "../ui";
-import { ItemType, ObjectData } from "../data";
+import { ItemType, SpellType } from "../constants";
 import { Nullable } from "../util";
 import globals from "../globals";
+import { Entity, World } from "ape-ecs";
+import { WeightCallback } from "../rot/path/path";
+import { getItems } from "../inventory";
+import { getKnownSpells } from "../fighter";
+import { SpellData } from "../skills";
 
-function weightCallback(x: number, y: number): number {
-    if (globals.Game === null) { throw new Error("Global game object is null"); }
+function generateWeightCallback(ecs: World): WeightCallback {
+    return function (x: number, y: number): number {
+        if (globals.Game === null) { throw new Error("Global game object is null"); }
 
-    const objects = getObjectsAtLocation(globals.Game.gameObjects, x, y);
-    // if (objects.length > 0) { console.log(objects); }
-    return objects.length > 0 ? 20 : 0;
+        const objects = getEntitiesAtLocation(ecs, x, y);
+        // if (objects.length > 0) { console.log(objects); }
+        return objects.length > 0 ? 20 : 0;
+    };
 }
 
 /**
@@ -47,16 +56,16 @@ function weightCallback(x: number, y: number): number {
  * @returns {Point} the nth step along the path
  */
 export function getStepsTowardsTarget(
-    actor: GameObject,
-    targetX: number,
-    targetY: number,
+    ecs: World,
+    origin: PositionComponent,
+    target: PositionComponent,
     steps: number
 ): Nullable<number[][]> {
     const aStar = new Path.AStar(
-        targetX,
-        targetY,
-        createPassableCallback(actor),
-        weightCallback,
+        target.x,
+        target.y,
+        createPassableCallback(origin),
+        generateWeightCallback(ecs),
         { topology: 8 }
     );
 
@@ -64,7 +73,7 @@ export function getStepsTowardsTarget(
     function pathCallback(x: number, y: number) {
         path.push([x, y]);
     }
-    aStar.compute(actor.x, actor.y, pathCallback);
+    aStar.compute(origin.x, origin.y, pathCallback);
 
     // remove our own position
     path.shift();
@@ -85,82 +94,69 @@ export function getStepsTowardsTarget(
  * @param gameObjects The current map's list of objects
  * @returns {Command} A move command
  */
-export function wanderAction(ai: AIComponent, map: GameMap, gameObjects: GameObject[]): Command {
-    if (ai.owner === null) { throw new Error("No owner on AI for wanderAction"); }
-
+export function wanderAction(
+    ecs: World,
+    ai: PlannerAIComponent,
+    map: GameMap,
+    triggerMap: Map<string, Entity>
+): Command {
     let blocks: boolean = true;
-    let object: Nullable<Object> = null;
+    let entity: Nullable<Entity> = null;
     let newX: number = 0;
     let newY: number = 0;
     let dir: number = RNG.getItem([0, 1, 2, 3, 4, 5, 6, 7]) ?? 0;
+    const pos = ai.entity.getOne(PositionComponent)!;
 
     do {
         dir = RNG.getItem([0, 1, 2, 3, 4, 5, 6, 7]) ?? 0;
-        newX = ai.owner.x + DIRS[8][dir][0];
-        newY = ai.owner.y + DIRS[8][dir][1];
-        ({ blocks, object } = isBlocked(map, gameObjects, newX, newY));
-    } while (blocks === true || object !== null);
+        newX = pos.x + DIRS[8][dir][0];
+        newY = pos.y + DIRS[8][dir][1];
+        ({ blocks, entity } = isBlocked(ecs, map, newX, newY));
+    } while (blocks === true || entity !== null);
 
-    return new GoToLocationCommand([[newX, newY]], map, gameObjects);
+    return new GoToLocationCommand([[newX, newY]], ecs, map, triggerMap);
 }
 
 /**
  * Generates a command to move towards the AI's current patrol node.
  * If the AI is at the patrol node, then set the AI's patrol node to
  * the next node.
- * @param {AIComponent} ai The AI which is acting
- * @param {GameMap} map The current game map
- * @param {GameObject[]} gameObjects The current map's list of objects
- * @param {Map<number, PathNode>} pathNodes The map of patrol nodes for the map
- * @returns {Command} A move command
  */
 export function patrolAction(
-    ai: PlanningAI,
+    ecs: World,
+    aiState: PlannerAIComponent,
     map: GameMap,
-    gameObjects: GameObject[],
-    pathNodes: Map<number, PathNode>
+    triggerMap: Map<string, Entity>
 ): Command {
-    if (ai.pathName === null) { throw new Error("pathName not set for PatrollingMonsterAI"); }
-    if (ai.owner === null) { throw new Error("No owner on AI for patrolAction"); }
-
-    // For the first node, find the closest node on the path
-    // to the current position, we can just follow the path
-    // after that
-    if (ai.patrolTarget === null) {
-        const sortedNodes = [...pathNodes.values()]
-            .filter((n) => { return n.pathName === ai.pathName; })
-            .map((e) => {
-                e.distance = distanceBetweenObjects(e, ai.owner!);
-                return e;
-            })
-            .sort((a, b) => {
-                return a.distance - b.distance;
-            });
-
-        ai.patrolTarget = get(sortedNodes, "[0]", null);
+    const pos = aiState.entity.getOne(PositionComponent);
+    const patrolState = aiState.entity.getOne(PatrolAIComponent);
+    if (patrolState === undefined || pos === undefined) {
+        throw new Error("Cannot patrol without a patrolState or position");
     }
-    if (ai.patrolTarget === null) {
-        return new NoOpCommand(true);
-    }
+    if (patrolState.patrolTarget === null) { throw new Error(`Null patrol target for entity ${aiState.entity.id}`); }
 
+    let targetPos: PositionComponent = patrolState.patrolTarget.getOne(PositionComponent);
     let path: Nullable<number[][]> = getStepsTowardsTarget(
-        ai.owner,
-        ai.patrolTarget.x,
-        ai.patrolTarget.y,
+        ecs,
+        pos,
+        targetPos,
         2
     );
     // try the next node
     if (path === null) {
-        ai.patrolTarget = pathNodes.get(ai.patrolTarget.next) ?? null;
+        const next = patrolState.patrolTarget.getOne(PatrolPathComponent);
+        if (next === undefined) { throw new Error(`Missing patrol link on node ${patrolState.patrolTarget.id}`); }
+        patrolState.patrolTarget = next.next;
 
-        if (ai.patrolTarget === null) {
+        if (patrolState.patrolTarget === null) {
             return new NoOpCommand(true);
         }
 
+        targetPos = patrolState.patrolTarget.getOne(PositionComponent);
         path = getStepsTowardsTarget(
-            ai.owner,
-            ai.patrolTarget.x,
-            ai.patrolTarget.y,
+            ecs,
+            pos,
+            targetPos,
             2
         );
     }
@@ -169,7 +165,7 @@ export function patrolAction(
         return new NoOpCommand(true);
     }
 
-    return new GoToLocationCommand(path, map, gameObjects);
+    return new GoToLocationCommand(path, ecs, map, triggerMap);
 }
 
 /**
@@ -178,23 +174,28 @@ export function patrolAction(
  * @returns {Command} a command to move
  */
 export function chaseAction(
-    ai: PlanningAI,
+    ecs: World,
+    ai: PlannerAIComponent,
     map: GameMap,
-    gameObjects: GameObject[],
+    triggerMap: Map<string, Entity>
 ): Command {
-    if (ai.owner === null) { throw new Error("No owner on AI for chaseAction"); }
     if (ai.target === null) { throw new Error("Cannot perform chaseAction without a target"); }
 
-    const maxTilesPerMove = ObjectData[ai.owner.type].maxTilesPerMove;
-    if (maxTilesPerMove === null) {
-        throw new Error(`Missing maxTilesPerMove for ${ai.owner.type}`);
+    const speedData = ai.entity.getOne(SpeedComponent);
+    const posData = ai.entity.getOne(PositionComponent);
+    const targetPosData = ai.target.getOne(PositionComponent);
+    if (speedData === undefined || posData === undefined) {
+        throw new Error(`Missing data for ${ai.entity.id}`);
+    }
+    if (targetPosData === undefined) {
+        throw new Error(`Missing data for ${ai.target.id}`);
     }
 
     const path: Nullable<number[][]> = getStepsTowardsTarget(
-        ai.owner,
-        ai.target.x,
-        ai.target.y,
-        maxTilesPerMove
+        ecs,
+        posData,
+        targetPosData,
+        speedData.maxTilesPerMove
     );
     if (path === null) {
         return new NoOpCommand(true);
@@ -204,7 +205,7 @@ export function chaseAction(
         return new NoOpCommand(true);
     }
 
-    return new GoToLocationCommand(path, map, gameObjects);
+    return new GoToLocationCommand(path, ecs, map, triggerMap);
 }
 
 /**
@@ -212,11 +213,11 @@ export function chaseAction(
  * @param {AIComponent} ai the ai to calculate the weight for
  * @returns {number} the weight
  */
-export function chaseWeight(ai: PlanningAI): number {
-    if (ai.owner === null) { throw new Error("No owner on AI for chaseWeight"); }
-    if (ai.target === null) { throw new Error("Cannot find chaseWeight without a target"); }
-
-    return distanceBetweenObjects(ai.owner, ai.target);
+export function chaseWeight(aiState: PlannerAIComponent): number {
+    const posData = aiState.entity.getOne(PositionComponent);
+    const targetPosData = aiState.target.getOne(PositionComponent);
+    if (posData === undefined || targetPosData === undefined) { throw new Error("no position data for ai"); }
+    return distanceBetweenPoints(posData, targetPosData);
 }
 
 /**
@@ -225,8 +226,10 @@ export function chaseWeight(ai: PlanningAI): number {
  * @param ai The AI which is acting
  * @returns {Command} An attack command
  */
-export function meleeAttackAction(ai: PlanningAI): Command {
-    if (ai.owner === null) { throw new Error("No owner on AI for meleeAttackAction"); }
+export function meleeAttackAction(
+    ecs: World,
+    ai: PlannerAIComponent
+): Command {
     if (ai.target === null) { throw new Error("Cannot perform meleeAttackAction without a target"); }
     return new InteractCommand(ai.target);
 }
@@ -237,18 +240,22 @@ export function meleeAttackAction(ai: PlanningAI): Command {
  * @param ai The AI to act
  * @returns {Command} A use item command
  */
-export function useHealingItemAction(ai: PlanningAI): Command {
-    if (ai.owner === null) { throw new Error("No owner on AI for useHealingItemAction"); }
-    if (ai.owner.inventory === null) { throw new Error("No inventory on owner for AI for castSpellAction"); }
+export function useHealingItemAction(
+    ecs: World,
+    aiState: PlannerAIComponent
+): Command {
+    const inventoryData = aiState.entity.getOne(InventoryComponent);
+    const displayName = aiState.entity.getOne(DisplayNameComponent);
+    if (inventoryData === undefined) { throw new Error("No inventory on owner for AI for castSpellAction"); }
+    if (displayName === undefined) { throw new Error(`Entity ${aiState.entity.id} is missing DisplayNameComponent`); }
 
-    const item = ai.owner.inventory
-        .getItems()
+    const item = getItems(inventoryData)
         .filter(i => i.type === ItemType.HealSelf)
         .sort((a, b) => a.value! - b.value!)[0];
 
-    displayMessage(`${ai.owner.name} used a ${item.displayName}`);
+    displayMessage(`${displayName.name} used a ${item.displayName}`);
 
-    return new UseItemCommand(item.id);
+    return new UseItemCommand(item.id, ecs);
 }
 
 /**
@@ -257,18 +264,22 @@ export function useHealingItemAction(ai: PlanningAI): Command {
  * @param ai The AI to act
  * @returns {Command} A use item command
  */
-export function useManaItemAction(ai: PlanningAI): Command {
-    if (ai.owner === null) { throw new Error("No owner on AI for useManaItemAction"); }
-    if (ai.owner.inventory === null) { throw new Error("No inventory on owner for AI for useManaItemAction"); }
+export function useManaItemAction(
+    ecs: World,
+    aiState: PlannerAIComponent
+): Command {
+    const inventoryData = aiState.entity.getOne(InventoryComponent);
+    const displayName = aiState.entity.getOne(DisplayNameComponent);
+    if (inventoryData === undefined) { throw new Error("No inventory on owner for AI for castSpellAction"); }
+    if (displayName === undefined) { throw new Error(`Entity ${aiState.entity.id} is missing DisplayNameComponent`); }
 
-    const item = ai.owner.inventory
-        .getItems()
+    const item = getItems(inventoryData)
         .filter(i => i.type === ItemType.AddManaSelf)
         .sort((a, b) => a.value! - b.value!)[0];
 
-    displayMessage(`${ai.owner.name} used a ${item.displayName}`);
+    displayMessage(`${displayName.name} used a ${item.displayName}`);
 
-    return new UseItemCommand(item.id);
+    return new UseItemCommand(item.id, ecs);
 }
 
 /**
@@ -281,15 +292,139 @@ export function useManaItemAction(ai: PlanningAI): Command {
  * @returns {function} the action update function
  */
 export function castSpellAction(spellID: string) {
-    return function (ai: PlanningAI, map: GameMap, gameObjects: GameObject[]): Command {
-        if (ai.owner === null) { throw new Error("No owner on AI for castSpellAction"); }
-        if (ai.owner.fighter === null) { throw new Error("No fighter on owner for AI for castSpellAction"); }
+    return function (ecs: World, aiState: PlannerAIComponent, map: GameMap): Command {
+        const spellData = aiState.entity.getOne(SpellsComponent);
+        const displayName = aiState.entity.getOne(DisplayNameComponent);
+        if (spellData === undefined) { throw new Error(`No spells on ${aiState.entity.id} for castSpellAction`); }
+        if (displayName === undefined) { throw new Error(`Entity ${aiState.entity.id} is missing DisplayNameComponent`); }
 
-        const spells = ai.owner.fighter.getKnownSpells().map(s => s.id);
+        const spells = getKnownSpells(spellData).map(s => s.id);
         if (spells.indexOf(spellID) === -1) {
-            throw new Error(`${ai.owner.name} does not know spell ${spellID}`);
+            throw new Error(`${displayName.name} does not know spell ${spellID}`);
         }
+        const targetPos = aiState.target.getOne(PositionComponent);
+        if (targetPos === undefined) { throw new Error(`Target entity ${aiState.target.id} is missing PositionComponent`); }
 
-        return new UseSpellCommand(spellID, ai.target, map, gameObjects);
+        return new UseSpellCommand(spellID, ecs, targetPos, map);
     };
+}
+
+interface Action {
+    preconditions: { [key: string]: boolean },
+    postconditions: { [key: string]: boolean }
+    updateFunction: (
+        ecs: World,
+        ai: PlannerAIComponent,
+        map: GameMap,
+        triggerMap: Map<string, Entity>
+    ) => Command,
+    weight: (aiState: PlannerAIComponent) => number
+}
+
+/**
+ * Action data by the action's name. An action is something which
+ * satisfies goal, thereby changing the world state. Defines
+ * which state variables are changed, the function to perform the
+ * action, and the cost (weight) of the action.
+ */
+export const ActionData: { [key: string]: Action } = {
+    "wander": {
+        preconditions: { targetPositionKnown: false },
+        postconditions: { targetPositionKnown: true },
+        updateFunction: wanderAction,
+        weight: () => 1
+    },
+    "guard": {
+        preconditions: { targetPositionKnown: false },
+        postconditions: { targetPositionKnown: true },
+        updateFunction: () => { return new NoOpCommand(true); },
+        weight: () => 1
+    },
+    "patrol": {
+        preconditions: { targetPositionKnown: false },
+        postconditions: { targetPositionKnown: true },
+        updateFunction: patrolAction,
+        weight: () => 1
+    },
+    "chase": {
+        preconditions: { targetPositionKnown: true, targetInLineOfSight: false },
+        postconditions: { targetInLineOfSight: true },
+        updateFunction: chaseAction,
+        weight: () => 1
+    },
+    "useManaItem": {
+        preconditions: { lowMana: true, hasManaItem: true },
+        postconditions: { lowMana: false },
+        updateFunction: useManaItemAction,
+        weight: () => 1
+    },
+    "useHealingItem": {
+        preconditions: { lowHealth: true, hasHealingItem: true },
+        postconditions: { lowHealth: false },
+        updateFunction: useHealingItemAction,
+        weight: () => 1
+    },
+    "goToEnemy": {
+        preconditions: { targetPositionKnown: true, nextToTarget: false },
+        postconditions: { nextToTarget: true },
+        updateFunction: chaseAction,
+        weight: chaseWeight
+    },
+    "meleeAttack": {
+        preconditions: { nextToTarget: true, targetKilled: false },
+        postconditions: { targetKilled: true },
+        updateFunction: meleeAttackAction,
+        weight: () => 1
+    },
+    "reposition": {
+        preconditions: { inDangerousArea: true },
+        postconditions: { inDangerousArea: false },
+        updateFunction: () => { return new NoOpCommand(true); },
+        weight: () => 1
+    },
+    "runAway": {
+        preconditions: { afraid: true },
+        postconditions: { afraid: false },
+        updateFunction: () => { return new NoOpCommand(true); },
+        weight: () => 1
+    },
+    "cower": {
+        preconditions: { afraid: false, cowering: false },
+        postconditions: { cowering: true },
+        updateFunction: () => { return new NoOpCommand(true); },
+        weight: () => 1
+    },
+    "goToFallbackPosition": {
+        preconditions: { atFallbackPosition: false },
+        postconditions: { atFallbackPosition: true },
+        updateFunction: () => { return new NoOpCommand(true); },
+        weight: () => 1
+    }
+};
+
+// Dynamically add spells to goals and actions
+for (const key in SpellData) {
+    const data = SpellData[key];
+    // capitalize the first letter
+    const goal = `enoughManaFor_${key}`;
+    const action = `castSpell_${key}`;
+    if (data.type === SpellType.DamageOther) {
+        ActionData[action] = {
+            preconditions: {
+                [goal]: true,
+                targetInLineOfSight: true,
+                targetKilled: false
+            },
+            postconditions: { targetKilled: true },
+            updateFunction: castSpellAction(key),
+            weight: () => 1
+        };
+    } else if (data.type === SpellType.HealSelf) {
+        ActionData[action] = {
+            preconditions: { lowHealth: true, [goal]: true },
+            postconditions: { lowHealth: false },
+            updateFunction: castSpellAction(key),
+            weight: () => 1
+        };
+    }
 }

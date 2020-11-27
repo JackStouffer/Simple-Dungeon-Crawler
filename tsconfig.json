@@ -6,7 +6,8 @@
         "noImplicitAny": true,
         "alwaysStrict": true,
         "noImplicitThis": true,
-        "strictNullChecks": true
+        "strictNullChecks": true,
+        "moduleResolution": "node"
     },
     "include": ["./src/**/*.ts"],
     "exclude": [

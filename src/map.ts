@@ -1,19 +1,156 @@
+import { get } from "lodash";
+import { Entity, World } from "ape-ecs";
+
 import { Display, RNG } from "./rot/index";
 import { toRGB, fromString, multiply } from "./rot/color";
-import { isNil, get } from "lodash";
+
+// @ts-expect-error
+import * as forrest_001 from "./maps/forrest_001";
+// @ts-expect-error
+import * as durdwin_001 from "./maps/durdwin_001";
+// @ts-expect-error
+import * as dev_room from "./maps/dev_room";
 
 import {
-    COLOR_AMBIENT_LIGHT,
-    COLOR_INVISIBLE_WALL,
-    COLOR_DARK_GROUND,
-    COLOR_INVISIBLE_GROUND,
-    LevelData,
-    TileData, WIDTH, HEIGHT, LevelName
-} from "./data";
-import { createObject, GameObject } from "./object";
+    createEntity,
+    HitPointsComponent,
+    InventoryComponent,
+    PatrolPathComponent,
+    PlannerAIComponent,
+    PositionComponent
+} from "./entity";
 import { Camera } from "./camera";
 import { Nullable } from "./util";
-import { EventTrigger } from "./trigger";
+import { createPlanner } from "./ai/commands";
+
+const COLOR_INVISIBLE_WALL = "black";
+const COLOR_INVISIBLE_GROUND = "black";
+const COLOR_DARK_GROUND = "rgb(50, 50, 50)";
+const COLOR_AMBIENT_LIGHT = "rgb(50, 50, 50)";
+
+const LevelData: { [key: string]: any } = {
+    forrest_001,
+    durdwin_001,
+    dev_room
+};
+
+type LevelName = keyof typeof LevelData;
+
+interface TileDataDetails {
+    name: string;
+    char: string;
+    fgColor: string;
+    bgColor: string;
+    fgColorExplored: string;
+    bgColorExplored: string;
+    blocks: boolean;
+    blocksSight: boolean;
+    reflectivity: number;
+}
+
+const TileData: { [key: number]: TileDataDetails } = {
+    780: {
+        name: "Gravestone",
+        char: "\u07E1",
+        fgColor: "white",
+        bgColor: "brown",
+        fgColorExplored: "white",
+        bgColorExplored: "black",
+        blocks: true,
+        blocksSight: false,
+        reflectivity: 0.18
+    },
+    900: {
+        name: "empty ground",
+        char: "",
+        fgColor: "white",
+        bgColor: "white",
+        fgColorExplored: "rgb(50, 50, 50)",
+        bgColorExplored: "rgb(50, 50, 50)",
+        blocks: false,
+        blocksSight: false,
+        reflectivity: 0.18
+    },
+    980: {
+        name: "A stove",
+        char: "\u233B",
+        fgColor: "black",
+        bgColor: "brown",
+        fgColorExplored: "white",
+        bgColorExplored: "black",
+        blocks: true,
+        blocksSight: false,
+        reflectivity: 0.18
+    },
+    1048: {
+        name: "A wall",
+        char: "",
+        fgColor: "#352620",
+        bgColor: "#352620",
+        fgColorExplored: "black",
+        bgColorExplored: "black",
+        blocks: true,
+        blocksSight: true,
+        reflectivity: 0.18
+    },
+    1165: {
+        name: "A tree",
+        char: "\u1278",
+        fgColor: "lightgreen",
+        bgColor: "darkgreen",
+        fgColorExplored: "grey",
+        bgColorExplored: "black",
+        blocks: true,
+        blocksSight: true,
+        reflectivity: 0.18
+    },
+    1543: {
+        name: "bed",
+        char: "\u2583",
+        fgColor: "gold",
+        bgColor: "white",
+        fgColorExplored: "white",
+        bgColorExplored: "black",
+        blocks: true,
+        blocksSight: false,
+        reflectivity: 0.18
+    },
+    2710: {
+        name: "A table",
+        char: "\u03A0",
+        fgColor: "tan",
+        bgColor: "brown",
+        fgColorExplored: "white",
+        bgColorExplored: "black",
+        blocks: true,
+        blocksSight: false,
+        reflectivity: 0.18
+    },
+    2869: {
+        name: "A chair",
+        char: "\u043F",
+        fgColor: "black",
+        bgColor: "brown",
+        fgColorExplored: "white",
+        bgColorExplored: "black",
+        blocks: true,
+        blocksSight: false,
+        reflectivity: 0.18
+    },
+    2936: {
+        name: "A cabinet",
+        char: "\u2339",
+        fgColor: "black",
+        bgColor: "brown",
+        fgColorExplored: "white",
+        bgColorExplored: "black",
+        blocks: true,
+        blocksSight: false,
+        reflectivity: 0.18
+    }
+};
+Object.freeze(TileData);
+
 
 export class Tile {
     name: string;
@@ -64,21 +201,9 @@ export class Tile {
     }
 }
 
-export class PathNode {
-    pathName: string;
-    x: number;
-    y: number;
-    next: number;
-    distance: number;
-
-    constructor(pathName: string, x: number, y: number, next: number) {
-        this.pathName = pathName;
-        this.x = x;
-        this.y = y;
-        this.next = next;
-    }
-}
-
+/**
+ * Searches through the properties on a tiled object and returns the value
+ */
 function findProperty(o: any, name: string): any {
     if (o.properties === undefined || o.properties.length === 0) { return null; }
 
@@ -97,19 +222,14 @@ export type GameMap = Tile[][];
 
 /**
  * Load a Tiled map using its name.
- * @param {String} level The name of the level
- * @returns {Object}     The map 2d array, player location, and game objects array
  */
-export function loadTiledMap(level: LevelName) {
+export function loadTiledMap(ecs: World, level: LevelName) {
     if (!(level in LevelData)) { throw new Error(`${level} is not a valid level`); }
 
     const sourceData = LevelData[level];
     const tileSize: number = sourceData.tileheight;
     const map: GameMap = [];
-    const objects: GameObject[] = [];
-    const pathNodes: Map<number, PathNode> = new Map();
-    const fallbackNodes = new Map();
-    let playerLocation: number[] = [0, 0];
+    let playerLocation: [number, number] = [0, 0];
 
     const tileLayer = get(sourceData.layers.filter((l: any) => l.name === "Tile Layer"), "[0]");
     const objectLayer = get(sourceData.layers.filter((l: any) => l.name === "Object Layer"), "[0]");
@@ -145,72 +265,139 @@ export function loadTiledMap(level: LevelName) {
         map.push(translated.slice(i, i + sourceData.width));
     }
 
+    // First create all of the nodes
+    nodeLayer.objects.forEach((o: any) => {
+        ecs.createEntity({
+            id: o.id.toString(10),
+            c: {
+                PositionComponent: {
+                    x: Math.floor(o.x / tileSize),
+                    y: Math.floor(o.y / tileSize)
+                }
+            }
+        });
+    });
+
+    // Do this is two passes because each node could reference
+    // another node so make sure all of the nodes are created
+    // before we try to create the references
+    nodeLayer.objects.forEach((o: any) => {
+        const entity = ecs.getEntity(o.id.toString());
+        if (entity === undefined) { throw new Error(`Node ${o.id} not initialized in level load`); }
+
+        const nextId = findProperty(o, "next") as number;
+        const next = nextId !== null ? ecs.getEntity(nextId.toString(10)) : null;
+        if (next !== null) {
+            const comp = entity.addComponent({
+                type: "PatrolPathComponent"
+            }) as PatrolPathComponent;
+            comp!.next = next;
+        }
+    });
+
     objectLayer.objects.forEach((o: any) => {
         if (o.point !== undefined) {
             if (o.type === "object") {
-                const type = findProperty(o, "objectType"),
-                    inventory = findProperty(o, "inventory"),
-                    levelName = findProperty(o, "levelName"),
-                    spellId = findProperty(o, "spellId"),
-                    pathName = findProperty(o, "pathName"),
-                    fallbackPosition = findProperty(o, "fallbackPosition"),
-                    event = findProperty(o, "event");
+                const type = findProperty(o, "objectType") as string,
+                    inventory = findProperty(o, "inventory") as string,
+                    levelName = findProperty(o, "levelName") as string,
+                    spellId = findProperty(o, "spellId") as string,
+                    patrolTarget = findProperty(o, "patrolTarget") as number,
+                    fallbackPosition = findProperty(o, "fallbackPosition") as number,
+                    event = findProperty(o, "event") as string;
 
                 if (type === null) {
-                    throw new Error(`No id for ${o.name}`);
+                    throw new Error(`No type for ${o.name}`);
                 }
 
                 if (type === "player") {
                     playerLocation = [Math.floor(o.x / tileSize), Math.floor(o.y / tileSize)];
                 } else {
-                    const obj: GameObject = createObject(
+                    const entity: Entity = createEntity(
+                        ecs,
                         type,
                         Math.floor(o.x / tileSize),
-                        Math.floor(o.y / tileSize),
+                        Math.floor(o.y / tileSize)
                     );
 
-                    // different if statement because of typescript's weird semantic
-                    // analysis around null checks
-                    if (obj.inventory !== null) {
-                        if (inventory !== null && inventory !== "") {
-                            inventory
-                                .split(",")
-                                .forEach((i: string) => obj.inventory!.addItem(i));
+                    if (inventory !== null) {
+                        const items: Map<string, number> = new Map();
+                        inventory.split(",").forEach((i: string) => items.set(i, 1));
+
+                        const existingInventory = entity.getOne(InventoryComponent);
+                        if (existingInventory === undefined) {
+                            entity.addComponent({
+                                type: "InventoryComponent",
+                                inventory: items
+                            });
+                        } else {
+                            existingInventory.inventory = items;
                         }
                     }
 
-                    if (levelName !== null &&
-                        obj.interactable !== null &&
-                        obj.interactable.setLevel !== undefined) {
-                        obj.interactable.setLevel(levelName);
+                    if (levelName !== null) {
+                        entity.addComponent({
+                            type: "LoadLevelComponent",
+                            levelName
+                        });
                     }
 
-                    if (spellId !== null &&
-                        obj.interactable !== null &&
-                        obj.interactable.setSpell !== undefined) {
-                        obj.interactable.setSpell(spellId);
+                    if (spellId !== null) {
+                        entity.addComponent({
+                            type: "SpellsComponent",
+                            knownSpells: new Set([spellId])
+                        });
                     }
 
-                    if (pathName !== null &&
-                        obj.ai !== null &&
-                        obj.ai.setPatrolPath !== undefined) {
-                        obj.ai.setPatrolPath(pathName);
+                    if (patrolTarget !== null) {
+                        const target = ecs.getEntity(patrolTarget.toString());
+                        if (target === undefined) { throw new Error(`Patrol target ${patrolTarget} is not initialized`); }
+                        entity.addComponent({
+                            type: "PatrolAIComponent",
+                            patrolTarget: target
+                        });
+
+                        // recreate the planner
+                        const aiState = entity.getOne(PlannerAIComponent);
+                        if (aiState === undefined) { throw new Error("Trying to set patrol target without an ai"); }
+                        aiState.actions.delete("wander");
+                        aiState.actions.delete("guard");
+                        aiState.actions.add("patrol");
+                        const { goals, planner } = createPlanner(aiState.actions);
+                        aiState.goals = goals;
+                        aiState.planner = planner;
+                        aiState.update();
                     }
 
-                    if (fallbackPosition !== null &&
-                        obj.ai !== null &&
-                        obj.ai.setFallbackPosition !== undefined) {
-                        obj.ai.setFallbackPosition(fallbackPosition);
+                    if (fallbackPosition !== null) {
+                        const fallback = ecs.getEntity(fallbackPosition.toString());
+                        if (fallback === undefined) { throw new Error(`Fallback target ${fallbackPosition} is not initialized`); }
+                        entity.addComponent({
+                            type: "FallbackAIComponent",
+                            isAtFallbackPosition: false,
+                            fallbackPosition: fallback
+                        });
+
+                        // recreate the planner
+                        const aiState = entity.getOne(PlannerAIComponent);
+                        if (aiState === undefined) { throw new Error("Trying to set fallback position without an ai"); }
+                        aiState.actions.add("goToFallbackPosition");
+                        const { goals, planner } = createPlanner(aiState.actions);
+                        aiState.goals = goals;
+                        aiState.planner = planner;
+                        aiState.update();
                     }
 
-                    if (type === "event_trigger" &&
-                        event !== null &&
-                        obj.trigger !== null) {
-                        const trigger = obj.trigger as EventTrigger;
-                        trigger.eventName = event;
+                    if (type === "event_trigger" && event !== null) {
+                        entity.addComponent({
+                            type: "TriggerTypeComponent",
+                            triggerType: "event"
+                        });
+                        entity.addComponent({
+                            type: "EventTriggerComponent",
+                            event
+                        });
                     }
-
-                    objects.push(obj);
                 }
             } else {
                 throw new Error(`Unrecognized object type ${o.type}`);
@@ -218,41 +405,7 @@ export function loadTiledMap(level: LevelName) {
         }
     });
 
-    nodeLayer.objects.forEach((o: any) => {
-        const x = Math.floor(o.x / tileSize),
-            y = Math.floor(o.y / tileSize);
-
-        if (o.type === "path_node") {
-            const next = findProperty(o, "next"),
-                pathName = findProperty(o, "pathName");
-            pathNodes.set(o.id, new PathNode(pathName, x, y, next));
-        } else if (o.type === "fallback_node") {
-            fallbackNodes.set(o.id, { x, y });
-        } else {
-            throw new Error(`Unrecognized object type ${o.type}`);
-        }
-    });
-
-    return { map, playerLocation, objects, pathNodes, fallbackNodes };
-}
-
-/**
- * Return a random pair of x and y coordinates which
- * is non-blocking and does not have a blocking GameObject
- * on it.
- * @param {Array} map     The 2D map array
- * @param {Array} objects An array of GameObjects
- * @returns {Object}      The x and y coordinates
- */
-export function findEmptySpace(map: GameMap, objects: GameObject[]): Point {
-    let x = 0, y = 0;
-    let blocks = true;
-    while (blocks) {
-        x = Math.floor(RNG.getUniform() * map[0].length);
-        y = Math.floor(RNG.getUniform() * map.length);
-        ({ blocks } = isBlocked(map, objects, x, y));
-    }
-    return { x, y };
+    return { map, playerLocation };
 }
 
 /**
@@ -262,56 +415,81 @@ export function findEmptySpace(map: GameMap, objects: GameObject[]): Point {
  * @param {Number} y The y coordinate
  * @returns {Array} An array of GameObjects
  */
-export function getObjectsAtLocation(objects: GameObject[], x: number, y: number): GameObject[] {
-    return objects.filter(object => object.x === x && object.y === y);
+export function getEntitiesAtLocation(
+    ecs: World,
+    x: number,
+    y: number
+): Entity[] {
+    const entities = ecs.createQuery().fromAll(PositionComponent).execute();
+    if (entities === undefined) { return []; }
+    const ret = [];
+
+    for (const entity of entities) {
+        const pos = entity.getOne(PositionComponent)!;
+        if (pos.x === x && pos.y === y) {
+            ret.push(entity);
+        }
+    }
+    return ret;
 }
 
 interface BlocksResult {
-    object: Nullable<GameObject>;
+    entity: Nullable<Entity>;
     blocks: boolean;
 }
 
 /**
- * Returns an object with two keys, object and blocks. Object
- * will be the GameObject on the tile if there is one, and null
+ * Returns an entity with two keys, entity and blocks. entity
+ * will be the Entity on the tile if there is one, and null
  * otherwise. Blocks is true if either the tile or the object on
  * the tile blocks, false otherwise.
- *
- * @param {GameMap} map The map 2D array
- * @param {GameObject[]} objects An array of GameObjects
- * @param {number} x The x coordinate to check
- * @param {number} y The y coordinate to check
  */
-export function isBlocked(map: GameMap, objects: GameObject[], x: number, y: number): BlocksResult {
+export function isBlocked(
+    ecs: World,
+    map: GameMap,
+    x: number,
+    y: number
+): BlocksResult {
     if (map.length === 0) { throw new Error("Bad map data"); }
 
     if (x < 0 || y < 0 || x >= map[0].length || y >= map.length || map[y][x].blocks) {
-        return { object: null, blocks: true };
+        return { entity: null, blocks: true };
     }
 
-    const object = objects.filter(o => o.x === x && o.y === y)[0];
-    return object !== undefined ?
-        { object, blocks: object.blocks } : { object: null, blocks: false };
+    const entities = ecs.createQuery().fromAll(PositionComponent, "blocks").execute();
+
+    let entity: Entity | undefined;
+    for (const e of entities) {
+        const pos = e.getOne(PositionComponent);
+        if (pos !== undefined && pos.x === x && pos.y === y) {
+            entity = e;
+            break;
+        }
+    }
+
+    if (entity !== undefined) {
+        return { entity, blocks: entity.tags.has("blocks") };
+    }
+    return { entity: null, blocks: false };
 }
 
 /**
  * Returns true if space blocks sight, false otherwise.
- * @param {GameMap} map The 2D map array
- * @param {GameObject[]} objects An array of GameObjects
  * @param {number} x The x coordinate to check
  * @param {number} y The y coordinate to check
  * @returns {boolean} Does the spot block sight
  */
-export function isSightBlocked(map: GameMap, objects: GameObject[], x: number, y: number): boolean {
+export function isSightBlocked(ecs: World, map: GameMap, x: number, y: number): boolean {
     if (map.length === 0) { throw new Error("Bad map data"); }
 
     if (x < 0 || y < 0 || x >= map[0].length || y >= map.length || map[y][x].blocksSight) {
         return true;
     }
 
-    const o = getObjectsAtLocation(objects, x, y);
-    for (let i = 0; i < o.length; i++) {
-        if (o[i].blocksSight) {
+    const entities = ecs.createQuery().fromAll(PositionComponent, "blocksSight").execute();
+    for (const e of entities) {
+        const pos = e.getOne(PositionComponent)!;
+        if (pos.x === x && pos.y === y) {
             return true;
         }
     }
@@ -321,13 +499,13 @@ export function isSightBlocked(map: GameMap, objects: GameObject[], x: number, y
 
 /**
  * Draw a tile given the tile data and the coordinates.
- * @param {Object} display The ROT.js display object
+ * @param {Display} display The ROT.js display object
  * @param {Tile} tile The tile to draw
  * @param {Number} x The x coordinate
  * @param {Number} y The y coordinate
  */
 export function drawTile(display: Display, tile: Tile, x: number, y: number): void {
-    if (x > WIDTH || x < 0 || y > HEIGHT || y < 0) {
+    if (x > display._options.width || x < 0 || y > display._options.height || y < 0) {
         return;
     }
 
@@ -371,12 +549,12 @@ export interface Point {
 }
 
 /**
- * Find the distance between two GameObjects
- * @param  {Point} a An object
- * @param  {Point} b An object
- * @return {number}       The distance
+ * Find the distance between two points
+ * @param  {Point} a A point
+ * @param  {Point} b A point
+ * @return {number} The distance
  */
-export function distanceBetweenObjects(a: Point, b: Point): number {
+export function distanceBetweenPoints(a: Point, b: Point): number {
     const dx = b.x - a.x;
     const dy = b.y - a.y;
     return Math.sqrt(dx ** 2 + dy ** 2);
@@ -393,18 +571,25 @@ export function distanceBetweenObjects(a: Point, b: Point): number {
  * @return {GameObject}              The closest actor
  */
 export function getRandomFighterWithinRange(
+    ecs: World,
     map: GameMap,
-    actors: GameObject[],
-    origin: GameObject,
+    origin: PositionComponent,
     maxDistance: number
-): Nullable<GameObject> {
-    const possibleActors = actors
-        .filter(a => !isNil(a.fighter))
-        .filter(a => !isNil(a.ai))
-        .filter(a => a !== origin)
-        .filter(a => distanceBetweenObjects(origin, a) <= maxDistance);
+): Nullable<Entity> {
+    const entities = ecs
+        .createQuery()
+        .fromAll(PositionComponent, HitPointsComponent, PlannerAIComponent)
+        .execute();
 
-    return possibleActors.length > 0 ? RNG.getItem(possibleActors) : null;
+    const possible = [];
+    for (const e of entities) {
+        const pos = e.getOne(PositionComponent)!;
+        if (pos !== origin && distanceBetweenPoints(origin, pos) <= maxDistance) {
+            possible.push(e);
+        }
+    }
+
+    return possible.length > 0 ? RNG.getItem(possible) : null;
 }
 
 /**

@@ -1,4 +1,5 @@
 import { get } from "lodash";
+import { Entity, World } from "ape-ecs";
 
 import { Display } from "./rot/index";
 import globals from "./globals";
@@ -6,42 +7,51 @@ import {
     WIDTH,
     HEIGHT,
     UI_HEIGHT,
-    MAP_FILLED_SPACE,
     LEVEL_UP_BASE,
     LEVEL_UP_FACTOR,
-    SpellType,
-    SpellDataDetails
-} from "./data";
+    SpellType
+} from "./constants";
 import input from "./input";
 import { PlayerState, KeyCommand } from "./input-handler";
+import { DisplayNameComponent, InputHandlingComponent, LevelComponent, PlannerAIComponent } from "./entity";
 import { InventoryItemDetails } from "./inventory";
-import { GameObject } from "./object";
-import { GameMap, getObjectsAtLocation } from "./map";
+import { getEffectiveHitPointData, getEffectiveStatData } from "./fighter";
+import { GameMap, getEntitiesAtLocation } from "./map";
 import { assertUnreachable, Nullable } from "./util";
+import { SpellDataDetails } from "./skills";
 
-export function drawUI(
+export function drawStatusBar(
     display: Display,
-    player: GameObject,
-    gameObjects: GameObject[],
+    ecs: World,
     map: GameMap
 ): void {
-    if (player.fighter === null) { throw new Error("Player must have a fighter"); }
-    if (player.inputHandler === null) { throw new Error("Player must have a inputHandler"); }
+    const player = ecs.getEntity("player");
+    if (player === undefined) { throw new Error("No player entity found"); }
+
+    const hpData = getEffectiveHitPointData(player);
+    const statData = getEffectiveStatData(player);
+    const levelData = player.getOne(LevelComponent);
+    const inputHandlerData = player.getOne(InputHandlingComponent);
+
+    if (hpData === null ||
+        statData === null ||
+        levelData === undefined ||
+        inputHandlerData === undefined) {
+        throw new Error("Player missing data");
+    }
 
     for (let x = 0; x < WIDTH; x++) {
         for (let y = 0; y < UI_HEIGHT; y++) {
-            display.draw(x, HEIGHT - (UI_HEIGHT - y), MAP_FILLED_SPACE, "blue", "blue");
+            display.draw(x, HEIGHT - (UI_HEIGHT - y), "#", "blue", "blue");
         }
     }
 
-    const stats = player.fighter.getEffectiveStats();
-
-    display.drawText(1, HEIGHT - UI_HEIGHT, `%c{white}%b{blue}HP: ${stats.hp}/${stats.maxHp}`);
-    display.drawText(14, HEIGHT - UI_HEIGHT, `%c{white}%b{blue}Mana: ${stats.mana}/${stats.maxMana}`);
-    display.drawText(30, HEIGHT - UI_HEIGHT, `%c{white}%b{blue}STR: ${stats.strength}`);
-    display.drawText(38, HEIGHT - UI_HEIGHT, `%c{white}%b{blue}DEF: ${stats.defense}`);
-    display.drawText(46, HEIGHT - UI_HEIGHT, `%c{white}%b{blue}EXP: ${player.fighter.experience}/${(LEVEL_UP_BASE + player.fighter.level * LEVEL_UP_FACTOR)}`);
-    display.drawText(23, HEIGHT - UI_HEIGHT + 2, `%c{white}%b{blue}${PlayerState[player.inputHandler.state]}`);
+    display.drawText(1, HEIGHT - UI_HEIGHT, `%c{white}%b{blue}HP: ${hpData.hp}/${hpData.maxHp}`);
+    display.drawText(14, HEIGHT - UI_HEIGHT, `%c{white}%b{blue}Mana: ${statData.mana}/${statData.maxMana}`);
+    display.drawText(30, HEIGHT - UI_HEIGHT, `%c{white}%b{blue}STR: ${statData.strength}`);
+    display.drawText(38, HEIGHT - UI_HEIGHT, `%c{white}%b{blue}DEF: ${statData.defense}`);
+    display.drawText(46, HEIGHT - UI_HEIGHT, `%c{white}%b{blue}EXP: ${levelData.experience}/${(LEVEL_UP_BASE + levelData.level * LEVEL_UP_FACTOR)}`);
+    display.drawText(23, HEIGHT - UI_HEIGHT + 2, `%c{white}%b{blue}${PlayerState[inputHandlerData.state]}`);
 
     const mousePosition = input.getMousePosition();
     if (mousePosition === null) { return; }
@@ -51,20 +61,25 @@ export function drawUI(
         return;
     }
 
-    const target = get(getObjectsAtLocation(gameObjects, x, y), "[0]", null);
     const tile = map[y][x];
-
     if (!tile?.isVisibleAndLit()) {
         return;
     }
 
-    if (target === null || target.name === null) {
+    const target: Nullable<Entity> = get(getEntitiesAtLocation(ecs, x, y), "[0]", null);
+    if (target === null) {
         display.drawText(1, HEIGHT - UI_HEIGHT + 4, `%c{white}%b{blue}${tile.name}`);
-    } else if (target.ai !== null && target.fighter !== null) {
-        const targetStats = target.fighter.getEffectiveStats();
-        display.drawText(1, HEIGHT - UI_HEIGHT + 4, `%c{white}%b{blue}A ${target.name} (${targetStats.hp}/${targetStats.maxHp}) (${target.ai.getStateName()})`);
-    } else {
-        display.drawText(1, HEIGHT - UI_HEIGHT + 4, `%c{white}%b{blue}A ${target.name}`);
+        return;
+    }
+
+    const targetNameData = target.getOne(DisplayNameComponent);
+    const targetHPData = getEffectiveHitPointData(target);
+    const targetAIData = target.getOne(PlannerAIComponent);
+
+    if (targetNameData !== undefined && targetAIData !== undefined && targetHPData !== null) {
+        display.drawText(1, HEIGHT - UI_HEIGHT + 4, `%c{white}%b{blue}A ${targetNameData.name} (${targetHPData.hp}/${targetHPData.maxHp}) (${targetAIData.knowsTargetPosition})`);
+    } else if (targetNameData !== undefined) {
+        display.drawText(1, HEIGHT - UI_HEIGHT + 4, `%c{white}%b{blue}A ${targetNameData.name}`);
     }
 }
 

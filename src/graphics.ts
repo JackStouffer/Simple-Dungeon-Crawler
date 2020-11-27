@@ -1,82 +1,73 @@
-import Display from "./rot/display/display";
+import { Entity, Query, System, World } from "ape-ecs";
 
+import {
+    ChestGraphicsComponent,
+    GraphicsComponent,
+    InputHandlingComponent,
+    InventoryComponent,
+    PositionComponent,
+    SpeedComponent
+} from "./entity";
 import input from "./input";
-import { distanceBetweenObjects, GameMap, getObjectsAtLocation } from "./map";
-import { GameObject } from "./object";
-import { Camera } from "./camera";
-import { ObjectData, ObjectDataDetails } from "./data";
-import { PlayerState } from "./input-handler";
+import { distanceBetweenPoints, getEntitiesAtLocation } from "./map";
+import { getTargetingReticle, PlayerState } from "./input-handler";
 import { getActorMovementPath } from "./commands";
-import { Nullable } from "./util";
+import { getItems } from "./inventory";
+import globals from "./globals";
 
-export interface GraphicsComponent {
-    char: string;
-    fgColor: string;
-    bgColor: string;
-    owner: Nullable<GameObject>;
-
-    draw: (display: Display, camera: Camera, map: GameMap, objects: GameObject[]) => void;
+/**
+ * Grab the first background color of an object on the position that doesn't
+ * belong to the entity "id". If no objects, return the tile color
+ */
+function getTransparencyBackground(
+    ecs: World,
+    pos: PositionComponent,
+    entities: Set<Entity>,
+    id: string
+) {
+    let ret: string = globals.Game!.map[pos.y][pos.x].lightingColor;
+    const entitiesAtLocation = getEntitiesAtLocation(ecs, pos.x, pos.y);
+    if (entitiesAtLocation.length > 0) {
+        for (let i = 0; i < entitiesAtLocation.length; i++) {
+            const entity = entitiesAtLocation[i];
+            if (entity.id === id) {
+                continue;
+            }
+            const graphicData = entity.getOne(GraphicsComponent);
+            if (graphicData !== undefined && graphicData.bgColor !== null) {
+                ret = graphicData.bgColor;
+                break;
+            }
+        }
+    }
+    return ret;
 }
 
 /**
- * Graphics component which simply draws the character with the fore
- * and background color at the owner's x and y coordinates if the tile
- * it's on is visible.
+ * Draw all entities with a GraphicsComponent and a PositionComponent,
+ * also takes into account entities with transparent background, correctly
+ * drawing the right background color based on the objects on that tile.
  */
-export class BasicGraphics implements GraphicsComponent {
-    char: string;
-    fgColor: string;
-    bgColor: string;
-    owner: Nullable<GameObject>;
+export class DrawSystem extends System {
+    private graphicsQuery: Query;
 
-    constructor(data: ObjectDataDetails) {
-        if (data.char === null) {
-            throw new Error("Missing data on DrawAfterSeen ctor");
-        }
-        if (data.fgColor === null) {
-            throw new Error("Missing data on DrawAfterSeen ctor");
-        }
-        if (data.bgColor === null) {
-            throw new Error("Missing data on DrawAfterSeen ctor");
-        }
-
-        this.char = data.char;
-        this.fgColor = data.fgColor;
-        this.bgColor = data.bgColor;
-        this.owner = null;
+    init() {
+        this.graphicsQuery = this
+            .createQuery()
+            .fromAll(GraphicsComponent, PositionComponent)
+            .not("input")
+            .persist();
     }
 
-    draw(display: Display, camera: Camera, map: GameMap) {
-        if (this.owner === null) { throw new Error("Can't draw BasicGraphics without owner"); }
-
-        if (map[this.owner.y][this.owner.x].isVisibleAndLit()) {
-            const { x, y } = camera.worldToScreen(this.owner.x, this.owner.y);
-            display.draw(x, y, this.char, this.fgColor, this.bgColor);
+    /**
+     * Simply draws the character with the fore and background color at
+     * x and y coordinates if the tile it's on is visible.
+     */
+    draw(pos: PositionComponent, graphics: GraphicsComponent): void {
+        if (globals.Game!.map[pos.y][pos.x].isVisibleAndLit()) {
+            const { x, y } = globals.Game!.gameCamera.worldToScreen(pos.x, pos.y);
+            globals.Game!.display!.draw(x, y, graphics.char, graphics.fgColor, graphics.bgColor);
         }
-    }
-}
-
-/**
- * Graphics component which handles the odd behavior with ROT.js and
- * transparent backgrounds
- */
-export class TransparencyGraphics implements GraphicsComponent {
-    char: string;
-    fgColor: string;
-    bgColor: string;
-    owner: Nullable<GameObject>;
-
-    constructor(data: ObjectDataDetails) {
-        if (data.char === null) {
-            throw new Error("Missing data on DrawAfterSeen ctor");
-        }
-        if (data.fgColor === null) {
-            throw new Error("Missing data on DrawAfterSeen ctor");
-        }
-
-        this.char = data.char;
-        this.fgColor = data.fgColor;
-        this.owner = null;
     }
 
     /**
@@ -85,183 +76,173 @@ export class TransparencyGraphics implements GraphicsComponent {
      * If the tile is not occupied by anything else, use the lighting
      * color of the owner occupied tile as the background. If there are
      * other objects on the same tile, use that object's background color.
-     *
-     * @param {Display} display The ROT.js Display object
-     * @param {Array} map The map 2D array
-     * @param {Array} objects An array of GameObjects
      */
-    draw(display: Display, camera: Camera, map: GameMap, objects: GameObject[]) {
-        if (this.owner === null) { throw new Error("Can't draw TransparencyGraphics without owner"); }
-
-        if (map[this.owner.y][this.owner.x].isVisibleAndLit()) {
-            let bgColor = map[this.owner.y][this.owner.x].lightingColor;
-            const objectsAtLocation = getObjectsAtLocation(objects, this.owner.x, this.owner.y);
-            if (objectsAtLocation.length > 0) {
-                for (let i = 0; i < objectsAtLocation.length; i++) {
-                    const obj = objectsAtLocation[i];
-                    if (obj === this.owner || obj.graphics === null) {
-                        continue;
-                    }
-                    if (obj.graphics.bgColor !== null) {
-                        bgColor = obj.graphics.bgColor;
-                    }
-                }
-            }
-
-            const { x, y } = camera.worldToScreen(this.owner.x, this.owner.y);
-
-            display.draw(
+    drawWithTransparency(
+        pos: PositionComponent,
+        graphics: GraphicsComponent,
+        entities: Set<Entity>,
+        id: string
+    ): void {
+        if (globals.Game!.map[pos.y][pos.x].isVisibleAndLit()) {
+            const bgColor = getTransparencyBackground(this.world, pos, entities, id);
+            const { x, y } = globals.Game!.gameCamera.worldToScreen(pos.x, pos.y);
+            globals.Game!.display!.draw(
                 x,
                 y,
-                this.char,
-                this.fgColor,
+                graphics.char,
+                graphics.fgColor,
                 bgColor
             );
         }
     }
-}
 
-/**
- * Graphics component which handles the odd behavior with ROT.js and
- * transparent backgrounds
- */
-export class PlayerGraphics implements GraphicsComponent {
-    char: string;
-    fgColor: string;
-    bgColor: string;
-    owner: Nullable<GameObject>;
-
-    constructor(data: ObjectDataDetails) {
-        if (data.char === null) {
-            throw new Error("Missing data on DrawAfterSeen ctor");
+    drawAfterSeen(pos: PositionComponent, graphics: GraphicsComponent): void {
+        if (globals.Game!.map[pos.y][pos.x].explored) {
+            const { x, y } = globals.Game!.gameCamera.worldToScreen(pos.x, pos.y);
+            globals.Game!.display!.draw(x, y, graphics.char, graphics.fgColor, graphics.bgColor);
         }
-        if (data.fgColor === null) {
-            throw new Error("Missing data on DrawAfterSeen ctor");
-        }
-
-        this.char = data.char;
-        this.fgColor = data.fgColor;
-        this.owner = null;
     }
 
-    /**
-     * Draws the object's character and foreground color normally.
-     *
-     * If the tile is not occupied by anything else, use the lighting
-     * color of the owner occupied tile as the background. If there are
-     * other objects on the same tile, use that object's background color.
-     *
-     * @param {Display} display The ROT.js Display object
-     * @param {Array} map The map 2D array
-     * @param {Array} objects An array of GameObjects
-     */
-    draw(display: Display, camera: Camera, map: GameMap, objects: GameObject[]): void {
-        if (this.owner === null) { throw new Error("Can't draw PlayerGraphics without owner"); }
-        if (this.owner.inputHandler === null) { throw new Error("Can't draw PlayerGraphics without inputHandler"); }
-        if (ObjectData[this.owner.type].maxTilesPerMove === null) {
-            throw new Error(`Missing maxTilesPerMove for ${this.owner.type}`);
-        }
-        const maxTilesPerMove = ObjectData[this.owner.type].maxTilesPerMove!;
+    update() {
+        if (globals.Game === null) { throw new Error("Global game is null"); }
 
-        if (map[this.owner.y][this.owner.x].isVisibleAndLit()) {
-            let bgColor = map[this.owner.y][this.owner.x].lightingColor;
-            const objectsAtLocation = getObjectsAtLocation(objects, this.owner.x, this.owner.y);
-            if (objectsAtLocation.length > 0) {
-                for (let i = 0; i < objectsAtLocation.length; i++) {
-                    const obj = objectsAtLocation[i];
-                    if (obj === this.owner || obj.graphics === null) {
-                        continue;
-                    }
-                    if (obj.graphics.bgColor !== null) {
-                        bgColor = obj.graphics.bgColor;
-                    }
-                }
+        const entities = this.graphicsQuery.execute();
+        for (const entity of entities) {
+            const graphicData = entity.getOne(GraphicsComponent);
+            const pos = entity.getOne(PositionComponent);
+
+            if (graphicData === undefined || pos === undefined) {
+                throw new Error(`missing data for draw system for ${entity.id}`);
             }
 
-            const { x, y } = camera.worldToScreen(this.owner.x, this.owner.y);
-
-            display.draw(
-                x,
-                y,
-                this.char,
-                this.fgColor,
-                bgColor
-            );
-
-            const inputHandlerState = this.owner.inputHandler.state;
-            if (inputHandlerState === PlayerState.Combat) {
-                const mousePosition = input.getMousePosition();
-                if (mousePosition === null) { return; }
-
-                // quick distance check to cut down the number of
-                // AStar calcs
-                if (distanceBetweenObjects(this.owner, mousePosition) < maxTilesPerMove * 2) {
-                    const path = getActorMovementPath(
-                        mousePosition.x,
-                        mousePosition.y,
-                        this.owner,
-                        map,
-                        objects
-                    );
-                    if (path === null) { return; }
-
-                    for (let i = 0; i < path.length; i++) {
-                        const step = path[i];
-                        const { x, y } = camera.worldToScreen(step[0], step[1]);
-                        display.draw(x, y, "", "yellow", "yellow");
-                    }
-                }
-            } else if (inputHandlerState === PlayerState.Target) {
-                const targetArea = this.owner.inputHandler.getTargetingReticle();
-
-                for (let i = 0; i < targetArea.length; i++) {
-                    if (targetArea[i].x >= map[0].length ||
-                        targetArea[i].y >= map.length ||
-                        map[targetArea[i].y][targetArea[i].x].visible === false) {
-                        return;
-                    }
-
-                    const { x, y } = camera.worldToScreen(targetArea[i].x, targetArea[i].y);
-                    display.draw(x, y, "X", "black", "yellow");
-                }
+            if (entity.tags.has("drawAfterSeen") === true) {
+                this.drawAfterSeen(pos, graphicData);
+            } else if (graphicData.bgColor === null) {
+                this.drawWithTransparency(pos, graphicData, entities, entity.id);
+            } else {
+                this.draw(pos, graphicData);
             }
         }
     }
 }
 
 /**
- * Graphics component will always draw the object if the tile it's on has been explored,
- * regardless of its visibility
+ * Draw all chests which have a ChestGraphicsComponent, a PositionComponent,
+ * and an InventoryComponent. Looks in the inventory and changes the background
+ * color if it's empty.
  */
-export class DrawAfterSeen implements GraphicsComponent {
-    char: string;
-    fgColor: string;
-    bgColor: string;
-    owner: Nullable<GameObject>;
+export class DrawChestsSystem extends System {
+    private chestGraphics: Query;
 
-    constructor(data: ObjectDataDetails) {
-        if (data.char === null) {
-            throw new Error("Missing data on DrawAfterSeen ctor");
-        }
-        if (data.fgColor === null) {
-            throw new Error("Missing data on DrawAfterSeen ctor");
-        }
-        if (data.bgColor === null) {
-            throw new Error("Missing data on DrawAfterSeen ctor");
-        }
-
-        this.char = data.char;
-        this.fgColor = data.fgColor;
-        this.bgColor = data.bgColor;
-        this.owner = null;
+    init() {
+        this.chestGraphics = this
+            .createQuery()
+            .fromAll(ChestGraphicsComponent, PositionComponent, InventoryComponent)
+            .persist();
     }
 
-    draw(display: Display, camera: Camera, map: GameMap) {
-        if (this.owner === null) { throw new Error("Can't draw DrawAfterSeen without owner"); }
+    update() {
+        if (globals.Game === null) { throw new Error("Global game is null"); }
 
-        if (map[this.owner.y][this.owner.x].explored) {
-            const { x, y } = camera.worldToScreen(this.owner.x, this.owner.y);
-            display.draw(x, y, this.char, this.fgColor, this.bgColor);
+        const entities = this.chestGraphics.execute();
+        for (const entity of entities) {
+            const pos = entity.getOne(PositionComponent)!;
+
+            if (globals.Game.map[pos.y][pos.x].explored) {
+                const graphics = entity.getOne(ChestGraphicsComponent)!;
+                const inventory = entity.getOne(InventoryComponent)!;
+                const bgColor = getItems(inventory).length > 0 ?
+                    graphics.bgColor :
+                    graphics.emptyColor;
+
+                const { x, y } = globals.Game.gameCamera.worldToScreen(pos.x, pos.y);
+                globals.Game.display!.draw(x, y, graphics.char, graphics.fgColor, bgColor);
+            }
+        }
+    }
+}
+
+export class DrawPlayerSystem extends System {
+    private query: Query;
+
+    init() {
+        this.query = this
+            .createQuery()
+            .fromAll(PositionComponent, InventoryComponent, "input")
+            .persist();
+    }
+
+    update() {
+        if (globals.Game === null) { throw new Error("Global game is null"); }
+
+        const entities = this.query.execute();
+        for (const entity of entities) {
+            const pos = entity.getOne(PositionComponent)!;
+            const inputStateData = entity.getOne(InputHandlingComponent);
+            const speedData = entity.getOne(SpeedComponent);
+            const graphics = entity.getOne(GraphicsComponent);
+
+            if (speedData === undefined ||
+                inputStateData === undefined ||
+                graphics === undefined) {
+                throw new Error("Player missing speed or input data");
+            }
+
+            if (globals.Game!.map[pos.y][pos.x].isVisibleAndLit()) {
+                const bgColor = getTransparencyBackground(this.world, pos, entities, entity.id);
+                const { x, y } = globals.Game!.gameCamera.worldToScreen(pos.x, pos.y);
+
+                globals.Game!.display!.draw(
+                    x,
+                    y,
+                    graphics.char,
+                    graphics.fgColor,
+                    bgColor
+                );
+
+                if (inputStateData.state === PlayerState.Combat) {
+                    const mousePosition = input.getMousePosition();
+                    if (mousePosition === null) { return; }
+
+                    // quick distance check to cut down the number of
+                    // AStar calcs
+                    if (distanceBetweenPoints(pos, mousePosition) < speedData.maxTilesPerMove * 2) {
+                        const path = getActorMovementPath(
+                            this.world,
+                            pos,
+                            mousePosition,
+                            speedData.maxTilesPerMove,
+                            globals.Game!.map,
+                        );
+                        if (path === null) { return; }
+
+                        for (let i = 0; i < path.length; i++) {
+                            const step = path[i];
+                            const { x, y } = globals
+                                .Game!
+                                .gameCamera
+                                .worldToScreen(step[0], step[1]);
+                            globals.Game!.display!.draw(x, y, "", "yellow", "yellow");
+                        }
+                    }
+                } else if (inputStateData.state === PlayerState.Target) {
+                    const targetArea = getTargetingReticle(inputStateData);
+
+                    for (let i = 0; i < targetArea.length; i++) {
+                        if (targetArea[i].x >= globals.Game!.map[0].length ||
+                        targetArea[i].y >= globals.Game!.map.length ||
+                        globals.Game!.map[targetArea[i].y][targetArea[i].x].visible === false) {
+                            return;
+                        }
+
+                        const { x, y } = globals
+                            .Game!
+                            .gameCamera
+                            .worldToScreen(targetArea[i].x, targetArea[i].y);
+                        globals.Game!.display!.draw(x, y, "X", "black", "yellow");
+                    }
+                }
+            }
         }
     }
 }

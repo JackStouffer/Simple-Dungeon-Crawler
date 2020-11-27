@@ -365,9 +365,9 @@
                          "value":"bandit"
                         }, 
                         {
-                         "name":"pathName",
-                         "type":"string",
-                         "value":"forrest_path_01"
+                         "name":"patrolTarget",
+                         "type":"object",
+                         "value":25
                         }],
                  "rotation":0,
                  "type":"object",
@@ -398,9 +398,9 @@
                          "value":"bandit_mage"
                         }, 
                         {
-                         "name":"pathName",
-                         "type":"string",
-                         "value":"forrest_path_01"
+                         "name":"patrolTarget",
+                         "type":"object",
+                         "value":25
                         }],
                  "rotation":0,
                  "type":"object",
@@ -426,9 +426,9 @@
                          "value":"bandit"
                         }, 
                         {
-                         "name":"pathName",
-                         "type":"string",
-                         "value":"forrest_path_01"
+                         "name":"patrolTarget",
+                         "type":"object",
+                         "value":25
                         }],
                  "rotation":0,
                  "type":"object",
@@ -516,8 +516,8 @@
                  "type":"object",
                  "visible":true,
                  "width":0,
-                 "x":1172.95621265976,
-                 "y":1404.74930046132
+                 "x":1167.08577325737,
+                 "y":1401.22703681989
                 }, 
                 {
                  "height":0,
@@ -534,8 +534,8 @@
                  "type":"object",
                  "visible":true,
                  "width":0,
-                 "x":1198.92332138397,
-                 "y":1370.98129908697
+                 "x":1200.09740926445,
+                 "y":1365.11085968458
                 }, 
                 {
                  "height":0,
@@ -588,8 +588,8 @@
                  "type":"object",
                  "visible":true,
                  "width":0,
-                 "x":1234.84692829258,
-                 "y":1427.69086266107
+                 "x":1232.2052305615,
+                 "y":1428.86495054155
                 }, 
                 {
                  "height":0,
@@ -606,8 +606,8 @@
                  "type":"object",
                  "visible":true,
                  "width":0,
-                 "x":1199.62429187825,
-                 "y":1396.28401185829
+                 "x":1200.21133581849,
+                 "y":1398.92570958936
                 }, 
                 {
                  "height":0,
@@ -624,7 +624,7 @@
                  "type":"object",
                  "visible":true,
                  "width":0,
-                 "x":1231.91170859139,
+                 "x":1232.79227450175,
                  "y":1399.5127535296
                 }, 
                 {
@@ -642,8 +642,8 @@
                  "type":"object",
                  "visible":true,
                  "width":0,
-                 "x":1233.08579647187,
-                 "y":1364.29011711527
+                 "x":1232.20523056151,
+                 "y":1365.46420499575
                 }, 
                 {
                  "height":0,
@@ -660,8 +660,8 @@
                  "type":"object",
                  "visible":true,
                  "width":0,
-                 "x":1200.21133581849,
-                 "y":1425.63620887023
+                 "x":1199.91781384837,
+                 "y":1427.69086266107
                 }, 
                 {
                  "height":0,
@@ -732,8 +732,44 @@
                  "type":"object",
                  "visible":true,
                  "width":0,
-                 "x":1264.19912530453,
-                 "y":1333.76383222284
+                 "x":1263.02503742405,
+                 "y":1336.69905192403
+                }, 
+                {
+                 "height":0,
+                 "id":59,
+                 "name":"water",
+                 "point":true,
+                 "properties":[
+                        {
+                         "name":"objectType",
+                         "type":"string",
+                         "value":"shallow_water"
+                        }],
+                 "rotation":0,
+                 "type":"object",
+                 "visible":true,
+                 "width":0,
+                 "x":1168.8044850157,
+                 "y":1333.1767882826
+                }, 
+                {
+                 "height":0,
+                 "id":60,
+                 "name":"water",
+                 "point":true,
+                 "properties":[
+                        {
+                         "name":"objectType",
+                         "type":"string",
+                         "value":"shallow_water"
+                        }],
+                 "rotation":0,
+                 "type":"object",
+                 "visible":true,
+                 "width":0,
+                 "x":1169.09800698582,
+                 "y":1431.50664827262
                 }],
          "opacity":1,
          "type":"objectgroup",
@@ -857,10 +893,10 @@
          "y":0
         }],
  "nextlayerid":7,
- "nextobjectid":59,
+ "nextobjectid":61,
  "orientation":"orthogonal",
  "renderorder":"right-down",
- "tiledversion":"1.4.2",
+ "tiledversion":"1.4.3",
  "tileheight":32,
  "tilesets":[
         {

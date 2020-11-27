@@ -1,22 +1,25 @@
+import { Entity, World } from "ape-ecs";
+
 import globals from "./globals";
 import input from "./input";
 import {
     Command,
     getActorMovementPath,
     GoToLocationCommand,
-    OpenInventoryCommand,
-    OpenSpellsCommand,
     UseItemCommand,
     UseSpellCommand,
-    NoOpCommand,
-    InteractCommand,
-    RotateReticleCommand
+    InteractCommand
 } from "./commands";
-import { GameObject } from "./object";
-import { InventoryItemDetails } from "./inventory";
-import { distanceBetweenObjects, getObjectsAtLocation, GameMap, Point } from "./map";
+import { distanceBetweenPoints, getEntitiesAtLocation, GameMap, Point } from "./map";
 import { Nullable } from "./util";
-import { SpellData, SpellDataDetails } from "./data";
+import {
+    HitPointsComponent,
+    InputHandlingComponent,
+    InteractableTypeComponent,
+    PositionComponent,
+    SpeedComponent
+} from "./entity";
+import { SpellData } from "./skills";
 
 export interface KeyCommand {
     key: string;
@@ -38,12 +41,11 @@ export enum PlayerState {
  * @return {Nullable<GameObject>} A game object
  */
 export function mouseTarget(
-    mousePosition: Point,
+    ecs: World,
     map: GameMap,
-    gameObjects: GameObject[]
-): Nullable<GameObject> {
-    let target = null;
-    const objects = getObjectsAtLocation(gameObjects, mousePosition.x, mousePosition.y);
+    mousePosition: Point
+): Nullable<Entity> {
+    const entities = getEntitiesAtLocation(ecs, mousePosition.x, mousePosition.y);
 
     if (mousePosition.x >= map[0].length ||
         mousePosition.y >= map.length ||
@@ -51,173 +53,161 @@ export function mouseTarget(
         return null;
     }
 
-    for (let i = 0; i < objects.length; i++) {
-        if (objects[i].fighter !== null || objects[i].interactable !== null) {
-            target = objects[i];
-            break;
+    for (let i = 0; i < entities.length; i++) {
+        const hpData = entities[i].getOne(HitPointsComponent);
+        const interactableData = entities[i].getOne(InteractableTypeComponent);
+        if (hpData !== undefined || interactableData !== undefined) {
+            return entities[i];
         }
     }
 
-    return target;
+    return null;
 }
 
-export interface InputHandler {
-    state: any;
-    reticleRotation: 0 | 90 | 180 | 270;
-    owner: Nullable<GameObject>;
-    keyCommands: KeyCommand[];
-    itemForTarget: Nullable<InventoryItemDetails>;
-    spellForTarget: Nullable<SpellDataDetails>;
+/**
+ * Returns a list of Points that represent the area being targeted by
+ * the player.
+ */
+export function getTargetingReticle(inputState: InputHandlingComponent): Point[] {
+    if (inputState.state !== PlayerState.Target) { throw new Error("Cannot get reticle outside of targeting state"); }
 
-    handleInput: (map: GameMap, objects: GameObject[]) => Nullable<Command>;
-    getTargetingReticle: () => Point[];
-}
+    const ret: Point[] = [];
 
-export class PlayerInputHandler implements InputHandler {
-    state: PlayerState;
-    reticleRotation: 0 | 90 | 180 | 270;
-    keyCommands: KeyCommand[];
-    owner: Nullable<GameObject>;
-    itemForTarget: Nullable<InventoryItemDetails>;
-    spellForTarget: Nullable<SpellDataDetails>;
+    const mousePosition = input.getMousePosition();
+    if (mousePosition === null) { return ret; }
 
-    constructor() {
-        this.owner = null;
-        this.reticleRotation = 0;
-        this.state = PlayerState.Combat;
-        this.itemForTarget = null;
-        this.spellForTarget = null;
-        this.keyCommands = [
-            { key: "i", description: "Inventory", command: new OpenInventoryCommand() },
-            { key: "m", description: "Spell Menu", command: new OpenSpellsCommand() },
-            { key: "r", description: "Rotate Target Reticle", command: new RotateReticleCommand() },
-            { key: "x", description: "Do Nothing", command: new NoOpCommand(true) }
-        ];
-    }
-
-    /**
-     * Returns a list of Points that represent the area being targeted by
-     * the player.
-     */
-    getTargetingReticle(): Point[] {
-        if (this.state !== PlayerState.Target) { throw new Error("Cannot get reticle outside of targeting state"); }
-
-        const ret: Point[] = [];
-
-        const mousePosition = input.getMousePosition();
-        if (mousePosition === null) { return ret; }
-
-        if (this.spellForTarget !== null) {
-            const spellData = SpellData[this.spellForTarget.id];
-            if (spellData.areaOfEffect !== null) {
-                for (let dx = 0; dx < spellData.areaOfEffect.width; dx++) {
-                    for (let dy = 0; dy < spellData.areaOfEffect.height; dy++) {
-                        switch (this.reticleRotation) {
-                            case 0:
-                                ret.push({ x: mousePosition.x + dx, y: mousePosition.y + dy });
-                                break;
-                            case 90:
-                                ret.push({ x: mousePosition.x + dy, y: mousePosition.y + dx });
-                                break;
-                            case 180:
-                                ret.push({ x: mousePosition.x + dx, y: mousePosition.y - dy });
-                                break;
-                            case 270:
-                                ret.push({ x: mousePosition.x - dy, y: mousePosition.y + dx });
-                                break;
-                            default: break;
-                        }
+    if (inputState.spellForTarget !== null) {
+        const spellData = SpellData[inputState.spellForTarget.id];
+        if (spellData.areaOfEffect !== undefined) {
+            for (let dx = 0; dx < spellData.areaOfEffect.width; dx++) {
+                for (let dy = 0; dy < spellData.areaOfEffect.height; dy++) {
+                    switch (inputState.reticleRotation) {
+                        case 0:
+                            ret.push({ x: mousePosition.x + dx, y: mousePosition.y + dy });
+                            break;
+                        case 90:
+                            ret.push({ x: mousePosition.x + dy, y: mousePosition.y + dx });
+                            break;
+                        case 180:
+                            ret.push({ x: mousePosition.x + dx, y: mousePosition.y - dy });
+                            break;
+                        case 270:
+                            ret.push({ x: mousePosition.x - dy, y: mousePosition.y + dx });
+                            break;
+                        default: break;
                     }
                 }
-            } else {
-                ret.push({ x: mousePosition.x, y: mousePosition.y });
             }
         } else {
             ret.push({ x: mousePosition.x, y: mousePosition.y });
         }
-
-        return ret;
+    } else {
+        ret.push({ x: mousePosition.x, y: mousePosition.y });
     }
 
-    handleInput(map: GameMap, objects: GameObject[]): Nullable<Command> {
-        if (globals.gameEventEmitter === null) { throw new Error("Global gameEventEmitter cannot be null"); }
-        if (this.owner === null) { throw new Error("Can't handle input without an owner"); }
+    return ret;
+}
 
-        if (this.state === PlayerState.Combat) {
-            // Key commands
-            for (let i = 0; i < this.keyCommands.length; i++) {
-                const keyCommand = this.keyCommands[i];
-                if (input.isDown(keyCommand.key)) {
-                    return keyCommand.command;
-                }
+export function handleInput(
+    ecs: World,
+    map: GameMap,
+    triggerMap: Map<string, Entity>,
+    player: Entity
+): Nullable<Command> {
+    if (globals.gameEventEmitter === null) { throw new Error("Global gameEventEmitter cannot be null"); }
+
+    const inputState = player.getOne(InputHandlingComponent);
+    const playerPosition = player.getOne(PositionComponent);
+    const speedData = player.getOne(SpeedComponent);
+
+    if (inputState === undefined ||
+        playerPosition === undefined ||
+        speedData === undefined) {
+        throw new Error("player is missing data");
+    }
+
+    if (inputState.state === PlayerState.Combat) {
+        // Key commands
+        for (let i = 0; i < inputState.keyCommands.length; i++) {
+            const keyCommand = inputState.keyCommands[i];
+            if (input.isDown(keyCommand.key)) {
+                return keyCommand.command;
             }
+        }
 
-            // Movement
-            const mouseDownPosition = input.getLeftMouseDown();
-            if (mouseDownPosition !== null) {
-                if (distanceBetweenObjects(mouseDownPosition, this.owner) < 1.5) {
-                    const target = mouseTarget(
-                        mouseDownPosition,
-                        map,
-                        objects
-                    );
-                    if (target !== null && target !== this.owner) {
-                        return new InteractCommand(target);
-                    }
-                }
-
-                const path = getActorMovementPath(
-                    mouseDownPosition.x,
-                    mouseDownPosition.y,
-                    this.owner,
+        // Movement
+        const mouseDownPosition = input.getLeftMouseDown();
+        if (mouseDownPosition !== null) {
+            if (distanceBetweenPoints(mouseDownPosition, playerPosition) < 1.5) {
+                const target = mouseTarget(
+                    ecs,
                     map,
-                    objects
+                    mouseDownPosition
                 );
-                if (path !== null) {
-                    return new GoToLocationCommand(
-                        path,
-                        map,
-                        objects
-                    );
+                if (target !== null && target !== inputState.entity) {
+                    return new InteractCommand(target);
                 }
             }
 
-            return null;
-        } else if (this.state === PlayerState.Target) {
-            globals.gameEventEmitter.emit("tutorial.spellTargeting");
-
-            // Key commands
-            for (let i = 0; i < this.keyCommands.length; i++) {
-                const keyCommand = this.keyCommands[i];
-                if (input.isDown(keyCommand.key)) {
-                    return keyCommand.command;
-                }
-            }
-
-            const position = input.getLeftMouseDown();
-            if (position === null) {
-                return null;
-            }
-
-            let command: Nullable<Command> = null;
-            if (this.itemForTarget !== null) {
-                command = new UseItemCommand(this.itemForTarget.id, position, map, objects);
-            } else if (this.spellForTarget !== null) {
-                command = new UseSpellCommand(
-                    this.spellForTarget.id,
-                    position,
+            const path = getActorMovementPath(
+                ecs,
+                playerPosition,
+                mouseDownPosition,
+                speedData.maxTilesPerMove,
+                map
+            );
+            if (path !== null) {
+                return new GoToLocationCommand(
+                    path,
+                    ecs,
                     map,
-                    objects,
-                    this.reticleRotation
+                    triggerMap
                 );
             }
-
-            this.state = PlayerState.Combat;
-            this.itemForTarget = null;
-            this.spellForTarget = null;
-            return command;
         }
 
         return null;
+    } else if (inputState.state === PlayerState.Target) {
+        globals.gameEventEmitter.emit("tutorial.spellTargeting");
+
+        // Key commands
+        for (let i = 0; i < inputState.keyCommands.length; i++) {
+            const keyCommand = inputState.keyCommands[i];
+            if (input.isDown(keyCommand.key)) {
+                return keyCommand.command;
+            }
+        }
+
+        const position = input.getLeftMouseDown();
+        if (position === null) {
+            return null;
+        }
+
+        let command: Nullable<Command> = null;
+        if (inputState.itemForTarget !== null) {
+            command = new UseItemCommand(
+                inputState.itemForTarget.id,
+                ecs,
+                position,
+                map,
+                inputState.reticleRotation
+            );
+        } else if (inputState.spellForTarget !== null) {
+            command = new UseSpellCommand(
+                inputState.spellForTarget.id,
+                ecs,
+                position,
+                map,
+                inputState.reticleRotation
+            );
+        }
+
+        inputState.state = PlayerState.Combat;
+        inputState.itemForTarget = null;
+        inputState.spellForTarget = null;
+        inputState.update();
+        return command;
     }
+
+    return null;
 }
