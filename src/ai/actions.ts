@@ -26,7 +26,7 @@ import {
     isBlocked,
 } from "../map";
 import { displayMessage } from "../ui";
-import { ItemType, SpellType } from "../data";
+import { ItemType, SpellType } from "../constants";
 import { Nullable } from "../util";
 import globals from "../globals";
 import { Entity, World } from "ape-ecs";

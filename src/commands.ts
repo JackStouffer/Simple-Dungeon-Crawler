@@ -3,19 +3,21 @@ import { Entity, World } from "ape-ecs";
 import Path from "./rot/path/index";
 
 import globals from "./globals";
-import { GameState } from "./data";
+import {
+    GameState,
+    InteractableType,
+    TriggerType
+} from "./constants";
 import { GameMap, isBlocked, distanceBetweenPoints, Point } from "./map";
 import { assertUnreachable, Nullable } from "./util";
 import { displayMessage } from "./ui";
 import {
     HitPointsComponent,
     InputHandlingComponent,
-    InteractableType,
     InteractableTypeComponent,
     InventoryComponent,
     PositionComponent,
     StatsComponent,
-    TriggerType,
     TriggerTypeComponent
 } from "./entity";
 import { attack, getEffectiveStatData, hasSpell, useMana } from "./fighter";

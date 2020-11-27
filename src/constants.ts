@@ -84,3 +84,17 @@ export enum StatusEffectType {
     Frozen,
     Paralyzed
 }
+
+export enum InteractableType {
+    LoadLevel,
+    Door,
+    GiveItems,
+    GiveSpells
+}
+
+export enum TriggerType {
+    Event,
+    Fire,
+    ShallowWater,
+    DeepWater
+}

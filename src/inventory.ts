@@ -1,5 +1,5 @@
 import globals from "./globals";
-import { ItemType } from "./data";
+import { ItemType } from "./constants";
 import { Nullable } from "./util";
 import { InventoryComponent } from "./entity";
 import { ItemData } from "./skills";

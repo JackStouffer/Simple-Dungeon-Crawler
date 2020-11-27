@@ -64,7 +64,7 @@ import {
     UseItemCommand,
     UseSpellCommand
 } from "./commands";
-import { WIDTH, HEIGHT, GameState, ItemType, SpellType } from "./data";
+import { WIDTH, HEIGHT, GameState, ItemType, SpellType } from "./constants";
 import input from "./input";
 import { handleInput, PlayerState } from "./input-handler";
 import {

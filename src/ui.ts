@@ -10,7 +10,7 @@ import {
     LEVEL_UP_BASE,
     LEVEL_UP_FACTOR,
     SpellType
-} from "./data";
+} from "./constants";
 import input from "./input";
 import { PlayerState, KeyCommand } from "./input-handler";
 import { DisplayNameComponent, InputHandlingComponent, LevelComponent, PlannerAIComponent } from "./entity";

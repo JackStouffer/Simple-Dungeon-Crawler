@@ -10,7 +10,7 @@ import {
     DamageType,
     SpellType,
     DeathType
-} from "./data";
+} from "./constants";
 import {
     createEntity,
     DamageAffinityComponent,
@@ -21,6 +21,7 @@ import {
     InventoryComponent,
     LevelComponent,
     PositionComponent,
+    SpeedComponent,
     SpeedEffectComponent,
     SpellsComponent,
     StatsComponent,
@@ -236,8 +237,9 @@ export class UpdateEffectsSystem extends System {
         for (const entity of speedEffects) {
             const effects = entity.getComponents(SpeedEffectComponent);
             for (const effect of effects) {
-                effect.turnsLeft -= 1;
+                effect.turnsLeft--;
                 if (effect.turnsLeft === 0) {
+                    entity.removeComponent(effect);
                     effect.destroy();
                 } else {
                     effect.update();
@@ -378,6 +380,24 @@ export function getEffectiveStatData(entity: Entity) {
         stats.mana = newStats.maxMana;
         newStats.mana = newStats.maxMana;
     }
+
+    return newStats;
+}
+
+/**
+ * Find the fighter's current stats after the effects of all
+ * of the statistic effects are taken into account.
+ */
+export function getEffectiveSpeedData(entity: Entity) {
+    const effects = entity.getComponents(SpeedEffectComponent);
+    const speed = entity.getOne(SpeedComponent);
+    if (speed === undefined) { return null; }
+    if (effects.size === 0) { return speed; }
+
+    let newStats = pick(speed, "speed", "maxTilesPerMove");
+    effects.forEach(e => {
+        newStats = calculateStatModifier(e, newStats);
+    });
 
     return newStats;
 }

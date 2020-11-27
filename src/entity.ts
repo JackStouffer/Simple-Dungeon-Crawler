@@ -8,8 +8,10 @@ import {
     BASE_SPEED,
     DamageType,
     DeathType,
-    LightingType
-} from "./data";
+    LightingType,
+    InteractableType,
+    TriggerType
+} from "./constants";
 import { Nullable, randomIntFromInterval } from "./util";
 import { KeyCommand, PlayerState } from "./input-handler";
 import { InventoryItemDetails } from "./inventory";
@@ -23,7 +25,7 @@ import {
 import { createPlanner } from "./ai/commands";
 import { SpellDataDetails } from "./skills";
 
-export interface DamageAffinityMap {
+interface DamageAffinityMap {
     [DamageType.Physical]: Affinity;
     [DamageType.Fire]: Affinity;
     [DamageType.Electric]: Affinity;
@@ -49,20 +51,6 @@ const waterTypeDamageValues: DamageAffinityMap = {
     [DamageType.Nature]: Affinity.normal,
     [DamageType.Ice]: Affinity.weak
 };
-
-export enum InteractableType {
-    LoadLevel,
-    Door,
-    GiveItems,
-    GiveSpells
-}
-
-export enum TriggerType {
-    Event,
-    Fire,
-    ShallowWater,
-    DeepWater
-}
 
 export class PositionComponent extends Component {
     x: number;
@@ -1080,6 +1068,7 @@ const ObjectData: { [key: string]: ObjectDataDetails } = {
             "meleeAttack"
         ],
         staticallyKnownComponents: {
+            tags: ["blocks"],
             c: {
                 TypeComponent: {
                     entityType: "rat"
@@ -1147,6 +1136,7 @@ const ObjectData: { [key: string]: ObjectDataDetails } = {
             "meleeAttack"
         ],
         staticallyKnownComponents: {
+            tags: ["blocks"],
             c: {
                 TypeComponent: {
                     entityType: "water_sprite"

@@ -1,5 +1,5 @@
 import { Entity } from "ape-ecs";
-import { WIDTH, HEIGHT, UI_HEIGHT } from "./data";
+import { WIDTH, HEIGHT, UI_HEIGHT } from "./constants";
 import { PositionComponent } from "./entity";
 import { GameMap } from "./map";
 import { Nullable } from "./util";

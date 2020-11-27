@@ -1,7 +1,7 @@
 import { System, Entity } from "ape-ecs";
 
 import globals from "./globals";
-import { DamageType } from "./data";
+import { DamageType } from "./constants";
 import { EventTriggerComponent, FireTriggerComponent, FlammableComponent, PositionComponent, TypeComponent } from "./entity";
 import { takeDamage } from "./fighter";
 

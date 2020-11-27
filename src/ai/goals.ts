@@ -1,5 +1,5 @@
 import { Entity } from "ape-ecs";
-import { ItemType, SpellType } from "../data";
+import { ItemType, SpellType } from "../constants";
 import {
     FallbackAIComponent,
     FearAIComponent,

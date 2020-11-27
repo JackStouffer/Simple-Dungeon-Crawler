@@ -5,7 +5,7 @@ import { RNG } from "./rot/index";
 import globals from "./globals";
 import { GameMap, getRandomFighterWithinRange, isBlocked, Point, setAllToExplored } from "./map";
 import { displayMessage } from "./ui";
-import { DamageType, ItemType, SpellType, StatusEffectType } from "./data";
+import { DamageType, ItemType, SpellType, StatusEffectType } from "./constants";
 import {
     createEntity,
     DisplayNameComponent,
@@ -328,7 +328,7 @@ export function castSlow(
         return false;
     }
 
-    const speedEffects = user.getComponents(SpeedEffectComponent);
+    const speedEffects = entity.getComponents(SpeedEffectComponent);
     // TODO implement filter/map for Iterators
     for (const e of speedEffects) {
         if (e.name === "Slow") {
@@ -339,7 +339,7 @@ export function castSlow(
 
     displayMessage(`Spell hits and slows ${displayName.name}`);
 
-    user.addComponent({
+    entity.addComponent({
         type: "SpeedEffectComponent",
         name: "Slow",
         stat: "speed",
@@ -439,8 +439,6 @@ export function castFireWall(
         "fire_effect"
     );
 }
-
-
 
 export const ItemData: { [key: string]: ItemDataDetails } = {
     "health_potion_weak": {

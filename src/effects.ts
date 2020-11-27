@@ -1,7 +1,7 @@
 import { Query, System } from "ape-ecs";
 
 import globals from "./globals";
-import { DamageType } from "./data";
+import { DamageType } from "./constants";
 import { displayMessage } from "./ui";
 import {
     DisplayNameComponent,
