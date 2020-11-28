@@ -13,7 +13,7 @@ import {
 } from "./constants";
 import input from "./input";
 import { PlayerState, KeyCommand } from "./input-handler";
-import { DisplayNameComponent, InputHandlingComponent, LevelComponent, PlannerAIComponent } from "./entity";
+import { DisplayNameComponent, FlammableComponent, FreezableComponent, InputHandlingComponent, LevelComponent, PlannerAIComponent, WetableComponent } from "./entity";
 import { InventoryItemDetails } from "./inventory";
 import { getEffectiveHitPointData, getEffectiveStatData } from "./fighter";
 import { GameMap, getEntitiesAtLocation } from "./map";
@@ -32,6 +32,9 @@ export function drawStatusBar(
     const statData = getEffectiveStatData(player);
     const levelData = player.getOne(LevelComponent);
     const inputHandlerData = player.getOne(InputHandlingComponent);
+    const flammableData = player.getOne(FlammableComponent);
+    const frozenData = player.getOne(FreezableComponent);
+    const wetData = player.getOne(WetableComponent);
 
     if (hpData === null ||
         statData === null ||
@@ -51,7 +54,15 @@ export function drawStatusBar(
     display.drawText(30, HEIGHT - UI_HEIGHT, `%c{white}%b{blue}STR: ${statData.strength}`);
     display.drawText(38, HEIGHT - UI_HEIGHT, `%c{white}%b{blue}DEF: ${statData.defense}`);
     display.drawText(46, HEIGHT - UI_HEIGHT, `%c{white}%b{blue}EXP: ${levelData.experience}/${(LEVEL_UP_BASE + levelData.level * LEVEL_UP_FACTOR)}`);
-    display.drawText(23, HEIGHT - UI_HEIGHT + 2, `%c{white}%b{blue}${PlayerState[inputHandlerData.state]}`);
+    display.drawText(1, HEIGHT - UI_HEIGHT + 2, `%c{white}%b{blue}${PlayerState[inputHandlerData.state]}`);
+
+    if (flammableData !== undefined && flammableData.onFire) {
+        display.drawText(14, HEIGHT - UI_HEIGHT + 2, `%c{white}%b{blue}On Fire`);
+    } else if (frozenData !== undefined && frozenData.frozen) {
+        display.drawText(14, HEIGHT - UI_HEIGHT + 2, `%c{white}%b{blue}Frozen`);
+    } else if (wetData !== undefined && wetData.wet) {
+        display.drawText(14, HEIGHT - UI_HEIGHT + 2, `%c{white}%b{blue}Wet`);
+    }
 
     const mousePosition = input.getMousePosition();
     if (mousePosition === null) { return; }

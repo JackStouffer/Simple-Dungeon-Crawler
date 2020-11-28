@@ -22,6 +22,7 @@ import {
 import { Camera } from "./camera";
 import { Nullable } from "./util";
 import { createPlanner } from "./ai/commands";
+import { ItemData } from "./skills";
 
 const COLOR_INVISIBLE_WALL = "black";
 const COLOR_INVISIBLE_GROUND = "black";
@@ -322,7 +323,10 @@ export function loadTiledMap(ecs: World, level: LevelName) {
 
                     if (inventory !== null) {
                         const items: Map<string, number> = new Map();
-                        inventory.split(",").forEach((i: string) => items.set(i, 1));
+                        inventory
+                            .split(",")
+                            .filter((i: string) => i in ItemData)
+                            .forEach((i: string) => items.set(i, 1));
 
                         const existingInventory = entity.getOne(InventoryComponent);
                         if (existingInventory === undefined) {

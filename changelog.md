@@ -6,6 +6,16 @@ _In Development_
 
 * Gameplay
   * Replaced burn status with on fire status
+  * Added "Wet" status which
+    * Makes you weak to electric attacks
+    * Makes you invulnerable to the on fire status once, so walking into a fire will protect you for one turn when wet and then the wet status will be removed
+  * Added shallow water which
+    * Removes on fire status
+    * Gives you the wet status
+  * Added deep water which
+    * Removes on fire status
+    * Gives you the wet status
+    * Slows you down
 * Technical
   * Refactor to Entity Component System design rather than the Unity-style Entity with plugin components
 

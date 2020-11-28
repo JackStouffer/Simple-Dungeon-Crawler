@@ -2,7 +2,15 @@ import { System, Entity } from "ape-ecs";
 
 import globals from "./globals";
 import { DamageType } from "./constants";
-import { EventTriggerComponent, FireTriggerComponent, FlammableComponent, PositionComponent, SpeedComponent, TypeComponent } from "./entity";
+import {
+    EventTriggerComponent,
+    FireTriggerComponent,
+    FlammableComponent,
+    PositionComponent,
+    SpeedComponent,
+    TypeComponent,
+    WetableComponent
+} from "./entity";
 import { takeDamage } from "./fighter";
 import { displayMessage } from "./ui";
 
@@ -45,8 +53,21 @@ export class UpdateTriggerMapSystem extends System {
  */
 export function fireTrigger(actor: Entity, trigger: Entity): void {
     const flammableData = actor.getOne(FlammableComponent);
+    const wetData = actor.getOne(WetableComponent);
 
     if (flammableData !== undefined) {
+        // You can't be set on fire if you're wet
+        if (wetData !== undefined && wetData.wet) {
+            wetData.wet = false;
+            wetData.turnsLeft = 0;
+            wetData.update();
+
+            if (actor === globals.Game?.player) {
+                displayMessage("Being wet prevented you from being set on fire");
+            }
+            return;
+        }
+
         const fireTriggerData = trigger.getOne(FireTriggerComponent);
         if (fireTriggerData === undefined) { throw new Error("Fire trigger is missing its data"); }
 
@@ -89,6 +110,16 @@ export function shallowWaterTrigger(actor: Entity): void {
             displayMessage("The water doused you");
         }
     }
+
+    const wetData = actor.getOne(WetableComponent);
+    if (wetData !== undefined && wetData.wet === false && actor === globals.Game?.player) {
+        displayMessage("You are now wet from stepping in the water");
+    }
+    if (wetData !== undefined && (wetData.wet === false || wetData.turnsLeft < 2)) {
+        wetData.wet = true;
+        wetData.turnsLeft = 3;
+        wetData.update();
+    }
 }
 
 export function deepWaterTrigger(actor: Entity): void {
@@ -103,6 +134,16 @@ export function deepWaterTrigger(actor: Entity): void {
         if (actor === globals.Game?.player) {
             displayMessage("The water doused you");
         }
+    }
+
+    const wetData = actor.getOne(WetableComponent);
+    if (wetData !== undefined && wetData.wet === false && actor === globals.Game?.player) {
+        displayMessage("You are now wet from swimming");
+    }
+    if (wetData !== undefined && (wetData.wet === false || wetData.turnsLeft < 6)) {
+        wetData.wet = true;
+        wetData.turnsLeft = 10;
+        wetData.update();
     }
 
     // Slow the player down to simulate swimming

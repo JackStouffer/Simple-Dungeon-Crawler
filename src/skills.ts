@@ -15,7 +15,8 @@ import {
     PositionComponent,
     SpeedComponent,
     SpeedEffectComponent,
-    StatsComponent
+    StatsComponent,
+    WetableComponent
 } from "./entity";
 import { randomIntFromInterval, Nullable } from "./util";
 import { mouseTarget } from "./input-handler";
@@ -136,13 +137,22 @@ function rollForStatusEffect(
     if (RNG.getUniform() <= targetStats.ailmentSusceptibility) {
         if (item?.statusEffect === StatusEffectType.OnFire) {
             const flammableData = target.getOne(FlammableComponent);
+            const wetData = target.getOne(WetableComponent);
             if (flammableData === undefined) { return true; }
+
+            // You can't be set on fire if you're wet
+            if (wetData !== undefined && wetData.wet) {
+                wetData.wet = false;
+                wetData.turnsLeft = 0;
+                wetData.update();
+                return true;
+            }
 
             flammableData.turnsLeft = randomIntFromInterval(3, 6);
             flammableData.fireDamage = Math.round(targetHp.maxHp * 0.0625);
             flammableData.update();
         } else if (item?.statusEffect !== undefined) {
-            throw new Error(`Status effect ${item?.statusEffect} is no implemented`);
+            throw new Error(`Status effect ${item?.statusEffect} is not implemented`);
         }
     }
 

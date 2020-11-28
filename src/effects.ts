@@ -9,7 +9,8 @@ import {
     HitPointsComponent,
     HitPointsEffectComponent,
     SpeedEffectComponent,
-    StatsEffectComponent
+    StatsEffectComponent,
+    WetableComponent
 } from "./entity";
 import { takeDamage } from "./fighter";
 
@@ -58,6 +59,31 @@ export class OnFireSystem extends System {
     }
 }
 
+export class WetSystem extends System {
+    private mainQuery: Query;
+
+    init() {
+        this.mainQuery = this
+            .createQuery()
+            .fromAll(WetableComponent)
+            .persist();
+    }
+
+    update() {
+        const entities = this.mainQuery.execute();
+        for (const entity of entities) {
+            const effect = entity.getOne(WetableComponent)!;
+            if (effect.turnsLeft > 0) {
+                effect.turnsLeft--;
+                effect.update();
+            } else if (effect.turnsLeft === 0) {
+                effect.wet = false;
+                effect.update();
+            }
+        }
+    }
+}
+
 /**
  * System to reduce the turn count of all effects on entities. If the
  * turn count reaches zero, then destroy the effect.
@@ -79,6 +105,7 @@ export class UpdateHitPointsEffectsSystem extends System {
             for (const effect of effects) {
                 effect.turnsLeft -= 1;
                 if (effect.turnsLeft === 0) {
+                    entity.removeComponent(effect);
                     effect.destroy();
                 } else {
                     effect.update();
@@ -108,6 +135,7 @@ export class UpdateStatsEffectsSystem extends System {
             for (const effect of effects) {
                 effect.turnsLeft -= 1;
                 if (effect.turnsLeft === 0) {
+                    entity.removeComponent(effect);
                     effect.destroy();
                 } else {
                     effect.update();

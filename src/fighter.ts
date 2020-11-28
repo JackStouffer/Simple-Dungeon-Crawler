@@ -9,7 +9,8 @@ import {
     LEVEL_UP_FACTOR,
     DamageType,
     SpellType,
-    DeathType
+    DeathType,
+    Affinity
 } from "./constants";
 import {
     createEntity,
@@ -26,7 +27,8 @@ import {
     SpellsComponent,
     StatsComponent,
     StatsEffectComponent,
-    TypeComponent
+    TypeComponent,
+    WetableComponent
 } from "./entity";
 import { displayMessage, MessageType } from "./ui";
 import { assertUnreachable } from "./util";
@@ -340,6 +342,28 @@ export function getEffectiveSpeedData(entity: Entity) {
     return newStats;
 }
 
+export function getEffectiveAffinityData(entity: Entity) {
+    const affinity = entity.getOne(DamageAffinityComponent);
+    const wetData = entity.getOne(WetableComponent);
+    if (affinity === undefined) { return null; }
+    if (wetData === undefined) { return affinity; }
+
+    const newAffinity = pick(
+        affinity,
+        DamageType.Physical,
+        DamageType.Fire,
+        DamageType.Electric,
+        DamageType.Water,
+        DamageType.Ice,
+        DamageType.Nature
+    );
+    if (wetData.wet && newAffinity[DamageType.Electric] !== Affinity.strong) {
+        newAffinity[DamageType.Electric] = Affinity.weak;
+    }
+
+    return newAffinity;
+}
+
 /**
  * Take damage from an attacker. Takes this fighter's current defense
  * into account.
@@ -358,9 +382,9 @@ export function takeDamage(
 
     const targetStats = getEffectiveStatData(target);
     const stats = target.getOne(StatsComponent);
-    const damageAffinity = target.getOne(DamageAffinityComponent);
+    const damageAffinity = getEffectiveAffinityData(target);
 
-    if (stats !== undefined && targetStats !== null && damageAffinity !== undefined) {
+    if (stats !== undefined && targetStats !== null && damageAffinity !== null) {
         damage = damage * damageAffinity[damageType];
         damage = Math.max(1, damage - targetStats.defense);
     } else if (stats !== undefined && targetStats !== null) {

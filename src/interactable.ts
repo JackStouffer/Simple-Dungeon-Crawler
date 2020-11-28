@@ -11,6 +11,8 @@ import { ItemData, SpellData } from "./skills";
  * Give the actor all of the items in the interactable's inventory
  */
 export function giveItemsInteract(actor: Entity, interactable: Entity) {
+    // TODO picking up dropped items doesn't delete the dropped item entity
+
     const actorInventory = actor.getOne(InventoryComponent);
     const interactableInventory = interactable.getOne(InventoryComponent);
 

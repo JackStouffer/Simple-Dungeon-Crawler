@@ -381,6 +381,16 @@ export class FlammableComponent extends Component {
     }
 }
 
+export class WetableComponent extends Component {
+    wet: boolean;
+    turnsLeft: number;
+
+    static properties = {
+        wet: false,
+        turnsLeft: 1
+    }
+}
+
 export class TriggerTypeComponent extends Component {
     triggerType: TriggerType;
 
@@ -752,6 +762,7 @@ const ObjectData: { [key: string]: ObjectDataDetails } = {
         }
     },
     "dropped_item": {
+        addInventory: true,
         staticallyKnownComponents: {
             c: {
                 TypeComponent: {
@@ -908,6 +919,10 @@ const ObjectData: { [key: string]: ObjectDataDetails } = {
                 FreezableComponent: {
                     frozen: false,
                     turnsLeft: 0
+                },
+                WetableComponent: {
+                    wet: false,
+                    turnsLeft: 0
                 }
             }
         }
@@ -977,6 +992,10 @@ const ObjectData: { [key: string]: ObjectDataDetails } = {
                 },
                 FreezableComponent: {
                     frozen: false,
+                    turnsLeft: 0
+                },
+                WetableComponent: {
+                    wet: false,
                     turnsLeft: 0
                 }
             }
@@ -1054,6 +1073,10 @@ const ObjectData: { [key: string]: ObjectDataDetails } = {
                 FreezableComponent: {
                     frozen: false,
                     turnsLeft: 0
+                },
+                WetableComponent: {
+                    wet: false,
+                    turnsLeft: 0
                 }
             }
         }
@@ -1121,6 +1144,10 @@ const ObjectData: { [key: string]: ObjectDataDetails } = {
                 },
                 FreezableComponent: {
                     frozen: false,
+                    turnsLeft: 0
+                },
+                WetableComponent: {
+                    wet: false,
                     turnsLeft: 0
                 }
             }
@@ -1259,6 +1286,10 @@ const ObjectData: { [key: string]: ObjectDataDetails } = {
                 FreezableComponent: {
                     frozen: false,
                     turnsLeft: 0
+                },
+                WetableComponent: {
+                    wet: false,
+                    turnsLeft: 0
                 }
             }
         }
@@ -1337,6 +1368,10 @@ const ObjectData: { [key: string]: ObjectDataDetails } = {
                 },
                 FreezableComponent: {
                     frozen: false,
+                    turnsLeft: 0
+                },
+                WetableComponent: {
+                    wet: false,
                     turnsLeft: 0
                 }
             }

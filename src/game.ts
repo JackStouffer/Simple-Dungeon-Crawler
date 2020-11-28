@@ -56,7 +56,8 @@ import {
     RemoveAfterNTurnsComponent,
     RemoveAfterNTurnsSystem,
     LoadLevelComponent,
-    ChestGraphicsComponent
+    ChestGraphicsComponent,
+    WetableComponent
 } from "./entity";
 import {
     Command,
@@ -97,7 +98,8 @@ import {
     OnFireSystem,
     UpdateHitPointsEffectsSystem,
     UpdateStatsEffectsSystem,
-    UpdateSpeedEffectsSystem
+    UpdateSpeedEffectsSystem,
+    WetSystem
 } from "./effects";
 import { generateAICommand } from "./ai/commands";
 import { SpellDataDetails } from "./skills";
@@ -239,6 +241,7 @@ export class SimpleDungeonCrawler {
         this.ecs.registerComponent(InputHandlingComponent, 1);
         this.ecs.registerComponent(FreezableComponent, 50);
         this.ecs.registerComponent(FlammableComponent, 50);
+        this.ecs.registerComponent(WetableComponent, 50);
         this.ecs.registerComponent(TriggerTypeComponent, 50);
         this.ecs.registerComponent(FireTriggerComponent, 20);
         this.ecs.registerComponent(EventTriggerComponent, 20);
@@ -255,6 +258,7 @@ export class SimpleDungeonCrawler {
         this.ecs.registerSystem("postCommand", UpdateHitPointsEffectsSystem);
         this.ecs.registerSystem("postCommand", UpdateStatsEffectsSystem);
         this.ecs.registerSystem("postCommand", UpdateSpeedEffectsSystem);
+        this.ecs.registerSystem("postCommand", WetSystem);
         this.ecs.registerSystem("postCommand", OnFireSystem);
         this.ecs.registerSystem("postCommand", LevelUpSystem);
         this.ecs.registerSystem("postCommand", DeathSystem);
