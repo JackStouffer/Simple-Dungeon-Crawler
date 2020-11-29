@@ -13,7 +13,15 @@ import {
 } from "./constants";
 import input from "./input";
 import { PlayerState, KeyCommand } from "./input-handler";
-import { DisplayNameComponent, FlammableComponent, FreezableComponent, InputHandlingComponent, LevelComponent, PlannerAIComponent, WetableComponent } from "./entity";
+import {
+    DisplayNameComponent,
+    FlammableComponent,
+    FreezableComponent,
+    InputHandlingComponent,
+    LevelComponent,
+    PlannerAIComponent,
+    WetableComponent
+} from "./entity";
 import { InventoryItemDetails } from "./inventory";
 import { getEffectiveHitPointData, getEffectiveStatData } from "./fighter";
 import { GameMap, getEntitiesAtLocation } from "./map";
@@ -101,6 +109,8 @@ export function drawStatusBar(
 
     if (targetNameData !== undefined && targetAIData !== undefined && targetHPData !== null) {
         display.drawText(1, HEIGHT - UI_HEIGHT + 4, `%c{white}%b{${bgColor}}A ${targetNameData.name} (${targetHPData.hp}/${targetHPData.maxHp}) (${targetAIData.knowsTargetPosition})`);
+    } else if (targetNameData !== undefined && targetHPData !== null) {
+        display.drawText(1, HEIGHT - UI_HEIGHT + 4, `%c{white}%b{${bgColor}}A ${targetNameData.name} (${targetHPData.hp}/${targetHPData.maxHp})`);
     } else if (targetNameData !== undefined) {
         display.drawText(1, HEIGHT - UI_HEIGHT + 4, `%c{white}%b{${bgColor}}A ${targetNameData.name}`);
     }
