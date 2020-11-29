@@ -11,8 +11,6 @@ import { ItemData, SpellData } from "./skills";
  * Give the actor all of the items in the interactable's inventory
  */
 export function giveItemsInteract(actor: Entity, interactable: Entity) {
-    // TODO picking up dropped items doesn't delete the dropped item entity
-
     const actorInventory = actor.getOne(InventoryComponent);
     const interactableInventory = interactable.getOne(InventoryComponent);
 
@@ -30,8 +28,11 @@ export function giveItemsInteract(actor: Entity, interactable: Entity) {
             }
 
             const interactableEntityType = interactable.getOne(TypeComponent);
-            if (actor === globals.Game.player && interactableEntityType?.type === "chest") {
+            if (actor === globals.Game.player && interactableEntityType?.entityType === "chest") {
                 globals.gameEventEmitter.emit("chest.open");
+            }
+            if (interactableEntityType?.entityType === "dropped_item") {
+                interactable.destroy();
             }
         } else {
             displayMessage("Empty");
