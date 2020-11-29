@@ -381,13 +381,15 @@ export function takeDamage(
     if (hpData === undefined) { throw new Error("Cannot take damage without a HitPointsComponent"); }
 
     const targetStats = getEffectiveStatData(target);
-    const stats = target.getOne(StatsComponent);
     const damageAffinity = getEffectiveAffinityData(target);
 
-    if (stats !== undefined && targetStats !== null && damageAffinity !== null) {
+    if (targetStats !== null && damageAffinity !== null) {
         damage = damage * damageAffinity[damageType];
         damage = Math.max(1, damage - targetStats.defense);
-    } else if (stats !== undefined && targetStats !== null) {
+    } else if (targetStats === null && damageAffinity !== null) {
+        damage = damage * damageAffinity[damageType];
+        damage = Math.max(1, damage);
+    } else if (targetStats !== null) {
         damage = Math.max(1, damage - targetStats.defense);
     }
 

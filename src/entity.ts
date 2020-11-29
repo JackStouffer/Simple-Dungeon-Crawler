@@ -746,12 +746,12 @@ const ObjectData: { [key: string]: ObjectDataDetails } = {
                     bgColor: "lightblue",
                 },
                 HitPointsComponent: {
-                    hp: 10,
-                    maxHp: 10,
+                    hp: 100,
+                    maxHp: 100,
                     onDeath: DeathType.RemoveFromWorld,
                 },
                 DamageAffinityComponent: {
-                    [DamageType.Physical]: Affinity.weak,
+                    [DamageType.Physical]: Affinity.normal,
                     [DamageType.Fire]: Affinity.weak,
                     [DamageType.Electric]: Affinity.normal,
                     [DamageType.Water]: Affinity.strong,
