@@ -43,26 +43,38 @@ export function drawStatusBar(
         throw new Error("Player missing data");
     }
 
+    let bgColor = "grey";
+    if (globals.Game?.player === globals.Game?.currentActor) {
+        bgColor = "blue";
+    }
+
     for (let x = 0; x < WIDTH; x++) {
         for (let y = 0; y < UI_HEIGHT; y++) {
-            display.draw(x, HEIGHT - (UI_HEIGHT - y), "#", "blue", "blue");
+            display.draw(x, HEIGHT - (UI_HEIGHT - y), "#", bgColor, bgColor);
         }
     }
 
-    display.drawText(1, HEIGHT - UI_HEIGHT, `%c{white}%b{blue}HP: ${hpData.hp}/${hpData.maxHp}`);
-    display.drawText(14, HEIGHT - UI_HEIGHT, `%c{white}%b{blue}Mana: ${statData.mana}/${statData.maxMana}`);
-    display.drawText(30, HEIGHT - UI_HEIGHT, `%c{white}%b{blue}STR: ${statData.strength}`);
-    display.drawText(38, HEIGHT - UI_HEIGHT, `%c{white}%b{blue}DEF: ${statData.defense}`);
-    display.drawText(46, HEIGHT - UI_HEIGHT, `%c{white}%b{blue}EXP: ${levelData.experience}/${(LEVEL_UP_BASE + levelData.level * LEVEL_UP_FACTOR)}`);
-    display.drawText(1, HEIGHT - UI_HEIGHT + 2, `%c{white}%b{blue}${PlayerState[inputHandlerData.state]}`);
+    display.drawText(1, HEIGHT - UI_HEIGHT, `%c{white}%b{${bgColor}}HP: ${hpData.hp}/${hpData.maxHp}`);
+    display.drawText(14, HEIGHT - UI_HEIGHT, `%c{white}%b{${bgColor}}Mana: ${statData.mana}/${statData.maxMana}`);
+    display.drawText(30, HEIGHT - UI_HEIGHT, `%c{white}%b{${bgColor}}STR: ${statData.strength}`);
+    display.drawText(38, HEIGHT - UI_HEIGHT, `%c{white}%b{${bgColor}}DEF: ${statData.defense}`);
+    display.drawText(46, HEIGHT - UI_HEIGHT, `%c{white}%b{${bgColor}}EXP: ${levelData.experience}/${(LEVEL_UP_BASE + levelData.level * LEVEL_UP_FACTOR)}`);
 
-    if (flammableData !== undefined && flammableData.onFire) {
-        display.drawText(14, HEIGHT - UI_HEIGHT + 2, `%c{white}%b{blue}On Fire`);
-    } else if (frozenData !== undefined && frozenData.frozen) {
-        display.drawText(14, HEIGHT - UI_HEIGHT + 2, `%c{white}%b{blue}Frozen`);
-    } else if (wetData !== undefined && wetData.wet) {
-        display.drawText(14, HEIGHT - UI_HEIGHT + 2, `%c{white}%b{blue}Wet`);
+    if (globals.Game?.player === globals.Game?.currentActor) {
+        display.drawText(1, HEIGHT - UI_HEIGHT + 2, `%c{white}%b{${bgColor}}State: ${PlayerState[inputHandlerData.state]}`);
+    } else {
+        display.drawText(1, HEIGHT - UI_HEIGHT + 2, `%c{white}%b{${bgColor}}Enemy Turn`);
     }
+
+    let status = "none";
+    if (flammableData !== undefined && flammableData.onFire) {
+        status = "On Fire";
+    } else if (frozenData !== undefined && frozenData.frozen) {
+        status = "Frozen";
+    } else if (wetData !== undefined && wetData.wet) {
+        status = "Wet";
+    }
+    display.drawText(30, HEIGHT - UI_HEIGHT + 2, `%c{white}%b{${bgColor}}Status: ${status}`);
 
     const mousePosition = input.getMousePosition();
     if (mousePosition === null) { return; }
@@ -79,7 +91,7 @@ export function drawStatusBar(
 
     const target: Nullable<Entity> = get(getEntitiesAtLocation(ecs, x, y), "[0]", null);
     if (target === null) {
-        display.drawText(1, HEIGHT - UI_HEIGHT + 4, `%c{white}%b{blue}${tile.name}`);
+        display.drawText(1, HEIGHT - UI_HEIGHT + 4, `%c{white}%b{${bgColor}}${tile.name}`);
         return;
     }
 
@@ -88,9 +100,9 @@ export function drawStatusBar(
     const targetAIData = target.getOne(PlannerAIComponent);
 
     if (targetNameData !== undefined && targetAIData !== undefined && targetHPData !== null) {
-        display.drawText(1, HEIGHT - UI_HEIGHT + 4, `%c{white}%b{blue}A ${targetNameData.name} (${targetHPData.hp}/${targetHPData.maxHp}) (${targetAIData.knowsTargetPosition})`);
+        display.drawText(1, HEIGHT - UI_HEIGHT + 4, `%c{white}%b{${bgColor}}A ${targetNameData.name} (${targetHPData.hp}/${targetHPData.maxHp}) (${targetAIData.knowsTargetPosition})`);
     } else if (targetNameData !== undefined) {
-        display.drawText(1, HEIGHT - UI_HEIGHT + 4, `%c{white}%b{blue}A ${targetNameData.name}`);
+        display.drawText(1, HEIGHT - UI_HEIGHT + 4, `%c{white}%b{${bgColor}}A ${targetNameData.name}`);
     }
 }
 
