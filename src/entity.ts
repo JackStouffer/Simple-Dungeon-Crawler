@@ -469,13 +469,13 @@ const ObjectData: { [key: string]: ObjectDataDetails } = {
                 DisplayNameComponent: {
                     name: "Door"
                 },
+                TypeComponent: {
+                    entityType: "door"
+                },
                 GraphicsComponent: {
                     char: "\u1882",
                     fgColor: "white",
                     bgColor: "brown"
-                },
-                TypeComponent: {
-                    entityType: "door"
                 },
                 InteractableTypeComponent: {
                     interactableType: InteractableType.Door
@@ -490,13 +490,13 @@ const ObjectData: { [key: string]: ObjectDataDetails } = {
                 DisplayNameComponent: {
                     name: "Door to new area"
                 },
+                TypeComponent: {
+                    entityType: "load_door"
+                },
                 GraphicsComponent: {
                     char: "\u1882",
                     fgColor: "white",
                     bgColor: "black",
-                },
-                TypeComponent: {
-                    entityType: "door"
                 },
                 InteractableTypeComponent: {
                     interactableType: InteractableType.LoadLevel
@@ -511,13 +511,13 @@ const ObjectData: { [key: string]: ObjectDataDetails } = {
                 DisplayNameComponent: {
                     name: "Stairs"
                 },
+                TypeComponent: {
+                    entityType: "stairs"
+                },
                 GraphicsComponent: {
                     char: "\u1750",
                     fgColor: "white",
                     bgColor: "black",
-                },
-                TypeComponent: {
-                    entityType: "door"
                 },
                 InteractableTypeComponent: {
                     interactableType: InteractableType.LoadLevel
@@ -558,6 +558,9 @@ const ObjectData: { [key: string]: ObjectDataDetails } = {
         staticallyKnownComponents: {
             tags: ["blocks"],
             c: {
+                TypeComponent: {
+                    entityType: "crate"
+                },
                 DisplayNameComponent: {
                     name: "Wooden Crate"
                 },
@@ -565,9 +568,6 @@ const ObjectData: { [key: string]: ObjectDataDetails } = {
                     char: "\u2612",
                     fgColor: "white",
                     bgColor: "brown"
-                },
-                TypeComponent: {
-                    entityType: "chest"
                 },
                 HitPointsComponent: {
                     hp: 5,
@@ -595,6 +595,9 @@ const ObjectData: { [key: string]: ObjectDataDetails } = {
         staticallyKnownComponents: {
             tags: ["blocks"],
             c: {
+                TypeComponent: {
+                    entityType: "barrel"
+                },
                 DisplayNameComponent: {
                     name: "Wooden Barrel"
                 },
@@ -602,9 +605,6 @@ const ObjectData: { [key: string]: ObjectDataDetails } = {
                     char: "\u232D",
                     fgColor: "white",
                     bgColor: "brown",
-                },
-                TypeComponent: {
-                    entityType: "chest"
                 },
                 HitPointsComponent: {
                     hp: 5,
