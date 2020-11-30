@@ -72,8 +72,30 @@ export function togglePlayerFOV(): void {
     globals.Game.isLightingEnabled = !(globals.Game.isLightingEnabled as boolean);
 }
 
+export function toggleCommandExecution(): void {
+    if (globals.Game === null) { throw new Error("Global game object is null"); }
+
+    globals.Game.processCommands = !(globals.Game.processCommands as boolean);
+}
+
+export function togglePathfindingDebug(): void {
+    if (globals.Game === null) { throw new Error("Global game object is null"); }
+    globals.Game.debugPathfinding = !(globals.Game.debugPathfinding as boolean);
+}
+
 export function getEntity(id: string): Entity | undefined {
     if (globals.Game === null) { throw new Error("Global game object is null"); }
 
     return globals.Game.ecs.getEntity(id);
+}
+
+export function step(): void {
+    if (globals.Game === null) { throw new Error("Global game object is null"); }
+
+    if (globals.Game.currentCommand !== null && globals.Game.currentActor !== null) {
+        globals.Game.currentCommand.execute(
+            globals.Game.deltaTime,
+            globals.Game.currentActor
+        );
+    }
 }

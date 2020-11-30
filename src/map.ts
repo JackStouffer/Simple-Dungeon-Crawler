@@ -23,6 +23,7 @@ import { Camera } from "./camera";
 import { Nullable } from "./util";
 import { createPlanner } from "./ai/commands";
 import { ItemData } from "./skills";
+import globals from "./globals";
 
 const COLOR_INVISIBLE_WALL = "black";
 const COLOR_INVISIBLE_GROUND = "black";
@@ -166,6 +167,7 @@ export class Tile {
     explored: boolean;
     reflectivity: number;
     lightingColor: string;
+    pathfindingCost: string = "0";
 
     constructor(
         name: string,
@@ -606,6 +608,14 @@ export function resetVisibility(map: GameMap): void {
         for (let x = 0; x < map[y].length; x++) {
             map[y][x].visible = false;
             map[y][x].lightingColor = COLOR_AMBIENT_LIGHT;
+        }
+    }
+}
+
+export function resetTilePathCosts(map: GameMap): void {
+    for (let y = 0; y < map.length; y++) {
+        for (let x = 0; x < map[y].length; x++) {
+            map[y][x].pathfindingCost = "0";
         }
     }
 }

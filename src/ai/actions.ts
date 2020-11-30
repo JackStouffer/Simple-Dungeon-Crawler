@@ -7,7 +7,8 @@ import {
     GoToLocationCommand,
     InteractCommand,
     NoOpCommand,
-    createPassableCallback
+    createPassableCallback,
+    generateWeightCallback
 } from "../commands";
 import {
     DisplayNameComponent,
@@ -22,28 +23,15 @@ import {
 import {
     distanceBetweenPoints,
     GameMap,
-    getEntitiesAtLocation,
     isBlocked,
 } from "../map";
 import { displayMessage } from "../ui";
 import { ItemType, SpellType } from "../constants";
 import { Nullable } from "../util";
-import globals from "../globals";
 import { Entity, World } from "ape-ecs";
-import { WeightCallback } from "../rot/path/path";
 import { getItems } from "../inventory";
 import { getKnownSpells } from "../fighter";
 import { SpellData } from "../skills";
-
-function generateWeightCallback(ecs: World): WeightCallback {
-    return function (x: number, y: number): number {
-        if (globals.Game === null) { throw new Error("Global game object is null"); }
-
-        const objects = getEntitiesAtLocation(ecs, x, y);
-        // if (objects.length > 0) { console.log(objects); }
-        return objects.length > 0 ? 20 : 0;
-    };
-}
 
 /**
  * Calculate a path from a game object to the give x and y
@@ -57,6 +45,7 @@ function generateWeightCallback(ecs: World): WeightCallback {
  */
 export function getStepsTowardsTarget(
     ecs: World,
+    actor: Entity,
     origin: PositionComponent,
     target: PositionComponent,
     steps: number
@@ -65,7 +54,7 @@ export function getStepsTowardsTarget(
         target.x,
         target.y,
         createPassableCallback(origin),
-        generateWeightCallback(ecs),
+        generateWeightCallback(ecs, origin),
         { topology: 8 }
     );
 
@@ -138,6 +127,7 @@ export function patrolAction(
     let targetPos: PositionComponent = patrolState.patrolTarget.getOne(PositionComponent);
     let path: Nullable<number[][]> = getStepsTowardsTarget(
         ecs,
+        aiState.entity,
         pos,
         targetPos,
         2
@@ -155,6 +145,7 @@ export function patrolAction(
         targetPos = patrolState.patrolTarget.getOne(PositionComponent);
         path = getStepsTowardsTarget(
             ecs,
+            aiState.entity,
             pos,
             targetPos,
             2
@@ -193,6 +184,7 @@ export function chaseAction(
 
     const path: Nullable<number[][]> = getStepsTowardsTarget(
         ecs,
+        ai.entity,
         posData,
         targetPosData,
         speedData.maxTilesPerMove

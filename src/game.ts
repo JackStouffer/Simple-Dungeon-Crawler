@@ -71,7 +71,8 @@ import { handleInput, PlayerState } from "./input-handler";
 import {
     GameMap,
     drawMap,
-    loadTiledMap
+    loadTiledMap,
+    resetTilePathCosts
 } from "./map";
 import {
     KeyBindingMenu,
@@ -113,8 +114,12 @@ export class SimpleDungeonCrawler {
     canvas: Nullable<HTMLElement>;
     display: Nullable<Display>;
     gameCamera: Camera;
+
+    // debug flags
     processAI: boolean;
+    processCommands: boolean;
     isLightingEnabled: boolean;
+    debugPathfinding: boolean;
 
     lastTimestamp: DOMHighResTimeStamp;
     deltaTime: DOMHighResTimeStamp;
@@ -143,8 +148,11 @@ export class SimpleDungeonCrawler {
         this.triggerMap = new Map();
         this.totalTurns = 1;
 
+        // debug flags
         this.processAI = true;
+        this.processCommands = true;
         this.isLightingEnabled = true;
+        this.debugPathfinding = false;
 
         this.display = new Display({
             width: WIDTH,
@@ -516,6 +524,7 @@ export class SimpleDungeonCrawler {
             this.currentActor = this.scheduler.next();
         }
 
+        // Command generation
         if (this.currentActor !== null && this.currentCommand === null) {
             if (this.currentActor === this.player) {
                 this.handleInput();
@@ -533,21 +542,29 @@ export class SimpleDungeonCrawler {
             }
         }
 
-        if (this.currentCommand !== null && this.currentActor !== null) {
+        // Run the command
+        if (this.currentCommand !== null &&
+            this.currentActor !== null &&
+            this.processCommands === true) {
             this.currentCommand.execute(this.deltaTime, this.currentActor);
         }
 
+        // Schedule the next actor and run post command systems if finished
         if (this.currentCommand !== null && this.currentCommand.isFinished()) {
             if (this.currentCommand.usedTurn()) {
                 if (this.currentActor === this.player) {
                     this.ecs.runSystems("postCommand");
+                    this.totalTurns++;
                 }
 
                 this.currentActor = this.scheduler.next();
             }
 
             this.currentCommand = null;
-            this.totalTurns++;
+
+            if (this.debugPathfinding) {
+                resetTilePathCosts(this.map);
+            }
         }
 
         const hpData = getEffectiveHitPointData(this.player);

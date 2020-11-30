@@ -9,9 +9,12 @@ interface MyWindow extends Window {
     giveAllSpells?: () => void;
     toggleAI?: () => void;
     togglePlayerFOV?: () => void;
+    toggleCommandExecution?: () => void;
+    togglePathfindingDebug?: () => void;
     startGameLoop?: () => void;
     stopGameLoop?: () => void;
     getEntity?: (id: string) => Entity | undefined;
+    step?: () => void;
 }
 
 interface Globals {

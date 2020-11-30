@@ -1,4 +1,4 @@
-import { System, Entity } from "ape-ecs";
+import { System, Entity, Query } from "ape-ecs";
 
 import globals from "./globals";
 import { DamageType } from "./constants";
@@ -8,6 +8,7 @@ import {
     FlammableComponent,
     PositionComponent,
     SpeedComponent,
+    TriggerTypeComponent,
     TypeComponent,
     WetableComponent
 } from "./entity";
@@ -15,34 +16,23 @@ import { takeDamage } from "./fighter";
 import { displayMessage } from "./ui";
 
 export class UpdateTriggerMapSystem extends System {
+    private mainQuery: Query;
+
     init() {
-        this.subscribe("TriggerTypeComponent");
+        this.mainQuery = this.createQuery()
+            .fromAll(TriggerTypeComponent, PositionComponent)
+            .persist();
     }
 
     update() {
         if (globals.Game === null) { throw new Error("Global game object is null"); }
+        const entities = this.mainQuery.execute();
+        globals.Game.triggerMap.clear();
 
-        for (let i = 0; i < this.changes.length; i++) {
-            const change = this.changes[i];
-            const entity = this.world.getEntity(change.entity);
-            if (entity === undefined) { return; }
-            const pos = entity.getOne(PositionComponent);
+        for (const e of entities) {
+            const pos = e.getOne(PositionComponent);
             if (pos === undefined) { return; }
-
-            switch (change.op) {
-                case "add":
-                    globals.Game.triggerMap.set(`${pos.x},${pos.y}`, entity);
-                    break;
-                case "destroy":
-                    globals.Game.triggerMap.delete(`${pos.x},${pos.y}`);
-                    break;
-                case "change":
-                case "addRef":
-                case "deleteRef":
-                    break;
-                default:
-                    throw new Error(`${change.entity}: Unknown change operation ${change.op}`);
-            }
+            globals.Game.triggerMap.set(`${pos.x},${pos.y}`, e);
         }
     }
 }

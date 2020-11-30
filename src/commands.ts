@@ -1,6 +1,7 @@
 import { Entity, World } from "ape-ecs";
 
 import Path from "./rot/path/index";
+import { WeightCallback, PassableCallback } from "./rot/path/path";
 
 import globals from "./globals";
 import {
@@ -8,7 +9,7 @@ import {
     InteractableType,
     TriggerType
 } from "./constants";
-import { GameMap, isBlocked, distanceBetweenPoints, Point } from "./map";
+import { GameMap, isBlocked, distanceBetweenPoints, Point, getEntitiesAtLocation } from "./map";
 import { assertUnreachable, Nullable } from "./util";
 import { displayMessage } from "./ui";
 import {
@@ -16,6 +17,7 @@ import {
     InputHandlingComponent,
     InteractableTypeComponent,
     InventoryComponent,
+    PlannerAIComponent,
     PositionComponent,
     StatsComponent,
     TriggerTypeComponent
@@ -24,7 +26,6 @@ import { attack, getEffectiveSpeedData, getEffectiveStatData, hasSpell, useMana 
 import { hasItem, useItem } from "./inventory";
 import { deepWaterTrigger, eventTrigger, fireTrigger, shallowWaterTrigger } from "./trigger";
 import { giveItemsInteract, giveSpellsInteract, doorInteract, levelLoadInteract } from "./interactable";
-import { PassableCallback } from "./rot/path/path";
 import { ItemData, SpellData } from "./skills";
 
 /**
@@ -43,27 +44,55 @@ export function createPassableCallback(origin: Point): PassableCallback {
             return true;
         }
         const { blocks } = isBlocked(globals.Game.ecs, globals.Game.map, x, y);
+
         return !blocks;
     };
 }
 
+export function generateWeightCallback(ecs: World, origin: Point): WeightCallback {
+    return function (x: number, y: number): number {
+        if (globals.Game === null) { throw new Error("Global game object is null"); }
+
+        let weight = Math.max(Math.abs(x - origin.x), Math.abs(y - origin.y));
+        if (x !== origin.x || y !== origin.y) {
+            const entities = getEntitiesAtLocation(ecs, x, y);
+            for (let i = 0; i < entities.length; i++) {
+                const e = entities[i];
+                const trigger = e.getOne(TriggerTypeComponent);
+
+                if (trigger !== undefined && trigger.triggerType === TriggerType.Fire) {
+                    weight += 20;
+                } else if (trigger !== undefined && trigger.triggerType === TriggerType.DeepWater) {
+                    weight += 7;
+                }
+            }
+        }
+
+        if (globals.Game?.debugPathfinding === true) {
+            globals.Game.map[y][x].pathfindingCost = weight.toString(10);
+        }
+
+        return weight;
+    };
+}
+
+export function generatePlayerWeightCallback(ecs: World, origin: Point): WeightCallback {
+    return function (x: number, y: number): number {
+        return Math.max(Math.abs(x - origin.x), Math.abs(y - origin.y));
+    };
+}
+
 /**
- * Command design pattern that encapsulates an action that a
- * GameObject can perform. A function generally returns a Command
- * as a closure. Takes the GameObject that is acting, and then
- * returns a boolean representing if the actor took up their turn
- * or not.
+ * Encapsulates an action that an entity can perform. Allows
+ * entities to do things over multiple frames.
+ *
+ * TODO: Perhaps pre-allocate common commands to be reused
  */
 export interface Command {
     usedTurn: () => boolean;
     isFinished: () => boolean;
     execute: (dt: DOMHighResTimeStamp, actor: Entity) => void;
 }
-
-// TODO: rethink commands to be actual objects that have a finished
-// state, set to true when animation completed. Tieing together
-// both movement logic an animation logic here. Might be a problem
-// for reuse.
 
 export function getActorMovementPath(
     ecs: World,
@@ -79,7 +108,7 @@ export function getActorMovementPath(
             destination.x,
             destination.y,
             createPassableCallback(origin),
-            () => 0,
+            generatePlayerWeightCallback(ecs, origin),
             { topology: 8 }
         );
 

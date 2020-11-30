@@ -97,6 +97,10 @@ export function drawStatusBar(
         return;
     }
 
+    if (globals.Game?.debugPathfinding === true) {
+        display.drawText(30, HEIGHT - UI_HEIGHT + 4, `%c{white}%b{${bgColor}}(${x}, ${y}): ${tile.pathfindingCost}`);
+    }
+
     const target: Nullable<Entity> = get(getEntitiesAtLocation(ecs, x, y), "[0]", null);
     if (target === null) {
         display.drawText(1, HEIGHT - UI_HEIGHT + 4, `%c{white}%b{${bgColor}}${tile.name}`);

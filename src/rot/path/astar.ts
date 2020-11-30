@@ -105,7 +105,8 @@ export default class AStar extends Path {
     }
 
     _add(x: number, y: number, prev: Item | null): void {
-        const h = this._distance(x, y) + this.weightCallback(x, y);
+        const h = this.weightCallback(x, y);
+
         const obj = {
             x: x,
             y: y,
