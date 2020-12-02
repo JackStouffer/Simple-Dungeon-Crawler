@@ -9,7 +9,13 @@ import {
     InteractableType,
     TriggerType
 } from "./constants";
-import { GameMap, isBlocked, distanceBetweenPoints, Point, getEntitiesAtLocation } from "./map";
+import {
+    GameMap,
+    isBlocked,
+    distanceBetweenPoints,
+    Point,
+    getEntitiesAtLocation
+} from "./map";
 import { assertUnreachable, Nullable } from "./util";
 import { displayMessage } from "./ui";
 import {
@@ -17,7 +23,6 @@ import {
     InputHandlingComponent,
     InteractableTypeComponent,
     InventoryComponent,
-    PlannerAIComponent,
     PositionComponent,
     StatsComponent,
     TriggerTypeComponent

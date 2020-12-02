@@ -24,6 +24,7 @@ import {
 } from "./commands";
 import { createPlanner } from "./ai/commands";
 import { SpellDataDetails } from "./skills";
+import { Point } from "./map";
 
 interface DamageAffinityMap {
     [DamageType.Physical]: Affinity;
@@ -257,7 +258,7 @@ export class SpellsComponent extends Component {
 }
 
 export class PlannerAIComponent extends Component {
-    target: Entity;
+    target: Entity; // TODO change to nullable entity
     sightRange: number;
     planner: Planner;
     previousWorldState: PlannerWorldState;
@@ -300,11 +301,13 @@ export class LoseTargetAIComponent extends Component {
 export class FearAIComponent extends Component {
     fear: number;
     fearThreshold: number;
+    runAwayTarget: Nullable<Point>;
     isCowering: boolean;
 
     static properties = {
         fear: 0,
         fearThreshold: 10,
+        runAwayTarget: null,
         isCowering: false
     }
 }
@@ -1088,7 +1091,8 @@ const ObjectData: { [key: string]: ObjectDataDetails } = {
             "wander",
             "chase",
             "goToEnemy",
-            "meleeAttack"
+            "meleeAttack",
+            "runAway"
         ],
         staticallyKnownComponents: {
             tags: ["blocks"],
@@ -1227,7 +1231,6 @@ const ObjectData: { [key: string]: ObjectDataDetails } = {
             "goToEnemy",
             "reposition",
             "runAway",
-            "cower",
             "meleeAttack"
         ],
         inventoryPool: [
@@ -1310,7 +1313,6 @@ const ObjectData: { [key: string]: ObjectDataDetails } = {
             "goToEnemy",
             "reposition",
             "runAway",
-            "cower",
             "meleeAttack"
         ],
         inventoryPool: [

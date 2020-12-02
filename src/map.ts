@@ -20,10 +20,9 @@ import {
     PositionComponent
 } from "./entity";
 import { Camera } from "./camera";
-import { Nullable } from "./util";
+import { Nullable, randomIntFromInterval } from "./util";
 import { createPlanner } from "./ai/commands";
 import { ItemData } from "./skills";
-import globals from "./globals";
 
 const COLOR_INVISIBLE_WALL = "black";
 const COLOR_INVISIBLE_GROUND = "black";
@@ -596,6 +595,22 @@ export function getRandomFighterWithinRange(
     }
 
     return possible.length > 0 ? RNG.getItem(possible) : null;
+}
+
+export function findRandomOpenSpace(ecs: World, map: GameMap): Point {
+    const width = map[0].length;
+    const height = map.length;
+    let blocks = false;
+    let x = 0;
+    let y = 0;
+
+    do {
+        x = randomIntFromInterval(0, width);
+        y = randomIntFromInterval(0, height);
+        ({ blocks } = isBlocked(ecs, map, x, y));
+    } while (blocks);
+
+    return { x, y };
 }
 
 /**

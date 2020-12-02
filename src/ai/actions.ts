@@ -12,6 +12,7 @@ import {
 } from "../commands";
 import {
     DisplayNameComponent,
+    FearAIComponent,
     InventoryComponent,
     PatrolAIComponent,
     PatrolPathComponent,
@@ -22,8 +23,10 @@ import {
 } from "../entity";
 import {
     distanceBetweenPoints,
+    findRandomOpenSpace,
     GameMap,
     isBlocked,
+    Point,
 } from "../map";
 import { displayMessage } from "../ui";
 import { ItemType, SpellType } from "../constants";
@@ -41,14 +44,16 @@ import { SpellData } from "../skills";
  * @param {number} targetX The x coordinate to move towards
  * @param {number} targetY The y coordinate to move towards
  * @param {number} steps The number of steps along the path to take
+ * @param {boolean} popBack Should the end point be removed from the path, useful when the end is a blocked tile
  * @returns {Point} the nth step along the path
  */
 export function getStepsTowardsTarget(
     ecs: World,
     actor: Entity,
-    origin: PositionComponent,
-    target: PositionComponent,
-    steps: number
+    origin: Point,
+    target: Point,
+    steps: number,
+    popBack: boolean = true
 ): Nullable<number[][]> {
     const aStar = new Path.AStar(
         target.x,
@@ -66,8 +71,10 @@ export function getStepsTowardsTarget(
 
     // remove our own position
     path.shift();
-    // remove the target's position
-    path.pop();
+    if (popBack) {
+        // remove the target's position
+        path.pop();
+    }
 
     if (path.length > 0) {
         return path.slice(0, steps);
@@ -301,6 +308,70 @@ export function castSpellAction(spellID: string) {
     };
 }
 
+/**
+ * Simulate running away in fear from a target by choosing a random
+ * spot on the map and going to it.
+ */
+export function runAwayAction(
+    ecs: World,
+    aiState: PlannerAIComponent,
+    map: GameMap,
+    triggerMap: Map<string, Entity>
+): Command {
+    // TODO: Could improve this by using basic steering behaviors so that the
+    // AI at first moves away from the target and then follows the path to the
+    // chosen run away position
+
+    const pos = aiState.entity.getOne(PositionComponent);
+    const fearState = aiState.entity.getOne(FearAIComponent);
+    const speedData = aiState.entity.getOne(SpeedComponent);
+    if (pos === undefined || fearState === undefined || speedData === undefined) {
+        throw new Error("Missing data when trying to run away");
+    }
+
+    let path: Nullable<number[][]> = [];
+
+    if (fearState.runAwayTarget === null) {
+        // Give up after 5 tries as you might be boxed in
+        let tries = 0;
+        do {
+            // TODO should also fix this to make it so the target is at least
+            // n tiles away from the target we're afraid of
+            fearState.runAwayTarget = findRandomOpenSpace(ecs, map);
+
+            path = getStepsTowardsTarget(
+                ecs,
+                aiState.entity,
+                pos,
+                fearState.runAwayTarget,
+                speedData.maxTilesPerMove
+            );
+            tries++;
+        } while (path === null || tries < 5);
+    } else {
+        path = getStepsTowardsTarget(
+            ecs,
+            aiState.entity,
+            pos,
+            fearState.runAwayTarget,
+            speedData.maxTilesPerMove,
+            false
+        );
+    }
+
+    if (path === null) {
+        return new NoOpCommand(true);
+    }
+
+    if (path[path.length - 1][0] === fearState.runAwayTarget.x &&
+        path[path.length - 1][1] === fearState.runAwayTarget.y) {
+        fearState.fear = 0;
+        fearState.runAwayTarget = null;
+    }
+
+    return new GoToLocationCommand(path, ecs, map, triggerMap);
+}
+
 interface Action {
     preconditions: { [key: string]: boolean },
     postconditions: { [key: string]: boolean }
@@ -375,15 +446,9 @@ export const ActionData: { [key: string]: Action } = {
         weight: () => 1
     },
     "runAway": {
-        preconditions: { afraid: true },
-        postconditions: { afraid: false },
-        updateFunction: () => { return new NoOpCommand(true); },
-        weight: () => 1
-    },
-    "cower": {
-        preconditions: { afraid: false, cowering: false },
-        postconditions: { cowering: true },
-        updateFunction: () => { return new NoOpCommand(true); },
+        preconditions: { afraid: true, cowering: false },
+        postconditions: { afraid: false, cowering: true },
+        updateFunction: runAwayAction,
         weight: () => 1
     },
     "goToFallbackPosition": {

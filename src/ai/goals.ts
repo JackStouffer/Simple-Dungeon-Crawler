@@ -95,8 +95,9 @@ export function resolveAfraid(ai: Entity) {
 
 export function resolveCowering(ai: Entity) {
     const aiState = ai.getOne(FearAIComponent);
-    if (aiState === undefined) { return false; }
-    return aiState.isCowering === true ? true : false;
+    const pos = ai.getOne(PositionComponent);
+    if (aiState === undefined || pos === undefined) { return false; }
+    return pos.x === aiState.runAwayTarget?.x && pos.y === aiState.runAwayTarget?.y;
 }
 
 export function resolveAtFallbackPosition(ai: Entity): boolean {

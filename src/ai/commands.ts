@@ -14,6 +14,8 @@ import { GameMap, isBlocked, isSightBlocked } from "../map";
 import {
     ConfusedAIComponent,
     DisplayNameComponent,
+    FearAIComponent,
+    LevelComponent,
     LoseTargetAIComponent,
     PlannerAIComponent,
     PositionComponent
@@ -21,24 +23,39 @@ import {
 import { displayMessage } from "../ui";
 import { Nullable } from "../util";
 
+function calcFearOnSight(ai: Entity): number {
+    const aiState = ai.getOne(PlannerAIComponent)!;
+    const levelData = ai.getOne(LevelComponent);
+    const targetLevelData = aiState.target.getOne(LevelComponent);
+
+    if (levelData === undefined || targetLevelData === undefined) {
+        return 1;
+    }
+
+    return Math.max(targetLevelData.level - levelData.level, 0);
+}
 
 /**
  * Creates a function which checks if the Game player object
- * is visible or not and sets the AI to the chase state if it
- * is.
- *
- * @param {GameObject} owner The game object to be used with this function
- * @return {VisibilityCallback} the callback
+ * is visible or not and sets the AI hasTargetInSight bool to
+ * true.
  */
-export function createVisibilityCallback(ai: PlannerAIComponent): VisibilityCallback {
-    const targetPos = ai.target?.getOne(PositionComponent);
+function createVisibilityCallback(ai: Entity): VisibilityCallback {
+    const aiState = ai.getOne(PlannerAIComponent)!;
+    const fearState = ai.getOne(FearAIComponent)!;
+    const targetPos = aiState.target?.getOne(PositionComponent);
 
     return function(x: number, y: number, r: number, visibility: number) {
         if (targetPos === undefined) { return; }
         if (x === targetPos.x && y === targetPos.y && visibility > 0) {
-            ai.knowsTargetPosition = true;
-            ai.hasTargetInSight = true;
-            ai.update();
+            if (fearState !== undefined && aiState.knowsTargetPosition === false) {
+                fearState.fear += calcFearOnSight(ai);
+                fearState.update();
+            }
+
+            aiState.knowsTargetPosition = true;
+            aiState.hasTargetInSight = true;
+            aiState.update();
         }
     };
 }
@@ -215,7 +232,7 @@ export function plannerAIGenerateCommand(
         pos.x,
         pos.y,
         aiState.sightRange,
-        createVisibilityCallback(aiState)
+        createVisibilityCallback(ai)
     );
 
     const plan = getPlan(aiState);
