@@ -61,7 +61,7 @@ const TileData: { [key: number]: TileDataDetails } = {
         blocksSight: false,
         reflectivity: 0.18
     },
-    900: {
+    964: {
         name: "empty ground",
         char: "",
         fgColor: "white",
@@ -152,6 +152,11 @@ const TileData: { [key: number]: TileDataDetails } = {
 };
 Object.freeze(TileData);
 
+const TileToObject: Map<number, string> = new Map([
+    [28, "water"],
+    [32, "shallow_water"],
+    [900, "mud"]
+]);
 
 export class Tile {
     name: string;
@@ -235,6 +240,7 @@ export function loadTiledMap(ecs: World, level: LevelName) {
 
     const tileLayer = get(sourceData.layers.filter((l: any) => l.name === "Tile Layer"), "[0]");
     const objectLayer = get(sourceData.layers.filter((l: any) => l.name === "Object Layer"), "[0]");
+    const environmentLayer = get(sourceData.layers.filter((l: any) => l.name === "Environment Layer"), "[0]");
     const nodeLayer = get(sourceData.layers.filter((l: any) => l.name === "Node Layer"), "[0]");
 
     if (tileLayer === null) {
@@ -295,6 +301,22 @@ export function loadTiledMap(ecs: World, level: LevelName) {
             }) as PatrolPathComponent;
             comp!.next = next;
         }
+    });
+
+    environmentLayer.data.forEach((tile: number, i: number) => {
+        if (tile === 0) { return; }
+
+        const type = TileToObject.get(tile);
+        if (type === undefined) {
+            throw new Error(`Unknown environment tile ${tile}`);
+        }
+
+        createEntity(
+            ecs,
+            type,
+            Math.floor(i % sourceData.width),
+            Math.floor(i / sourceData.width),
+        );
     });
 
     objectLayer.objects.forEach((o: any) => {

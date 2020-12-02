@@ -96,7 +96,7 @@ export function mudTrigger(actor: Entity): void {
             stat: "maxTilesPerMove",
             modifierType: "multiply",
             turnsLeft: 1,
-            value: 0.4
+            value: 0.1
         });
     }
 }
@@ -121,7 +121,7 @@ export function shallowWaterTrigger(actor: Entity): void {
     }
     if (wetData !== undefined && (wetData.wet === false || wetData.turnsLeft < 2)) {
         wetData.wet = true;
-        wetData.turnsLeft = 3;
+        wetData.turnsLeft = 10;
         wetData.update();
     }
 }
@@ -146,7 +146,7 @@ export function deepWaterTrigger(actor: Entity): void {
     }
     if (wetData !== undefined && (wetData.wet === false || wetData.turnsLeft < 6)) {
         wetData.wet = true;
-        wetData.turnsLeft = 10;
+        wetData.turnsLeft = 20;
         wetData.update();
     }
 

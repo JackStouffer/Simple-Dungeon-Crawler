@@ -65,14 +65,25 @@ export function generateWeightCallback(ecs: World, origin: Point): WeightCallbac
                 const e = entities[i];
                 const trigger = e.getOne(TriggerTypeComponent);
 
-                if (trigger !== undefined && trigger.triggerType === TriggerType.Fire) {
-                    weight += 20;
-                } else if (trigger !== undefined && trigger.triggerType === TriggerType.DeepWater) {
-                    weight += 7;
-                } else if (
-                    trigger !== undefined &&
-                    trigger.triggerType === TriggerType.ShallowWater) {
-                    weight += 2;
+                if (trigger !== undefined) {
+                    switch (trigger.triggerType) {
+                        case TriggerType.Fire:
+                            weight += 20;
+                            break;
+                        case TriggerType.ShallowWater:
+                            weight += 2;
+                            break;
+                        case TriggerType.DeepWater:
+                            weight += 7;
+                            break;
+                        case TriggerType.Mud:
+                            weight += 7;
+                            break;
+                        case TriggerType.Event:
+                            break;
+                        default:
+                            assertUnreachable(trigger.triggerType);
+                    }
                 }
             }
         }

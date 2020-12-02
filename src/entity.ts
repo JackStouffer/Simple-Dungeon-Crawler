@@ -876,8 +876,8 @@ const ObjectData: { [key: string]: ObjectDataDetails } = {
                     name: "Mud"
                 },
                 GraphicsComponent: {
-                    char: "\u2022",
-                    fgColor: "yellow",
+                    char: ".",
+                    fgColor: "tan",
                     bgColor: "brown"
                 },
                 TriggerTypeComponent: {
