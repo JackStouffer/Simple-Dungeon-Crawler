@@ -76,7 +76,7 @@ export class WetSystem extends System {
             if (effect.turnsLeft > 0) {
                 effect.turnsLeft--;
                 effect.update();
-            } else if (effect.turnsLeft === 0) {
+            } else if (effect.turnsLeft <= 0) {
                 effect.wet = false;
                 effect.update();
             }

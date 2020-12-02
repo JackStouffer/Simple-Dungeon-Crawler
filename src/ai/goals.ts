@@ -106,11 +106,6 @@ export function resolveAtFallbackPosition(ai: Entity): boolean {
     return aiState.isAtFallbackPosition === true ? true : false;
 }
 
-export function resolveHasArrows(): boolean {
-    // FIXME
-    return false;
-}
-
 export interface GoalDataDetails {
     resolver: (ai: Entity) => boolean
 }
@@ -134,9 +129,6 @@ export const GoalData: { [key: string]: GoalDataDetails } = {
     },
     "lowHealth": {
         resolver: resolveLowHealth
-    },
-    "hasArrows": {
-        resolver: resolveHasArrows
     },
     "hasManaItem": {
         resolver: resolveHasManaItem

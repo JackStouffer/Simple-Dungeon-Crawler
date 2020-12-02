@@ -10,7 +10,7 @@ import {
 import input from "./input";
 import { distanceBetweenPoints, getEntitiesAtLocation } from "./map";
 import { getTargetingReticle, PlayerState } from "./input-handler";
-import { getActorMovementPath } from "./commands";
+import { getPlayerMovementPath } from "./commands";
 import { getItems } from "./inventory";
 import globals from "./globals";
 import { getEffectiveSpeedData } from "./fighter";
@@ -203,11 +203,14 @@ export class DrawPlayerSystem extends System {
                 if (inputStateData.state === PlayerState.Combat) {
                     const mousePosition = input.getMousePosition();
                     if (mousePosition === null) { return; }
+                    if (!globals.Game!.map[mousePosition.y][mousePosition.x].isVisibleAndLit()) {
+                        return;
+                    }
 
                     // quick distance check to cut down the number of
                     // AStar calcs
-                    if (distanceBetweenPoints(pos, mousePosition) < speedData.maxTilesPerMove * 2) {
-                        const path = getActorMovementPath(
+                    if (distanceBetweenPoints(pos, mousePosition) < 40) {
+                        const path = getPlayerMovementPath(
                             this.world,
                             pos,
                             mousePosition,

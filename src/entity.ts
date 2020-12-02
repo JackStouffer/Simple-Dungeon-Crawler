@@ -890,6 +890,37 @@ const ObjectData: { [key: string]: ObjectDataDetails } = {
             }
         }
     },
+    "tall_grass": {
+        staticallyKnownComponents: {
+            c: {
+                TypeComponent: {
+                    entityType: "tall_grass"
+                },
+                DisplayNameComponent: {
+                    name: "Tall Grass"
+                },
+                GraphicsComponent: {
+                    char: "\u15D0",
+                    fgColor: "green",
+                    bgColor: "white"
+                },
+                FlammableComponent: {
+                    onFire: false,
+                    fireDamage: 0,
+                    turnsLeft: 0
+                },
+                WetableComponent: {
+                    wet: false,
+                    turnsLeft: 0
+                },
+                HitPointsComponent: {
+                    hp: 10,
+                    maxHp: 10,
+                    onDeath: DeathType.RemoveFromWorld
+                }
+            }
+        }
+    },
     "player": {
         addInventory: true,
         addInput: true,

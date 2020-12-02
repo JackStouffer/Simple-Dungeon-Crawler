@@ -4,7 +4,7 @@ import globals from "./globals";
 import input from "./input";
 import {
     Command,
-    getActorMovementPath,
+    getPlayerMovementPath,
     GoToLocationCommand,
     UseItemCommand,
     UseSpellCommand,
@@ -147,7 +147,7 @@ export function handleInput(
                 }
             }
 
-            const path = getActorMovementPath(
+            const path = getPlayerMovementPath(
                 ecs,
                 playerPosition,
                 mouseDownPosition,

@@ -96,7 +96,10 @@ export function generateWeightCallback(ecs: World, origin: Point): WeightCallbac
     };
 }
 
-export function generatePlayerWeightCallback(ecs: World, origin: Point): WeightCallback {
+/**
+ * Simplified distance heuristic
+ */
+export function generatePlayerWeightCallback(origin: Point): WeightCallback {
     return function (x: number, y: number): number {
         return Math.max(Math.abs(x - origin.x), Math.abs(y - origin.y));
     };
@@ -114,7 +117,7 @@ export interface Command {
     execute: (dt: DOMHighResTimeStamp, actor: Entity) => void;
 }
 
-export function getActorMovementPath(
+export function getPlayerMovementPath(
     ecs: World,
     origin: Point,
     destination: Point,
@@ -128,7 +131,7 @@ export function getActorMovementPath(
             destination.x,
             destination.y,
             createPassableCallback(origin),
-            generatePlayerWeightCallback(ecs, origin),
+            generatePlayerWeightCallback(origin),
             { topology: 8 }
         );
 

@@ -96,7 +96,7 @@ const TileData: { [key: number]: TileDataDetails } = {
     },
     1165: {
         name: "A tree",
-        char: "\u1278",
+        char: "\u23C3",
         fgColor: "lightgreen",
         bgColor: "darkgreen",
         fgColorExplored: "grey",
@@ -155,7 +155,8 @@ Object.freeze(TileData);
 const TileToObject: Map<number, string> = new Map([
     [28, "water"],
     [32, "shallow_water"],
-    [900, "mud"]
+    [900, "mud"],
+    [831, "tall_grass"]
 ]);
 
 export class Tile {
