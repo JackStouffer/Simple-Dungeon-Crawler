@@ -87,6 +87,20 @@ export function eventTrigger(actor: Entity, trigger: Entity): void {
     }
 }
 
+export function mudTrigger(actor: Entity): void {
+    // Slow the player down to simulate walking in mud
+    const speedData = actor.getOne(SpeedComponent);
+    if (speedData !== undefined) {
+        actor.addComponent({
+            type: "SpeedEffectComponent",
+            stat: "maxTilesPerMove",
+            modifierType: "multiply",
+            turnsLeft: 1,
+            value: 0.4
+        });
+    }
+}
+
 export function shallowWaterTrigger(actor: Entity): void {
     // Put the fire out if the actor is on fire
     const flammableData = actor.getOne(FlammableComponent);

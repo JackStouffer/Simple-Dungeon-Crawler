@@ -29,7 +29,7 @@ import {
 } from "./entity";
 import { attack, getEffectiveSpeedData, getEffectiveStatData, hasSpell, useMana } from "./fighter";
 import { hasItem, useItem } from "./inventory";
-import { deepWaterTrigger, eventTrigger, fireTrigger, shallowWaterTrigger } from "./trigger";
+import { deepWaterTrigger, eventTrigger, fireTrigger, mudTrigger, shallowWaterTrigger } from "./trigger";
 import { giveItemsInteract, giveSpellsInteract, doorInteract, levelLoadInteract } from "./interactable";
 import { ItemData, SpellData } from "./skills";
 
@@ -69,6 +69,10 @@ export function generateWeightCallback(ecs: World, origin: Point): WeightCallbac
                     weight += 20;
                 } else if (trigger !== undefined && trigger.triggerType === TriggerType.DeepWater) {
                     weight += 7;
+                } else if (
+                    trigger !== undefined &&
+                    trigger.triggerType === TriggerType.ShallowWater) {
+                    weight += 2;
                 }
             }
         }
@@ -231,6 +235,9 @@ export class GoToLocationCommand implements Command {
                         break;
                     case TriggerType.DeepWater:
                         deepWaterTrigger(actor);
+                        break;
+                    case TriggerType.Mud:
+                        mudTrigger(actor);
                         break;
                     default:
                         assertUnreachable(triggerData.triggerType);

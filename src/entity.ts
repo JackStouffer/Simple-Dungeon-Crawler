@@ -866,6 +866,30 @@ const ObjectData: { [key: string]: ObjectDataDetails } = {
             }
         }
     },
+    "mud": {
+        staticallyKnownComponents: {
+            c: {
+                TypeComponent: {
+                    entityType: "mud"
+                },
+                DisplayNameComponent: {
+                    name: "Mud"
+                },
+                GraphicsComponent: {
+                    char: "\u2022",
+                    fgColor: "yellow",
+                    bgColor: "brown"
+                },
+                TriggerTypeComponent: {
+                    triggerType: TriggerType.Mud
+                },
+                FreezableComponent: {
+                    frozen: false,
+                    turnsLeft: 0
+                }
+            }
+        }
+    },
     "player": {
         addInventory: true,
         addInput: true,
