@@ -16,6 +16,9 @@ _In Development_
     * Removes on fire status
     * Gives you the wet status
     * Slows you down
+  * Enemies can now run away in fear
+    * Enemies will run away when they reach a threshold
+    * They will become more and more afraid when they see powerful targets and when their allies are killed
 * Technical
   * Refactor to Entity Component System design rather than the Unity-style Entity with plugin components
 

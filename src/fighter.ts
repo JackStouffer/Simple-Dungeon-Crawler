@@ -22,6 +22,7 @@ import {
     HitPointsEffectComponent,
     InventoryComponent,
     LevelComponent,
+    PlannerAIComponent,
     PositionComponent,
     SpeedComponent,
     SpeedEffectComponent,
@@ -436,6 +437,15 @@ export function takeDamage(
     if (damage > 0) {
         hpData.hp -= damage;
         hpData.update();
+
+        const aiState = target.getOne(PlannerAIComponent);
+        // Update the AI state to know where the target is
+        // This is of course assuming that all damage is done by
+        // the target and that the target is in line of sight
+        if (aiState !== undefined && aiState.knowsTargetPosition === false) {
+            aiState.knowsTargetPosition = true;
+            aiState.update();
+        }
     }
 
     // TODO fix messages to say who did the attacking
