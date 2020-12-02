@@ -104,6 +104,7 @@ import {
 } from "./effects";
 import { generateAICommand } from "./ai/commands";
 import { SpellDataDetails } from "./skills";
+import { debounce } from "lodash";
 
 globals.gameEventEmitter = new EventEmitter();
 
@@ -136,6 +137,7 @@ export class SimpleDungeonCrawler {
     private readonly spellSelectionMenu: SpellSelectionMenu;
 
     constructor() {
+        if (globals.window === null) { throw new Error("Global window cannot be null"); }
         if (globals.document === null) { throw new Error("Global document cannot be null"); }
 
         this.state = GameState.OpeningCinematic;
@@ -157,7 +159,10 @@ export class SimpleDungeonCrawler {
         this.display = new Display({
             width: WIDTH,
             height: HEIGHT,
-            fontSize: 14,
+            fontSize: Math.max(
+                Math.floor(globals.window.innerHeight / 40),
+                12
+            ),
             forceSquareRatio: true
         });
         this.canvas = this.display.getContainer();
@@ -170,6 +175,12 @@ export class SimpleDungeonCrawler {
         const loading: Nullable<HTMLElement> = globals.document.getElementById("loading");
         if (loading === null || loading.parentNode === null) { throw new Error("this.canvas cannot be null"); }
         loading.parentNode.removeChild(loading);
+
+        globals.window.addEventListener(
+            "resize",
+            debounce(resizeGameDisplay, 300),
+            { once: false }
+        );
 
         this.keyBindingMenu = new KeyBindingMenu();
         this.inventoryMenu = new InventoryMenu();
@@ -580,4 +591,17 @@ export class SimpleDungeonCrawler {
     getTurnNumber(): number {
         return this.totalTurns;
     }
+}
+
+function resizeGameDisplay() {
+    if (globals.Game === null ||
+        globals.Game.display === null ||
+        globals.window === null) { return; }
+
+    globals.Game.display.setOptions({
+        fontSize: Math.max(
+            Math.floor(globals.window.innerHeight / 40),
+            12
+        )
+    });
 }
