@@ -62,11 +62,11 @@ const TileData: { [key: number]: TileDataDetails } = {
         reflectivity: 0.18
     },
     964: {
-        name: "empty ground",
-        char: "",
-        fgColor: "white",
+        name: "grass",
+        char: ".",
+        fgColor: "green",
         bgColor: "white",
-        fgColorExplored: "rgb(50, 50, 50)",
+        fgColorExplored: "white",
         bgColorExplored: "rgb(50, 50, 50)",
         blocks: false,
         blocksSight: false,
