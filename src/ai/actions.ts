@@ -200,10 +200,6 @@ export function chaseAction(
         return new NoOpCommand(true);
     }
 
-    if (path === null) {
-        return new NoOpCommand(true);
-    }
-
     return new GoToLocationCommand(path, ecs, map, triggerMap);
 }
 

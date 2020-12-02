@@ -1,7 +1,7 @@
-import { System, Query, World, Entity } from "ape-ecs";
+import { System, Query, Entity } from "ape-ecs";
 import { cloneDeep, pick } from "lodash";
 
-import { RNG } from "./rot/index";
+import { FOV, RNG } from "./rot/index";
 
 import globals from "./globals";
 import {
@@ -16,6 +16,7 @@ import {
     createEntity,
     DamageAffinityComponent,
     DisplayNameComponent,
+    FearAIComponent,
     GraphicsComponent,
     HitPointsComponent,
     HitPointsEffectComponent,
@@ -33,6 +34,8 @@ import {
 import { displayMessage, MessageType } from "./ui";
 import { assertUnreachable } from "./util";
 import { SpellData, SpellDataDetails } from "./skills";
+import { createPassableSightCallback } from "./ai/commands";
+import { getEntitiesAtLocation } from "./map";
 
 /**
  * Find all entities with HitPointsComponents and when hp is <= 0,
@@ -47,12 +50,34 @@ export class DeathSystem extends System {
             .persist();
     }
 
+    generateUpdateFearVisibilityCallback(target: Entity) {
+        const targetLevelData = target.getOne(LevelComponent);
+        const ecs = this.world;
+
+        return function (x: number, y: number) {
+            if (targetLevelData === undefined) { return; }
+
+            // TODO Speed up, doing O(m*n) checks here
+            const entities = getEntitiesAtLocation(ecs, x, y);
+            for (const e of entities) {
+                const fearData = e.getOne(FearAIComponent);
+                const levelData = e.getOne(LevelComponent);
+                if (fearData === undefined || levelData === undefined) { continue; }
+
+                fearData.fear += Math.max(
+                    targetLevelData.level - levelData.level, 0
+                );
+                fearData.update();
+            }
+        };
+    }
+
     /**
      * Removes the AI, fighter, and intractable off of an object. Changes graphics
      * to dead body graphics and sets blocking to false. Also spawns a dropped item
      * if there were items in the inventory
      */
-    actorDeath(ecs: World, target: Entity): void {
+    actorDeath(target: Entity): void {
         if (globals.gameEventEmitter === null) { throw new Error("Global gameEventEmitter object is null"); }
 
         const nameData = target.getOne(DisplayNameComponent);
@@ -73,6 +98,19 @@ export class DeathSystem extends System {
             graphicData.update();
         }
 
+        // Calculate the added fear for all of the entities
+        // with fear components within an FOV of the current
+        // location
+        const pos = target.getOne(PositionComponent);
+        if (pos === undefined) { throw new Error("Position data missing on dead body"); }
+        const fov = new FOV.PreciseShadowcasting(createPassableSightCallback(pos));
+        fov.compute(
+            pos.x,
+            pos.y,
+            10,
+            this.generateUpdateFearVisibilityCallback(target)
+        );
+
         target.removeComponent("HitPointsComponent");
         target.removeComponent("StatsComponent");
         target.removeComponent("SpeedComponent");
@@ -81,6 +119,7 @@ export class DeathSystem extends System {
         target.removeComponent("FearAIComponent");
         target.removeComponent("InteractableComponent");
 
+        // Create dropped item entity
         const inventoryData = target.getOne(InventoryComponent);
         const positionData = target.getOne(PositionComponent);
         if (inventoryData !== undefined &&
@@ -88,10 +127,11 @@ export class DeathSystem extends System {
             inventoryData.inventory.size > 0) {
             globals.gameEventEmitter.emit("tutorial.pickUpItem");
 
-            const item = createEntity(ecs, "dropped_item", positionData.x, positionData.y);
+            const item = createEntity(this.world, "dropped_item", positionData.x, positionData.y);
             const itemInventory = item.getOne(InventoryComponent);
             itemInventory!.inventory = inventoryData.inventory;
         }
+
         target.removeComponent("InventoryComponent");
     }
 
@@ -99,7 +139,7 @@ export class DeathSystem extends System {
      * Removes target from world and scheduler. Also spawns a dropped item
      * if there were items in the inventory.
      */
-    removeDeath(ecs: World, target: Entity): void {
+    removeDeath(target: Entity): void {
         if (globals.gameEventEmitter === null) { throw new Error("Global gameEventEmitter object is null"); }
 
         const inventoryData = target.getOne(InventoryComponent);
@@ -109,7 +149,7 @@ export class DeathSystem extends System {
             inventoryData.inventory.size > 0) {
             globals.gameEventEmitter.emit("tutorial.pickUpItem");
 
-            const item = createEntity(ecs, "dropped_item", positionData.x, positionData.y);
+            const item = createEntity(this.world, "dropped_item", positionData.x, positionData.y);
             const itemInventory = item.getOne(InventoryComponent);
             itemInventory!.inventory = inventoryData.inventory;
         }
@@ -122,7 +162,7 @@ export class DeathSystem extends System {
             globals.gameEventEmitter.emit("barrel.break");
         }
 
-        ecs.removeEntity(target);
+        this.world.removeEntity(target);
     }
 
     update() {
@@ -134,10 +174,10 @@ export class DeathSystem extends System {
             if (hpData.hp <= 0) {
                 switch (hpData.onDeath) {
                     case DeathType.Default:
-                        this.actorDeath(this.world, entity);
+                        this.actorDeath(entity);
                         break;
                     case DeathType.RemoveFromWorld:
-                        this.removeDeath(this.world, entity);
+                        this.removeDeath(entity);
                         break;
                     default:
                         assertUnreachable(hpData.onDeath);
