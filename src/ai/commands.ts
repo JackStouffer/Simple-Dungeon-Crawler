@@ -99,7 +99,7 @@ export function createPlanner(actions: Set<string>) {
 
         actionList.addCondition(action, actionData.preconditions);
         actionList.addReaction(action, actionData.postconditions);
-        // TODO
+        // TODO add dynamic weights
         // actionList.setWeight(action, actionData.weight());
     }
 

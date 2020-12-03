@@ -214,8 +214,18 @@ export class DrawPlayerSystem extends System {
             }
 
             if (globals.Game!.map[pos.y][pos.x].isVisibleAndLit()) {
-                const bgColor = getTransparencyBackground(this.world, pos, entities, entity.id);
+                const flameData = entity.getOne(FlammableComponent);
+                const wetData = entity.getOne(WetableComponent);
                 const { x, y } = globals.Game!.gameCamera.worldToScreen(pos.x, pos.y);
+
+                let bgColor;
+                if (flameData !== undefined && flameData.onFire === true) {
+                    bgColor = "red";
+                } else if (wetData !== undefined && wetData.wet === true) {
+                    bgColor = "lightblue";
+                } else {
+                    bgColor = getTransparencyBackground(this.world, pos, entities, entity.id);
+                }
 
                 globals.Game!.display!.draw(
                     x,
@@ -228,7 +238,8 @@ export class DrawPlayerSystem extends System {
                 if (inputStateData.state === PlayerState.Combat) {
                     const mousePosition = input.getMousePosition();
                     if (mousePosition === null) { return; }
-                    if (!globals.Game!.map[mousePosition.y][mousePosition.x].isVisibleAndLit()) {
+                    const tile = globals.Game!.map[mousePosition.y][mousePosition.x];
+                    if (tile !== undefined && !tile.explored) {
                         return;
                     }
 

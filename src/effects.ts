@@ -41,6 +41,9 @@ export class OnFireSystem extends System {
                     flammableData.onFire = false;
                     flammableData.fireDamage = 0;
 
+                    // If this is an entity which was given a fire trigger
+                    // because it was on fire and non-blocking, then remove
+                    // the trigger
                     if (entity.tags.has("blocks") === false) {
                         entity.removeComponent("TriggerTypeComponent");
                         entity.removeComponent("FireTriggerComponent");

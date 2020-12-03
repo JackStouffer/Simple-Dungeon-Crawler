@@ -133,9 +133,10 @@ export function handleInput(
             }
         }
 
-        // Movement
+        // Mouse input
         const mouseDownPosition = input.getLeftMouseDown();
         if (mouseDownPosition !== null) {
+            // Attacking
             if (distanceBetweenPoints(mouseDownPosition, playerPosition) < 1.5) {
                 const target = mouseTarget(
                     ecs,
@@ -147,6 +148,10 @@ export function handleInput(
                 }
             }
 
+            const tile = globals.Game!.map[mouseDownPosition.y][mouseDownPosition.x];
+            if (tile === undefined || tile.explored === false) { return null; }
+
+            // Movement
             const path = getPlayerMovementPath(
                 ecs,
                 playerPosition,

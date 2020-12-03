@@ -58,7 +58,7 @@ export class DeathSystem extends System {
         return function (x: number, y: number) {
             if (targetLevelData === undefined) { return; }
 
-            // TODO Speed up, doing O(m*n) checks here
+            // SPEED: doing O(m*n) checks here
             const entities = getEntitiesAtLocation(ecs, x, y);
             for (const e of entities) {
                 const fearData = e.getOne(FearAIComponent);

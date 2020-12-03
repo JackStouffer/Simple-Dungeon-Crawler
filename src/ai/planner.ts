@@ -142,6 +142,7 @@ function createNode(path: PlannerPath, state: PlannerWorldState, name: string = 
     return path["nodes"][path["nodeID"]];
 }
 
+// SPEED this A* implementation is really slow
 function aStar(
     startState: PlannerWorldState,
     goalState: PlannerWorldState,
