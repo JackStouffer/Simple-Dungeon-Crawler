@@ -5,22 +5,30 @@
 _In Development_
 
 * Gameplay
-  * Replaced burn status with on fire status
+  * Replaced burn status effect with On Fire status
+  * When walking over flammable things in the world while on fire, the objects have a chance to catch on fire
   * Added "Wet" status which
     * Makes you weak to electric attacks
     * Makes you invulnerable to the on fire status once, so walking into a fire will protect you for one turn when wet and then the wet status will be removed
   * Added shallow water which
-    * Removes on fire status
-    * Gives you the wet status
+    * Removes On Fire status
+    * Gives you the Wet status
   * Added deep water which
-    * Removes on fire status
-    * Gives you the wet status
-    * Slows you down
+    * Removes On Fire status
+    * Gives you the Wet status
+    * Slows you down when you try to walk through it
+  * Added mud which slows you down when you try to walk through it
+  * Added tall grass which can catch on fire
   * Enemies can now run away in fear
-    * Enemies will run away when they reach a threshold
+    * Enemies will run away when they reach a set threshold
     * They will become more and more afraid when they see powerful targets and when their allies are killed
 * Technical
   * Refactor to Entity Component System design rather than the Unity-style Entity with plugin components
+* Graphical Changes
+  * Game display will now resize based on web browser window size
+  * Changed the characters for both the ground and for trees
+  * Entities that are on fire will now have a different background color
+  * Entities that are wet will now have a different background color
 
 ## Version 9
 

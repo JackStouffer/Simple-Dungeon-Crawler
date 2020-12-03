@@ -16,9 +16,10 @@ import {
     Point,
     getEntitiesAtLocation
 } from "./map";
-import { assertUnreachable, Nullable } from "./util";
+import { assertUnreachable, Nullable, randomIntFromInterval } from "./util";
 import { displayMessage } from "./ui";
 import {
+    FlammableComponent,
     HitPointsComponent,
     InputHandlingComponent,
     InteractableTypeComponent,
@@ -31,7 +32,7 @@ import { attack, getEffectiveSpeedData, getEffectiveStatData, hasSpell, useMana 
 import { hasItem, useItem } from "./inventory";
 import { deepWaterTrigger, eventTrigger, fireTrigger, mudTrigger, shallowWaterTrigger } from "./trigger";
 import { giveItemsInteract, giveSpellsInteract, doorInteract, levelLoadInteract } from "./interactable";
-import { ItemData, SpellData } from "./skills";
+import { ItemData, SpellData, setOnFire } from "./skills";
 
 /**
  * Creates a function which returns if an x and y coordinate
@@ -109,7 +110,7 @@ export function generatePlayerWeightCallback(origin: Point): WeightCallback {
  * Encapsulates an action that an entity can perform. Allows
  * entities to do things over multiple frames.
  *
- * TODO: Perhaps pre-allocate common commands to be reused
+ * SPEED: Perhaps pre-allocate common commands to be reused
  */
 export interface Command {
     usedTurn: () => boolean;
@@ -227,34 +228,60 @@ export class GoToLocationCommand implements Command {
         pos.x = destination[0];
         pos.y = destination[1];
         pos.update();
-        this.tilesMoved++;
 
+        this.tilesMoved++;
         this.path.shift();
 
-        const triggerEntity = this.triggerMap.get(`${destination[0]},${destination[1]}`);
-        if (triggerEntity !== undefined) {
-            const triggerData = triggerEntity.getOne(TriggerTypeComponent);
-            const triggerPosData = triggerEntity.getOne(PositionComponent);
-            if (triggerData !== undefined &&
-                triggerPosData !== undefined) {
-                switch (triggerData.triggerType) {
-                    case TriggerType.Event:
-                        eventTrigger(actor, triggerEntity);
-                        break;
-                    case TriggerType.Fire:
-                        fireTrigger(actor, triggerEntity);
-                        break;
-                    case TriggerType.ShallowWater:
-                        shallowWaterTrigger(actor);
-                        break;
-                    case TriggerType.DeepWater:
-                        deepWaterTrigger(actor);
-                        break;
-                    case TriggerType.Mud:
-                        mudTrigger(actor);
-                        break;
-                    default:
-                        assertUnreachable(triggerData.triggerType);
+        const actorFlammableData = actor.getOne(FlammableComponent);
+        const entities = this.ecs.entities.values();
+        // SPEED: use a Quad-Tree
+        for (const e of entities) {
+            const entityPos = e.getOne(PositionComponent);
+            const triggerData = e.getOne(TriggerTypeComponent);
+            const flammableData = e.getOne(FlammableComponent);
+
+            if (entityPos === undefined) { continue; }
+
+            if (pos.x === entityPos.x &&
+                pos.y === entityPos.y) {
+
+                // If we're walking over a flammable entity and we're
+                // on fire, roll to set the entity on fire if the entity
+                // in question is flammable
+                if (actorFlammableData !== undefined &&
+                    actorFlammableData.onFire === true &&
+                    flammableData !== undefined &&
+                    flammableData.onFire === false &&
+                    Math.random() >= .5) {
+                    setOnFire(
+                        e,
+                        actorFlammableData.fireDamage,
+                        randomIntFromInterval(3, 6)
+                    );
+                }
+
+                // Check to see if the current tile is a trigger
+                // and activate it
+                if (triggerData !== undefined) {
+                    switch (triggerData.triggerType) {
+                        case TriggerType.Event:
+                            eventTrigger(actor, e);
+                            break;
+                        case TriggerType.Fire:
+                            fireTrigger(actor, e);
+                            break;
+                        case TriggerType.ShallowWater:
+                            shallowWaterTrigger(actor);
+                            break;
+                        case TriggerType.DeepWater:
+                            deepWaterTrigger(actor);
+                            break;
+                        case TriggerType.Mud:
+                            mudTrigger(actor);
+                            break;
+                        default:
+                            assertUnreachable(triggerData.triggerType);
+                    }
                 }
             }
         }
