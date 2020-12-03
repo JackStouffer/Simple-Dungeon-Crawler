@@ -357,7 +357,8 @@ export class SimpleDungeonCrawler {
                 break;
             case GameState.OpeningCinematic:
                 this.display.clear();
-                this.display.drawText(WIDTH - (WIDTH - 18), 15, "%c{white}Press [enter] to start");
+                this.display.drawText(WIDTH - (WIDTH - 2), 15, "%c{white}This is an experiment to test a bunch of gameplay ideas I have. It doesn't represent a finished product, but I hope you'll enjoy it anyway!");
+                this.display.drawText(WIDTH - (WIDTH - 18), 25, "%c{white}Press [enter] to start");
                 break;
             case GameState.LoseCinematic:
                 this.display.clear();
