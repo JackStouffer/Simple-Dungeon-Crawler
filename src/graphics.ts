@@ -65,10 +65,21 @@ export class DrawSystem extends System {
      * Simply draws the character with the fore and background color at
      * x and y coordinates if the tile it's on is visible.
      */
-    draw(pos: PositionComponent, graphics: GraphicsComponent): void {
+    draw(entity: Entity, pos: PositionComponent, graphics: GraphicsComponent): void {
         if (globals.Game!.map[pos.y][pos.x].isVisibleAndLit()) {
             const { x, y } = globals.Game!.gameCamera.worldToScreen(pos.x, pos.y);
-            globals.Game!.display!.draw(x, y, graphics.char, graphics.fgColor, graphics.bgColor);
+
+            const flameData = entity.getOne(FlammableComponent);
+            const wetData = entity.getOne(WetableComponent);
+
+            let bgColor = graphics.bgColor;
+            if (flameData !== undefined && flameData.onFire === true) {
+                bgColor = "red";
+            } else if (wetData !== undefined && wetData.wet === true) {
+                bgColor = "blue";
+            }
+
+            globals.Game!.display!.draw(x, y, graphics.char, graphics.fgColor, bgColor);
         }
     }
 
@@ -93,7 +104,7 @@ export class DrawSystem extends System {
             let bgColor;
             if (flameData !== undefined && flameData.onFire === true) {
                 bgColor = "red";
-            } if (wetData !== undefined && wetData.wet === true) {
+            } else if (wetData !== undefined && wetData.wet === true) {
                 bgColor = "blue";
             } else {
                 bgColor = getTransparencyBackground(this.world, pos, entities, id);
@@ -134,7 +145,7 @@ export class DrawSystem extends System {
             } else if (graphicData.bgColor === null) {
                 this.drawWithTransparency(entity, pos, graphicData, entities, entity.id);
             } else {
-                this.draw(pos, graphicData);
+                this.draw(entity, pos, graphicData);
             }
         }
     }
