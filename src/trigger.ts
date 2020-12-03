@@ -14,6 +14,7 @@ import {
 } from "./entity";
 import { takeDamage } from "./fighter";
 import { displayMessage } from "./ui";
+import { setOnFire } from "./skills";
 
 export class UpdateTriggerMapSystem extends System {
     private mainQuery: Query;
@@ -43,29 +44,18 @@ export class UpdateTriggerMapSystem extends System {
  */
 export function fireTrigger(actor: Entity, trigger: Entity): void {
     const flammableData = actor.getOne(FlammableComponent);
-    const wetData = actor.getOne(WetableComponent);
 
     if (flammableData !== undefined) {
-        // You can't be set on fire if you're wet
-        if (wetData !== undefined && wetData.wet) {
-            wetData.wet = false;
-            wetData.turnsLeft = 0;
-            wetData.update();
-
-            if (actor === globals.Game?.player) {
-                displayMessage("Being wet prevented you from being set on fire");
-            }
-            return;
-        }
-
         const fireTriggerData = trigger.getOne(FireTriggerComponent);
         if (fireTriggerData === undefined) { throw new Error("Fire trigger is missing its data"); }
+        const wasSetOnFire = setOnFire(
+            actor,
+            Math.max(flammableData.fireDamage, fireTriggerData.effectDamage),
+            Math.max(flammableData.turnsLeft, fireTriggerData.effectTurns)
+        );
 
+        if (!wasSetOnFire) { return; }
         takeDamage(actor, fireTriggerData.damage, false, DamageType.Fire);
-
-        flammableData.onFire = true;
-        flammableData.turnsLeft = Math.max(flammableData.turnsLeft, fireTriggerData.effectTurns);
-        flammableData.fireDamage = Math.max(flammableData.fireDamage, fireTriggerData.effectDamage);
     }
 }
 

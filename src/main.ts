@@ -10,7 +10,8 @@ import {
     startGameLoop,
     stopGameLoop,
     getEntity,
-    step
+    step,
+    getEntities
 } from "./console-commands";
 
 globals.window = window;
@@ -27,6 +28,7 @@ globals.window.togglePathfindingDebug = togglePathfindingDebug;
 globals.window.startGameLoop = startGameLoop;
 globals.window.stopGameLoop = stopGameLoop;
 globals.window.getEntity = getEntity;
+globals.window.getEntities = getEntities;
 globals.window.step = step;
 
 globals.Game.startGameplay();

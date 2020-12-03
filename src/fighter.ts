@@ -119,6 +119,10 @@ export class DeathSystem extends System {
         target.removeComponent("LoseTargetAIComponent");
         target.removeComponent("FearAIComponent");
         target.removeComponent("InteractableComponent");
+        target.removeComponent("FlammableComponent");
+        target.removeComponent("WetableComponent");
+        target.removeComponent("TriggerTypeComponent");
+        target.removeComponent("FireTriggerComponent");
 
         // Create dropped item entity
         const inventoryData = target.getOne(InventoryComponent);

@@ -14,6 +14,7 @@ interface MyWindow extends Window {
     startGameLoop?: () => void;
     stopGameLoop?: () => void;
     getEntity?: (id: string) => Entity | undefined;
+    getEntities?: (x: number, y: number) => Entity[];
     step?: () => void;
 }
 

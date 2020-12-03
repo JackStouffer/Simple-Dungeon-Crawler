@@ -5,7 +5,7 @@ import { RNG } from "./rot/index";
 import globals from "./globals";
 import { GameMap, getRandomFighterWithinRange, isBlocked, Point, setAllToExplored } from "./map";
 import { displayMessage } from "./ui";
-import { DamageType, ItemType, SpellType, StatusEffectType } from "./constants";
+import { DamageType, ItemType, SpellType, StatusEffectType, TriggerType } from "./constants";
 import {
     createEntity,
     DisplayNameComponent,
@@ -128,10 +128,11 @@ export function castIncreaseMana(
     return true;
 }
 
-function setOnFire(target: Entity, damage: number, turns: number): void {
+export function setOnFire(target: Entity, damage: number, turns: number): boolean {
     const flammableData = target.getOne(FlammableComponent);
     const wetData = target.getOne(WetableComponent);
-    if (flammableData === undefined) { return; }
+    const blocks = target.tags.has("blocks");
+    if (flammableData === undefined) { return false; }
 
     // You can't be set on fire if you're wet
     if (wetData !== undefined && wetData.wet) {
@@ -146,13 +147,31 @@ function setOnFire(target: Entity, damage: number, turns: number): void {
             displayMessage(`${displayName.name} was not set on fire because it was wet`);
         }
 
-        return;
+        return false;
     }
 
     flammableData.turnsLeft = turns;
     flammableData.fireDamage = damage;
     flammableData.onFire = true;
     flammableData.update();
+
+    // If the entity doesn't block and it's on fire, we want
+    // to add a fire trigger component so that things catch
+    // on fire when they step on it
+    if (!blocks) {
+        target.addComponent({
+            type: "TriggerTypeComponent",
+            triggerType: TriggerType.Fire
+        });
+        target.addComponent({
+            type: "FireTriggerComponent",
+            effectTurns: 5,
+            effectDamage: 5,
+            damage: 15
+        });
+    }
+
+    return true;
 }
 
 function rollForStatusEffect(

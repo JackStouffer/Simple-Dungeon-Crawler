@@ -40,6 +40,11 @@ export class OnFireSystem extends System {
                 if (flammableData.turnsLeft === 0) {
                     flammableData.onFire = false;
                     flammableData.fireDamage = 0;
+
+                    if (entity.tags.has("blocks") === false) {
+                        entity.removeComponent("TriggerTypeComponent");
+                        entity.removeComponent("FireTriggerComponent");
+                    }
                 }
 
                 flammableData.update();
