@@ -902,7 +902,7 @@ const ObjectData: { [key: string]: ObjectDataDetails } = {
                 GraphicsComponent: {
                     char: "\u15D0",
                     fgColor: "green",
-                    bgColor: "white"
+                    bgColor: null
                 },
                 FlammableComponent: {
                     onFire: false,

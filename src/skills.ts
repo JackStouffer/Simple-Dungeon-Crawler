@@ -18,7 +18,7 @@ import {
     StatsComponent,
     WetableComponent
 } from "./entity";
-import { randomIntFromInterval, Nullable } from "./util";
+import { randomIntFromInterval, Nullable, assertUnreachable } from "./util";
 import { mouseTarget } from "./input-handler";
 import { addMana, getEffectiveHitPointData, getEffectiveStatData, heal, takeDamage } from "./fighter";
 
@@ -128,35 +128,54 @@ export function castIncreaseMana(
     return true;
 }
 
+function setOnFire(target: Entity, damage: number, turns: number): void {
+    const flammableData = target.getOne(FlammableComponent);
+    const wetData = target.getOne(WetableComponent);
+    if (flammableData === undefined) { return; }
+
+    // You can't be set on fire if you're wet
+    if (wetData !== undefined && wetData.wet) {
+        wetData.wet = false;
+        wetData.turnsLeft = 0;
+        wetData.update();
+
+        if (target === globals.Game?.player) {
+            displayMessage("You were not set on fire because you were wet");
+        } else {
+            const displayName = target.getOne(DisplayNameComponent)!;
+            displayMessage(`${displayName.name} was not set on fire because it was wet`);
+        }
+
+        return;
+    }
+
+    flammableData.turnsLeft = turns;
+    flammableData.fireDamage = damage;
+    flammableData.onFire = true;
+    flammableData.update();
+}
+
 function rollForStatusEffect(
     item: ItemDataDetails | SpellDataDetails,
     target: Entity,
     targetStats: any,
     targetHp: any
-) {
+): void {
+    if (item.statusEffect === undefined) { return; }
+
     if (RNG.getUniform() <= targetStats.ailmentSusceptibility) {
-        if (item?.statusEffect === StatusEffectType.OnFire) {
-            const flammableData = target.getOne(FlammableComponent);
-            const wetData = target.getOne(WetableComponent);
-            if (flammableData === undefined) { return true; }
-
-            // You can't be set on fire if you're wet
-            if (wetData !== undefined && wetData.wet) {
-                wetData.wet = false;
-                wetData.turnsLeft = 0;
-                wetData.update();
-                return true;
-            }
-
-            flammableData.turnsLeft = randomIntFromInterval(3, 6);
-            flammableData.fireDamage = Math.round(targetHp.maxHp * 0.0625);
-            flammableData.update();
-        } else if (item?.statusEffect !== undefined) {
-            throw new Error(`Status effect ${item?.statusEffect} is not implemented`);
+        switch (item.statusEffect) {
+            case StatusEffectType.OnFire:
+                setOnFire(target, Math.round(targetHp.maxHp * 0.0625), randomIntFromInterval(3, 6));
+                break;
+            case StatusEffectType.Frozen:
+                throw new Error("Not implemented");
+            case StatusEffectType.Paralyzed:
+                throw new Error("Not implemented");
+            default:
+                assertUnreachable(item.statusEffect);
         }
     }
-
-    return true;
 }
 
 export function castDamageSpell(
@@ -188,7 +207,8 @@ export function castDamageSpell(
     const stats = getEffectiveStatData(targetedEntity);
     const hp = getEffectiveHitPointData(targetedEntity);
     if (stats === null || hp === null) { return true; }
-    return rollForStatusEffect(item, targetedEntity, stats, hp);
+    rollForStatusEffect(item, targetedEntity, stats, hp);
+    return true;
 }
 
 export function castWildDamageSpell(
@@ -222,7 +242,8 @@ export function castWildDamageSpell(
     const stats = getEffectiveStatData(targetedEntity);
     const hp = getEffectiveHitPointData(targetedEntity);
     if (stats === null || hp === null) { return true; }
-    return rollForStatusEffect(item, targetedEntity, stats, hp);
+    rollForStatusEffect(item, targetedEntity, stats, hp);
+    return true;
 }
 
 export function castConfuse(
@@ -271,9 +292,6 @@ export function castClairvoyance(): boolean {
 /**
  * Double the user's fighter's speed stat for value number
  * of turns. Does not stack.
- *
- * @param {Object} item The item data
- * @param {GameObject} user The object using the item
  */
 export function castHaste(
     ecs: World,
@@ -450,6 +468,31 @@ export function castFireWall(
         rotation,
         "fire_effect"
     );
+}
+
+/**
+ * Set a target on fire
+ */
+export function castCombust(
+    ecs: World,
+    item: ItemDataDetails | SpellDataDetails,
+    user: Entity,
+    target: Nullable<Point>,
+    map: Nullable<GameMap>
+): boolean {
+    if (item.value === null) { throw new Error("Item does not have a value for castDamageSpell"); }
+    if (target === null) { throw new Error("Target cannot be null for castDamageSpell"); }
+    if (map === null) { throw new Error("Map cannot be null for castDamageSpell"); }
+
+    const targetedEntity = mouseTarget(ecs, map, target);
+    if (targetedEntity === null) {
+        displayMessage("Canceled casting");
+        return false;
+    }
+
+    setOnFire(targetedEntity, item.value, randomIntFromInterval(3, 6));
+
+    return true;
 }
 
 /**
@@ -719,5 +762,13 @@ export const SpellData: { [key: string]: SpellDataDetails } = {
             height: 6
         },
         useFunc: castIceWall
+    },
+    "combust": {
+        id: "combust",
+        displayName: "Combust",
+        value: 5,
+        manaCost: 10,
+        type: SpellType.DamageOther,
+        useFunc: castCombust
     }
 };

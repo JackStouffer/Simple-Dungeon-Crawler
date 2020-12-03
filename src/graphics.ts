@@ -2,10 +2,12 @@ import { Entity, Query, System, World } from "ape-ecs";
 
 import {
     ChestGraphicsComponent,
+    FlammableComponent,
     GraphicsComponent,
     InputHandlingComponent,
     InventoryComponent,
-    PositionComponent
+    PositionComponent,
+    WetableComponent
 } from "./entity";
 import input from "./input";
 import { distanceBetweenPoints, getEntitiesAtLocation } from "./map";
@@ -78,13 +80,25 @@ export class DrawSystem extends System {
      * other objects on the same tile, use that object's background color.
      */
     drawWithTransparency(
+        entity: Entity,
         pos: PositionComponent,
         graphics: GraphicsComponent,
         entities: Set<Entity>,
         id: string
     ): void {
         if (globals.Game!.map[pos.y][pos.x].isVisibleAndLit()) {
-            const bgColor = getTransparencyBackground(this.world, pos, entities, id);
+            const flameData = entity.getOne(FlammableComponent);
+            const wetData = entity.getOne(WetableComponent);
+
+            let bgColor;
+            if (flameData !== undefined && flameData.onFire === true) {
+                bgColor = "red";
+            } if (wetData !== undefined && wetData.wet === true) {
+                bgColor = "blue";
+            } else {
+                bgColor = getTransparencyBackground(this.world, pos, entities, id);
+            }
+
             const { x, y } = globals.Game!.gameCamera.worldToScreen(pos.x, pos.y);
             globals.Game!.display!.draw(
                 x,
@@ -118,7 +132,7 @@ export class DrawSystem extends System {
             if (entity.tags.has("drawAfterSeen") === true) {
                 this.drawAfterSeen(pos, graphicData);
             } else if (graphicData.bgColor === null) {
-                this.drawWithTransparency(pos, graphicData, entities, entity.id);
+                this.drawWithTransparency(entity, pos, graphicData, entities, entity.id);
             } else {
                 this.draw(pos, graphicData);
             }
