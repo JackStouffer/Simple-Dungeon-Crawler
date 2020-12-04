@@ -17,11 +17,15 @@ import {
     DamageAffinityComponent,
     DisplayNameComponent,
     FearAIComponent,
+    FireTriggerComponent,
+    FlammableComponent,
     GraphicsComponent,
     HitPointsComponent,
     HitPointsEffectComponent,
+    InteractableTypeComponent,
     InventoryComponent,
     LevelComponent,
+    LoseTargetAIComponent,
     PlannerAIComponent,
     PositionComponent,
     SpeedComponent,
@@ -29,6 +33,7 @@ import {
     SpellsComponent,
     StatsComponent,
     StatsEffectComponent,
+    TriggerTypeComponent,
     TypeComponent,
     WetableComponent
 } from "./entity";
@@ -112,17 +117,26 @@ export class DeathSystem extends System {
             this.generateUpdateFearVisibilityCallback(target)
         );
 
-        target.removeComponent("HitPointsComponent");
-        target.removeComponent("StatsComponent");
-        target.removeComponent("SpeedComponent");
-        target.removeComponent("PlannerAIComponent");
-        target.removeComponent("LoseTargetAIComponent");
-        target.removeComponent("FearAIComponent");
-        target.removeComponent("InteractableComponent");
-        target.removeComponent("FlammableComponent");
-        target.removeComponent("WetableComponent");
-        target.removeComponent("TriggerTypeComponent");
-        target.removeComponent("FireTriggerComponent");
+        const compArray: any = [
+            HitPointsComponent,
+            StatsComponent,
+            SpeedComponent,
+            PlannerAIComponent,
+            LoseTargetAIComponent,
+            FearAIComponent,
+            InteractableTypeComponent,
+            FlammableComponent,
+            WetableComponent,
+            TriggerTypeComponent,
+            FireTriggerComponent
+        ];
+
+        for (let i = 0; i < compArray.length; i++) {
+            const c = target.getOne(compArray[i]);
+            if (c !== undefined) {
+                target.removeComponent(c);
+            }
+        }
 
         // Create dropped item entity
         const inventoryData = target.getOne(InventoryComponent);
@@ -137,7 +151,7 @@ export class DeathSystem extends System {
             itemInventory!.inventory = inventoryData.inventory;
         }
 
-        target.removeComponent("InventoryComponent");
+        target.removeComponent(target.getOne(InventoryComponent)!);
     }
 
     /**

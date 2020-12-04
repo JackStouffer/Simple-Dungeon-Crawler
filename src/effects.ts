@@ -5,14 +5,18 @@ import { DamageType } from "./constants";
 import { displayMessage } from "./ui";
 import {
     DisplayNameComponent,
+    FireTriggerComponent,
     FlammableComponent,
     HitPointsComponent,
     HitPointsEffectComponent,
+    PositionComponent,
     SpeedEffectComponent,
     StatsEffectComponent,
+    TriggerTypeComponent,
     WetableComponent
 } from "./entity";
 import { takeDamage } from "./fighter";
+import { setOnFire } from "./skills";
 
 /**
  * Gives damage to those entities with a flammable comp that is
@@ -37,16 +41,47 @@ export class OnFireSystem extends System {
                 takeDamage(entity, flammableData.fireDamage, false, DamageType.Fire);
                 flammableData.turnsLeft--;
 
-                if (flammableData.turnsLeft === 0) {
+                if (flammableData.turnsLeft <= 0) {
                     flammableData.onFire = false;
                     flammableData.fireDamage = 0;
 
                     // If this is an entity which was given a fire trigger
                     // because it was on fire and non-blocking, then remove
                     // the trigger
-                    if (entity.tags.has("blocks") === false) {
-                        entity.removeComponent("TriggerTypeComponent");
-                        entity.removeComponent("FireTriggerComponent");
+                    if (entity.tags.has("blocks") === false &&
+                        entity.has(TriggerTypeComponent)) {
+                        entity.removeComponent(entity.getOne(TriggerTypeComponent)!);
+                        entity.removeComponent(entity.getOne(FireTriggerComponent)!);
+                    }
+                } else {
+                    // Simulate Fire Spreading
+                    // Check neighboring tiles for flammable entities
+                    // If there is one, roll to see if the entity will
+                    // be set to on fire
+                    // SPEED: use Quad Tree, O(m*n)
+                    const firePos = entity.getOne(PositionComponent);
+                    if (firePos !== undefined) {
+                        const neighborPositions = new Set([
+                            `${firePos.x-1},${firePos.y}`,
+                            `${firePos.x},${firePos.y-1}`,
+                            `${firePos.x-1},${firePos.y-1}`,
+                            `${firePos.x+1},${firePos.y}`,
+                            `${firePos.x},${firePos.y+1}`,
+                            `${firePos.x+1},${firePos.y+1}`,
+                            `${firePos.x+1},${firePos.y-1}`,
+                            `${firePos.x-1},${firePos.y+1}`
+                        ]);
+                        const entities = this.world.entities.values();
+                        for (const e of entities) {
+                            const pos = e.getOne(PositionComponent);
+                            if (pos === undefined) { continue; }
+                            if (neighborPositions.has(`${pos.x},${pos.y}`) &&
+                                Math.random() >= .80) {
+                                // TODO Find some way to defer the setting on fire until
+                                // the next turn
+                                setOnFire(e);
+                            }
+                        }
                     }
                 }
 

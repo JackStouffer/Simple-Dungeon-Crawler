@@ -128,7 +128,7 @@ export function castIncreaseMana(
     return true;
 }
 
-export function setOnFire(target: Entity, damage: number, turns: number): boolean {
+export function setOnFire(target: Entity, damage?: number, turns?: number): boolean {
     const flammableData = target.getOne(FlammableComponent);
     const wetData = target.getOne(WetableComponent);
     const blocks = target.tags.has("blocks");
@@ -150,15 +150,10 @@ export function setOnFire(target: Entity, damage: number, turns: number): boolea
         return false;
     }
 
-    flammableData.turnsLeft = turns;
-    flammableData.fireDamage = damage;
-    flammableData.onFire = true;
-    flammableData.update();
-
     // If the entity doesn't block and it's on fire, we want
     // to add a fire trigger component so that things catch
     // on fire when they step on it
-    if (!blocks) {
+    if (flammableData.onFire === false && !blocks) {
         target.addComponent({
             type: "TriggerTypeComponent",
             triggerType: TriggerType.Fire
@@ -170,6 +165,29 @@ export function setOnFire(target: Entity, damage: number, turns: number): boolea
             damage: 15
         });
     }
+
+    // Inanimate objects should burn until they
+    // are consumed
+    if (target.has(PlannerAIComponent)) {
+        flammableData.turnsLeft = turns ?? randomIntFromInterval(3, 6);
+    } else {
+        flammableData.turnsLeft = 1000;
+    }
+
+    const hpData = target.getOne(HitPointsComponent);
+    if (damage !== undefined) {
+        flammableData.fireDamage = damage;
+    } else if (hpData !== undefined) {
+        flammableData.fireDamage = Math.max(
+            1,
+            Math.round(hpData.maxHp * 0.0625)
+        );
+    } else {
+        flammableData.fireDamage = 3;
+    }
+
+    flammableData.onFire = true;
+    flammableData.update();
 
     return true;
 }
@@ -499,7 +517,6 @@ export function castCombust(
     target: Nullable<Point>,
     map: Nullable<GameMap>
 ): boolean {
-    if (item.value === null) { throw new Error("Item does not have a value for castDamageSpell"); }
     if (target === null) { throw new Error("Target cannot be null for castDamageSpell"); }
     if (map === null) { throw new Error("Map cannot be null for castDamageSpell"); }
 
@@ -509,8 +526,7 @@ export function castCombust(
         return false;
     }
 
-    setOnFire(targetedEntity, item.value, randomIntFromInterval(3, 6));
-
+    setOnFire(targetedEntity);
     return true;
 }
 

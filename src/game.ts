@@ -412,7 +412,7 @@ export class SimpleDungeonCrawler {
         if (inputHandlerState === undefined ||
             playerInventory === undefined ||
             playerSpells === undefined) {
-            throw new Error("player is missing data in handleInput");
+            return;
         }
 
         if (this.state === GameState.Gameplay) {
