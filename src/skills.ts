@@ -3,7 +3,14 @@ import { Entity, World } from "ape-ecs";
 import { RNG } from "./rot/index";
 
 import globals from "./globals";
-import { GameMap, getRandomFighterWithinRange, isBlocked, Point, setAllToExplored } from "./map";
+import {
+    GameMap,
+    getRandomFighterWithinRange,
+    isBlocked,
+    Point,
+    setAllToExplored,
+    getRandomOpenSpace
+} from "./map";
 import { displayMessage } from "./ui";
 import { DamageType, ItemType, SpellType, StatusEffectType, TriggerType } from "./constants";
 import {
@@ -128,6 +135,11 @@ export function castIncreaseMana(
     return true;
 }
 
+/**
+ * Set an entity on fire an deal with all of the interactions
+ * between different statuses, and the behavior with different
+ * types of entities
+ */
 export function setOnFire(target: Entity, damage?: number, turns?: number): boolean {
     const flammableData = target.getOne(FlammableComponent);
     const wetData = target.getOne(WetableComponent);
@@ -190,6 +202,32 @@ export function setOnFire(target: Entity, damage?: number, turns?: number): bool
     flammableData.update();
 
     return true;
+}
+
+export function setWet(target: Entity, turns?: number): boolean {
+    // Put the fire out if the actor is on fire
+    const flammableData = target.getOne(FlammableComponent);
+    if (flammableData !== undefined && flammableData.onFire) {
+        flammableData.onFire = false;
+        flammableData.turnsLeft = 0;
+        flammableData.fireDamage = 0;
+        flammableData.update();
+
+        if (target === globals.Game?.player) {
+            displayMessage("The water doused you");
+        }
+    }
+
+    if (turns === undefined) { turns = 10; }
+    const wetData = target.getOne(WetableComponent);
+    if (wetData !== undefined && (wetData.wet === false || wetData.turnsLeft < turns)) {
+        wetData.wet = true;
+        wetData.turnsLeft = turns;
+        wetData.update();
+        return true;
+    }
+
+    return false;
 }
 
 function rollForStatusEffect(
@@ -531,6 +569,33 @@ export function castCombust(
 }
 
 /**
+ * Set a target on fire
+ */
+export function castRain(
+    ecs: World,
+    item: ItemDataDetails | SpellDataDetails,
+    user: Entity,
+    target: Nullable<Point>,
+    map: Nullable<GameMap>
+): boolean {
+    if (map === null) { throw new Error("Map cannot be null for castWall"); }
+    if (item.value === null) { throw new Error("value cannot be null for castRain"); }
+
+    const entities = ecs.entities.values();
+    for (const e of entities) {
+        setWet(e, item.value);
+    }
+
+    // Spawn puddles in random places on the map
+    for (let i = 0; i < 30; i++) {
+        const { x, y } = getRandomOpenSpace(ecs, map);
+        createEntity(ecs, "puddle", x, y);
+    }
+
+    return true;
+}
+
+/**
  * Map of item IDs and their data, including a function pointer
  * to the implementation of the item's behavior
  */
@@ -805,5 +870,13 @@ export const SpellData: { [key: string]: SpellDataDetails } = {
         manaCost: 10,
         type: SpellType.DamageOther,
         useFunc: castCombust
+    },
+    "rain": {
+        id: "rain",
+        displayName: "Rain",
+        value: 15,
+        manaCost: 10,
+        type: SpellType.Passive,
+        useFunc: castRain
     }
 };

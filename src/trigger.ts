@@ -10,11 +10,11 @@ import {
     SpeedComponent,
     TriggerTypeComponent,
     TypeComponent,
-    WetableComponent
+    WetableComponent,
 } from "./entity";
 import { takeDamage } from "./fighter";
+import { setOnFire, setWet } from "./skills";
 import { displayMessage } from "./ui";
-import { setOnFire } from "./skills";
 
 export class UpdateTriggerMapSystem extends System {
     private mainQuery: Query;
@@ -92,52 +92,18 @@ export function mudTrigger(actor: Entity): void {
 }
 
 export function shallowWaterTrigger(actor: Entity): void {
-    // Put the fire out if the actor is on fire
-    const flammableData = actor.getOne(FlammableComponent);
-    if (flammableData !== undefined && flammableData.onFire) {
-        flammableData.onFire = false;
-        flammableData.turnsLeft = 0;
-        flammableData.fireDamage = 0;
-        flammableData.update();
-
-        if (actor === globals.Game?.player) {
-            displayMessage("The water doused you");
-        }
-    }
-
+    setWet(actor, 10);
     const wetData = actor.getOne(WetableComponent);
     if (wetData !== undefined && wetData.wet === false && actor === globals.Game?.player) {
         displayMessage("You are now wet from stepping in the water");
     }
-    if (wetData !== undefined && (wetData.wet === false || wetData.turnsLeft < 2)) {
-        wetData.wet = true;
-        wetData.turnsLeft = 10;
-        wetData.update();
-    }
 }
 
 export function deepWaterTrigger(actor: Entity): void {
-    // Put the fire out if the actor is on fire
-    const flammableData = actor.getOne(FlammableComponent);
-    if (flammableData !== undefined && flammableData.onFire) {
-        flammableData.onFire = false;
-        flammableData.turnsLeft = 0;
-        flammableData.fireDamage = 0;
-        flammableData.update();
-
-        if (actor === globals.Game?.player) {
-            displayMessage("The water doused you");
-        }
-    }
-
+    setWet(actor, 20);
     const wetData = actor.getOne(WetableComponent);
     if (wetData !== undefined && wetData.wet === false && actor === globals.Game?.player) {
-        displayMessage("You are now wet from swimming");
-    }
-    if (wetData !== undefined && (wetData.wet === false || wetData.turnsLeft < 6)) {
-        wetData.wet = true;
-        wetData.turnsLeft = 20;
-        wetData.update();
+        displayMessage("You are now wet from stepping in the water");
     }
 
     // Slow the player down to simulate swimming

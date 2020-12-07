@@ -620,18 +620,19 @@ export function getRandomFighterWithinRange(
     return possible.length > 0 ? RNG.getItem(possible) : null;
 }
 
-export function findRandomOpenSpace(ecs: World, map: GameMap): Point {
+export function getRandomOpenSpace(ecs: World, map: GameMap): Point {
     const width = map[0].length;
     const height = map.length;
     let blocks = false;
+    let entity;
     let x = 0;
     let y = 0;
 
     do {
         x = randomIntFromInterval(0, width);
         y = randomIntFromInterval(0, height);
-        ({ blocks } = isBlocked(ecs, map, x, y));
-    } while (blocks);
+        ({ entity, blocks } = isBlocked(ecs, map, x, y));
+    } while (entity !== null || blocks === true);
 
     return { x, y };
 }

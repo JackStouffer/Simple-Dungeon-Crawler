@@ -842,6 +842,33 @@ const ObjectData: { [key: string]: ObjectDataDetails } = {
             }
         }
     },
+    "puddle": {
+        staticallyKnownComponents: {
+            c: {
+                TypeComponent: {
+                    entityType: "puddle"
+                },
+                DisplayNameComponent: {
+                    name: "Puddle"
+                },
+                GraphicsComponent: {
+                    char: ".",
+                    fgColor: "blue",
+                    bgColor: "lightblue",
+                },
+                TriggerTypeComponent: {
+                    triggerType: TriggerType.ShallowWater
+                },
+                FreezableComponent: {
+                    frozen: false,
+                    turnsLeft: 0
+                },
+                RemoveAfterNTurnsComponent: {
+                    turnsLeft: 25
+                }
+            }
+        }
+    },
     "water": {
         staticallyKnownComponents: {
             c: {

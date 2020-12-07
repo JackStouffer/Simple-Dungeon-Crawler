@@ -23,7 +23,7 @@ import {
 } from "../entity";
 import {
     distanceBetweenPoints,
-    findRandomOpenSpace,
+    getRandomOpenSpace,
     GameMap,
     isBlocked,
     Point,
@@ -333,7 +333,7 @@ export function runAwayAction(
         do {
             // TODO should also fix this to make it so the target is at least
             // n tiles away from the target we're afraid of
-            fearState.runAwayTarget = findRandomOpenSpace(ecs, map);
+            fearState.runAwayTarget = getRandomOpenSpace(ecs, map);
 
             path = getStepsTowardsTarget(
                 ecs,
