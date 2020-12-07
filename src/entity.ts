@@ -954,7 +954,7 @@ const ObjectData: { [key: string]: ObjectDataDetails } = {
         spells: [],
         staticallyKnownComponents: {
             id: "player",
-            tags: ["blocks", "input"],
+            tags: ["blocks", "input", "sentient"],
             c: {
                 TypeComponent: {
                     entityType: "player"
@@ -1029,7 +1029,7 @@ const ObjectData: { [key: string]: ObjectDataDetails } = {
             }
         ],
         staticallyKnownComponents: {
-            tags: ["blocks"],
+            tags: ["blocks", "sentient"],
             c: {
                 TypeComponent: {
                     entityType: "goblin"
@@ -1109,7 +1109,7 @@ const ObjectData: { [key: string]: ObjectDataDetails } = {
             }
         ],
         staticallyKnownComponents: {
-            tags: ["blocks"],
+            tags: ["blocks", "sentient"],
             c: {
                 TypeComponent: {
                     entityType: "goblin_brute"
@@ -1177,7 +1177,7 @@ const ObjectData: { [key: string]: ObjectDataDetails } = {
             "runAway"
         ],
         staticallyKnownComponents: {
-            tags: ["blocks"],
+            tags: ["blocks", "sentient"],
             c: {
                 TypeComponent: {
                     entityType: "rat"
@@ -1249,7 +1249,7 @@ const ObjectData: { [key: string]: ObjectDataDetails } = {
             "meleeAttack"
         ],
         staticallyKnownComponents: {
-            tags: ["blocks"],
+            tags: ["blocks", "sentient"],
             c: {
                 TypeComponent: {
                     entityType: "water_sprite"
@@ -1322,7 +1322,7 @@ const ObjectData: { [key: string]: ObjectDataDetails } = {
             }
         ],
         staticallyKnownComponents: {
-            tags: ["blocks"],
+            tags: ["blocks", "sentient"],
             c: {
                 TypeComponent: {
                     entityType: "bandit"
@@ -1404,7 +1404,7 @@ const ObjectData: { [key: string]: ObjectDataDetails } = {
             }
         ],
         staticallyKnownComponents: {
-            tags: ["blocks"],
+            tags: ["blocks", "sentient"],
             c: {
                 TypeComponent: {
                     entityType: "bandit_mage"

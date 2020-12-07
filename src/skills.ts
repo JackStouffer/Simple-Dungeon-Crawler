@@ -180,7 +180,7 @@ export function setOnFire(target: Entity, damage?: number, turns?: number): bool
 
     // Inanimate objects should burn until they
     // are consumed
-    if (target.has(PlannerAIComponent)) {
+    if (target.tags.has("sentient")) {
         flammableData.turnsLeft = turns ?? randomIntFromInterval(3, 6);
     } else {
         flammableData.turnsLeft = 1000;

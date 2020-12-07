@@ -233,7 +233,13 @@ export class SimpleDungeonCrawler {
 
         loadEventualSounds();
 
-        this.ecs.registerTags("blocks", "blocksSight", "drawAfterSeen", "input");
+        this.ecs.registerTags(
+            "blocks",
+            "blocksSight",
+            "drawAfterSeen",
+            "input",
+            "sentient"
+        );
         this.ecs.registerComponent(PositionComponent, 100);
         this.ecs.registerComponent(TypeComponent, 100);
         this.ecs.registerComponent(DisplayNameComponent, 100);
@@ -331,12 +337,6 @@ export class SimpleDungeonCrawler {
         const inventoryData = this.player.getOne(InventoryComponent);
         const spellsData = this.player.getOne(SpellsComponent);
 
-        if (inputHandlerData === undefined ||
-            inventoryData === undefined ||
-            spellsData === undefined) {
-            throw new Error("Missing data on player");
-        }
-
         switch (this.state) {
             case GameState.Gameplay:
                 this.display.clear();
@@ -347,12 +347,21 @@ export class SimpleDungeonCrawler {
                 drawStatusBar(this.display, this.ecs, this.map);
                 break;
             case GameState.PauseMenu:
+                if (inputHandlerData === undefined) {
+                    return;
+                }
                 this.keyBindingMenu.draw(inputHandlerData.keyCommands);
                 break;
             case GameState.InventoryMenu:
+                if (inventoryData === undefined) {
+                    return;
+                }
                 this.inventoryMenu.draw(getItems(inventoryData));
                 break;
             case GameState.SpellMenu:
+                if (spellsData === undefined) {
+                    return;
+                }
                 this.spellSelectionMenu.draw(getKnownSpells(spellsData));
                 break;
             case GameState.OpeningCinematic:
@@ -409,12 +418,6 @@ export class SimpleDungeonCrawler {
         const playerInventory = this.player.getOne(InventoryComponent);
         const playerSpells = this.player.getOne(SpellsComponent);
 
-        if (inputHandlerState === undefined ||
-            playerInventory === undefined ||
-            playerSpells === undefined) {
-            return;
-        }
-
         if (this.state === GameState.Gameplay) {
             if (input.isDown("Escape")) {
                 globals.gameEventEmitter.emit("ui.openKeybinding");
@@ -425,6 +428,10 @@ export class SimpleDungeonCrawler {
             this.currentCommand = handleInput(this.ecs, this.map, this.triggerMap, this.player);
             return;
         } else if (this.state === GameState.PauseMenu) {
+            if (inputHandlerState === undefined) {
+                return;
+            }
+
             if (input.isDown("Escape")) {
                 globals.gameEventEmitter.emit("ui.closeKeybinding");
                 this.state = GameState.Gameplay;
@@ -434,6 +441,11 @@ export class SimpleDungeonCrawler {
 
             this.keyBindingMenu.handleInput(inputHandlerState.keyCommands);
         } else if (this.state === GameState.InventoryMenu) {
+            if (playerInventory === undefined ||
+                inputHandlerState === undefined) {
+                return;
+            }
+
             if (input.isDown("Escape")) {
                 globals.gameEventEmitter.emit("ui.closeInventory");
                 this.state = GameState.Gameplay;
@@ -472,6 +484,11 @@ export class SimpleDungeonCrawler {
                 }
             }
         } else if (this.state === GameState.SpellMenu) {
+            if (playerSpells === undefined ||
+                inputHandlerState === undefined) {
+                return;
+            }
+
             if (input.isDown("Escape")) {
                 globals.gameEventEmitter.emit("ui.closeSpells");
                 this.state = GameState.Gameplay;
