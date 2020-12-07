@@ -196,18 +196,17 @@ export class SimpleDungeonCrawler {
     reset(): void {
         if (globals.document === null) { throw new Error("Global document cannot be null"); }
         this.ecs.entities.forEach((v) => {
-            v.destroy();
+            this.ecs.removeEntity(v);
         });
 
+        this.currentActor = null;
         this.player = createEntity(this.ecs, "player", 1, 1);
         this.map = [];
         this.totalTurns = 1;
-        this.scheduler.clear();
-        this.scheduler.add(this.player, true);
-        this.gameCamera.follow(this.player);
-
 
         this.loadLevel("forrest_001");
+        this.scheduler.add(this.player.id, true);
+        this.gameCamera.follow(this.player);
 
         const log = globals.document.getElementById("log");
         if (log === null) { return; }
@@ -317,7 +316,7 @@ export class SimpleDungeonCrawler {
         globals.gameEventEmitter.on("tutorial.spellTargeting", explainSpellTargeting);
         globals.gameEventEmitter.on("tutorial.wildSpells", explainWildSpells);
 
-        this.scheduler.add(this.player, true);
+        this.scheduler.add(this.player.id, true);
         this.gameCamera.follow(this.player);
 
         input.init();
@@ -393,7 +392,7 @@ export class SimpleDungeonCrawler {
         if (globals.gameEventEmitter === null) { throw new Error("Global gameEventEmitter cannot be null"); }
 
         this.scheduler.clear();
-        this.scheduler.add(this.player, true);
+        this.scheduler.add(this.player.id, true);
 
         const { map, playerLocation } = loadTiledMap(this.ecs, name);
         this.map = map;
@@ -550,7 +549,9 @@ export class SimpleDungeonCrawler {
         this.lastTimestamp = timestamp;
 
         if (this.currentActor === null) {
-            this.currentActor = this.scheduler.next();
+            this.currentActor = this.ecs.getEntity(
+                this.scheduler.next()!
+            )!;
         }
 
         // Command generation
@@ -586,7 +587,9 @@ export class SimpleDungeonCrawler {
                     this.totalTurns++;
                 }
 
-                this.currentActor = this.scheduler.next();
+                this.currentActor = this.ecs.getEntity(
+                    this.scheduler.next()!
+                )!;
             }
 
             this.currentCommand = null;

@@ -222,17 +222,16 @@ export class UpdateSchedulerSystem extends System {
         for (let i = 0; i < this.changes.length; i++) {
             const change = this.changes[i];
             const entity = this.world.getEntity(change.entity);
-            if (entity === undefined) { throw new Error(`Entity ${change.entity} is undefined`); }
-            // We want to add the player manually so that the player is
-            // always first to act in a level load
-            if (entity === globals.Game?.player) { continue; }
 
             switch (change.op) {
                 case "add":
-                    globals.Game.scheduler.add(entity, true);
+                    // We want to add the player manually so that the player is
+                    // always first to act in a level load
+                    if (entity === globals.Game?.player) { continue; }
+                    globals.Game.scheduler.add(change.entity, true);
                     break;
                 case "destroy":
-                    globals.Game.scheduler.remove(entity);
+                    globals.Game.scheduler.remove(change.entity);
                     break;
                 case "change":
                 case "addRef":
