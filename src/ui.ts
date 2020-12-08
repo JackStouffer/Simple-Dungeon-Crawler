@@ -159,45 +159,68 @@ export function displayMessage(text: string, type: MessageType = MessageType.Def
 }
 
 export class InventoryMenu {
+    private readonly pageSize: number = 15;
+
     private currentSelection: number;
+    private currentPage: number;
     private readonly allowedKeys: Set<string>;
 
     constructor() {
         this.currentSelection = 0;
+        this.currentPage = 0;
         this.allowedKeys = new Set(["ArrowDown", "ArrowUp", "Enter"]);
     }
 
     resetState() {
         this.currentSelection = 0;
+        this.currentPage = 0;
     }
 
     draw(inventoryItems: InventoryItemDetails[]) {
         if (globals.Game === null) { throw new Error("Global Game object is null"); }
         if (globals.Game.display === null) { throw new Error("Cannot draw InventoryMenu when display is null"); }
 
-        // add four for header
-        const height = inventoryItems.length + UI_HEIGHT;
-
         // draw background
         for (let w = 0; w < WIDTH; w++) {
-            for (let h = 0; h < height; h++) {
-                if (w === 0 || h === 0 || w === WIDTH - 1 || h === height - 1) {
+            for (let h = 0; h < HEIGHT; h++) {
+                if (w === 0 || h === 0 ||
+                    w === WIDTH - 1 || h === HEIGHT - 1 ||
+                    h === HEIGHT / 2) {
                     globals.Game.display.draw(w, h, "1", "grey", "grey");
                 } else {
                     globals.Game.display.draw(w, h, "1", "black", "black");
                 }
             }
         }
-
         globals.Game.display.drawText(2, 1, "%c{white}%b{black}Player Inventory");
-        for (let i = 0; i < inventoryItems.length; i++) {
+        const currentPage = Math.floor(this.currentSelection / this.pageSize);
+        const start = currentPage * this.pageSize;
+        const end = Math.min(start + this.pageSize, inventoryItems.length);
+
+        for (let i = start; i < end; i++) {
             let displayString;
             if (i === this.currentSelection) {
                 displayString = `%c{white}%b{grey}${inventoryItems[i].displayName} (${inventoryItems[i].count})`;
             } else {
                 displayString = `%c{white}%b{black}${inventoryItems[i].displayName} (${inventoryItems[i].count})`;
             }
-            globals.Game.display.drawText(2, i + 3, displayString);
+            globals.Game.display.drawText(2, (i - start) + 3, displayString);
+        }
+
+        if (start > 0) {
+            globals.Game.display.drawText((WIDTH / 2) - 2, 2, "%c{white}%b{black}\u25B2\u25B2\u25B2");
+        }
+        if (end < inventoryItems.length) {
+            globals.Game.display.drawText((WIDTH / 2) - 2, (HEIGHT / 2) - 1, "%c{white}%b{black}\u25BC\u25BC\u25BC");
+        }
+
+        const info = inventoryItems[this.currentSelection];
+        if (info !== undefined) {
+            globals.Game.display.drawText(
+                2,
+                (HEIGHT / 2) + 2,
+                `%c{white}%b{black}${info.description}`
+            );
         }
     }
 
@@ -224,6 +247,8 @@ export class InventoryMenu {
 }
 
 export class SpellSelectionMenu {
+    private readonly pageSize: number = 15;
+
     private currentSelection: number;
     private readonly allowedKeys: Set<string>;
 
@@ -240,13 +265,12 @@ export class SpellSelectionMenu {
         if (globals.Game === null) { throw new Error("Global Game object is null"); }
         if (globals.Game.display === null) { throw new Error("Cannot draw InventoryMenu when display is null"); }
 
-        // add four for header
-        const height = spells.length + UI_HEIGHT;
-
         // draw background
         for (let w = 0; w < WIDTH; w++) {
-            for (let h = 0; h < height; h++) {
-                if (w === 0 || h === 0 || w === WIDTH - 1 || h === height - 1) {
+            for (let h = 0; h < HEIGHT; h++) {
+                if (w === 0 || h === 0 ||
+                    w === WIDTH - 1 || h === HEIGHT - 1 ||
+                    h === HEIGHT / 2) {
                     globals.Game.display.draw(w, h, "1", "grey", "grey");
                 } else {
                     globals.Game.display.draw(w, h, "1", "black", "black");
@@ -255,17 +279,21 @@ export class SpellSelectionMenu {
         }
 
         globals.Game.display.drawText(2, 1, "%c{white}%b{black}Spells");
-        for (let i = 0; i < spells.length; i++) {
+        const currentPage = Math.floor(this.currentSelection / this.pageSize);
+        const start = currentPage * this.pageSize;
+        const end = Math.min(start + this.pageSize, spells.length);
+
+        for (let i = start; i < end; i++) {
             const spell = spells[i];
-            let displaySettings;
+            let displayString;
 
             if (i === this.currentSelection) {
-                displaySettings = "%c{white}%b{grey}";
+                displayString = `%c{white}%b{grey} ${spell.displayName}`;
             } else {
-                displaySettings = "%c{white}%b{black}";
+                displayString = `%c{white}%b{black} ${spell.displayName}`;
             }
 
-            globals.Game.display.drawText(2, i + 3, displaySettings + ` ${spell.displayName}`);
+            globals.Game.display.drawText(2, i + 3, displayString);
 
             let infoString = "%c{white}%b{black}";
             switch (spell.type) {
@@ -286,7 +314,27 @@ export class SpellSelectionMenu {
             }
             globals.Game.display.drawText(25, i + 3, infoString);
 
-            globals.Game.display.drawText(40, i + 3, `%c{white}%b{black}cost: ${spell.manaCost}`);
+            globals.Game.display.drawText(
+                40,
+                (i - start) + 3,
+                `%c{white}%b{black}cost: ${spell.manaCost}`
+            );
+        }
+
+        if (start > 0) {
+            globals.Game.display.drawText((WIDTH / 2) - 2, 2, "%c{white}%b{black}\u25B2\u25B2\u25B2");
+        }
+        if (end < spells.length) {
+            globals.Game.display.drawText((WIDTH / 2) - 2, (HEIGHT / 2) - 1, "%c{white}%b{black}\u25BC\u25BC\u25BC");
+        }
+
+        const info = spells[this.currentSelection];
+        if (info !== undefined) {
+            globals.Game.display.drawText(
+                2,
+                (HEIGHT / 2) + 2,
+                `%c{white}%b{black}${info.description}`
+            );
         }
     }
 

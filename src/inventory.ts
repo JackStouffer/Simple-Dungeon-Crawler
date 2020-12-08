@@ -7,6 +7,7 @@ import { ItemData } from "./skills";
 export interface InventoryItemDetails {
     id: string;
     displayName: string;
+    description: string;
     type: ItemType;
     count: number;
     value: Nullable<number>;
@@ -24,6 +25,7 @@ export function getItems(inventory: InventoryComponent): InventoryItemDetails[] 
         res.push({
             id: k,
             displayName: data.displayName,
+            description: data.description,
             type: data.type,
             count: v,
             value: data.value

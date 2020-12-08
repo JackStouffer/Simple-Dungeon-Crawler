@@ -36,6 +36,7 @@ interface Area {
 
 export interface ItemDataDetails {
     displayName: string,
+    description: string;
     type: ItemType,
     value: Nullable<number>,
     damageType?: DamageType;
@@ -48,6 +49,7 @@ export interface ItemDataDetails {
 export interface SpellDataDetails {
     id: string;
     displayName: string;
+    description: string;
     manaCost: number;
     type: SpellType;
     value: Nullable<number>;
@@ -602,30 +604,35 @@ export function castRain(
 export const ItemData: { [key: string]: ItemDataDetails } = {
     "health_potion_weak": {
         displayName: "Weak Potion of Healing",
+        description: "Potion that restores a small amount of health",
         value: 25,
         type: ItemType.HealSelf,
         useFunc: castHeal
     },
     "health_potion": {
         displayName: "Potion of Healing",
+        description: "Potion that restores a some health",
         value: 50,
         type: ItemType.HealSelf,
         useFunc: castHeal
     },
     "health_potion_strong": {
         displayName: "Strong Potion of Healing",
+        description: "Potion that restores a large amount of health",
         value: 100,
         type: ItemType.HealSelf,
         useFunc: castHeal
     },
     "mana_potion_weak": {
         displayName: "Weak Potion of Mana",
+        description: "Potion that restores a small amount of mana",
         value: 25,
         type: ItemType.AddManaSelf,
         useFunc: castIncreaseMana
     },
     "lightning_scroll_weak": {
-        displayName: "Weak Scroll of Lightning",
+        displayName: "Weak Scroll of Lightning Bolt",
+        description: "Conjure a lightning bolt that damages a target with lightning damage",
         value: 20,
         type: ItemType.DamageScroll,
         damageType: DamageType.Electric,
@@ -633,6 +640,7 @@ export const ItemData: { [key: string]: ItemDataDetails } = {
     },
     "lightning_scroll": {
         displayName: "Scroll of Lightning",
+        description: "Conjure a lightning bolt that damages a target with lightning damage",
         value: 50,
         type: ItemType.DamageScroll,
         damageType: DamageType.Electric,
@@ -640,6 +648,7 @@ export const ItemData: { [key: string]: ItemDataDetails } = {
     },
     "lightning_scroll_strong": {
         displayName: "Strong Scroll of Lightning",
+        description: "Conjure a lightning bolt that damages a target with lightning damage",
         value: 100,
         type: ItemType.DamageScroll,
         damageType: DamageType.Electric,
@@ -647,6 +656,7 @@ export const ItemData: { [key: string]: ItemDataDetails } = {
     },
     "fireball_scroll_weak": {
         displayName: "Weak Scroll of Fire",
+        description: "Conjure a ball of fire that damages a target with fire damage",
         value: 20,
         type: ItemType.DamageScroll,
         damageType: DamageType.Fire,
@@ -655,6 +665,7 @@ export const ItemData: { [key: string]: ItemDataDetails } = {
     },
     "fireball_scroll": {
         displayName: "Scroll of Fire",
+        description: "Conjure a ball of fire that damages a target with fire damage",
         value: 50,
         type: ItemType.DamageScroll,
         damageType: DamageType.Fire,
@@ -663,6 +674,7 @@ export const ItemData: { [key: string]: ItemDataDetails } = {
     },
     "fireball_scroll_strong": {
         displayName: "Strong Scroll of Fire",
+        description: "Conjure a ball of fire that damages a target with fire damage",
         value: 100,
         type: ItemType.DamageScroll,
         damageType: DamageType.Fire,
@@ -671,6 +683,7 @@ export const ItemData: { [key: string]: ItemDataDetails } = {
     },
     "lightning_scroll_weak_wild": {
         displayName: "Weak Scroll of Wild Lightning",
+        description: "Summons a lightning bolt that's beyond your control and attacks randomly with lightning damage",
         value: 50,
         type: ItemType.WildDamageScroll,
         damageType: DamageType.Electric,
@@ -678,6 +691,7 @@ export const ItemData: { [key: string]: ItemDataDetails } = {
     },
     "lightning_scroll_wild": {
         displayName: "Scroll of Wild Lightning",
+        description: "Summons a lightning bolt that's beyond your control and attacks randomly with lightning damage",
         value: 100,
         type: ItemType.WildDamageScroll,
         damageType: DamageType.Electric,
@@ -685,6 +699,7 @@ export const ItemData: { [key: string]: ItemDataDetails } = {
     },
     "lightning_scroll_strong_wild": {
         displayName: "Strong Scroll of Wild Lightning",
+        description: "Summons a lightning bolt that's beyond your control and attacks randomly with lightning damage",
         value: 150,
         type: ItemType.WildDamageScroll,
         damageType: DamageType.Electric,
@@ -692,6 +707,7 @@ export const ItemData: { [key: string]: ItemDataDetails } = {
     },
     "fireball_scroll_weak_wild": {
         displayName: "Weak Scroll of Wild Fire",
+        description: "Summons a ball of fire that's beyond your control and attacks randomly with fire damage",
         value: 50,
         type: ItemType.WildDamageScroll,
         damageType: DamageType.Fire,
@@ -700,6 +716,7 @@ export const ItemData: { [key: string]: ItemDataDetails } = {
     },
     "fireball_scroll_wild": {
         displayName: "Scroll of Wild Fire",
+        description: "Summons a ball of fire that's beyond your control and attacks randomly with fire damage",
         value: 100,
         type: ItemType.WildDamageScroll,
         damageType: DamageType.Fire,
@@ -708,6 +725,7 @@ export const ItemData: { [key: string]: ItemDataDetails } = {
     },
     "fireball_scroll_strong_wild": {
         displayName: "Strong Scroll of Wild Fire",
+        description: "Summons a ball of fire that's beyond your control and attacks randomly with fire damage",
         value: 150,
         type: ItemType.WildDamageScroll,
         damageType: DamageType.Fire,
@@ -716,24 +734,28 @@ export const ItemData: { [key: string]: ItemDataDetails } = {
     },
     "confuse_scroll": {
         displayName: "Scroll of Confuse Enemy",
+        description: "Your target loses control of their actions",
         value: 8,
         type: ItemType.ConfuseScroll,
         useFunc: castConfuse,
     },
     "clairvoyance_scroll": {
         displayName: "Scroll of Clairvoyance",
+        description: "Use sensory magics to learn the layout of the whole map",
         value: null,
         type: ItemType.ClairvoyanceScroll,
         useFunc: castClairvoyance
     },
     "haste_potion_weak": {
         displayName: "Weak Potion of Haste",
+        description: "Haste gives you more actions per turn",
         value: 5,
         type: ItemType.HasteSelf,
         useFunc: castHaste,
     },
     "slow_poison_weak": {
         displayName: "Weak Poison of Slow",
+        description: "Only allow your target to take one action per two turns",
         value: 5,
         type: ItemType.SlowOther,
         useFunc: castSlow
@@ -748,6 +770,7 @@ export const SpellData: { [key: string]: SpellDataDetails } = {
     "lightning_bolt": {
         id: "lightning_bolt",
         displayName: "Lightning Bolt",
+        description: "Send a bolt of lighting hurtling towards your foes",
         manaCost: 10,
         value: 20,
         type: SpellType.DamageOther,
@@ -757,6 +780,7 @@ export const SpellData: { [key: string]: SpellDataDetails } = {
     "wild_lightning_bolt": {
         id: "wild_lightning_bolt",
         displayName: "Wild Lightning Bolt",
+        description: "Summons a lightning bolt that's beyond your control and attacks randomly with lightning damage",
         manaCost: 10,
         value: 30,
         type: SpellType.WildDamage,
@@ -766,6 +790,7 @@ export const SpellData: { [key: string]: SpellDataDetails } = {
     "fireball": {
         id: "fireball",
         displayName: "Fireball",
+        description: "Hurl a ball of fire",
         manaCost: 50,
         value: 20,
         type: SpellType.DamageOther,
@@ -776,6 +801,7 @@ export const SpellData: { [key: string]: SpellDataDetails } = {
     "wild_fireball": {
         id: "wild_fireball",
         displayName: "Wild Fireball",
+        description: "Summons a ball of fire that's beyond your control and attacks randomly",
         manaCost: 10,
         value: 30,
         type: SpellType.WildDamage,
@@ -785,6 +811,7 @@ export const SpellData: { [key: string]: SpellDataDetails } = {
     "confuse": {
         id: "confuse",
         displayName: "Confuse",
+        description: "Your target loses control of their actions",
         manaCost: 20,
         value: 8,
         type: SpellType.DamageOther,
@@ -793,6 +820,7 @@ export const SpellData: { [key: string]: SpellDataDetails } = {
     "clairvoyance": {
         id: "clairvoyance",
         displayName: "Clairvoyance",
+        description: "Use sensory magics to learn the layout of the whole map",
         manaCost: 20,
         value: null,
         type: SpellType.Passive,
@@ -801,6 +829,7 @@ export const SpellData: { [key: string]: SpellDataDetails } = {
     "lesser_heal": {
         id: "lesser_heal",
         displayName: "Lesser Heal",
+        description: "Gives a small amount of hit points",
         manaCost: 10,
         value: 25,
         type: SpellType.HealSelf,
@@ -809,6 +838,7 @@ export const SpellData: { [key: string]: SpellDataDetails } = {
     "heal": {
         id: "heal",
         displayName: "Heal",
+        description: "Heals a good amount of health",
         manaCost: 30,
         value: 50,
         type: SpellType.HealSelf,
@@ -817,6 +847,7 @@ export const SpellData: { [key: string]: SpellDataDetails } = {
     "greater_heal": {
         id: "greater_heal",
         displayName: "Greater Heal",
+        description: "Gives a large amount of health",
         manaCost: 50,
         value: 100,
         type: SpellType.HealSelf,
@@ -825,6 +856,7 @@ export const SpellData: { [key: string]: SpellDataDetails } = {
     "lesser_haste": {
         id: "lesser_haste",
         displayName: "Lesser Haste",
+        description: "Haste gives you more actions per turn",
         manaCost: 30,
         value: 10,
         type: SpellType.Effect,
@@ -833,6 +865,7 @@ export const SpellData: { [key: string]: SpellDataDetails } = {
     "lesser_slow": {
         id: "lesser_slow",
         displayName: "Lesser Slow",
+        description: "Only allow your target to take one action per two turns",
         manaCost: 30,
         value: 10,
         type: SpellType.DamageOther,
@@ -841,6 +874,7 @@ export const SpellData: { [key: string]: SpellDataDetails } = {
     "fire_wall": {
         id: "fire_wall",
         displayName: "Wall of Fire",
+        description: "Conjure a wall of flame that damages all who walk through it",
         manaCost: 30,
         value: 10,
         type: SpellType.DamageOther,
@@ -854,6 +888,7 @@ export const SpellData: { [key: string]: SpellDataDetails } = {
     "ice_wall": {
         id: "ice_wall",
         displayName: "Wall of Ice",
+        description: "Conjure a wall of ice that blocks foe's path",
         manaCost: 30,
         value: null,
         type: SpellType.DamageOther,
@@ -866,6 +901,7 @@ export const SpellData: { [key: string]: SpellDataDetails } = {
     "combust": {
         id: "combust",
         displayName: "Combust",
+        description: "Doesn't do much damage, but is guaranteed to light something on fire",
         value: 5,
         manaCost: 10,
         type: SpellType.DamageOther,
@@ -874,6 +910,7 @@ export const SpellData: { [key: string]: SpellDataDetails } = {
     "rain": {
         id: "rain",
         displayName: "Rain",
+        description: "Calls a storm which makes everything wet",
         value: 15,
         manaCost: 10,
         type: SpellType.Passive,
