@@ -454,6 +454,7 @@ interface ObjectDataDetails {
     sightRange?: number;
     spells?: [string, number][];
     actions?: string[];
+    lowHealthThreshold?: number;
     inventoryPool?: InventoryPoolProbabilities[];
     staticallyKnownComponents: IEntityConfig;
 }
@@ -1011,6 +1012,7 @@ const ObjectData: { [key: string]: ObjectDataDetails } = {
         addInventory: true,
         addPlannerAI: true,
         sightRange: 7,
+        lowHealthThreshold: 0.5,
         actions: [
             "wander",
             "chase",
@@ -1160,6 +1162,7 @@ const ObjectData: { [key: string]: ObjectDataDetails } = {
     "rat": {
         addPlannerAI: true,
         sightRange: 5,
+        lowHealthThreshold: 0.5,
         actions: [
             "wander",
             "chase",
@@ -1231,6 +1234,7 @@ const ObjectData: { [key: string]: ObjectDataDetails } = {
     "water_sprite": {
         addPlannerAI: true,
         sightRange: 9,
+        lowHealthThreshold: 0.5,
         actions: [
             "wander",
             "chase",
@@ -1293,6 +1297,7 @@ const ObjectData: { [key: string]: ObjectDataDetails } = {
         addInventory: true,
         addPlannerAI: true,
         sightRange: 10,
+        lowHealthThreshold: 0.5,
         actions: [
             "guard",
             "chase",
@@ -1368,6 +1373,7 @@ const ObjectData: { [key: string]: ObjectDataDetails } = {
         addInventory: true,
         addPlannerAI: true,
         sightRange: 8,
+        lowHealthThreshold: 0.5,
         spells: [
             ["fireball", 3],
             ["lesser_heal", 1]
@@ -1376,6 +1382,7 @@ const ObjectData: { [key: string]: ObjectDataDetails } = {
             "wander",
             "chase",
             "useHealingItem",
+            "useHealingSpell",
             "goToEnemy",
             "reposition",
             "runAway",
@@ -1531,7 +1538,7 @@ export function createEntity(
             currentOrder: "attack",
             goals,
             actions,
-            lowHealthThreshold: 0.25,
+            lowHealthThreshold: data.lowHealthThreshold ?? 0.25,
             knowsTargetPosition: false,
             hasTargetInSight: false
         });

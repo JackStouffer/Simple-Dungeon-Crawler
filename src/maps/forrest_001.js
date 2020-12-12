@@ -402,7 +402,7 @@
                         {
                          "name":"inventory",
                          "type":"string",
-                         "value":"mana_potion_weak"
+                         "value":""
                         }, 
                         {
                          "name":"objectType",

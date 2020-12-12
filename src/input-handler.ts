@@ -16,6 +16,7 @@ import {
     HitPointsComponent,
     InputHandlingComponent,
     InteractableTypeComponent,
+    PlannerAIComponent,
     PositionComponent,
     SpeedComponent
 } from "./entity";
@@ -51,15 +52,25 @@ export function mouseTarget(
         return null;
     }
 
-    for (let i = 0; i < entities.length; i++) {
-        const hpData = entities[i].getOne(HitPointsComponent);
-        const interactableData = entities[i].getOne(InteractableTypeComponent);
-        if (hpData !== undefined || interactableData !== undefined) {
-            return entities[i];
-        }
-    }
+    // SPEED
+    const res = entities
+        .filter(e => {
+            const hpData = e.getOne(HitPointsComponent);
+            const interactableData = e.getOne(InteractableTypeComponent);
+            return hpData !== undefined || interactableData !== undefined;
+        })
+        .sort((a, b) => {
+            const plannerA = a.getOne(PlannerAIComponent);
+            const plannerB = b.getOne(PlannerAIComponent);
 
-    return null;
+            if (plannerA !== undefined && plannerB === undefined) { return -1; }
+            if (plannerA === undefined && plannerB === undefined) { return 0; }
+            if (plannerA === undefined && plannerB !== undefined) { return 1; }
+            if (plannerA !== undefined && plannerB !== undefined) { return 1; }
+            return -1;
+        })[0];
+
+    return res ?? null;
 }
 
 /**

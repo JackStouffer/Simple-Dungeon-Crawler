@@ -235,13 +235,13 @@ export function meleeAttackAction(
  * @param ai The AI to act
  * @returns {Command} A use item command
  */
-export function useHealingItemAction(
+function useHealingItemAction(
     ecs: World,
     aiState: PlannerAIComponent
 ): Command {
     const inventoryData = aiState.entity.getOne(InventoryComponent);
     const displayName = aiState.entity.getOne(DisplayNameComponent);
-    if (inventoryData === undefined) { throw new Error("No inventory on owner for AI for castSpellAction"); }
+    if (inventoryData === undefined) { throw new Error("No inventory on owner for AI for useHealingItemAction"); }
     if (displayName === undefined) { throw new Error(`Entity ${aiState.entity.id} is missing DisplayNameComponent`); }
 
     const item = getItems(inventoryData)
@@ -253,6 +253,24 @@ export function useHealingItemAction(
     return new UseItemCommand(item.id, ecs);
 }
 
+function useHealingSpellAction(
+    ecs: World,
+    aiState: PlannerAIComponent
+): Command {
+    const spells = aiState.entity.getOne(SpellsComponent);
+    const displayName = aiState.entity.getOne(DisplayNameComponent);
+    if (spells === undefined) { throw new Error("No spells on owner for AI for useHealingSpellAction"); }
+    if (displayName === undefined) { throw new Error(`Entity ${aiState.entity.id} is missing DisplayNameComponent`); }
+
+    const spell = getKnownSpells(spells)
+        .filter(i => i.type === SpellType.HealSelf)
+        .sort((a, b) => a.value! - b.value!)[0];
+
+    displayMessage(`${displayName.name} casted ${spell.displayName}`);
+
+    return new UseSpellCommand(spell.id, ecs);
+}
+
 /**
  * A generator for an Action Update function.
  *
@@ -262,7 +280,7 @@ export function useHealingItemAction(
  * @param {string} spellID The ID of the spell to use
  * @returns {function} the action update function
  */
-export function castSpellAction(spellID: string) {
+function castSpellAction(spellID: string) {
     return function (ecs: World, aiState: PlannerAIComponent, map: GameMap): Command {
         const spellData = aiState.entity.getOne(SpellsComponent);
         const displayName = aiState.entity.getOne(DisplayNameComponent);
@@ -391,6 +409,12 @@ export const ActionData: { [key: string]: Action } = {
         preconditions: { lowHealth: true, hasHealingItem: true },
         postconditions: { lowHealth: false },
         updateFunction: useHealingItemAction,
+        weight: () => 1
+    },
+    "useHealingSpell": {
+        preconditions: { lowHealth: true, hasHealingSpell: true },
+        postconditions: { lowHealth: false },
+        updateFunction: useHealingSpellAction,
         weight: () => 1
     },
     "goToEnemy": {
