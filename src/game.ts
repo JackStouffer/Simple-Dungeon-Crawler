@@ -103,7 +103,6 @@ import {
     WetSystem
 } from "./effects";
 import { generateAICommand } from "./ai/commands";
-import { SpellDataDetails } from "./skills";
 import { debounce } from "lodash";
 
 globals.gameEventEmitter = new EventEmitter();
@@ -459,7 +458,6 @@ export class SimpleDungeonCrawler {
             if (item !== null) {
                 switch (item.type) {
                     case ItemType.HealSelf:
-                    case ItemType.AddManaSelf:
                     case ItemType.ClairvoyanceScroll:
                     case ItemType.HasteSelf:
                     case ItemType.WildDamageScroll:
@@ -495,7 +493,7 @@ export class SimpleDungeonCrawler {
                 return;
             }
 
-            const spell: Nullable<SpellDataDetails> = this.spellSelectionMenu.handleInput(
+            const spell = this.spellSelectionMenu.handleInput(
                 getKnownSpells(playerSpells)
             );
 

@@ -22,14 +22,13 @@ import {
     PositionComponent,
     SpeedComponent,
     SpeedEffectComponent,
-    StatsComponent,
     WetableComponent
 } from "./entity";
 import { randomIntFromInterval, Nullable, assertUnreachable } from "./util";
 import { mouseTarget } from "./input-handler";
-import { addMana, getEffectiveHitPointData, getEffectiveStatData, heal, takeDamage } from "./fighter";
+import { getEffectiveHitPointData, getEffectiveStatData, heal, takeDamage } from "./fighter";
 
-interface Area {
+export interface Area {
     width: number;
     height: number;
 }
@@ -50,7 +49,6 @@ export interface SpellDataDetails {
     id: string;
     displayName: string;
     description: string;
-    manaCost: number;
     type: SpellType;
     value: Nullable<number>;
     damageType?: DamageType;
@@ -100,40 +98,6 @@ export function castHeal(
     }
 
     heal(user.getOne(HitPointsComponent)!, item.value);
-    return true;
-}
-
-/**
- * Call the addMana function on the user's fighter instance. Calls
- * the provided callback with true if the item was successfully used
- * and false otherwise.
- *
- * @param {Object} item The item data
- * @param {GameObject} user The object using the item
- */
-export function castIncreaseMana(
-    ecs: World,
-    item: ItemDataDetails | SpellDataDetails,
-    user: Entity
-): boolean {
-    if (globals.Game === null) { throw new Error("Global game object is null"); }
-    if (item.value === null) { throw new Error("Item does not have a value"); }
-
-    const statsData = getEffectiveStatData(user);
-    if (statsData === null) { throw new Error(`Trying to heal entity ${user.id} without any hp data`); }
-
-    if (statsData.mana >= statsData.maxMana) {
-        if (user === globals.Game.player) {
-            displayMessage("You are already at full mana.");
-        } else {
-            const displayName = user.getOne(DisplayNameComponent)!;
-            displayMessage(`${displayName.name} tries and fails to take a mana potion`);
-        }
-
-        return false;
-    }
-
-    addMana(user.getOne(StatsComponent)!, item.value);
     return true;
 }
 
@@ -623,13 +587,6 @@ export const ItemData: { [key: string]: ItemDataDetails } = {
         type: ItemType.HealSelf,
         useFunc: castHeal
     },
-    "mana_potion_weak": {
-        displayName: "Weak Potion of Mana",
-        description: "Potion that restores a small amount of mana",
-        value: 25,
-        type: ItemType.AddManaSelf,
-        useFunc: castIncreaseMana
-    },
     "lightning_scroll_weak": {
         displayName: "Weak Scroll of Lightning Bolt",
         description: "Conjure a lightning bolt that damages a target with lightning damage",
@@ -763,7 +720,7 @@ export const ItemData: { [key: string]: ItemDataDetails } = {
 };
 
 /**
- * Defines all the properties of a spell: the name, mana cost,
+ * Defines all the properties of a spell: the name,
  * damage values, damage type, and the function to execute.
  */
 export const SpellData: { [key: string]: SpellDataDetails } = {
@@ -771,7 +728,6 @@ export const SpellData: { [key: string]: SpellDataDetails } = {
         id: "lightning_bolt",
         displayName: "Lightning Bolt",
         description: "Send a bolt of lighting hurtling towards your foes",
-        manaCost: 10,
         value: 20,
         type: SpellType.DamageOther,
         damageType: DamageType.Electric,
@@ -781,7 +737,6 @@ export const SpellData: { [key: string]: SpellDataDetails } = {
         id: "wild_lightning_bolt",
         displayName: "Wild Lightning Bolt",
         description: "Summons a lightning bolt that's beyond your control and attacks randomly with lightning damage",
-        manaCost: 10,
         value: 30,
         type: SpellType.WildDamage,
         damageType: DamageType.Electric,
@@ -791,7 +746,6 @@ export const SpellData: { [key: string]: SpellDataDetails } = {
         id: "fireball",
         displayName: "Fireball",
         description: "Hurl a ball of fire",
-        manaCost: 50,
         value: 20,
         type: SpellType.DamageOther,
         damageType: DamageType.Fire,
@@ -802,7 +756,6 @@ export const SpellData: { [key: string]: SpellDataDetails } = {
         id: "wild_fireball",
         displayName: "Wild Fireball",
         description: "Summons a ball of fire that's beyond your control and attacks randomly",
-        manaCost: 10,
         value: 30,
         type: SpellType.WildDamage,
         damageType: DamageType.Fire,
@@ -812,7 +765,6 @@ export const SpellData: { [key: string]: SpellDataDetails } = {
         id: "confuse",
         displayName: "Confuse",
         description: "Your target loses control of their actions",
-        manaCost: 20,
         value: 8,
         type: SpellType.DamageOther,
         useFunc: castConfuse
@@ -821,7 +773,6 @@ export const SpellData: { [key: string]: SpellDataDetails } = {
         id: "clairvoyance",
         displayName: "Clairvoyance",
         description: "Use sensory magics to learn the layout of the whole map",
-        manaCost: 20,
         value: null,
         type: SpellType.Passive,
         useFunc: castClairvoyance
@@ -830,7 +781,6 @@ export const SpellData: { [key: string]: SpellDataDetails } = {
         id: "lesser_heal",
         displayName: "Lesser Heal",
         description: "Gives a small amount of hit points",
-        manaCost: 10,
         value: 25,
         type: SpellType.HealSelf,
         useFunc: castHeal
@@ -839,7 +789,6 @@ export const SpellData: { [key: string]: SpellDataDetails } = {
         id: "heal",
         displayName: "Heal",
         description: "Heals a good amount of health",
-        manaCost: 30,
         value: 50,
         type: SpellType.HealSelf,
         useFunc: castHeal
@@ -848,7 +797,6 @@ export const SpellData: { [key: string]: SpellDataDetails } = {
         id: "greater_heal",
         displayName: "Greater Heal",
         description: "Gives a large amount of health",
-        manaCost: 50,
         value: 100,
         type: SpellType.HealSelf,
         useFunc: castHeal
@@ -857,7 +805,6 @@ export const SpellData: { [key: string]: SpellDataDetails } = {
         id: "lesser_haste",
         displayName: "Lesser Haste",
         description: "Haste gives you more actions per turn",
-        manaCost: 30,
         value: 10,
         type: SpellType.Effect,
         useFunc: castHaste
@@ -866,7 +813,6 @@ export const SpellData: { [key: string]: SpellDataDetails } = {
         id: "lesser_slow",
         displayName: "Lesser Slow",
         description: "Only allow your target to take one action per two turns",
-        manaCost: 30,
         value: 10,
         type: SpellType.DamageOther,
         useFunc: castSlow
@@ -875,7 +821,6 @@ export const SpellData: { [key: string]: SpellDataDetails } = {
         id: "fire_wall",
         displayName: "Wall of Fire",
         description: "Conjure a wall of flame that damages all who walk through it",
-        manaCost: 30,
         value: 10,
         type: SpellType.DamageOther,
         damageType: DamageType.Fire,
@@ -889,7 +834,6 @@ export const SpellData: { [key: string]: SpellDataDetails } = {
         id: "ice_wall",
         displayName: "Wall of Ice",
         description: "Conjure a wall of ice that blocks foe's path",
-        manaCost: 30,
         value: null,
         type: SpellType.DamageOther,
         areaOfEffect: {
@@ -903,7 +847,6 @@ export const SpellData: { [key: string]: SpellDataDetails } = {
         displayName: "Combust",
         description: "Doesn't do much damage, but is guaranteed to light something on fire",
         value: 5,
-        manaCost: 10,
         type: SpellType.DamageOther,
         useFunc: castCombust
     },
@@ -912,7 +855,6 @@ export const SpellData: { [key: string]: SpellDataDetails } = {
         displayName: "Rain",
         description: "Calls a storm which makes everything wet",
         value: 15,
-        manaCost: 10,
         type: SpellType.Passive,
         useFunc: castRain
     }

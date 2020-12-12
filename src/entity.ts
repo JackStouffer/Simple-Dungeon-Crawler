@@ -184,8 +184,6 @@ export class SpeedEffectComponent extends Component {
 }
 
 export class StatsComponent extends Component {
-    mana: number;
-    maxMana: number;
     strength: number;
     defense: number;
     criticalChance: number;
@@ -193,8 +191,6 @@ export class StatsComponent extends Component {
     ailmentSusceptibility: number;
 
     static properties = {
-        mana: 100,
-        maxMana: 100,
         strength: 5,
         defense: 1,
         criticalChance: 0.05,
@@ -205,14 +201,14 @@ export class StatsComponent extends Component {
 
 export class StatsEffectComponent extends Component {
     name: string;
-    stat: "mana" | "maxMana" | "strength" | "defense" | "criticalChance" | "criticalDamageMultiplier" | "ailmentSusceptibility";
+    stat: "strength" | "defense" | "criticalChance" | "criticalDamageMultiplier" | "ailmentSusceptibility";
     modifierType: "multiply" | "add";
     turnsLeft: number;
     value: number;
 
     static properties = {
         name: "",
-        stat: "mana",
+        stat: "strength",
         modifierType: "add",
         turnsLeft: 0,
         value: 0
@@ -250,7 +246,7 @@ export class DamageAffinityComponent extends Component {
 }
 
 export class SpellsComponent extends Component {
-    knownSpells: Set<string>;
+    knownSpells: Map<string, number>;
 
     static properties = {
         knownSpells: null
@@ -267,7 +263,6 @@ export class PlannerAIComponent extends Component {
     goals: Set<string>;
     actions: Set<string>;
     lowHealthThreshold: number;
-    lowManaThreshold: number;
     knowsTargetPosition: boolean;
     hasTargetInSight: boolean;
 
@@ -282,7 +277,6 @@ export class PlannerAIComponent extends Component {
         goals: null,
         actions: null,
         lowHealthThreshold: 0.25,
-        lowManaThreshold: 0.25,
         knowsTargetPosition: false,
         hasTargetInSight: false
     }
@@ -458,7 +452,7 @@ interface ObjectDataDetails {
     addInput?: boolean;
     addPlannerAI?: boolean;
     sightRange?: number;
-    spells?: string[];
+    spells?: [string, number][];
     actions?: string[];
     inventoryPool?: InventoryPoolProbabilities[];
     staticallyKnownComponents: IEntityConfig;
@@ -951,7 +945,10 @@ const ObjectData: { [key: string]: ObjectDataDetails } = {
     "player": {
         addInventory: true,
         addInput: true,
-        spells: [],
+        spells: [
+            ["fireball", 10],
+            ["lesser_heal", 5]
+        ],
         staticallyKnownComponents: {
             id: "player",
             tags: ["blocks", "input", "sentient"],
@@ -982,8 +979,6 @@ const ObjectData: { [key: string]: ObjectDataDetails } = {
                     maxTilesPerMove: 7
                 },
                 StatsComponent: {
-                    mana: 100,
-                    maxMana: 100,
                     strength: 5,
                     defense: 1,
                     criticalChance: 0.05,
@@ -1056,8 +1051,6 @@ const ObjectData: { [key: string]: ObjectDataDetails } = {
                     onDeath: DeathType.Default
                 },
                 StatsComponent: {
-                    mana: 0,
-                    maxMana: 0,
                     strength: 3,
                     defense: 1,
                     criticalChance: 0.05,
@@ -1136,8 +1129,6 @@ const ObjectData: { [key: string]: ObjectDataDetails } = {
                     onDeath: DeathType.Default
                 },
                 StatsComponent: {
-                    mana: 0,
-                    maxMana: 0,
                     strength: 7,
                     defense: 4,
                     criticalChance: 0.05,
@@ -1209,8 +1200,6 @@ const ObjectData: { [key: string]: ObjectDataDetails } = {
                     onDeath: DeathType.Default
                 },
                 StatsComponent: {
-                    mana: 0,
-                    maxMana: 0,
                     strength: 2,
                     defense: 1,
                     criticalChance: 0.05,
@@ -1281,8 +1270,6 @@ const ObjectData: { [key: string]: ObjectDataDetails } = {
                     onDeath: DeathType.Default
                 },
                 StatsComponent: {
-                    mana: 0,
-                    maxMana: 0,
                     strength: 2,
                     defense: 1,
                     criticalChance: 0.05,
@@ -1349,8 +1336,6 @@ const ObjectData: { [key: string]: ObjectDataDetails } = {
                     onDeath: DeathType.Default
                 },
                 StatsComponent: {
-                    mana: 0,
-                    maxMana: 0,
                     strength: 2,
                     defense: 1,
                     criticalChance: 0.05,
@@ -1384,14 +1369,13 @@ const ObjectData: { [key: string]: ObjectDataDetails } = {
         addPlannerAI: true,
         sightRange: 8,
         spells: [
-            "fireball",
-            "lesser_heal"
+            ["fireball", 3],
+            ["lesser_heal", 1]
         ],
         actions: [
             "wander",
             "chase",
             "useHealingItem",
-            "useManaItem",
             "goToEnemy",
             "reposition",
             "runAway",
@@ -1431,8 +1415,6 @@ const ObjectData: { [key: string]: ObjectDataDetails } = {
                     onDeath: DeathType.Default
                 },
                 StatsComponent: {
-                    mana: 100,
-                    maxMana: 100,
                     strength: 2,
                     defense: 1,
                     criticalChance: 0.05,
@@ -1469,7 +1451,7 @@ for (const objectID in ObjectData) {
     if (data.spells !== undefined && data.actions !== undefined) {
         for (let i = 0; i < data.spells.length; i++) {
             const spell = data.spells[i];
-            data.actions.push(`castSpell_${spell}`);
+            data.actions.push(`castSpell_${spell[0]}`);
         }
     }
 }
@@ -1498,7 +1480,9 @@ export function createEntity(
     }
 
     if (data.spells !== undefined && entity.has(SpellsComponent) === false) {
-        entity.addComponent({ type: "SpellsComponent", knownSpells: new Set(data.spells) });
+        const spells = new Map();
+        data.spells.forEach(s => spells.set(s[0], s[1]));
+        entity.addComponent({ type: "SpellsComponent", knownSpells: spells });
     }
 
     if (data?.addInventory === true && entity.has(InventoryComponent) === false) {
@@ -1548,7 +1532,6 @@ export function createEntity(
             goals,
             actions,
             lowHealthThreshold: 0.25,
-            lowManaThreshold: 0.25,
             knowsTargetPosition: false,
             hasTargetInSight: false
         });

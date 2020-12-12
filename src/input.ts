@@ -80,6 +80,11 @@ function getLeftMouseDown(): Nullable<Point> {
     ) { return null; }
 
     const pos = globals.Game.display.eventToPosition(mouseDownEvent);
+
+    if (pos[0] < 0 || pos[1] < 0) {
+        return null;
+    }
+
     return globals.Game.gameCamera.screenToWorld(pos[0], pos[1]);
 }
 

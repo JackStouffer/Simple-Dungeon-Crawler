@@ -51,8 +51,8 @@ export function giveSpellsInteract(actor: Entity, interactable: Entity): void {
         throw new Error(`Entity ${interactable.id} is missing a SpellsComponent`);
     }
 
-    for (const spell of spellData.knownSpells.values()) {
-        const res = addSpellById(actor, spell);
+    for (const [spell, count] of spellData.knownSpells.entries()) {
+        const res = addSpellById(actor, spell, count);
         if (actor === globals.Game?.player) {
             if (res) {
                 displayMessage(`You learned a new spell: ${SpellData[spell].displayName}`);

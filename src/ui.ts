@@ -23,10 +23,10 @@ import {
     WetableComponent
 } from "./entity";
 import { InventoryItemDetails } from "./inventory";
-import { getEffectiveHitPointData, getEffectiveStatData } from "./fighter";
+import { getEffectiveHitPointData, getEffectiveStatData, KnownSpellDetails } from "./fighter";
 import { GameMap, getEntitiesAtLocation } from "./map";
 import { assertUnreachable, Nullable } from "./util";
-import { SpellDataDetails } from "./skills";
+import { SpellData, SpellDataDetails } from "./skills";
 
 export function drawStatusBar(
     display: Display,
@@ -63,7 +63,6 @@ export function drawStatusBar(
     }
 
     display.drawText(1, HEIGHT - UI_HEIGHT, `%c{white}%b{${bgColor}}HP: ${hpData.hp}/${hpData.maxHp}`);
-    display.drawText(14, HEIGHT - UI_HEIGHT, `%c{white}%b{${bgColor}}Mana: ${statData.mana}/${statData.maxMana}`);
     display.drawText(30, HEIGHT - UI_HEIGHT, `%c{white}%b{${bgColor}}STR: ${statData.strength}`);
     display.drawText(38, HEIGHT - UI_HEIGHT, `%c{white}%b{${bgColor}}DEF: ${statData.defense}`);
     display.drawText(46, HEIGHT - UI_HEIGHT, `%c{white}%b{${bgColor}}EXP: ${levelData.experience}/${(LEVEL_UP_BASE + levelData.level * LEVEL_UP_FACTOR)}`);
@@ -261,7 +260,7 @@ export class SpellSelectionMenu {
         this.currentSelection = 0;
     }
 
-    draw(spells: SpellDataDetails[]): void {
+    draw(spells: KnownSpellDetails[]): void {
         if (globals.Game === null) { throw new Error("Global Game object is null"); }
         if (globals.Game.display === null) { throw new Error("Cannot draw InventoryMenu when display is null"); }
 
@@ -317,7 +316,7 @@ export class SpellSelectionMenu {
             globals.Game.display.drawText(
                 40,
                 (i - start) + 3,
-                `%c{white}%b{black}cost: ${spell.manaCost}`
+                `%c{white}%b{black}count: ${spell.count}`
             );
         }
 
@@ -338,12 +337,12 @@ export class SpellSelectionMenu {
         }
     }
 
-    handleInput(spells: SpellDataDetails[]): Nullable<SpellDataDetails> {
+    handleInput(spells: KnownSpellDetails[]): Nullable<SpellDataDetails> {
         if (globals.gameEventEmitter === null) { throw new Error("Global gameEventEmitter is null"); }
 
         if (input.isDown("Enter")) {
             globals.gameEventEmitter.emit("ui.select");
-            return spells[this.currentSelection];
+            return SpellData[spells[this.currentSelection].id];
         }
 
         if (input.isDown("ArrowUp") && this.currentSelection > 0) {

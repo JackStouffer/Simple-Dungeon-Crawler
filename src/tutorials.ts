@@ -20,7 +20,7 @@ export function explainMovement() {
 
 export function explainAttacking() {
     if (!hasMessageBeenShown.attack) {
-        displayMessage("Click enemy's to attack", MessageType.Tutorial);
+        displayMessage("Click on an enemy when next to it to attack", MessageType.Tutorial);
         playPing();
         hasMessageBeenShown.attack = true;
     }

@@ -181,9 +181,6 @@ export function getPlan(aiState: PlannerAIComponent): Nullable<string> {
     if (aiState.currentOrder === "attack") {
         stateStack.push({ targetKilled: true });
     }
-    if (worldState.lowMana === true) {
-        stateStack.push({ lowMana: false });
-    }
     if (worldState.lowHealth === true) {
         stateStack.push({ lowHealth: false });
     }

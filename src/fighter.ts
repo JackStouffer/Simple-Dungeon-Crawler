@@ -10,7 +10,8 @@ import {
     DamageType,
     SpellType,
     DeathType,
-    Affinity
+    Affinity,
+    StatusEffectType
 } from "./constants";
 import {
     createEntity,
@@ -38,8 +39,8 @@ import {
     WetableComponent
 } from "./entity";
 import { displayMessage, MessageType } from "./ui";
-import { assertUnreachable } from "./util";
-import { SpellData, SpellDataDetails } from "./skills";
+import { assertUnreachable, Nullable } from "./util";
+import { SpellData, Area } from "./skills";
 import { createPassableSightCallback } from "./ai/commands";
 import { getEntitiesAtLocation } from "./map";
 
@@ -275,7 +276,6 @@ export class LevelUpSystem extends System {
                 }
 
                 if (statsData !== undefined && effectiveStats !== null) {
-                    statsData.mana = effectiveStats.maxMana;
                     statsData.strength++;
                     statsData.defense++;
                     statsData.update();
@@ -332,15 +332,13 @@ export function getEffectiveHitPointData(entity: Entity) {
     });
 
     // Max hp modifiers should not kill the player
-    // no such check for mana so effects like "silence"
-    // work
     if (newHp.maxHp <= 0) {
         newHp.maxHp = 1;
     }
 
-    // If the current max HP or mana is less than the current
-    // hp or mana, we want to reduce the actual hp or mana rather
-    // than the effective hp or mana, so that reducing the max HP
+    // If the current max HP is less than the current
+    // hp we want to reduce the actual hp rather
+    // than the effective hp so that reducing the max HP
     // "damages" the fighter so when the max HP goes back up, the
     // HP is still lowered
     if (hpData.hp > newHp.maxHp) {
@@ -361,20 +359,10 @@ export function getEffectiveStatData(entity: Entity) {
     if (stats === undefined) { return null; }
     if (effects.size === 0) { return stats; }
 
-    let newStats = pick(stats, "mana", "maxMana", "strength", "defense", "criticalChance", "criticalDamageMultiplier", "ailmentSusceptibility");
+    let newStats = pick(stats, "strength", "defense", "criticalChance", "criticalDamageMultiplier", "ailmentSusceptibility");
     effects.forEach(e => {
         newStats = calculateStatModifier(e, newStats);
     });
-
-    // If the current max HP or mana is less than the current
-    // hp or mana, we want to reduce the actual hp or mana rather
-    // than the effective hp or mana, so that reducing the max HP
-    // "damages" the fighter so when the max HP goes back up, the
-    // HP is still lowered
-    if (stats.mana > newStats.maxMana) {
-        stats.mana = newStats.maxMana;
-        newStats.mana = newStats.maxMana;
-    }
 
     return newStats;
 }
@@ -528,28 +516,16 @@ export function heal(hpData: HitPointsComponent, amount: number): void {
     }
 }
 
-/**
- * Reduce the fighter's mana by a given amount. Resulting
- * fighter mana is automatically clamped to a min of zero.
- */
-export function useMana(stats: StatsComponent, amount: number): void {
-    stats.mana = Math.max(stats.mana - amount, 0);
-    stats.update();
-}
-
-/**
- * Add mana to the fighter. Total fighter's mana is automatically
- * clamped to the max effective mana.
- */
-export function addMana(stats: StatsComponent, amount: number): void {
-    const effectiveStats = getEffectiveStatData(stats.entity);
-    if (effectiveStats === null) { throw new Error(`getEffectiveStatData shouldn't be null for ${stats.entity.id}`); }
-
-    stats.mana += amount;
-    if (stats.mana > effectiveStats.maxMana) {
-        stats.mana = effectiveStats.maxMana;
+export function useSpell(spellData: SpellsComponent, id: string) {
+    if (!spellData.knownSpells.has(id)) {
+        throw new Error(`Item ${id} not in inventory`);
     }
-    stats.update();
+
+    const count = spellData.knownSpells.get(id)! - 1;
+    if (count > -1) {
+        spellData.knownSpells.set(id, count);
+    }
+    spellData.update();
 }
 
 /**
@@ -559,7 +535,7 @@ export function addMana(stats: StatsComponent, amount: number): void {
  * @param {String} id A spell id
  * @returns {Boolean} If the spell was successfully learned
  */
-export function addSpellById(entity: Entity, id: string): boolean {
+export function addSpellById(entity: Entity, id: string, count: number): boolean {
     if (globals.Game === null) { throw new Error("Global Game object is null"); }
     if (globals.gameEventEmitter === null) { throw new Error("Global gameEventEmitter object is null"); }
     if (!(id in SpellData)) { throw new Error(`${id} is not a valid spell id`); }
@@ -575,13 +551,37 @@ export function addSpellById(entity: Entity, id: string): boolean {
         }
     }
 
-    spellData.knownSpells.add(id);
+    spellData.knownSpells.set(id, count);
     spellData.update();
     return true;
 }
 
-export function getKnownSpells(data: SpellsComponent): SpellDataDetails[] {
-    return [...data.knownSpells].map(s => SpellData[s]);
+export interface KnownSpellDetails {
+    id: string;
+    count: number;
+    displayName: string;
+    description: string;
+    type: SpellType;
+    value: Nullable<number>;
+    damageType?: DamageType;
+    statusEffect?: StatusEffectType;
+    areaOfEffect?: Area;
+}
+
+export function getKnownSpells(data: SpellsComponent): KnownSpellDetails[] {
+    return [...data.knownSpells.entries()].map(([k, v]) => {
+        return {
+            id: k,
+            count: v,
+            displayName: SpellData[k].displayName,
+            description: SpellData[k].description,
+            type: SpellData[k].type,
+            value: SpellData[k].value,
+            damageType: SpellData[k].damageType,
+            statusEffect: SpellData[k].statusEffect,
+            areaOfEffect: SpellData[k].areaOfEffect
+        };
+    });
 }
 
 export function hasSpell(entity: Entity, spellID: string) {

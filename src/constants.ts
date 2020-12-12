@@ -62,7 +62,6 @@ export enum GameState {
 
 export enum ItemType {
     HealSelf,
-    AddManaSelf,
     DamageScroll,
     WildDamageScroll,
     ClairvoyanceScroll,

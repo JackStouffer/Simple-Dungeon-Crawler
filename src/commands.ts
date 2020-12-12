@@ -25,10 +25,11 @@ import {
     InteractableTypeComponent,
     InventoryComponent,
     PositionComponent,
+    SpellsComponent,
     StatsComponent,
     TriggerTypeComponent
 } from "./entity";
-import { attack, getEffectiveSpeedData, getEffectiveStatData, hasSpell, useMana } from "./fighter";
+import { attack, getEffectiveSpeedData, useSpell } from "./fighter";
 import { hasItem, useItem } from "./inventory";
 import { deepWaterTrigger, eventTrigger, fireTrigger, mudTrigger, shallowWaterTrigger } from "./trigger";
 import { giveItemsInteract, giveSpellsInteract, doorInteract, levelLoadInteract } from "./interactable";
@@ -497,17 +498,20 @@ export class UseSpellCommand implements Command {
     }
 
     execute(deltaTime: DOMHighResTimeStamp, actor: Entity): void {
-        if (hasSpell(actor, this.spellID) === false) { return; }
+        const spellData = actor.getOne(SpellsComponent);
+        if (spellData === undefined ||
+            spellData.knownSpells.has(this.spellID) === false) {
+            return;
+        }
 
         const details = SpellData[this.spellID];
-        const effectiveStats = getEffectiveStatData(actor);
-        if (effectiveStats === null) { return; }
 
-        if (details.manaCost > effectiveStats.mana) {
+        // fix me
+        if ((spellData.knownSpells.get(this.spellID) ?? -1) < 1) {
             this.didUseSpell = false;
 
             if (actor === globals.Game?.player) {
-                displayMessage(`You don't have enough mana to cast ${details.displayName}`);
+                displayMessage(`You don't have enough casts to use ${details.displayName}`);
             }
 
             return;
@@ -523,8 +527,8 @@ export class UseSpellCommand implements Command {
         );
 
         if (this.didUseSpell) {
-            const statData = actor.getOne(StatsComponent)!;
-            useMana(statData, details.manaCost);
+            const statData = actor.getOne(SpellsComponent)!;
+            useSpell(statData, details.id);
         }
     }
 }

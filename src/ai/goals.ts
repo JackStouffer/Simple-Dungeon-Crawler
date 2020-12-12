@@ -5,9 +5,10 @@ import {
     FearAIComponent,
     InventoryComponent,
     PlannerAIComponent,
-    PositionComponent
+    PositionComponent,
+    SpellsComponent
 } from "../entity";
-import { getEffectiveHitPointData, getEffectiveStatData } from "../fighter";
+import { getEffectiveHitPointData } from "../fighter";
 import { getItems } from "../inventory";
 import { distanceBetweenPoints } from "../map";
 import { SpellData } from "../skills";
@@ -32,13 +33,11 @@ export function resolveNextToTarget(ai: Entity): boolean {
     return distanceBetweenPoints(pos, targetPos) < 1.5;
 }
 
-export function resolveEnoughManaForSpellGenerator(spellID: string) {
+export function resolveEnoughCastsForSpellGenerator(spellID: string) {
     return function (ai: Entity): boolean {
-        const statData = getEffectiveStatData(ai);
-        if (statData === null) { return false; }
-
-        const spellData = SpellData[spellID];
-        return statData.mana >= spellData.manaCost;
+        const spellData = ai.getOne(SpellsComponent);
+        if (spellData === undefined) { return false; }
+        return (spellData.knownSpells.get(spellID) ?? -1) > 0;
     };
 }
 
@@ -48,23 +47,6 @@ export function resolveLowHealth(ai: Entity): boolean {
     if (hpData === null || aiState === undefined) { return false; }
 
     return (hpData.hp / hpData.maxHp) <= aiState.lowHealthThreshold;
-}
-
-export function resolveLowMana(ai: Entity): boolean {
-    const statData = getEffectiveStatData(ai);
-    const aiState = ai.getOne(PlannerAIComponent);
-    if (statData === null || aiState === undefined) { return false; }
-
-    return (statData.mana / statData.maxMana) <= aiState.lowManaThreshold;
-}
-
-export function resolveHasManaItem(ai: Entity): boolean {
-    const inventoryData = ai.getOne(InventoryComponent);
-    if (inventoryData === undefined) { return false; }
-
-    const manaItems = getItems(inventoryData)
-        .filter(i => i.type === ItemType.AddManaSelf);
-    return manaItems.length > 0;
 }
 
 export function resolveHasHealingItem(ai: Entity): boolean {
@@ -124,14 +106,8 @@ export const GoalData: { [key: string]: GoalDataDetails } = {
     "nextToTarget": {
         resolver: resolveNextToTarget
     },
-    "lowMana": {
-        resolver: resolveLowMana
-    },
     "lowHealth": {
         resolver: resolveLowHealth
-    },
-    "hasManaItem": {
-        resolver: resolveHasManaItem
     },
     "hasHealingItem": {
         resolver: resolveHasHealingItem
@@ -158,14 +134,14 @@ export const GoalData: { [key: string]: GoalDataDetails } = {
 for (const key in SpellData) {
     const data = SpellData[key];
     // capitalize the first letter
-    const goal = `enoughManaFor_${key}`;
+    const goal = `hasCastsFor_${key}`;
     if (data.type === SpellType.DamageOther) {
         GoalData[goal] = {
-            resolver: resolveEnoughManaForSpellGenerator(key)
+            resolver: resolveEnoughCastsForSpellGenerator(key)
         };
     } else if (data.type === SpellType.HealSelf) {
         GoalData[goal] = {
-            resolver: resolveEnoughManaForSpellGenerator(key)
+            resolver: resolveEnoughCastsForSpellGenerator(key)
         };
     }
 }

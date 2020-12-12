@@ -254,30 +254,6 @@ export function useHealingItemAction(
 }
 
 /**
- * Generate a command to use the most effective add mana item
- * in the AI's inventory.
- * @param ai The AI to act
- * @returns {Command} A use item command
- */
-export function useManaItemAction(
-    ecs: World,
-    aiState: PlannerAIComponent
-): Command {
-    const inventoryData = aiState.entity.getOne(InventoryComponent);
-    const displayName = aiState.entity.getOne(DisplayNameComponent);
-    if (inventoryData === undefined) { throw new Error("No inventory on owner for AI for castSpellAction"); }
-    if (displayName === undefined) { throw new Error(`Entity ${aiState.entity.id} is missing DisplayNameComponent`); }
-
-    const item = getItems(inventoryData)
-        .filter(i => i.type === ItemType.AddManaSelf)
-        .sort((a, b) => a.value! - b.value!)[0];
-
-    displayMessage(`${displayName.name} used a ${item.displayName}`);
-
-    return new UseItemCommand(item.id, ecs);
-}
-
-/**
  * A generator for an Action Update function.
  *
  * The generated update function will return a command
@@ -411,12 +387,6 @@ export const ActionData: { [key: string]: Action } = {
         updateFunction: chaseAction,
         weight: () => 1
     },
-    "useManaItem": {
-        preconditions: { lowMana: true, hasManaItem: true },
-        postconditions: { lowMana: false },
-        updateFunction: useManaItemAction,
-        weight: () => 1
-    },
     "useHealingItem": {
         preconditions: { lowHealth: true, hasHealingItem: true },
         postconditions: { lowHealth: false },
@@ -459,7 +429,7 @@ export const ActionData: { [key: string]: Action } = {
 for (const key in SpellData) {
     const data = SpellData[key];
     // capitalize the first letter
-    const goal = `enoughManaFor_${key}`;
+    const goal = `hasCastsFor_${key}`;
     const action = `castSpell_${key}`;
     if (data.type === SpellType.DamageOther) {
         ActionData[action] = {
