@@ -37,7 +37,7 @@ interface Item {
 }
 
 /**
- * @class Simplified A* algorithm: all edges have a value of 1
+ * @class Simplified A* algorithm
  * @augments ROT.Path
  * @see ROT.Path
  */

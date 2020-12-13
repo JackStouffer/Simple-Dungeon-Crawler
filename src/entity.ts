@@ -1090,7 +1090,7 @@ const ObjectData: { [key: string]: ObjectDataDetails } = {
             "chase",
             "useHealingItem",
             "goToEnemy",
-            "reposition",
+            "goToSafePosition",
             "meleeAttack"
         ],
         inventoryPool: [
@@ -1303,7 +1303,7 @@ const ObjectData: { [key: string]: ObjectDataDetails } = {
             "chase",
             "useHealingItem",
             "goToEnemy",
-            "reposition",
+            "goToSafePosition",
             "runAway",
             "meleeAttack"
         ],
@@ -1384,7 +1384,7 @@ const ObjectData: { [key: string]: ObjectDataDetails } = {
             "useHealingItem",
             "useHealingSpell",
             "goToEnemy",
-            "reposition",
+            "goToSafePosition",
             "runAway",
             "meleeAttack"
         ],

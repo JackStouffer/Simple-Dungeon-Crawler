@@ -35,6 +35,7 @@ import { Entity, World } from "ape-ecs";
 import { getItems } from "../inventory";
 import { getKnownSpells } from "../fighter";
 import { SpellData } from "../skills";
+import { isPositionPotentiallyDangerous } from "./goals";
 
 /**
  * Calculate a path from a game object to the give x and y
@@ -362,6 +363,39 @@ export function runAwayAction(
     return new GoToLocationCommand(path, ecs, map, triggerMap);
 }
 
+function goToSafePositionAction(
+    ecs: World,
+    aiState: PlannerAIComponent,
+    map: GameMap,
+    triggerMap: Map<string, Entity>
+): Command {
+    const pos = aiState.entity.getOne(PositionComponent);
+    const speedData = aiState.entity.getOne(SpeedComponent);
+    if (pos === undefined || speedData === undefined) {
+        throw new Error("Missing data when trying to run away");
+    }
+
+    const bfs = new Path.ReverseAStar(
+        (x, y) => !isPositionPotentiallyDangerous(ecs, aiState.entity, x, y),
+        createPassableCallback(pos)
+    );
+
+    let path: number[][] = [];
+    function pathCallback(x: number, y: number) {
+        path.splice(0, 0, [x, y]);
+    }
+    bfs.compute(pos.x, pos.y, pathCallback);
+
+    if (path.length === 0) {
+        return new NoOpCommand(true);
+    }
+
+    // remove our own position
+    path.shift();
+    path = path.slice(0, speedData.maxTilesPerMove);
+    return new GoToLocationCommand(path, ecs, map, triggerMap);
+}
+
 interface Action {
     preconditions: { [key: string]: boolean },
     postconditions: { [key: string]: boolean }
@@ -429,10 +463,10 @@ export const ActionData: { [key: string]: Action } = {
         updateFunction: meleeAttackAction,
         weight: () => 1
     },
-    "reposition": {
+    "goToSafePosition": {
         preconditions: { inDangerousArea: true },
         postconditions: { inDangerousArea: false },
-        updateFunction: () => { return new NoOpCommand(true); },
+        updateFunction: goToSafePositionAction,
         weight: () => 1
     },
     "runAway": {

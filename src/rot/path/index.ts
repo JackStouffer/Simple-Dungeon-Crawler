@@ -28,5 +28,6 @@
 
 import Dijkstra from "./dijkstra";
 import AStar from "./astar";
+import ReverseAStar from "./reverse_astar";
 
-export default { Dijkstra, AStar };
+export default { Dijkstra, AStar, ReverseAStar };

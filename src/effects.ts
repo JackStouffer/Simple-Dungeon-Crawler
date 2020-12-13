@@ -61,6 +61,7 @@ export class OnFireSystem extends System {
                     // SPEED: use Quad Tree, O(m*n)
                     const firePos = entity.getOne(PositionComponent);
                     if (firePos !== undefined) {
+                        // TODO just use DIRSs
                         const neighborPositions = new Set([
                             `${firePos.x-1},${firePos.y}`,
                             `${firePos.x},${firePos.y-1}`,
