@@ -254,7 +254,7 @@ export class SpellsComponent extends Component {
 }
 
 export class PlannerAIComponent extends Component {
-    target: Entity; // TODO change to nullable entity
+    target: Nullable<Entity>;
     sightRange: number;
     planner: Planner;
     previousWorldState: PlannerWorldState;
@@ -1345,6 +1345,11 @@ const ObjectData: { [key: string]: ObjectDataDetails } = {
                     turnsWithTargetOutOfSight: 0,
                     loseTrackAfterNTurns: 6
                 },
+                FearAIComponent: {
+                    fear: 0,
+                    isAfraidThreshold: 30,
+                    isCowering: false
+                },
                 SpeedComponent: {
                     speed: BASE_SPEED,
                     maxTilesPerMove: 5
@@ -1425,6 +1430,11 @@ const ObjectData: { [key: string]: ObjectDataDetails } = {
                 LoseTargetAIComponent: {
                     turnsWithTargetOutOfSight: 0,
                     loseTrackAfterNTurns: 6
+                },
+                FearAIComponent: {
+                    fear: 0,
+                    isAfraidThreshold: 30,
+                    isCowering: false
                 },
                 SpeedComponent: {
                     speed: BASE_SPEED,

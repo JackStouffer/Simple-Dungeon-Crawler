@@ -211,6 +211,7 @@ function chaseAction(
  * @returns {number} the weight
  */
 function chaseWeight(aiState: PlannerAIComponent): number {
+    if (aiState.target === null) { return 1; }
     const posData = aiState.entity.getOne(PositionComponent);
     const targetPosData = aiState.target.getOne(PositionComponent);
     if (posData === undefined || targetPosData === undefined) { throw new Error("no position data for ai"); }
@@ -238,6 +239,7 @@ function meleeAttackAction(
  * effective attack
  */
 function meleeAttackWeight(aiState: PlannerAIComponent): number {
+    if (aiState.target === null) { return 1; }
     const targetHPData = aiState.target.getOne(HitPointsComponent)!;
     const stats = getEffectiveStatData(aiState.entity)!;
 
@@ -300,6 +302,8 @@ function useHealingSpellAction(
  */
 function castSpellAction(spellID: string) {
     return function (ecs: World, aiState: PlannerAIComponent, map: GameMap): Command {
+        if (aiState.target === null) { throw new Error("Cannot cast spell without a target"); }
+
         const spellData = aiState.entity.getOne(SpellsComponent);
         const displayName = aiState.entity.getOne(DisplayNameComponent);
         if (spellData === undefined) { throw new Error(`No spells on ${aiState.entity.id} for castSpellAction`); }
@@ -324,6 +328,7 @@ function castSpellAction(spellID: string) {
  */
 function castSpellWeight(spellID: string) {
     return function (aiState: PlannerAIComponent): number {
+        if (aiState.target === null) { return 1; }
         const targetHPData = aiState.target.getOne(HitPointsComponent)!;
         const damage = SpellData[spellID].value ?? 1;
 

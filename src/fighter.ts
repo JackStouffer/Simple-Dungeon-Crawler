@@ -64,7 +64,7 @@ export class DeathSystem extends System {
         return function (x: number, y: number) {
             if (targetLevelData === undefined) { return; }
 
-            // SPEED: doing O(m*n) checks here
+            // SPEED: use quad tree
             const entities = getEntitiesAtLocation(ecs, x, y);
             for (const e of entities) {
                 const fearData = e.getOne(FearAIComponent);
@@ -72,7 +72,7 @@ export class DeathSystem extends System {
                 if (fearData === undefined || levelData === undefined) { continue; }
 
                 fearData.fear += Math.max(
-                    targetLevelData.level - levelData.level, 0
+                    (targetLevelData.level - levelData.level) + 5, 1
                 );
                 fearData.update();
             }
