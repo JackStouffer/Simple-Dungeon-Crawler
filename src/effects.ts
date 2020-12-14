@@ -10,6 +10,7 @@ import {
     HitPointsComponent,
     HitPointsEffectComponent,
     PositionComponent,
+    SilenceableComponent,
     SpeedEffectComponent,
     StatsEffectComponent,
     TriggerTypeComponent,
@@ -122,6 +123,31 @@ export class WetSystem extends System {
                 effect.update();
             } else if (effect.turnsLeft <= 0) {
                 effect.wet = false;
+                effect.update();
+            }
+        }
+    }
+}
+
+export class SilenceSystem extends System {
+    private mainQuery: Query;
+
+    init() {
+        this.mainQuery = this
+            .createQuery()
+            .fromAll(SilenceableComponent)
+            .persist();
+    }
+
+    update() {
+        const entities = this.mainQuery.execute();
+        for (const entity of entities) {
+            const effect = entity.getOne(SilenceableComponent)!;
+            if (effect.turnsLeft > 0) {
+                effect.turnsLeft--;
+                effect.update();
+            } else if (effect.turnsLeft <= 0) {
+                effect.silenced = false;
                 effect.update();
             }
         }

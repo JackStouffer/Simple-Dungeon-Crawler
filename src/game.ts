@@ -57,7 +57,8 @@ import {
     RemoveAfterNTurnsSystem,
     LoadLevelComponent,
     ChestGraphicsComponent,
-    WetableComponent
+    WetableComponent,
+    SilenceableComponent
 } from "./entity";
 import {
     Command,
@@ -79,6 +80,7 @@ import {
     InventoryMenu,
     SpellSelectionMenu,
     drawStatusBar,
+    displayMessage,
 } from "./ui";
 import {
     explainMovement,
@@ -100,7 +102,8 @@ import {
     UpdateHitPointsEffectsSystem,
     UpdateStatsEffectsSystem,
     UpdateSpeedEffectsSystem,
-    WetSystem
+    WetSystem,
+    SilenceSystem
 } from "./effects";
 import { generateAICommand } from "./ai/commands";
 import { debounce } from "lodash";
@@ -265,6 +268,7 @@ export class SimpleDungeonCrawler {
         this.ecs.registerComponent(FreezableComponent, 50);
         this.ecs.registerComponent(FlammableComponent, 50);
         this.ecs.registerComponent(WetableComponent, 50);
+        this.ecs.registerComponent(SilenceableComponent, 50);
         this.ecs.registerComponent(TriggerTypeComponent, 50);
         this.ecs.registerComponent(FireTriggerComponent, 20);
         this.ecs.registerComponent(EventTriggerComponent, 20);
@@ -283,6 +287,7 @@ export class SimpleDungeonCrawler {
         this.ecs.registerSystem("postCommand", UpdateSpeedEffectsSystem);
         this.ecs.registerSystem("postCommand", WetSystem);
         this.ecs.registerSystem("postCommand", OnFireSystem);
+        this.ecs.registerSystem("postCommand", SilenceSystem);
         this.ecs.registerSystem("postCommand", LevelUpSystem);
         this.ecs.registerSystem("postCommand", DeathSystem);
         this.ecs.registerSystem("postCommand", UpdateSchedulerSystem);
@@ -415,6 +420,7 @@ export class SimpleDungeonCrawler {
         const inputHandlerState = this.player.getOne(InputHandlingComponent);
         const playerInventory = this.player.getOne(InventoryComponent);
         const playerSpells = this.player.getOne(SpellsComponent);
+        const playerSilence = this.player.getOne(SilenceableComponent);
 
         if (this.state === GameState.Gameplay) {
             if (input.isDown("Escape")) {
@@ -498,6 +504,11 @@ export class SimpleDungeonCrawler {
             );
 
             if (spell !== null) {
+                if (playerSilence !== undefined && playerSilence.silenced) {
+                    displayMessage("Cannot cast spells while silenced");
+                    return;
+                }
+
                 switch (spell.type) {
                     case SpellType.Effect:
                     case SpellType.HealSelf:

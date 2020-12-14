@@ -384,7 +384,17 @@ export class WetableComponent extends Component {
 
     static properties = {
         wet: false,
-        turnsLeft: 1
+        turnsLeft: 0
+    }
+}
+
+export class SilenceableComponent extends Component {
+    silenced: boolean;
+    turnsLeft: number;
+
+    static properties = {
+        silenced: false,
+        turnsLeft: 0
     }
 }
 
@@ -1004,6 +1014,10 @@ const ObjectData: { [key: string]: ObjectDataDetails } = {
                 WetableComponent: {
                     wet: false,
                     turnsLeft: 0
+                },
+                SilenceableComponent: {
+                    silenced: false,
+                    turnsLeft: 0
                 }
             }
         }
@@ -1445,6 +1459,10 @@ const ObjectData: { [key: string]: ObjectDataDetails } = {
                 },
                 WetableComponent: {
                     wet: false,
+                    turnsLeft: 0
+                },
+                SilenceableComponent: {
+                    silenced: false,
                     turnsLeft: 0
                 }
             }

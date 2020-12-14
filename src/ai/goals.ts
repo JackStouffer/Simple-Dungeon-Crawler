@@ -8,6 +8,7 @@ import {
     InventoryComponent,
     PlannerAIComponent,
     PositionComponent,
+    SilenceableComponent,
     SpellsComponent
 } from "../entity";
 import { getEffectiveHitPointData, getKnownSpells } from "../fighter";
@@ -40,6 +41,10 @@ function resolveEnoughCastsForSpellGenerator(spellID: string) {
     return function (ecs: World, ai: Entity): boolean {
         const spellData = ai.getOne(SpellsComponent);
         if (spellData === undefined) { return false; }
+
+        const silenceData = ai.getOne(SilenceableComponent);
+        if (silenceData?.silenced === true) { return false; }
+
         return (spellData.knownSpells.get(spellID) ?? -1) > 0;
     };
 }

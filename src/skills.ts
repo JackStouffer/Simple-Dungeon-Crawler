@@ -20,8 +20,10 @@ import {
     HitPointsComponent,
     PlannerAIComponent,
     PositionComponent,
+    SilenceableComponent,
     SpeedComponent,
     SpeedEffectComponent,
+    SpellsComponent,
     WetableComponent
 } from "./entity";
 import { randomIntFromInterval, Nullable, assertUnreachable } from "./util";
@@ -561,6 +563,43 @@ export function castRain(
     return true;
 }
 
+
+export function castSilence(
+    ecs: World,
+    item: ItemDataDetails | SpellDataDetails,
+    user: Entity,
+    target: Nullable<Point>,
+    map: Nullable<GameMap>
+): boolean {
+    if (item.value === null) { throw new Error("Item does not have a value for castDamageSpell"); }
+    if (target === null) { throw new Error("Target cannot be null for castDamageSpell"); }
+    if (map === null) { throw new Error("Map cannot be null for castDamageSpell"); }
+
+    const targetedEntity = mouseTarget(ecs, map, target);
+    if (targetedEntity === null) {
+        displayMessage("Canceled casting");
+        return false;
+    }
+
+    const targetName = targetedEntity.getOne(DisplayNameComponent)!;
+    const targetSpellData = targetedEntity.getOne(SpellsComponent);
+    const targetSilenceableData = targetedEntity.getOne(SilenceableComponent);
+    if (targetSilenceableData === undefined && targetSpellData !== undefined) {
+        displayMessage(`${targetName.name} is immune to silence effects`);
+        return false;
+    }
+    if (targetSilenceableData === undefined) {
+        displayMessage(`${targetName.name} cannot be silenced because it doesn't know any spells`);
+        return false;
+    }
+
+    displayMessage(`${targetName.name} is silenced`);
+    targetSilenceableData.silenced = true;
+    targetSilenceableData.turnsLeft = item.value;
+    targetSilenceableData.update();
+    return true;
+}
+
 /**
  * Map of item IDs and their data, including a function pointer
  * to the implementation of the item's behavior
@@ -857,5 +896,13 @@ export const SpellData: { [key: string]: SpellDataDetails } = {
         value: 15,
         type: SpellType.Passive,
         useFunc: castRain
+    },
+    "silence": {
+        id: "silence",
+        displayName: "Silence",
+        description: "Removes the target's ability to cast spells for a number of turns",
+        value: 3,
+        type: SpellType.DamageOther,
+        useFunc: castSilence
     }
 };

@@ -22,6 +22,7 @@ _In Development_
   * Enemies can now run away in fear
     * Enemies will run away when they reach a set threshold
     * They will become more and more afraid when they see powerful targets and when their allies are killed
+  * Enemies will now run away from fire
 * Technical
   * Refactor to Entity Component System design rather than the Unity-style Entity with plugin components
 * Graphical Changes
