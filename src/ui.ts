@@ -197,8 +197,8 @@ export class InventoryMenu {
         const end = Math.min(start + this.pageSize, inventoryItems.length);
 
         for (let i = start; i < end; i++) {
+            const item = inventoryItems[i];
             let displayString;
-            let item = inventoryItems[i];
 
             if (i === this.currentSelection) {
                 displayString = `%c{white}%b{grey}${item.displayName} (${item.count})`;

@@ -13,6 +13,7 @@ import {
 import {
     DisplayNameComponent,
     FearAIComponent,
+    HitPointsComponent,
     InventoryComponent,
     PatrolAIComponent,
     PatrolPathComponent,
@@ -33,7 +34,7 @@ import { ItemType, SpellType } from "../constants";
 import { Nullable } from "../util";
 import { Entity, World } from "ape-ecs";
 import { getItems } from "../inventory";
-import { getKnownSpells } from "../fighter";
+import { getEffectiveStatData, getKnownSpells } from "../fighter";
 import { SpellData } from "../skills";
 import { isPositionPotentiallyDangerous } from "./goals";
 
@@ -48,7 +49,7 @@ import { isPositionPotentiallyDangerous } from "./goals";
  * @param {boolean} popBack Should the end point be removed from the path, useful when the end is a blocked tile
  * @returns {Point} the nth step along the path
  */
-export function getStepsTowardsTarget(
+function getStepsTowardsTarget(
     ecs: World,
     actor: Entity,
     origin: Point,
@@ -91,7 +92,7 @@ export function getStepsTowardsTarget(
  * @param gameObjects The current map's list of objects
  * @returns {Command} A move command
  */
-export function wanderAction(
+function wanderAction(
     ecs: World,
     ai: PlannerAIComponent,
     map: GameMap,
@@ -119,7 +120,7 @@ export function wanderAction(
  * If the AI is at the patrol node, then set the AI's patrol node to
  * the next node.
  */
-export function patrolAction(
+function patrolAction(
     ecs: World,
     aiState: PlannerAIComponent,
     map: GameMap,
@@ -172,7 +173,7 @@ export function patrolAction(
  * @param {AIComponent} ai The ai to act
  * @returns {Command} a command to move
  */
-export function chaseAction(
+function chaseAction(
     ecs: World,
     ai: PlannerAIComponent,
     map: GameMap,
@@ -209,7 +210,7 @@ export function chaseAction(
  * @param {AIComponent} ai the ai to calculate the weight for
  * @returns {number} the weight
  */
-export function chaseWeight(aiState: PlannerAIComponent): number {
+function chaseWeight(aiState: PlannerAIComponent): number {
     const posData = aiState.entity.getOne(PositionComponent);
     const targetPosData = aiState.target.getOne(PositionComponent);
     if (posData === undefined || targetPosData === undefined) { throw new Error("no position data for ai"); }
@@ -222,12 +223,28 @@ export function chaseWeight(aiState: PlannerAIComponent): number {
  * @param ai The AI which is acting
  * @returns {Command} An attack command
  */
-export function meleeAttackAction(
+function meleeAttackAction(
     ecs: World,
     ai: PlannerAIComponent
 ): Command {
     if (ai.target === null) { throw new Error("Cannot perform meleeAttackAction without a target"); }
     return new InteractCommand(ai.target);
+}
+
+/**
+ * Set the weight of a melee attack to the resulting HP of the target
+ * after the attack. This way, the attack that takes away the most HP
+ * will have the lowest weight. Therefore, the AI will choose the most
+ * effective attack
+ */
+function meleeAttackWeight(aiState: PlannerAIComponent): number {
+    const targetHPData = aiState.target.getOne(HitPointsComponent)!;
+    const stats = getEffectiveStatData(aiState.entity)!;
+
+    return Math.max(
+        1,
+        targetHPData.hp - stats.strength
+    );
 }
 
 /**
@@ -300,10 +317,28 @@ function castSpellAction(spellID: string) {
 }
 
 /**
+ * Set the weight of a spell attack to the resulting HP of the target
+ * after the attack. This way, the attack that takes away the most HP
+ * will have the lowest weight. Therefore, the AI will choose the most
+ * effective attack
+ */
+function castSpellWeight(spellID: string) {
+    return function (aiState: PlannerAIComponent): number {
+        const targetHPData = aiState.target.getOne(HitPointsComponent)!;
+        const damage = SpellData[spellID].value ?? 1;
+
+        return Math.max(
+            1,
+            targetHPData.hp - damage
+        );
+    };
+}
+
+/**
  * Simulate running away in fear from a target by choosing a random
  * spot on the map and going to it.
  */
-export function runAwayAction(
+function runAwayAction(
     ecs: World,
     aiState: PlannerAIComponent,
     map: GameMap,
@@ -461,7 +496,7 @@ export const ActionData: { [key: string]: Action } = {
         preconditions: { nextToTarget: true, targetKilled: false },
         postconditions: { targetKilled: true },
         updateFunction: meleeAttackAction,
-        weight: () => 1
+        weight: meleeAttackWeight
     },
     "goToSafePosition": {
         preconditions: { inDangerousArea: true },
@@ -489,7 +524,7 @@ for (const key in SpellData) {
     // capitalize the first letter
     const goal = `hasCastsFor_${key}`;
     const action = `castSpell_${key}`;
-    if (data.type === SpellType.DamageOther) {
+    if (data.type === SpellType.DamageOther || data.type === SpellType.WildDamage) {
         ActionData[action] = {
             preconditions: {
                 [goal]: true,
@@ -498,7 +533,7 @@ for (const key in SpellData) {
             },
             postconditions: { targetKilled: true },
             updateFunction: castSpellAction(key),
-            weight: () => 1
+            weight: castSpellWeight(key)
         };
     } else if (data.type === SpellType.HealSelf) {
         ActionData[action] = {
