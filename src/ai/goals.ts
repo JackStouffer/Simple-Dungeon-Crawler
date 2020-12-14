@@ -223,16 +223,8 @@ export const GoalData: { [key: string]: GoalDataDetails } = {
 
 // Dynamically add spells to goals and actions
 for (const key in SpellData) {
-    const data = SpellData[key];
-    // capitalize the first letter
     const goal = `hasCastsFor_${key}`;
-    if (data.type === SpellType.DamageOther) {
-        GoalData[goal] = {
-            resolver: resolveEnoughCastsForSpellGenerator(key)
-        };
-    } else if (data.type === SpellType.HealSelf) {
-        GoalData[goal] = {
-            resolver: resolveEnoughCastsForSpellGenerator(key)
-        };
-    }
+    GoalData[goal] = {
+        resolver: resolveEnoughCastsForSpellGenerator(key)
+    };
 }

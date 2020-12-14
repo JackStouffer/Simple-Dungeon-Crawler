@@ -484,14 +484,17 @@ export function isBlocked(
         return { entity: null, blocks: true };
     }
 
+    // SPEED use quad tree
     const entities = ecs.createQuery().fromAll(PositionComponent).execute();
 
     let entity: Entity | undefined;
     for (const e of entities) {
-        const pos = e.getOne(PositionComponent);
-        if (pos !== undefined && pos.x === x && pos.y === y) {
-            entity = e;
-            break;
+        const pos = e.getOne(PositionComponent)!;
+        if (pos.x === x && pos.y === y) {
+            if (entity === undefined ||
+                (entity !== undefined && !entity.tags.has("blocks") && e.tags.has("blocks"))) {
+                entity = e;
+            }
         }
     }
 

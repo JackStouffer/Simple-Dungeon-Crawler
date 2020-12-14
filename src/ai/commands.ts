@@ -99,8 +99,6 @@ export function createPlanner(actions: Set<string>) {
 
         actionList.addCondition(action, actionData.preconditions);
         actionList.addReaction(action, actionData.postconditions);
-        // TODO add dynamic weights
-        // actionList.setWeight(action, actionData.weight());
     }
 
     const planner = new Planner(...goals.values());
@@ -173,6 +171,15 @@ export function getPlan(ecs: World, aiState: PlannerAIComponent): Nullable<strin
     if (aiState.previousWorldState.targetPositionKnown === false &&
         worldState.targetPositionKnown === true) {
         displayMessage(`${displayName.name} saw you`);
+    }
+
+    const actions = Object.keys(aiState.planner.actionList!.reactions);
+    for (let i = 0; i < actions.length; i++) {
+        const action = actions[i];
+        const actionData = ActionData[action];
+        if (actionData !== undefined) {
+            aiState.planner.actionList!.setWeight(action, actionData.weight(aiState));
+        }
     }
 
     aiState.planner.setStartState(worldState);
