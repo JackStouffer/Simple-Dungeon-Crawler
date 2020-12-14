@@ -198,10 +198,12 @@ export class InventoryMenu {
 
         for (let i = start; i < end; i++) {
             let displayString;
+            let item = inventoryItems[i];
+
             if (i === this.currentSelection) {
-                displayString = `%c{white}%b{grey}${inventoryItems[i].displayName} (${inventoryItems[i].count})`;
+                displayString = `%c{white}%b{grey}${item.displayName} (${item.count})`;
             } else {
-                displayString = `%c{white}%b{black}${inventoryItems[i].displayName} (${inventoryItems[i].count})`;
+                displayString = `%c{white}%b{black}${item.displayName} (${item.count})`;
             }
             globals.Game.display.drawText(2, (i - start) + 3, displayString);
         }
@@ -292,7 +294,7 @@ export class SpellSelectionMenu {
                 displayString = `%c{white}%b{black} ${spell.displayName}`;
             }
 
-            globals.Game.display.drawText(2, i + 3, displayString);
+            globals.Game.display.drawText(2, (i - start) + 3, displayString);
 
             let infoString = "%c{white}%b{black}";
             switch (spell.type) {
