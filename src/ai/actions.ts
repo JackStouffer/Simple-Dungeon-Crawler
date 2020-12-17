@@ -210,7 +210,7 @@ function chaseAction(
  * @param {AIComponent} ai the ai to calculate the weight for
  * @returns {number} the weight
  */
-function chaseWeight(aiState: PlannerAIComponent): number {
+function chaseWeight(ecs: World, aiState: PlannerAIComponent): number {
     if (aiState.target === null) { return 1; }
     const posData = aiState.entity.getOne(PositionComponent);
     const targetPosData = aiState.target.getOne(PositionComponent);
@@ -238,7 +238,7 @@ function meleeAttackAction(
  * will have the lowest weight. Therefore, the AI will choose the most
  * effective attack
  */
-function meleeAttackWeight(aiState: PlannerAIComponent): number {
+function meleeAttackWeight(ecs: World, aiState: PlannerAIComponent): number {
     if (aiState.target === null) { return 1; }
     const targetHPData = aiState.target.getOne(HitPointsComponent)!;
     const stats = getEffectiveStatData(aiState.entity)!;
@@ -373,7 +373,7 @@ function castSpellAction(spellID: string) {
  * effective attack
  */
 function castSpellWeight(spellID: string) {
-    return function (aiState: PlannerAIComponent): number {
+    return function (ecs: World, aiState: PlannerAIComponent): number {
         if (aiState.target === null) { return 1; }
         const targetHPData = aiState.target.getOne(HitPointsComponent)!;
         const damage = SpellData[spellID].value ?? 1;
@@ -482,6 +482,66 @@ function goToSafePositionAction(
     return new GoToLocationCommand(path, ecs, map, triggerMap);
 }
 
+function repositionAction(
+    ecs: World,
+    aiState: PlannerAIComponent,
+    map: GameMap,
+    triggerMap: Map<string, Entity>
+): Command {
+    if (aiState.target === null) { throw new Error("Cannot perform chaseAction without a target"); }
+
+    const pos = aiState.entity.getOne(PositionComponent);
+    const targetPosData = aiState.target.getOne(PositionComponent);
+    const speedData = aiState.entity.getOne(SpeedComponent);
+    if (pos === undefined || speedData === undefined || targetPosData === undefined) {
+        throw new Error("Missing data when trying to reposition");
+    }
+
+    const bfs = new Path.ReverseAStar(
+        (x, y) => {
+            const d = distanceBetweenPoints({ x, y }, targetPosData);
+            return Math.floor(d) === aiState.desiredDistanceToTarget;
+        },
+        createPassableCallback(pos)
+    );
+
+    let path: number[][] = [];
+    function pathCallback(x: number, y: number) {
+        path.splice(0, 0, [x, y]);
+    }
+    bfs.compute(pos.x, pos.y, pathCallback);
+
+    if (path.length === 0) {
+        return new NoOpCommand(true);
+    }
+
+    // remove our own position
+    path.shift();
+    path = path.slice(0, speedData.maxTilesPerMove);
+    return new GoToLocationCommand(path, ecs, map, triggerMap);
+}
+
+function standbyWeight(ecs: World, aiState: PlannerAIComponent): number {
+    const pos = aiState.entity.getOne(PositionComponent)!;
+
+    const entities = ecs
+        .createQuery()
+        .fromAll(PositionComponent, PlannerAIComponent, HitPointsComponent)
+        .execute();
+
+    for (const e of entities) {
+        if (e === aiState.entity) { continue; }
+
+        const ePos = e.getOne(PositionComponent)!;
+        const hpData = e.getOne(HitPointsComponent)!;
+        if (distanceBetweenPoints(ePos, pos) < 12 && hpData.hp > 0) {
+            return 1;
+        }
+    }
+
+    return 100;
+}
+
 interface Action {
     preconditions: { [key: string]: boolean },
     postconditions: { [key: string]: boolean }
@@ -491,7 +551,7 @@ interface Action {
         map: GameMap,
         triggerMap: Map<string, Entity>
     ) => Command,
-    weight: (aiState: PlannerAIComponent) => number
+    weight: (ecs: World, aiState: PlannerAIComponent) => number
 }
 
 /**
@@ -523,6 +583,18 @@ export const ActionData: { [key: string]: Action } = {
         preconditions: { targetPositionKnown: true, targetInLineOfSight: false },
         postconditions: { targetInLineOfSight: true },
         updateFunction: chaseAction,
+        weight: () => 1
+    },
+    "standby": {
+        preconditions: { targetPositionKnown: true, atDesiredDistance: true, targetKilled: false },
+        postconditions: { targetKilled: true },
+        updateFunction: () => { return new NoOpCommand(true); },
+        weight: standbyWeight
+    },
+    "reposition": {
+        preconditions: { targetPositionKnown: true, atDesiredDistance: false, targetKilled: false },
+        postconditions: { atDesiredDistance: true },
+        updateFunction: repositionAction,
         weight: () => 1
     },
     "useHealingItem": {

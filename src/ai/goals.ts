@@ -43,6 +43,20 @@ function resolveNextToTarget(ecs: World, ai: Entity): boolean {
     return distanceBetweenPoints(pos, targetPos) < 1.5;
 }
 
+function resolveAtDesiredDistance(ecs: World, ai: Entity): boolean {
+    const aiState = ai.getOne(PlannerAIComponent);
+    if (aiState === undefined || aiState.target === null) {
+        throw new Error(`Entity ${ai.id} is missing a target`);
+    }
+
+    const pos = ai.getOne(PositionComponent);
+    const targetPos = aiState.target.getOne(PositionComponent);
+    if (pos === undefined || targetPos === undefined) {
+        throw new Error(`Entity ${ai.id} is missing data for resolveNextToTarget`);
+    }
+    return Math.floor(distanceBetweenPoints(pos, targetPos)) === aiState.desiredDistanceToTarget;
+}
+
 function resolveEnoughCastsForSpellGenerator(spellID: string) {
     return function (ecs: World, ai: Entity): boolean {
         const spellData = ai.getOne(SpellsComponent);
@@ -245,6 +259,9 @@ export const GoalData: { [key: string]: GoalDataDetails } = {
     },
     "nextToTarget": {
         resolver: resolveNextToTarget
+    },
+    "atDesiredDistance": {
+        resolver: resolveAtDesiredDistance
     },
     "lowHealth": {
         resolver: resolveLowHealth

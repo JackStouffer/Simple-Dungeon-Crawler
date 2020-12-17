@@ -263,6 +263,7 @@ export class PlannerAIComponent extends Component {
     goals: Set<string>;
     actions: Set<string>;
     lowHealthThreshold: number;
+    desiredDistanceToTarget: number;
     knowsTargetPosition: boolean;
     hasTargetInSight: boolean;
 
@@ -277,6 +278,7 @@ export class PlannerAIComponent extends Component {
         goals: null,
         actions: null,
         lowHealthThreshold: 0.25,
+        desiredDistanceToTarget: 1,
         knowsTargetPosition: false,
         hasTargetInSight: false
     }
@@ -461,6 +463,7 @@ interface ObjectDataDetails {
     addInventory?: boolean;
     addInput?: boolean;
     addPlannerAI?: boolean;
+    desiredDistanceToTarget?: number;
     sightRange?: number;
     spells?: [string, number][];
     actions?: string[];
@@ -1027,6 +1030,7 @@ const ObjectData: { [key: string]: ObjectDataDetails } = {
         addPlannerAI: true,
         sightRange: 7,
         lowHealthThreshold: 0.5,
+        desiredDistanceToTarget: 1,
         actions: [
             "wander",
             "chase",
@@ -1099,6 +1103,7 @@ const ObjectData: { [key: string]: ObjectDataDetails } = {
         addInventory: true,
         addPlannerAI: true,
         sightRange: 10,
+        desiredDistanceToTarget: 1,
         actions: [
             "guard",
             "chase",
@@ -1177,6 +1182,7 @@ const ObjectData: { [key: string]: ObjectDataDetails } = {
         addPlannerAI: true,
         sightRange: 5,
         lowHealthThreshold: 0.5,
+        desiredDistanceToTarget: 1,
         actions: [
             "wander",
             "chase",
@@ -1249,6 +1255,7 @@ const ObjectData: { [key: string]: ObjectDataDetails } = {
         addPlannerAI: true,
         sightRange: 9,
         lowHealthThreshold: 0.5,
+        desiredDistanceToTarget: 1,
         actions: [
             "wander",
             "chase",
@@ -1312,6 +1319,7 @@ const ObjectData: { [key: string]: ObjectDataDetails } = {
         addPlannerAI: true,
         sightRange: 10,
         lowHealthThreshold: 0.5,
+        desiredDistanceToTarget: 1,
         actions: [
             "guard",
             "chase",
@@ -1393,6 +1401,7 @@ const ObjectData: { [key: string]: ObjectDataDetails } = {
         addPlannerAI: true,
         sightRange: 8,
         lowHealthThreshold: 0.5,
+        desiredDistanceToTarget: 5,
         spells: [
             ["fireball", 3],
             ["lesser_heal", 1]
@@ -1400,6 +1409,8 @@ const ObjectData: { [key: string]: ObjectDataDetails } = {
         actions: [
             "wander",
             "chase",
+            "standby",
+            "reposition",
             "useHealingItem",
             "useHealingSpell",
             "goToEnemy",
@@ -1482,13 +1493,16 @@ const ObjectData: { [key: string]: ObjectDataDetails } = {
         addInventory: true,
         addPlannerAI: true,
         sightRange: 8,
-        lowHealthThreshold: 0.5,
+        lowHealthThreshold: 0.4,
+        desiredDistanceToTarget: 5,
         spells: [
-            ["heal_other", 3]
+            ["heal_other", 2]
         ],
         actions: [
             "wander",
             "chase",
+            "standby",
+            "reposition",
             "useHealingItem",
             "useHealingSpell",
             "healAlly",
@@ -1643,6 +1657,7 @@ export function createEntity(
         entity.addComponent({
             type: "PlannerAIComponent",
             sightRange: data?.sightRange ?? 5,
+            desiredDistanceToTarget: data?.desiredDistanceToTarget ?? 1,
             planner,
             target: ecs.getEntity("player"), // TODO: generic target selection
             previousWorldState: {},

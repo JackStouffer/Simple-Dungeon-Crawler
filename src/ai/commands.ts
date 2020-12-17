@@ -181,7 +181,7 @@ export function getPlan(ecs: World, aiState: PlannerAIComponent): Nullable<strin
         const action = actions[i];
         const actionData = ActionData[action];
         if (actionData !== undefined) {
-            aiState.planner.actionList!.setWeight(action, actionData.weight(aiState));
+            aiState.planner.actionList!.setWeight(action, actionData.weight(ecs, aiState));
         }
     }
 
