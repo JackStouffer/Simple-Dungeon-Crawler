@@ -77,7 +77,7 @@ export type SkillFunction = (
  * @param {Object} item The item data
  * @param {GameObject} user The object using the item
  */
-export function castHeal(
+function castHeal(
     ecs: World,
     item: ItemDataDetails | SpellDataDetails,
     user: Entity
@@ -100,6 +100,34 @@ export function castHeal(
     }
 
     heal(user.getOne(HitPointsComponent)!, item.value);
+    return true;
+}
+
+function castHealOther(
+    ecs: World,
+    item: ItemDataDetails | SpellDataDetails,
+    user: Entity,
+    target: Nullable<Point>,
+    map: Nullable<GameMap>
+): boolean {
+    if (item.value === null) { throw new Error("Item does not have a value for castDamageSpell"); }
+    if (target === null) { throw new Error("Target cannot be null for castDamageSpell"); }
+    if (map === null) { throw new Error("Map cannot be null for castDamageSpell"); }
+
+    const targetedEntity = mouseTarget(ecs, map, target);
+    if (targetedEntity === null) {
+        displayMessage("Canceled casting");
+        return false;
+    }
+
+    const targetName = targetedEntity.getOne(DisplayNameComponent)!;
+    const targetHPData = targetedEntity.getOne(HitPointsComponent);
+    if (targetHPData === undefined) {
+        displayMessage(`${targetName.name} isn't healable`);
+        return false;
+    }
+
+    heal(targetHPData, item.value);
     return true;
 }
 
@@ -819,7 +847,7 @@ export const SpellData: { [key: string]: SpellDataDetails } = {
     "lesser_heal": {
         id: "lesser_heal",
         displayName: "Lesser Heal",
-        description: "Gives a small amount of hit points",
+        description: "Heals a small amount of hit points",
         value: 25,
         type: SpellType.HealSelf,
         useFunc: castHeal
@@ -839,6 +867,14 @@ export const SpellData: { [key: string]: SpellDataDetails } = {
         value: 100,
         type: SpellType.HealSelf,
         useFunc: castHeal
+    },
+    "heal_other": {
+        id: "heal_other",
+        displayName: "Heal Other",
+        description: "Heals someone else for a small amount of hit points",
+        value: 25,
+        type: SpellType.HealOther,
+        useFunc: castHealOther
     },
     "lesser_haste": {
         id: "lesser_haste",

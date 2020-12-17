@@ -418,8 +418,8 @@
                  "type":"object",
                  "visible":true,
                  "width":0,
-                 "x":337.672052694903,
-                 "y":1399.66714135481
+                 "x":273.664559134681,
+                 "y":1395.76424540602
                 }, 
                 {
                  "height":0,
@@ -494,6 +494,29 @@
                  "width":0,
                  "x":372.804397180069,
                  "y":184.012426813239
+                }, 
+                {
+                 "height":0,
+                 "id":70,
+                 "name":"Bandit White Mage",
+                 "point":true,
+                 "properties":[
+                        {
+                         "name":"inventory",
+                         "type":"string",
+                         "value":""
+                        }, 
+                        {
+                         "name":"objectType",
+                         "type":"string",
+                         "value":"bandit_white_mage"
+                        }],
+                 "rotation":0,
+                 "type":"object",
+                 "visible":true,
+                 "width":0,
+                 "x":1362.11068612911,
+                 "y":694.715478885333
                 }],
          "opacity":1,
          "type":"objectgroup",
@@ -617,7 +640,7 @@
          "y":0
         }],
  "nextlayerid":9,
- "nextobjectid":70,
+ "nextobjectid":71,
  "orientation":"orthogonal",
  "renderorder":"right-down",
  "tiledversion":"1.4.3",

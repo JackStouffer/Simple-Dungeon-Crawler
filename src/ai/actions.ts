@@ -291,6 +291,52 @@ function useHealingSpellAction(
     return new UseSpellCommand(spell.id, ecs);
 }
 
+function healAllyAction(
+    ecs: World,
+    aiState: PlannerAIComponent,
+    map: GameMap
+): Command {
+    const pos = aiState.entity.getOne(PositionComponent);
+    const spells = aiState.entity.getOne(SpellsComponent);
+    const displayName = aiState.entity.getOne(DisplayNameComponent);
+    if (pos === undefined) { throw new Error("No position on AI for healAllyAction"); }
+    if (spells === undefined) { throw new Error("No spells on AI for healAllyAction"); }
+    if (displayName === undefined) { throw new Error(`Entity ${aiState.entity.id} is missing DisplayNameComponent`); }
+
+    const spell = getKnownSpells(spells)
+        .filter(i => i.type === SpellType.HealOther)
+        .sort((a, b) => a.value! - b.value!)[0];
+
+    const entities = ecs
+        .createQuery()
+        .fromAll(PositionComponent, PlannerAIComponent, HitPointsComponent)
+        .execute();
+
+    // SPEED this information is being calculated twice, once here
+    // and once in the goals
+    let target: Nullable<Point> = null;
+    let targetHPPercent: Nullable<number> = null;
+    for (const e of entities) {
+        const hpData = e.getOne(HitPointsComponent)!;
+        const ePos = e.getOne(PositionComponent)!;
+        const hpPercent = hpData.hp / hpData.maxHp;
+
+        if (distanceBetweenPoints(pos, ePos) < 10 &&
+            (target === null || hpPercent < targetHPPercent!)) {
+            target = ePos;
+            targetHPPercent = hpPercent;
+        }
+    }
+
+    if (target === null) {
+        throw new Error("Should never get here, there's a bug in goal allyLowHealth");
+    }
+
+    displayMessage(`${displayName.name} casted ${spell.displayName}`);
+
+    return new UseSpellCommand(spell.id, ecs, target, map);
+}
+
 /**
  * A generator for an Action Update function.
  *
@@ -486,9 +532,15 @@ export const ActionData: { [key: string]: Action } = {
         weight: () => 1
     },
     "useHealingSpell": {
-        preconditions: { lowHealth: true, hasHealingSpell: true },
+        preconditions: { lowHealth: true, hasSelfHealingSpell: true },
         postconditions: { lowHealth: false },
         updateFunction: useHealingSpellAction,
+        weight: () => 1
+    },
+    "healAlly": {
+        preconditions: { allyLowHealth: true, hasOtherHealingSpell: true },
+        postconditions: { allyLowHealth: false },
+        updateFunction: healAllyAction,
         weight: () => 1
     },
     "goToEnemy": {
@@ -545,6 +597,13 @@ for (const key in SpellData) {
             preconditions: { lowHealth: true, [goal]: true },
             postconditions: { lowHealth: false },
             updateFunction: castSpellAction(key),
+            weight: () => 1
+        };
+    } else if (data.type === SpellType.HealOther) {
+        ActionData[action] = {
+            preconditions: { allyLowHealth: true, [goal]: true },
+            postconditions: { allyLowHealth: false },
+            updateFunction: healAllyAction,
             weight: () => 1
         };
     }

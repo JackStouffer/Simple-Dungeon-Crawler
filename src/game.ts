@@ -521,6 +521,7 @@ export class SimpleDungeonCrawler {
                         );
                         break;
                     case SpellType.DamageOther:
+                    case SpellType.HealOther:
                         this.state = GameState.Gameplay;
                         inputHandlerState.spellForTarget = spell;
                         inputHandlerState.state = PlayerState.Target;

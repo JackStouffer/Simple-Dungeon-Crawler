@@ -5,6 +5,7 @@ import {
     FearAIComponent,
     FireTriggerComponent,
     FlammableComponent,
+    HitPointsComponent,
     InventoryComponent,
     PlannerAIComponent,
     PositionComponent,
@@ -13,9 +14,10 @@ import {
 } from "../entity";
 import { getEffectiveHitPointData, getKnownSpells } from "../fighter";
 import { getItems } from "../inventory";
-import { distanceBetweenPoints } from "../map";
+import { distanceBetweenPoints, Point } from "../map";
 import { DIRS } from "../rot";
 import { SpellData } from "../skills";
+import { Nullable } from "../util";
 
 function resolveTargetPositionKnown(ecs: World, ai: Entity): boolean {
     const aiState = ai.getOne(PlannerAIComponent);
@@ -29,8 +31,12 @@ function resolveTargetInLOS(ecs: World, ai: Entity): boolean {
 
 function resolveNextToTarget(ecs: World, ai: Entity): boolean {
     const aiState = ai.getOne(PlannerAIComponent);
+    if (aiState === undefined || aiState.target === null) {
+        throw new Error(`Entity ${ai.id} is missing a target`);
+    }
+
     const pos = ai.getOne(PositionComponent);
-    const targetPos = aiState?.target.getOne(PositionComponent);
+    const targetPos = aiState.target.getOne(PositionComponent);
     if (pos === undefined || targetPos === undefined) {
         throw new Error(`Entity ${ai.id} is missing data for resolveNextToTarget`);
     }
@@ -66,13 +72,54 @@ function resolveHasHealingItem(ecs: World, ai: Entity): boolean {
     return healthItems.length > 0;
 }
 
-function resolveHasHealingSpell(ecs: World, ai: Entity): boolean {
+function resolveHasSelfHealingSpell(ecs: World, ai: Entity): boolean {
     const spells = ai.getOne(SpellsComponent);
     if (spells === undefined) { return false; }
 
     const healthSpells = getKnownSpells(spells)
         .filter(i => i.type === SpellType.HealSelf && i.count > 0);
     return healthSpells.length > 0;
+}
+
+function resolveHasOtherHealingSpell(ecs: World, ai: Entity): boolean {
+    const spells = ai.getOne(SpellsComponent);
+    if (spells === undefined) { return false; }
+
+    const healthSpells = getKnownSpells(spells)
+        .filter(i => i.type === SpellType.HealOther && i.count > 0);
+    return healthSpells.length > 0;
+}
+
+function resolveAllyLowHealth(ecs: World, ai: Entity): boolean {
+    const pos = ai.getOne(PositionComponent)!;
+    const aiData = ai.getOne(PlannerAIComponent)!;
+    const entities = ecs
+        .createQuery()
+        .fromAll(PositionComponent, PlannerAIComponent, HitPointsComponent)
+        .execute();
+
+    // SPEED this information is being calculated twice, once here
+    // and once in the action
+    let target: Nullable<Point> = null;
+    let targetHPData: Nullable<HitPointsComponent> = null;
+    for (const e of entities) {
+        // TODO remove when we have target selection/factions
+        if (e === aiData.target || e === ai) { continue; }
+
+        const hpData = e.getOne(HitPointsComponent)!;
+        const ePos = e.getOne(PositionComponent)!;
+        const aiState = e.getOne(PlannerAIComponent)!;
+        const isLowHealth = (hpData.hp / hpData.maxHp) <= aiState.lowHealthThreshold;
+
+        if (distanceBetweenPoints(pos, ePos) < 10 &&
+            isLowHealth &&
+            (target === null || hpData.hp < targetHPData!.hp)) {
+            target = ePos;
+            targetHPData = hpData;
+        }
+    }
+
+    return target !== null;
 }
 
 /**
@@ -205,8 +252,14 @@ export const GoalData: { [key: string]: GoalDataDetails } = {
     "hasHealingItem": {
         resolver: resolveHasHealingItem
     },
-    "hasHealingSpell": {
-        resolver: resolveHasHealingSpell
+    "hasSelfHealingSpell": {
+        resolver: resolveHasSelfHealingSpell
+    },
+    "hasOtherHealingSpell": {
+        resolver: resolveHasOtherHealingSpell
+    },
+    "allyLowHealth": {
+        resolver: resolveAllyLowHealth
     },
     "inDangerousArea": {
         resolver: resolveInDangerousArea

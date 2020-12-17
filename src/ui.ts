@@ -306,6 +306,7 @@ export class SpellSelectionMenu {
                     infoString += `turns: ${spell.value}`;
                     break;
                 case SpellType.HealSelf:
+                case SpellType.HealOther:
                     infoString += `health: ${spell.value}`;
                     break;
                 case SpellType.Passive:

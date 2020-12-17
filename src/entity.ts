@@ -1338,8 +1338,8 @@ const ObjectData: { [key: string]: ObjectDataDetails } = {
                 },
                 GraphicsComponent: {
                     char: "b",
-                    fgColor: "white",
-                    bgColor: "brown",
+                    fgColor: "brown",
+                    bgColor: null
                 },
                 LoseTargetAIComponent: {
                     turnsWithTargetOutOfSight: 0,
@@ -1421,6 +1421,90 @@ const ObjectData: { [key: string]: ObjectDataDetails } = {
                 },
                 DisplayNameComponent: {
                     name: "Bandit Mage"
+                },
+                GraphicsComponent: {
+                    char: "b",
+                    fgColor: "blue",
+                    bgColor: null,
+                },
+                LoseTargetAIComponent: {
+                    turnsWithTargetOutOfSight: 0,
+                    loseTrackAfterNTurns: 6
+                },
+                FearAIComponent: {
+                    fear: 0,
+                    isAfraidThreshold: 30,
+                    isCowering: false
+                },
+                SpeedComponent: {
+                    speed: BASE_SPEED,
+                    maxTilesPerMove: 5
+                },
+                HitPointsComponent: {
+                    hp: 30,
+                    maxHp: 30,
+                    onDeath: DeathType.Default
+                },
+                StatsComponent: {
+                    strength: 2,
+                    defense: 1,
+                    criticalChance: 0.05,
+                    criticalDamageMultiplier: 1.5,
+                    ailmentSusceptibility: 0.1
+                },
+                LevelComponent: {
+                    level: 5,
+                    experience: 0,
+                    experienceGiven: 10
+                },
+                DamageAffinityComponent: normalTypeDamageValues,
+                FlammableComponent: {
+                    onFire: false,
+                    fireDamage: 0,
+                    turnsLeft: 0
+                },
+                FreezableComponent: {
+                    frozen: false,
+                    turnsLeft: 0
+                },
+                WetableComponent: {
+                    wet: false,
+                    turnsLeft: 0
+                },
+                SilenceableComponent: {
+                    silenced: false,
+                    turnsLeft: 0
+                }
+            }
+        }
+    },
+    "bandit_white_mage": {
+        addInventory: true,
+        addPlannerAI: true,
+        sightRange: 8,
+        lowHealthThreshold: 0.5,
+        spells: [
+            ["heal_other", 3]
+        ],
+        actions: [
+            "wander",
+            "chase",
+            "useHealingItem",
+            "useHealingSpell",
+            "healAlly",
+            "goToEnemy",
+            "goToSafePosition",
+            "runAway",
+            "meleeAttack"
+        ],
+        staticallyKnownComponents: {
+            tags: ["blocks", "sentient"],
+            c: {
+                TypeComponent: {
+                    entityType: "bandit_white_mage"
+                },
+                DisplayNameComponent: {
+                    name: "Bandit White Mage"
                 },
                 GraphicsComponent: {
                     char: "b",

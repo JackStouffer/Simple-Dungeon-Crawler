@@ -26,6 +26,8 @@ import { Nullable } from "../util";
 function calcFearOnSight(ai: Entity): number {
     const aiState = ai.getOne(PlannerAIComponent)!;
     const levelData = ai.getOne(LevelComponent);
+
+    if (aiState.target === null) { throw new Error("Should set target here"); }
     const targetLevelData = aiState.target.getOne(LevelComponent);
 
     if (levelData === undefined || targetLevelData === undefined) {
@@ -85,6 +87,7 @@ export function createPlanner(actions: Set<string>) {
 
     for (const action of actions) {
         const actionData = ActionData[action];
+        if (actionData === undefined) { throw new Error(`${action} is not a valid action`); }
         const preconditions = Object.keys(actionData.preconditions);
         const postconditions = Object.keys(actionData.postconditions);
 
@@ -188,16 +191,19 @@ export function getPlan(ecs: World, aiState: PlannerAIComponent): Nullable<strin
     if (aiState.currentOrder === "attack") {
         stateStack.push({ targetKilled: true });
     }
-    if (worldState.lowHealth === true) {
+    if (aiState.goals.has("lowHealth") && worldState.lowHealth === true) {
         stateStack.push({ lowHealth: false });
     }
-    if (worldState.inDangerousArea === true) {
+    if (aiState.goals.has("allyLowHealth") && worldState.allyLowHealth === true) {
+        stateStack.push({ allyLowHealth: false });
+    }
+    if (aiState.goals.has("inDangerousArea") && worldState.inDangerousArea === true) {
         stateStack.push({ inDangerousArea: false });
     }
     if (aiState.currentOrder === "fallback" && aiState.goals.has("atFallbackPosition")) {
         stateStack.push({ atFallbackPosition: true });
     }
-    if (worldState.afraid === true) {
+    if (aiState.goals.has("afraid") && worldState.afraid === true) {
         stateStack.push({ cowering: true });
     }
 
