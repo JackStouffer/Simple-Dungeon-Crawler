@@ -1,4 +1,4 @@
-import { System, Entity, Query } from "ape-ecs";
+import { Entity } from "ape-ecs";
 
 import globals from "./globals";
 import { DamageType } from "./constants";
@@ -6,37 +6,13 @@ import {
     EventTriggerComponent,
     FireTriggerComponent,
     FlammableComponent,
-    PositionComponent,
     SpeedComponent,
-    TriggerTypeComponent,
     TypeComponent,
     WetableComponent,
 } from "./entity";
 import { takeDamage } from "./fighter";
 import { setOnFire, setWet } from "./skills";
 import { displayMessage } from "./ui";
-
-export class UpdateTriggerMapSystem extends System {
-    private mainQuery: Query;
-
-    init() {
-        this.mainQuery = this.createQuery()
-            .fromAll(TriggerTypeComponent, PositionComponent)
-            .persist();
-    }
-
-    update() {
-        if (globals.Game === null) { throw new Error("Global game object is null"); }
-        const entities = this.mainQuery.execute();
-        globals.Game.triggerMap.clear();
-
-        for (const e of entities) {
-            const pos = e.getOne(PositionComponent);
-            if (pos === undefined) { return; }
-            globals.Game.triggerMap.set(`${pos.x},${pos.y}`, e);
-        }
-    }
-}
 
 /**
  * Checks if the actor is flammable, and then damages them, and then sets

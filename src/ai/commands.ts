@@ -181,7 +181,12 @@ export function getPlan(ecs: World, aiState: PlannerAIComponent): Nullable<strin
         const action = actions[i];
         const actionData = ActionData[action];
         if (actionData !== undefined) {
-            aiState.planner.actionList!.setWeight(action, actionData.weight(ecs, aiState));
+            const weight = actionData.weight(ecs, aiState);
+            aiState.planner.actionList!.setWeight(action, weight);
+            if (globals.Game?.debugAI === true) {
+                // eslint-disable-next-line no-console
+                console.log(`${aiState.entity.id}, action ${action} weight ${weight}`);
+            }
         }
     }
 
@@ -207,11 +212,18 @@ export function getPlan(ecs: World, aiState: PlannerAIComponent): Nullable<strin
         stateStack.push({ cowering: true });
     }
 
+    let goal;
     do {
-        aiState.planner.setGoalState(stateStack.pop());
+        goal = stateStack.pop();
+        aiState.planner.setGoalState(goal);
         const plan = aiState.planner.calculate();
         aiState.currentAction = get(plan, "['0'].name", null);
     } while (stateStack.length > 0 && aiState.currentAction === null);
+
+    if (globals.Game?.debugAI === true) {
+        // eslint-disable-next-line no-console
+        console.log(`${aiState.entity.id}, goal ${JSON.stringify(goal)} currentAction ${aiState.currentAction}`);
+    }
 
     aiState.previousWorldState = worldState;
     return aiState.currentAction;
@@ -228,7 +240,7 @@ export function plannerAIGenerateCommand(
     ecs: World,
     ai: Entity,
     map: GameMap,
-    triggerMap: Map<string, Entity>
+    entityMap: Map<string, Entity[]>
 ): Command {
     const aiState = ai.getOne(PlannerAIComponent);
     const pos = ai.getOne(PositionComponent);
@@ -253,7 +265,7 @@ export function plannerAIGenerateCommand(
     aiState.hasTargetInSight = false;
 
     if (plan !== null) {
-        return ActionData[plan].updateFunction(ecs, aiState, map, triggerMap);
+        return ActionData[plan].updateFunction(ecs, aiState, map, entityMap);
     } else {
         return new NoOpCommand(true);
     }
@@ -263,7 +275,7 @@ export function confusedAIGenerateCommand(
     ecs: World,
     entity: Entity,
     map: GameMap,
-    triggerMap: Map<string, Entity>
+    entityMap: Map<string, Entity[]>
 ): Command {
     const confusedState = entity.getOne(ConfusedAIComponent);
     if (confusedState === undefined) { throw new Error(`Entity ${entity.id} is missing a ConfusedAIComponent`); }
@@ -285,7 +297,7 @@ export function confusedAIGenerateCommand(
             dir = RNG.getItem([0, 1, 2, 3, 4, 5, 6, 7]) ?? 0;
             newX = pos.x + DIRS[8][dir][0];
             newY = pos.y + DIRS[8][dir][1];
-            ({ blocks } = isBlocked(ecs, map, newX, newY));
+            ({ blocks } = isBlocked(map, entityMap, newX, newY));
         } while (blocks === true);
 
         confusedState.update();
@@ -293,7 +305,7 @@ export function confusedAIGenerateCommand(
             [[newX, newY]],
             ecs,
             map,
-            triggerMap
+            entityMap
         );
     } else {
         confusedState.destroy();
@@ -312,17 +324,17 @@ export function generateAICommand(
     ecs: World,
     ai: Entity,
     map: GameMap,
-    triggerMap: Map<string, Entity>
+    entityMap: Map<string, Entity[]>
 ): Command {
     const aiState = ai.getOne(PlannerAIComponent);
     const confusedState = ai.getOne(ConfusedAIComponent);
 
     if (confusedState !== undefined) {
-        return confusedAIGenerateCommand(ecs, ai, map, triggerMap);
+        return confusedAIGenerateCommand(ecs, ai, map, entityMap);
     }
 
     if (aiState !== undefined) {
-        return plannerAIGenerateCommand(ecs, ai, map, triggerMap);
+        return plannerAIGenerateCommand(ecs, ai, map, entityMap);
     }
 
     throw new Error(`Missing AI state on entity ${ai.id}`);

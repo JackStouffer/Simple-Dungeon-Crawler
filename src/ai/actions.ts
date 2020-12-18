@@ -41,16 +41,11 @@ import { isPositionPotentiallyDangerous } from "./goals";
 /**
  * Calculate a path from a game object to the give x and y
  * coordinates. Return the x and y position of the nth step
- * along the path.
- * @param {GameObject} actor The starting point
- * @param {number} targetX The x coordinate to move towards
- * @param {number} targetY The y coordinate to move towards
- * @param {number} steps The number of steps along the path to take
- * @param {boolean} popBack Should the end point be removed from the path, useful when the end is a blocked tile
- * @returns {Point} the nth step along the path
+ * along the path
  */
 function getStepsTowardsTarget(
     ecs: World,
+    entityMap: Map<string, Entity[]>,
     actor: Entity,
     origin: Point,
     target: Point,
@@ -61,7 +56,7 @@ function getStepsTowardsTarget(
         target.x,
         target.y,
         createPassableCallback(origin),
-        generateWeightCallback(ecs, origin),
+        generateWeightCallback(ecs, entityMap, origin),
         { topology: 8 }
     );
 
@@ -96,7 +91,7 @@ function wanderAction(
     ecs: World,
     ai: PlannerAIComponent,
     map: GameMap,
-    triggerMap: Map<string, Entity>
+    entityMap: Map<string, Entity[]>
 ): Command {
     let blocks: boolean = true;
     let entity: Nullable<Entity> = null;
@@ -109,10 +104,10 @@ function wanderAction(
         dir = RNG.getItem([0, 1, 2, 3, 4, 5, 6, 7]) ?? 0;
         newX = pos.x + DIRS[8][dir][0];
         newY = pos.y + DIRS[8][dir][1];
-        ({ blocks, entity } = isBlocked(ecs, map, newX, newY));
+        ({ blocks, entity } = isBlocked(map, entityMap, newX, newY));
     } while (blocks === true || entity !== null);
 
-    return new GoToLocationCommand([[newX, newY]], ecs, map, triggerMap);
+    return new GoToLocationCommand([[newX, newY]], ecs, map, entityMap);
 }
 
 /**
@@ -124,7 +119,7 @@ function patrolAction(
     ecs: World,
     aiState: PlannerAIComponent,
     map: GameMap,
-    triggerMap: Map<string, Entity>
+    entityMap: Map<string, Entity[]>
 ): Command {
     const pos = aiState.entity.getOne(PositionComponent);
     const patrolState = aiState.entity.getOne(PatrolAIComponent);
@@ -136,6 +131,7 @@ function patrolAction(
     let targetPos: PositionComponent = patrolState.patrolTarget.getOne(PositionComponent);
     let path: Nullable<number[][]> = getStepsTowardsTarget(
         ecs,
+        entityMap,
         aiState.entity,
         pos,
         targetPos,
@@ -154,6 +150,7 @@ function patrolAction(
         targetPos = patrolState.patrolTarget.getOne(PositionComponent);
         path = getStepsTowardsTarget(
             ecs,
+            entityMap,
             aiState.entity,
             pos,
             targetPos,
@@ -165,7 +162,7 @@ function patrolAction(
         return new NoOpCommand(true);
     }
 
-    return new GoToLocationCommand(path, ecs, map, triggerMap);
+    return new GoToLocationCommand(path, ecs, map, entityMap);
 }
 
 /**
@@ -177,7 +174,7 @@ function chaseAction(
     ecs: World,
     ai: PlannerAIComponent,
     map: GameMap,
-    triggerMap: Map<string, Entity>
+    entityMap: Map<string, Entity[]>
 ): Command {
     if (ai.target === null) { throw new Error("Cannot perform chaseAction without a target"); }
 
@@ -193,6 +190,7 @@ function chaseAction(
 
     const path: Nullable<number[][]> = getStepsTowardsTarget(
         ecs,
+        entityMap,
         ai.entity,
         posData,
         targetPosData,
@@ -202,7 +200,7 @@ function chaseAction(
         return new NoOpCommand(true);
     }
 
-    return new GoToLocationCommand(path, ecs, map, triggerMap);
+    return new GoToLocationCommand(path, ecs, map, entityMap);
 }
 
 /**
@@ -257,7 +255,9 @@ function meleeAttackWeight(ecs: World, aiState: PlannerAIComponent): number {
  */
 function useHealingItemAction(
     ecs: World,
-    aiState: PlannerAIComponent
+    aiState: PlannerAIComponent,
+    map: GameMap,
+    entityMap: Map<string, Entity[]>
 ): Command {
     const inventoryData = aiState.entity.getOne(InventoryComponent);
     const displayName = aiState.entity.getOne(DisplayNameComponent);
@@ -270,12 +270,14 @@ function useHealingItemAction(
 
     displayMessage(`${displayName.name} used a ${item.displayName}`);
 
-    return new UseItemCommand(item.id, ecs);
+    return new UseItemCommand(item.id, ecs, map, entityMap);
 }
 
 function useHealingSpellAction(
     ecs: World,
-    aiState: PlannerAIComponent
+    aiState: PlannerAIComponent,
+    map: GameMap,
+    entityMap: Map<string, Entity[]>
 ): Command {
     const spells = aiState.entity.getOne(SpellsComponent);
     const displayName = aiState.entity.getOne(DisplayNameComponent);
@@ -288,13 +290,14 @@ function useHealingSpellAction(
 
     displayMessage(`${displayName.name} casted ${spell.displayName}`);
 
-    return new UseSpellCommand(spell.id, ecs);
+    return new UseSpellCommand(spell.id, ecs, map, entityMap);
 }
 
 function healAllyAction(
     ecs: World,
     aiState: PlannerAIComponent,
-    map: GameMap
+    map: GameMap,
+    entityMap: Map<string, Entity[]>
 ): Command {
     const pos = aiState.entity.getOne(PositionComponent);
     const spells = aiState.entity.getOne(SpellsComponent);
@@ -334,7 +337,7 @@ function healAllyAction(
 
     displayMessage(`${displayName.name} casted ${spell.displayName}`);
 
-    return new UseSpellCommand(spell.id, ecs, target, map);
+    return new UseSpellCommand(spell.id, ecs, map, entityMap, target);
 }
 
 /**
@@ -347,7 +350,12 @@ function healAllyAction(
  * @returns {function} the action update function
  */
 function castSpellAction(spellID: string) {
-    return function (ecs: World, aiState: PlannerAIComponent, map: GameMap): Command {
+    return function (
+        ecs: World,
+        aiState: PlannerAIComponent,
+        map: GameMap,
+        entityMap: Map<string, Entity[]>
+    ): Command {
         if (aiState.target === null) { throw new Error("Cannot cast spell without a target"); }
 
         const spellData = aiState.entity.getOne(SpellsComponent);
@@ -362,7 +370,7 @@ function castSpellAction(spellID: string) {
         const targetPos = aiState.target.getOne(PositionComponent);
         if (targetPos === undefined) { throw new Error(`Target entity ${aiState.target.id} is missing PositionComponent`); }
 
-        return new UseSpellCommand(spellID, ecs, targetPos, map);
+        return new UseSpellCommand(spellID, ecs, map, entityMap, targetPos);
     };
 }
 
@@ -393,7 +401,7 @@ function runAwayAction(
     ecs: World,
     aiState: PlannerAIComponent,
     map: GameMap,
-    triggerMap: Map<string, Entity>
+    entityMap: Map<string, Entity[]>
 ): Command {
     // TODO: Could improve this by using basic steering behaviors so that the
     // AI at first moves away from the target and then follows the path to the
@@ -414,10 +422,11 @@ function runAwayAction(
         do {
             // TODO should also fix this to make it so the target is at least
             // n tiles away from the target we're afraid of
-            fearState.runAwayTarget = getRandomOpenSpace(ecs, map);
+            fearState.runAwayTarget = getRandomOpenSpace(map, entityMap);
 
             path = getStepsTowardsTarget(
                 ecs,
+                entityMap,
                 aiState.entity,
                 pos,
                 fearState.runAwayTarget,
@@ -428,6 +437,7 @@ function runAwayAction(
     } else {
         path = getStepsTowardsTarget(
             ecs,
+            entityMap,
             aiState.entity,
             pos,
             fearState.runAwayTarget,
@@ -446,14 +456,14 @@ function runAwayAction(
         fearState.runAwayTarget = null;
     }
 
-    return new GoToLocationCommand(path, ecs, map, triggerMap);
+    return new GoToLocationCommand(path, ecs, map, entityMap);
 }
 
 function goToSafePositionAction(
     ecs: World,
     aiState: PlannerAIComponent,
     map: GameMap,
-    triggerMap: Map<string, Entity>
+    entityMap: Map<string, Entity[]>
 ): Command {
     const pos = aiState.entity.getOne(PositionComponent);
     const speedData = aiState.entity.getOne(SpeedComponent);
@@ -479,14 +489,14 @@ function goToSafePositionAction(
     // remove our own position
     path.shift();
     path = path.slice(0, speedData.maxTilesPerMove);
-    return new GoToLocationCommand(path, ecs, map, triggerMap);
+    return new GoToLocationCommand(path, ecs, map, entityMap);
 }
 
 function repositionAction(
     ecs: World,
     aiState: PlannerAIComponent,
     map: GameMap,
-    triggerMap: Map<string, Entity>
+    entityMap: Map<string, Entity[]>
 ): Command {
     if (aiState.target === null) { throw new Error("Cannot perform chaseAction without a target"); }
 
@@ -518,7 +528,7 @@ function repositionAction(
     // remove our own position
     path.shift();
     path = path.slice(0, speedData.maxTilesPerMove);
-    return new GoToLocationCommand(path, ecs, map, triggerMap);
+    return new GoToLocationCommand(path, ecs, map, entityMap);
 }
 
 function standbyWeight(ecs: World, aiState: PlannerAIComponent): number {
@@ -549,7 +559,7 @@ interface Action {
         ecs: World,
         ai: PlannerAIComponent,
         map: GameMap,
-        triggerMap: Map<string, Entity>
+        entityMap: Map<string, Entity[]>
     ) => Command,
     weight: (ecs: World, aiState: PlannerAIComponent) => number
 }

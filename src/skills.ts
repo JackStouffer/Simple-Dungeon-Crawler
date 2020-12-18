@@ -61,12 +61,13 @@ export interface SpellDataDetails {
 }
 
 export type SkillFunction = (
-    ecs: World,
     details: ItemDataDetails | SpellDataDetails,
     user: Entity,
-    target: Nullable<Point>,
-    map: Nullable<GameMap>,
-    rotation: Nullable<number>
+    ecs?: World,
+    map?: GameMap,
+    entityMap?: Map<string, Entity[]>,
+    target?: Point,
+    rotation?: number
 ) => boolean;
 
 /**
@@ -78,18 +79,16 @@ export type SkillFunction = (
  * @param {GameObject} user The object using the item
  */
 function castHeal(
-    ecs: World,
     item: ItemDataDetails | SpellDataDetails,
     user: Entity
 ): boolean {
-    if (globals.Game === null) { throw new Error("Global game object is null"); }
     if (item.value === null) { throw new Error("Item does not have a healing value"); }
 
     const hpData = getEffectiveHitPointData(user);
     if (hpData === null) { throw new Error(`Trying to heal entity ${user.id} without any hp data`); }
 
     if (hpData.hp >= hpData.maxHp) {
-        if (user === globals.Game.player) {
+        if (user.id === "player") {
             displayMessage("You are already at full health.");
         } else {
             const displayName = user.getOne(DisplayNameComponent)!;
@@ -104,17 +103,16 @@ function castHeal(
 }
 
 function castHealOther(
-    ecs: World,
     item: ItemDataDetails | SpellDataDetails,
     user: Entity,
-    target: Nullable<Point>,
-    map: Nullable<GameMap>
+    ecs: World,
+    map: GameMap,
+    entityMap: Map<string, Entity[]>,
+    target: Point
 ): boolean {
     if (item.value === null) { throw new Error("Item does not have a value for castDamageSpell"); }
-    if (target === null) { throw new Error("Target cannot be null for castDamageSpell"); }
-    if (map === null) { throw new Error("Map cannot be null for castDamageSpell"); }
 
-    const targetedEntity = mouseTarget(ecs, map, target);
+    const targetedEntity = mouseTarget(ecs, map, entityMap, target);
     if (targetedEntity === null) {
         displayMessage("Canceled casting");
         return false;
@@ -250,17 +248,16 @@ function rollForStatusEffect(
 }
 
 export function castDamageSpell(
-    ecs: World,
     item: ItemDataDetails | SpellDataDetails,
     user: Entity,
-    target: Nullable<Point>,
-    map: Nullable<GameMap>
+    ecs: World,
+    map: GameMap,
+    entityMap: Map<string, Entity[]>,
+    target: Point
 ): boolean {
     if (item.value === null) { throw new Error("Item does not have a value for castDamageSpell"); }
-    if (target === null) { throw new Error("Target cannot be null for castDamageSpell"); }
-    if (map === null) { throw new Error("Map cannot be null for castDamageSpell"); }
 
-    const targetedEntity = mouseTarget(ecs, map, target);
+    const targetedEntity = mouseTarget(ecs, map, entityMap, target);
     if (targetedEntity === null) {
         displayMessage("Canceled casting");
         return false;
@@ -283,15 +280,12 @@ export function castDamageSpell(
 }
 
 export function castWildDamageSpell(
-    ecs: World,
     item: ItemDataDetails | SpellDataDetails,
     user: Entity,
-    targetedPos: Nullable<Point>,
-    map: Nullable<GameMap>
+    ecs: World,
+    map: GameMap
 ): boolean {
-    if (globals.Game === null) { throw new Error("Global game object is null"); }
     if (item.value === null || item.damageType === undefined) { throw new Error("Item has missing data"); }
-    if (map === null) { throw new Error("Map cannot be null for castDamageSpell"); }
 
     const pos = user.getOne(PositionComponent);
     if (pos === undefined) { throw new Error("can't call castWildDamageSpell with a user without a position"); }
@@ -302,7 +296,7 @@ export function castWildDamageSpell(
     } while (targetedEntity === user);
 
     if (targetedEntity === null) {
-        if (user === globals.Game.player) {
+        if (user.id === "player") {
             displayMessage("No target is close enough to use the scroll");
         }
         return false;
@@ -318,17 +312,16 @@ export function castWildDamageSpell(
 }
 
 export function castConfuse(
-    ecs: World,
     item: ItemDataDetails | SpellDataDetails,
     user: Entity,
-    targetedPos: Nullable<Point>,
-    map: Nullable<GameMap>
+    ecs: World,
+    map: GameMap,
+    entityMap: Map<string, Entity[]>,
+    target: Point
 ): boolean {
     if (item.value === null) { throw new Error("Item does not have a value"); }
-    if (targetedPos === null) { throw new Error("Target cannot be null for castConfuse"); }
-    if (map === null) { throw new Error("Map cannot be null for castConfuse"); }
 
-    const entity = mouseTarget(ecs, map, targetedPos);
+    const entity = mouseTarget(ecs, map, entityMap, target);
     if (entity === null) {
         displayMessage("Canceled casting");
         return false;
@@ -365,7 +358,6 @@ export function castClairvoyance(): boolean {
  * of turns. Does not stack.
  */
 export function castHaste(
-    ecs: World,
     item: ItemDataDetails | SpellDataDetails,
     user: Entity
 ): boolean {
@@ -397,17 +389,16 @@ export function castHaste(
  * of turns. Does not stack.
  */
 export function castSlow(
-    ecs: World,
     item: ItemDataDetails | SpellDataDetails,
     user: Entity,
-    target: Nullable<Point>,
-    map: Nullable<GameMap>
+    ecs: World,
+    map: GameMap,
+    entityMap: Map<string, Entity[]>,
+    target: Point
 ): boolean {
     if (item.value === null) { throw new Error("Item does not have a value"); }
-    if (target === null) { throw new Error("Target cannot be null for castSlow"); }
-    if (map === null) { throw new Error("Map cannot be null for castSlow"); }
 
-    const entity = mouseTarget(ecs, map, target);
+    const entity = mouseTarget(ecs, map, entityMap, target);
     if (entity === null) {
         displayMessage("Canceled casting");
         return false;
@@ -453,18 +444,16 @@ export function castSlow(
  * ice spells.
  */
 function castWall(
-    ecs: World,
     item: ItemDataDetails | SpellDataDetails,
     user: Entity,
-    target: Nullable<Point>,
-    map: Nullable<GameMap>,
-    rotation: Nullable<number>,
+    ecs: World,
+    map: GameMap,
+    entityMap: Map<string, Entity[]>,
+    target: Point,
+    rotation: number,
     objectId: string
 ): boolean {
     if (globals.Game === null) { throw new Error("Global game object is null"); }
-    if (target === null) { throw new Error("Target cannot be null for castWall"); }
-    if (map === null) { throw new Error("Map cannot be null for castWall"); }
-    if (rotation === null) { rotation = 0; }
     if (item.areaOfEffect === undefined) { throw new Error("areaOfEffect cannot be null for castWall"); }
 
     for (let dx = 0; dx < item.areaOfEffect.width; dx++) {
@@ -490,7 +479,7 @@ function castWall(
                     break;
             }
 
-            const { blocks, entity } = isBlocked(ecs, map, locationX, locationY);
+            const { blocks, entity } = isBlocked(map, entityMap, locationX, locationY);
 
             if (blocks === true && entity === null) {
                 continue;
@@ -504,38 +493,42 @@ function castWall(
 }
 
 export function castIceWall(
-    ecs: World,
     item: ItemDataDetails | SpellDataDetails,
     user: Entity,
-    target: Nullable<Point>,
-    map: Nullable<GameMap>,
-    rotation: Nullable<number>
+    ecs: World,
+    map: GameMap,
+    entityMap: Map<string, Entity[]>,
+    target: Point,
+    rotation: number
 ): boolean {
     return castWall(
-        ecs,
         item,
         user,
-        target,
+        ecs,
         map,
+        entityMap,
+        target,
         rotation,
         "ice_wall"
     );
 }
 
 export function castFireWall(
-    ecs: World,
     item: ItemDataDetails | SpellDataDetails,
     user: Entity,
-    target: Nullable<Point>,
-    map: Nullable<GameMap>,
-    rotation: Nullable<number>
+    ecs: World,
+    map: GameMap,
+    entityMap: Map<string, Entity[]>,
+    target: Point,
+    rotation: number
 ): boolean {
     return castWall(
-        ecs,
         item,
         user,
-        target,
+        ecs,
         map,
+        entityMap,
+        target,
         rotation,
         "fire_effect"
     );
@@ -545,16 +538,14 @@ export function castFireWall(
  * Set a target on fire
  */
 export function castCombust(
-    ecs: World,
     item: ItemDataDetails | SpellDataDetails,
     user: Entity,
-    target: Nullable<Point>,
-    map: Nullable<GameMap>
+    ecs: World,
+    map: GameMap,
+    entityMap: Map<string, Entity[]>,
+    target: Point
 ): boolean {
-    if (target === null) { throw new Error("Target cannot be null for castDamageSpell"); }
-    if (map === null) { throw new Error("Map cannot be null for castDamageSpell"); }
-
-    const targetedEntity = mouseTarget(ecs, map, target);
+    const targetedEntity = mouseTarget(ecs, map, entityMap, target);
     if (targetedEntity === null) {
         displayMessage("Canceled casting");
         return false;
@@ -568,13 +559,12 @@ export function castCombust(
  * Set a target on fire
  */
 export function castRain(
-    ecs: World,
     item: ItemDataDetails | SpellDataDetails,
     user: Entity,
-    target: Nullable<Point>,
-    map: Nullable<GameMap>
+    ecs: World,
+    map: GameMap,
+    entityMap: Map<string, Entity[]>
 ): boolean {
-    if (map === null) { throw new Error("Map cannot be null for castWall"); }
     if (item.value === null) { throw new Error("value cannot be null for castRain"); }
 
     const entities = ecs.entities.values();
@@ -584,7 +574,7 @@ export function castRain(
 
     // Spawn puddles in random places on the map
     for (let i = 0; i < 30; i++) {
-        const { x, y } = getRandomOpenSpace(ecs, map);
+        const { x, y } = getRandomOpenSpace(map, entityMap);
         createEntity(ecs, "puddle", x, y);
     }
 
@@ -593,17 +583,16 @@ export function castRain(
 
 
 export function castSilence(
-    ecs: World,
     item: ItemDataDetails | SpellDataDetails,
     user: Entity,
-    target: Nullable<Point>,
-    map: Nullable<GameMap>
+    ecs: World,
+    map: GameMap,
+    entityMap: Map<string, Entity[]>,
+    target: Point
 ): boolean {
     if (item.value === null) { throw new Error("Item does not have a value for castDamageSpell"); }
-    if (target === null) { throw new Error("Target cannot be null for castDamageSpell"); }
-    if (map === null) { throw new Error("Map cannot be null for castDamageSpell"); }
 
-    const targetedEntity = mouseTarget(ecs, map, target);
+    const targetedEntity = mouseTarget(ecs, map, entityMap, target);
     if (targetedEntity === null) {
         displayMessage("Canceled casting");
         return false;

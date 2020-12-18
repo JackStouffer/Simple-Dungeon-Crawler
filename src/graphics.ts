@@ -1,4 +1,4 @@
-import { Entity, Query, System, World } from "ape-ecs";
+import { Entity, Query, System } from "ape-ecs";
 
 import {
     ChestGraphicsComponent,
@@ -22,13 +22,12 @@ import { getEffectiveSpeedData } from "./fighter";
  * belong to the entity "id". If no objects, return the tile color
  */
 function getTransparencyBackground(
-    ecs: World,
+    entityMap: Map<string, Entity[]>,
     pos: PositionComponent,
-    entities: Set<Entity>,
     id: string
 ) {
     let ret: string = globals.Game!.map[pos.y][pos.x].lightingColor;
-    const entitiesAtLocation = getEntitiesAtLocation(ecs, pos.x, pos.y);
+    const entitiesAtLocation = getEntitiesAtLocation(entityMap, pos.x, pos.y);
     if (entitiesAtLocation.length > 0) {
         for (let i = 0; i < entitiesAtLocation.length; i++) {
             const entity = entitiesAtLocation[i];
@@ -94,7 +93,6 @@ export class DrawSystem extends System {
         entity: Entity,
         pos: PositionComponent,
         graphics: GraphicsComponent,
-        entities: Set<Entity>,
         id: string
     ): void {
         if (globals.Game!.map[pos.y][pos.x].isVisibleAndLit()) {
@@ -107,7 +105,7 @@ export class DrawSystem extends System {
             } else if (wetData !== undefined && wetData.wet === true) {
                 bgColor = "blue";
             } else {
-                bgColor = getTransparencyBackground(this.world, pos, entities, id);
+                bgColor = getTransparencyBackground(globals.Game!.entityMap, pos, id);
             }
 
             const { x, y } = globals.Game!.gameCamera.worldToScreen(pos.x, pos.y);
@@ -143,7 +141,7 @@ export class DrawSystem extends System {
             if (entity.tags.has("drawAfterSeen") === true) {
                 this.drawAfterSeen(pos, graphicData);
             } else if (graphicData.bgColor === null) {
-                this.drawWithTransparency(entity, pos, graphicData, entities, entity.id);
+                this.drawWithTransparency(entity, pos, graphicData, entity.id);
             } else {
                 this.draw(entity, pos, graphicData);
             }
@@ -224,7 +222,7 @@ export class DrawPlayerSystem extends System {
                 } else if (wetData !== undefined && wetData.wet === true) {
                     bgColor = "lightblue";
                 } else {
-                    bgColor = getTransparencyBackground(this.world, pos, entities, entity.id);
+                    bgColor = getTransparencyBackground(globals.Game!.entityMap, pos, entity.id);
                 }
 
                 globals.Game!.display!.draw(
@@ -247,11 +245,11 @@ export class DrawPlayerSystem extends System {
                     // AStar calcs
                     if (distanceBetweenPoints(pos, mousePosition) < 40) {
                         const path = getPlayerMovementPath(
-                            this.world,
                             pos,
                             mousePosition,
                             speedData.maxTilesPerMove,
                             globals.Game!.map,
+                            globals.Game!.entityMap
                         );
                         if (path === null) { return; }
 

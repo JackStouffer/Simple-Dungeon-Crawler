@@ -50,19 +50,24 @@ export function createPassableCallback(origin: Point): PassableCallback {
         if (origin.x === x && origin.y === y) {
             return true;
         }
-        const { blocks } = isBlocked(globals.Game.ecs, globals.Game.map, x, y);
+        const { blocks } = isBlocked(globals.Game.map, globals.Game.entityMap, x, y);
 
         return !blocks;
     };
 }
 
-export function generateWeightCallback(ecs: World, origin: Point): WeightCallback {
+export function generateWeightCallback(
+    ecs: World,
+    entityMap: Map<string, Entity[]>,
+    origin: Point
+): WeightCallback {
+    // TODO tiles that neighbor fire trigger tiles should have a high weight as well
     return function (x: number, y: number): number {
         if (globals.Game === null) { throw new Error("Global game object is null"); }
 
         let weight = Math.max(Math.abs(x - origin.x), Math.abs(y - origin.y));
         if (x !== origin.x || y !== origin.y) {
-            const entities = getEntitiesAtLocation(ecs, x, y);
+            const entities = getEntitiesAtLocation(entityMap, x, y);
             for (let i = 0; i < entities.length; i++) {
                 const e = entities[i];
                 const trigger = e.getOne(TriggerTypeComponent);
@@ -120,11 +125,11 @@ export interface Command {
 }
 
 export function getPlayerMovementPath(
-    ecs: World,
     origin: Point,
     destination: Point,
     maxTilesPerMove: number,
-    map: GameMap
+    map: GameMap,
+    entityMap: Map<string, Entity[]>
 ): Nullable<number[][]> {
     // quick distance check to cut down the number of
     // AStar calcs
@@ -141,7 +146,7 @@ export function getPlayerMovementPath(
             return null;
         }
 
-        if (isBlocked(ecs, map, destination.x, destination.y).blocks === true) {
+        if (isBlocked(map, entityMap, destination.x, destination.y).blocks === true) {
             return null;
         }
 
@@ -191,16 +196,16 @@ export class GoToLocationCommand implements Command {
     private readonly path: number[][];
     private readonly map: GameMap;
     private readonly ecs: World;
-    private readonly triggerMap: Map<string, Entity>;
+    private readonly entityMap: Map<string, Entity[]>;
     private tilesMoved: number = 0;
     private readonly usesTurn: boolean = true;
     private done: boolean = false;
 
-    constructor(path: number[][], ecs: World, map: GameMap, triggerMap: Map<string, Entity>) {
+    constructor(path: number[][], ecs: World, map: GameMap, entityMap: Map<string, Entity[]>) {
         this.path = path;
         this.ecs = ecs;
         this.map = map;
-        this.triggerMap = triggerMap;
+        this.entityMap = entityMap;
     }
 
     usedTurn(): boolean {
@@ -214,8 +219,8 @@ export class GoToLocationCommand implements Command {
     execute(deltaTime: DOMHighResTimeStamp, actor: Entity): void {
         const destination = this.path[0];
         const { blocks } = isBlocked(
-            this.ecs,
             this.map,
+            this.entityMap,
             destination[0],
             destination[1]
         );
@@ -233,56 +238,50 @@ export class GoToLocationCommand implements Command {
         this.tilesMoved++;
         this.path.shift();
 
+        // Triggers and spreading fire
         const actorFlammableData = actor.getOne(FlammableComponent);
-        const entities = this.ecs.entities.values();
-        // SPEED: use a Quad-Tree
-        for (const e of entities) {
-            const entityPos = e.getOne(PositionComponent);
+        const entities = this.entityMap.get(`${pos.x},${pos.y}`) ?? [];
+        for (let i = 0; i < entities.length; i++) {
+            const e = entities[i];
             const triggerData = e.getOne(TriggerTypeComponent);
             const flammableData = e.getOne(FlammableComponent);
 
-            if (entityPos === undefined) { continue; }
+            // If we're walking over a flammable entity and we're
+            // on fire, roll to set the entity on fire if the entity
+            // in question is flammable
+            if (actorFlammableData !== undefined &&
+                actorFlammableData.onFire === true &&
+                flammableData !== undefined &&
+                flammableData.onFire === false &&
+                Math.random() >= .5) {
+                setOnFire(
+                    e,
+                    actorFlammableData.fireDamage,
+                    randomIntFromInterval(3, 6)
+                );
+            }
 
-            if (pos.x === entityPos.x &&
-                pos.y === entityPos.y) {
-
-                // If we're walking over a flammable entity and we're
-                // on fire, roll to set the entity on fire if the entity
-                // in question is flammable
-                if (actorFlammableData !== undefined &&
-                    actorFlammableData.onFire === true &&
-                    flammableData !== undefined &&
-                    flammableData.onFire === false &&
-                    Math.random() >= .5) {
-                    setOnFire(
-                        e,
-                        actorFlammableData.fireDamage,
-                        randomIntFromInterval(3, 6)
-                    );
-                }
-
-                // Check to see if the current tile is a trigger
-                // and activate it
-                if (triggerData !== undefined) {
-                    switch (triggerData.triggerType) {
-                        case TriggerType.Event:
-                            eventTrigger(actor, e);
-                            break;
-                        case TriggerType.Fire:
-                            fireTrigger(actor, e);
-                            break;
-                        case TriggerType.ShallowWater:
-                            shallowWaterTrigger(actor);
-                            break;
-                        case TriggerType.DeepWater:
-                            deepWaterTrigger(actor);
-                            break;
-                        case TriggerType.Mud:
-                            mudTrigger(actor);
-                            break;
-                        default:
-                            assertUnreachable(triggerData.triggerType);
-                    }
+            // Check to see if the current tile is a trigger
+            // and activate it
+            if (triggerData !== undefined) {
+                switch (triggerData.triggerType) {
+                    case TriggerType.Event:
+                        eventTrigger(actor, e);
+                        break;
+                    case TriggerType.Fire:
+                        fireTrigger(actor, e);
+                        break;
+                    case TriggerType.ShallowWater:
+                        shallowWaterTrigger(actor);
+                        break;
+                    case TriggerType.DeepWater:
+                        deepWaterTrigger(actor);
+                        break;
+                    case TriggerType.Mud:
+                        mudTrigger(actor);
+                        break;
+                    default:
+                        assertUnreachable(triggerData.triggerType);
                 }
             }
         }
@@ -412,20 +411,23 @@ export class UseItemCommand implements Command {
     private didUseItem: boolean = true;
     private readonly ecs: World;
     private readonly itemID: string;
-    private readonly target: Nullable<Point> = null;
-    private readonly map: Nullable<GameMap> = null;
-    private readonly rotation: Nullable<number> = null;
+    private readonly map: GameMap;
+    private readonly entityMap: Map<string, Entity[]>;
+    private readonly target: Point | undefined;
+    private readonly rotation: number | undefined;
 
     constructor(
         itemID: string,
         ecs: World,
-        target: Nullable<Point> = null,
-        map: Nullable<GameMap> = null,
-        rotation: Nullable<number> = null) {
+        map: GameMap,
+        entityMap: Map<string, Entity[]>,
+        target?: Point,
+        rotation?: number) {
         this.itemID = itemID;
         this.target = target;
         this.map = map;
         this.ecs = ecs;
+        this.entityMap = entityMap;
         this.rotation = rotation;
     }
 
@@ -444,12 +446,13 @@ export class UseItemCommand implements Command {
 
         const itemDetails = ItemData[this.itemID];
         const used = itemDetails.useFunc(
-            this.ecs,
             itemDetails,
             actor,
-            this.target,
+            this.ecs,
             this.map,
-            null
+            this.entityMap,
+            this.target,
+            this.rotation
         );
 
         if (used) {
@@ -471,21 +474,24 @@ export class UseSpellCommand implements Command {
     private didUseSpell: boolean = false;
     private readonly ecs: World;
     private readonly spellID: string;
-    private readonly target: Nullable<Point> = null;
-    private readonly map: Nullable<GameMap> = null;
-    private readonly rotation: Nullable<number> = null;
+    private readonly map: GameMap;
+    private readonly entityMap: Map<string, Entity[]>;
+    private readonly target: Point | undefined;
+    private readonly rotation: number | undefined;
 
     constructor(
         spellID: string,
         ecs: World,
-        target: Nullable<Point> = null,
-        map: Nullable<GameMap> = null,
-        rotation: Nullable<number> = null
+        map: GameMap,
+        entityMap: Map<string, Entity[]>,
+        target?: Point,
+        rotation?: number
     ) {
         this.spellID = spellID;
         this.ecs = ecs;
-        this.target = target;
         this.map = map;
+        this.entityMap = entityMap;
+        this.target = target;
         this.rotation = rotation;
     }
 
@@ -518,11 +524,12 @@ export class UseSpellCommand implements Command {
         }
 
         this.didUseSpell = details.useFunc(
-            this.ecs,
             details,
             actor,
-            this.target,
+            this.ecs,
             this.map,
+            this.entityMap,
+            this.target,
             this.rotation
         );
 

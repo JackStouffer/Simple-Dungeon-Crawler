@@ -84,6 +84,11 @@ export function togglePathfindingDebug(): void {
     globals.Game.debugPathfinding = !(globals.Game.debugPathfinding as boolean);
 }
 
+export function toggleAIDebug(): void {
+    if (globals.Game === null) { throw new Error("Global game object is null"); }
+    globals.Game.debugAI = !(globals.Game.debugAI as boolean);
+}
+
 export function getEntity(id: string): Entity | undefined {
     if (globals.Game === null) { throw new Error("Global game object is null"); }
 
@@ -93,7 +98,7 @@ export function getEntity(id: string): Entity | undefined {
 export function getEntities(x: number, y: number): Entity[] {
     if (globals.Game === null) { throw new Error("Global game object is null"); }
 
-    return getEntitiesAtLocation(globals.Game.ecs, x, y);
+    return getEntitiesAtLocation(globals.Game.entityMap, x, y);
 }
 
 export function step(): void {

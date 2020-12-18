@@ -31,7 +31,8 @@ import { SpellData, SpellDataDetails } from "./skills";
 export function drawStatusBar(
     display: Display,
     ecs: World,
-    map: GameMap
+    map: GameMap,
+    entityMap: Map<string, Entity[]>
 ): void {
     const player = ecs.getEntity("player");
     if (player === undefined) { throw new Error("No player entity found"); }
@@ -100,7 +101,7 @@ export function drawStatusBar(
         display.drawText(30, HEIGHT - UI_HEIGHT + 4, `%c{white}%b{${bgColor}}(${x}, ${y}): ${tile.pathfindingCost}`);
     }
 
-    const target: Nullable<Entity> = get(getEntitiesAtLocation(ecs, x, y), "[0]", null);
+    const target: Nullable<Entity> = get(getEntitiesAtLocation(entityMap, x, y), "[0]", null);
     if (target === null) {
         display.drawText(1, HEIGHT - UI_HEIGHT + 4, `%c{white}%b{${bgColor}}${tile.name}`);
         return;

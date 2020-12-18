@@ -59,13 +59,12 @@ export class DeathSystem extends System {
 
     generateUpdateFearVisibilityCallback(target: Entity) {
         const targetLevelData = target.getOne(LevelComponent);
-        const ecs = this.world;
 
         return function (x: number, y: number) {
             if (targetLevelData === undefined) { return; }
 
             // SPEED: use quad tree
-            const entities = getEntitiesAtLocation(ecs, x, y);
+            const entities = getEntitiesAtLocation(globals.Game!.entityMap, x, y);
             for (const e of entities) {
                 const fearData = e.getOne(FearAIComponent);
                 const levelData = e.getOne(LevelComponent);

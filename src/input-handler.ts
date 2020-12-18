@@ -42,9 +42,10 @@ export enum PlayerState {
 export function mouseTarget(
     ecs: World,
     map: GameMap,
+    entityMap: Map<string, Entity[]>,
     mousePosition: Point
 ): Nullable<Entity> {
-    const entities = getEntitiesAtLocation(ecs, mousePosition.x, mousePosition.y);
+    const entities = getEntitiesAtLocation(entityMap, mousePosition.x, mousePosition.y);
 
     if (mousePosition.x >= map[0].length ||
         mousePosition.y >= map.length ||
@@ -120,7 +121,7 @@ export function getTargetingReticle(inputState: InputHandlingComponent): Point[]
 export function handleInput(
     ecs: World,
     map: GameMap,
-    triggerMap: Map<string, Entity>,
+    entityMap: Map<string, Entity[]>,
     player: Entity
 ): Nullable<Command> {
     if (globals.gameEventEmitter === null) { throw new Error("Global gameEventEmitter cannot be null"); }
@@ -152,6 +153,7 @@ export function handleInput(
                 const target = mouseTarget(
                     ecs,
                     map,
+                    entityMap,
                     mouseDownPosition
                 );
                 if (target !== null && target !== inputState.entity) {
@@ -164,18 +166,18 @@ export function handleInput(
 
             // Movement
             const path = getPlayerMovementPath(
-                ecs,
                 playerPosition,
                 mouseDownPosition,
                 speedData.maxTilesPerMove,
-                map
+                map,
+                entityMap
             );
             if (path !== null) {
                 return new GoToLocationCommand(
                     path,
                     ecs,
                     map,
-                    triggerMap
+                    entityMap
                 );
             }
         }
@@ -202,16 +204,18 @@ export function handleInput(
             command = new UseItemCommand(
                 inputState.itemForTarget.id,
                 ecs,
-                position,
                 map,
+                entityMap,
+                position,
                 inputState.reticleRotation
             );
         } else if (inputState.spellForTarget !== null) {
             command = new UseSpellCommand(
                 inputState.spellForTarget.id,
                 ecs,
-                position,
                 map,
+                entityMap,
+                position,
                 inputState.reticleRotation
             );
         }

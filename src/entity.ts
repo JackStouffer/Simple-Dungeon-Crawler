@@ -3,6 +3,7 @@ import { assignIn } from "lodash";
 
 import { RNG } from "./rot/index";
 
+import globals from "./globals";
 import {
     Affinity,
     BASE_SPEED,
@@ -1673,6 +1674,31 @@ export function createEntity(
 
     return entity;
 }
+
+export class UpdateEntityMapSystem extends System {
+    private mainQuery: Query;
+
+    init() {
+        this.mainQuery = this.createQuery()
+            .fromAll(PositionComponent)
+            .persist();
+    }
+
+    update() {
+        if (globals.Game === null) { throw new Error("Global game object is null"); }
+        const entities = this.mainQuery.execute();
+        globals.Game.entityMap.clear();
+
+        for (const e of entities) {
+            const pos = e.getOne(PositionComponent)!;
+            const key = `${pos.x},${pos.y}`;
+            const val = globals.Game.entityMap.get(key) ?? [];
+            val.push(e);
+            globals.Game.entityMap.set(key, val);
+        }
+    }
+}
+
 
 /**
  * Remove entities with the RemoveAfterNTurnsComponent after they've

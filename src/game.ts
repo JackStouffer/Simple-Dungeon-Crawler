@@ -58,7 +58,8 @@ import {
     LoadLevelComponent,
     ChestGraphicsComponent,
     WetableComponent,
-    SilenceableComponent
+    SilenceableComponent,
+    UpdateEntityMapSystem
 } from "./entity";
 import {
     Command,
@@ -96,7 +97,6 @@ import { assertUnreachable, Nullable } from "./util";
 import { DeathSystem, getEffectiveHitPointData, getKnownSpells, LevelUpSystem, UpdateSchedulerSystem } from "./fighter";
 import { DrawChestsSystem, DrawPlayerSystem, DrawSystem } from "./graphics";
 import { LightingSystem } from "./lighting";
-import { UpdateTriggerMapSystem } from "./trigger";
 import {
     OnFireSystem,
     UpdateHitPointsEffectsSystem,
@@ -123,6 +123,7 @@ export class SimpleDungeonCrawler {
     processCommands: boolean;
     isLightingEnabled: boolean;
     debugPathfinding: boolean;
+    debugAI: boolean;
 
     lastTimestamp: DOMHighResTimeStamp;
     deltaTime: DOMHighResTimeStamp;
@@ -132,7 +133,7 @@ export class SimpleDungeonCrawler {
     currentActor: Nullable<Entity>;
     currentCommand: Nullable<Command>;
     map: GameMap;
-    triggerMap: Map<string, Entity>;
+    entityMap: Map<string, Entity[]>;
 
     private readonly keyBindingMenu: KeyBindingMenu;
     private readonly inventoryMenu: InventoryMenu;
@@ -149,7 +150,7 @@ export class SimpleDungeonCrawler {
         this.currentCommand = null;
         this.scheduler = new EntityScheduler();
         this.map = [];
-        this.triggerMap = new Map();
+        this.entityMap = new Map();
         this.totalTurns = 1;
 
         // debug flags
@@ -281,17 +282,18 @@ export class SimpleDungeonCrawler {
         this.ecs.registerSystem("frame", DrawChestsSystem);
         this.ecs.registerSystem("frame", DrawPlayerSystem);
 
-        this.ecs.registerSystem("postCommand", RemoveAfterNTurnsSystem);
-        this.ecs.registerSystem("postCommand", UpdateHitPointsEffectsSystem);
-        this.ecs.registerSystem("postCommand", UpdateStatsEffectsSystem);
-        this.ecs.registerSystem("postCommand", UpdateSpeedEffectsSystem);
-        this.ecs.registerSystem("postCommand", WetSystem);
-        this.ecs.registerSystem("postCommand", OnFireSystem);
-        this.ecs.registerSystem("postCommand", SilenceSystem);
-        this.ecs.registerSystem("postCommand", LevelUpSystem);
         this.ecs.registerSystem("postCommand", DeathSystem);
         this.ecs.registerSystem("postCommand", UpdateSchedulerSystem);
-        this.ecs.registerSystem("postCommand", UpdateTriggerMapSystem);
+        this.ecs.registerSystem("postCommand", UpdateEntityMapSystem);
+
+        this.ecs.registerSystem("postTurn", RemoveAfterNTurnsSystem);
+        this.ecs.registerSystem("postTurn", UpdateHitPointsEffectsSystem);
+        this.ecs.registerSystem("postTurn", UpdateStatsEffectsSystem);
+        this.ecs.registerSystem("postTurn", UpdateSpeedEffectsSystem);
+        this.ecs.registerSystem("postTurn", WetSystem);
+        this.ecs.registerSystem("postTurn", OnFireSystem);
+        this.ecs.registerSystem("postTurn", SilenceSystem);
+        this.ecs.registerSystem("postTurn", LevelUpSystem);
 
         this.player = createEntity(this.ecs, "player", 1, 1);
 
@@ -347,7 +349,7 @@ export class SimpleDungeonCrawler {
 
                 drawMap(this.display, this.gameCamera, this.map);
                 this.ecs.runSystems("frame");
-                drawStatusBar(this.display, this.ecs, this.map);
+                drawStatusBar(this.display, this.ecs, this.map, this.entityMap);
                 break;
             case GameState.PauseMenu:
                 if (inputHandlerData === undefined) {
@@ -429,7 +431,7 @@ export class SimpleDungeonCrawler {
                 return;
             }
 
-            this.currentCommand = handleInput(this.ecs, this.map, this.triggerMap, this.player);
+            this.currentCommand = handleInput(this.ecs, this.map, this.entityMap, this.player);
             return;
         } else if (this.state === GameState.PauseMenu) {
             if (inputHandlerState === undefined) {
@@ -470,7 +472,7 @@ export class SimpleDungeonCrawler {
                         this.state = GameState.Gameplay;
 
                         this.currentCommand = new UseItemCommand(
-                            item.id, this.ecs, null, this.map, null
+                            item.id, this.ecs, this.map, this.entityMap
                         );
                         break;
                     // Items that need to be targeted
@@ -517,7 +519,7 @@ export class SimpleDungeonCrawler {
                         this.state = GameState.Gameplay;
 
                         this.currentCommand = new UseSpellCommand(
-                            spell.id, this.ecs, null, this.map, null
+                            spell.id, this.ecs, this.map, this.entityMap
                         );
                         break;
                     case SpellType.DamageOther:
@@ -574,7 +576,7 @@ export class SimpleDungeonCrawler {
                         this.ecs,
                         this.currentActor,
                         this.map,
-                        this.triggerMap
+                        this.entityMap
                     );
                 } else {
                     this.currentCommand = new NoOpCommand(true);
@@ -593,9 +595,11 @@ export class SimpleDungeonCrawler {
         if (this.currentCommand !== null && this.currentCommand.isFinished()) {
             if (this.currentCommand.usedTurn()) {
                 if (this.currentActor === this.player) {
-                    this.ecs.runSystems("postCommand");
+                    this.ecs.runSystems("postTurn");
                     this.totalTurns++;
                 }
+
+                this.ecs.runSystems("postCommand");
 
                 this.currentActor = this.ecs.getEntity(
                     this.scheduler.next()!

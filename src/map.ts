@@ -437,28 +437,14 @@ export function loadTiledMap(ecs: World, level: LevelName) {
 }
 
 /**
- * Return all the objects at a given spot on the map.
- * @param {Array} objects An array of GameObjects
- * @param {Number} x The x coordinate
- * @param {Number} y The y coordinate
- * @returns {Array} An array of GameObjects
+ * Return all the objects at a given spot on the map
  */
 export function getEntitiesAtLocation(
-    ecs: World,
+    entityMap: Map<string, Entity[]>,
     x: number,
     y: number
 ): Entity[] {
-    const entities = ecs.createQuery().fromAll(PositionComponent).execute();
-    if (entities === undefined) { return []; }
-    const ret = [];
-
-    for (const entity of entities) {
-        const pos = entity.getOne(PositionComponent)!;
-        if (pos.x === x && pos.y === y) {
-            ret.push(entity);
-        }
-    }
-    return ret;
+    return entityMap.get(`${x},${y}`) ?? [];
 }
 
 interface BlocksResult {
@@ -473,8 +459,8 @@ interface BlocksResult {
  * the tile blocks, false otherwise.
  */
 export function isBlocked(
-    ecs: World,
     map: GameMap,
+    entityMap: Map<string, Entity[]>,
     x: number,
     y: number
 ): BlocksResult {
@@ -484,17 +470,16 @@ export function isBlocked(
         return { entity: null, blocks: true };
     }
 
-    // SPEED use quad tree
-    const entities = ecs.createQuery().fromAll(PositionComponent).execute();
+    const entities = entityMap.get(`${x},${y}`);
+    if (entities === undefined) {
+        return { entity: null, blocks: false };
+    }
 
     let entity: Entity | undefined;
     for (const e of entities) {
-        const pos = e.getOne(PositionComponent)!;
-        if (pos.x === x && pos.y === y) {
-            if (entity === undefined ||
-                (entity !== undefined && !entity.tags.has("blocks") && e.tags.has("blocks"))) {
-                entity = e;
-            }
+        if (entity === undefined ||
+            (entity !== undefined && !entity.tags.has("blocks") && e.tags.has("blocks"))) {
+            entity = e;
         }
     }
 
@@ -623,7 +608,7 @@ export function getRandomFighterWithinRange(
     return possible.length > 0 ? RNG.getItem(possible) : null;
 }
 
-export function getRandomOpenSpace(ecs: World, map: GameMap): Point {
+export function getRandomOpenSpace(map: GameMap, entityMap: Map<string, Entity[]>): Point {
     const width = map[0].length;
     const height = map.length;
     let blocks = false;
@@ -634,7 +619,7 @@ export function getRandomOpenSpace(ecs: World, map: GameMap): Point {
     do {
         x = randomIntFromInterval(0, width);
         y = randomIntFromInterval(0, height);
-        ({ entity, blocks } = isBlocked(ecs, map, x, y));
+        ({ entity, blocks } = isBlocked(map, entityMap, x, y));
     } while (entity !== null || blocks === true);
 
     return { x, y };
