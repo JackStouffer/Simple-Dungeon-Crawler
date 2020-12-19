@@ -16,6 +16,7 @@ import { DamageType, ItemType, SpellType, StatusEffectType, TriggerType } from "
 import {
     createEntity,
     DisplayNameComponent,
+    EntityMap,
     FlammableComponent,
     HitPointsComponent,
     PlannerAIComponent,
@@ -65,7 +66,7 @@ export type SkillFunction = (
     user: Entity,
     ecs?: World,
     map?: GameMap,
-    entityMap?: Map<string, Entity[]>,
+    entityMap?: EntityMap,
     target?: Point,
     rotation?: number
 ) => boolean;
@@ -107,7 +108,7 @@ function castHealOther(
     user: Entity,
     ecs: World,
     map: GameMap,
-    entityMap: Map<string, Entity[]>,
+    entityMap: EntityMap,
     target: Point
 ): boolean {
     if (item.value === null) { throw new Error("Item does not have a value for castDamageSpell"); }
@@ -252,7 +253,7 @@ export function castDamageSpell(
     user: Entity,
     ecs: World,
     map: GameMap,
-    entityMap: Map<string, Entity[]>,
+    entityMap: EntityMap,
     target: Point
 ): boolean {
     if (item.value === null) { throw new Error("Item does not have a value for castDamageSpell"); }
@@ -316,7 +317,7 @@ export function castConfuse(
     user: Entity,
     ecs: World,
     map: GameMap,
-    entityMap: Map<string, Entity[]>,
+    entityMap: EntityMap,
     target: Point
 ): boolean {
     if (item.value === null) { throw new Error("Item does not have a value"); }
@@ -393,7 +394,7 @@ export function castSlow(
     user: Entity,
     ecs: World,
     map: GameMap,
-    entityMap: Map<string, Entity[]>,
+    entityMap: EntityMap,
     target: Point
 ): boolean {
     if (item.value === null) { throw new Error("Item does not have a value"); }
@@ -448,7 +449,7 @@ function castWall(
     user: Entity,
     ecs: World,
     map: GameMap,
-    entityMap: Map<string, Entity[]>,
+    entityMap: EntityMap,
     target: Point,
     rotation: number,
     objectId: string
@@ -497,7 +498,7 @@ export function castIceWall(
     user: Entity,
     ecs: World,
     map: GameMap,
-    entityMap: Map<string, Entity[]>,
+    entityMap: EntityMap,
     target: Point,
     rotation: number
 ): boolean {
@@ -518,7 +519,7 @@ export function castFireWall(
     user: Entity,
     ecs: World,
     map: GameMap,
-    entityMap: Map<string, Entity[]>,
+    entityMap: EntityMap,
     target: Point,
     rotation: number
 ): boolean {
@@ -542,7 +543,7 @@ export function castCombust(
     user: Entity,
     ecs: World,
     map: GameMap,
-    entityMap: Map<string, Entity[]>,
+    entityMap: EntityMap,
     target: Point
 ): boolean {
     const targetedEntity = mouseTarget(ecs, map, entityMap, target);
@@ -563,7 +564,7 @@ export function castRain(
     user: Entity,
     ecs: World,
     map: GameMap,
-    entityMap: Map<string, Entity[]>
+    entityMap: EntityMap
 ): boolean {
     if (item.value === null) { throw new Error("value cannot be null for castRain"); }
 
@@ -587,7 +588,7 @@ export function castSilence(
     user: Entity,
     ecs: World,
     map: GameMap,
-    entityMap: Map<string, Entity[]>,
+    entityMap: EntityMap,
     target: Point
 ): boolean {
     if (item.value === null) { throw new Error("Item does not have a value for castDamageSpell"); }

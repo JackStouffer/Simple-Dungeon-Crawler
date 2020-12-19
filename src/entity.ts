@@ -27,6 +27,8 @@ import { createPlanner } from "./ai/commands";
 import { SpellDataDetails } from "./skills";
 import { Point } from "./map";
 
+export type EntityMap = Map<string, Entity[]>;
+
 interface DamageAffinityMap {
     [DamageType.Physical]: Affinity;
     [DamageType.Fire]: Affinity;

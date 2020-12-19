@@ -13,6 +13,7 @@ import {
 import { distanceBetweenPoints, getEntitiesAtLocation, GameMap, Point } from "./map";
 import { Nullable } from "./util";
 import {
+    EntityMap,
     HitPointsComponent,
     InputHandlingComponent,
     InteractableTypeComponent,
@@ -42,7 +43,7 @@ export enum PlayerState {
 export function mouseTarget(
     ecs: World,
     map: GameMap,
-    entityMap: Map<string, Entity[]>,
+    entityMap: EntityMap,
     mousePosition: Point
 ): Nullable<Entity> {
     const entities = getEntitiesAtLocation(entityMap, mousePosition.x, mousePosition.y);
@@ -121,7 +122,7 @@ export function getTargetingReticle(inputState: InputHandlingComponent): Point[]
 export function handleInput(
     ecs: World,
     map: GameMap,
-    entityMap: Map<string, Entity[]>,
+    entityMap: EntityMap,
     player: Entity
 ): Nullable<Command> {
     if (globals.gameEventEmitter === null) { throw new Error("Global gameEventEmitter cannot be null"); }

@@ -2,6 +2,7 @@ import { Entity, Query, System } from "ape-ecs";
 
 import {
     ChestGraphicsComponent,
+    EntityMap,
     FlammableComponent,
     GraphicsComponent,
     InputHandlingComponent,
@@ -22,7 +23,7 @@ import { getEffectiveSpeedData } from "./fighter";
  * belong to the entity "id". If no objects, return the tile color
  */
 function getTransparencyBackground(
-    entityMap: Map<string, Entity[]>,
+    entityMap: EntityMap,
     pos: PositionComponent,
     id: string
 ) {

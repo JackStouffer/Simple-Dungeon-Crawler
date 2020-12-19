@@ -19,6 +19,7 @@ import {
 import { assertUnreachable, Nullable, randomIntFromInterval } from "./util";
 import { displayMessage } from "./ui";
 import {
+    EntityMap,
     FlammableComponent,
     HitPointsComponent,
     InputHandlingComponent,
@@ -58,7 +59,7 @@ export function createPassableCallback(origin: Point): PassableCallback {
 
 export function generateWeightCallback(
     ecs: World,
-    entityMap: Map<string, Entity[]>,
+    entityMap: EntityMap,
     origin: Point
 ): WeightCallback {
     // TODO tiles that neighbor fire trigger tiles should have a high weight as well
@@ -129,7 +130,7 @@ export function getPlayerMovementPath(
     destination: Point,
     maxTilesPerMove: number,
     map: GameMap,
-    entityMap: Map<string, Entity[]>
+    entityMap: EntityMap
 ): Nullable<number[][]> {
     // quick distance check to cut down the number of
     // AStar calcs
@@ -196,12 +197,12 @@ export class GoToLocationCommand implements Command {
     private readonly path: number[][];
     private readonly map: GameMap;
     private readonly ecs: World;
-    private readonly entityMap: Map<string, Entity[]>;
+    private readonly entityMap: EntityMap;
     private tilesMoved: number = 0;
     private readonly usesTurn: boolean = true;
     private done: boolean = false;
 
-    constructor(path: number[][], ecs: World, map: GameMap, entityMap: Map<string, Entity[]>) {
+    constructor(path: number[][], ecs: World, map: GameMap, entityMap: EntityMap) {
         this.path = path;
         this.ecs = ecs;
         this.map = map;
@@ -412,7 +413,7 @@ export class UseItemCommand implements Command {
     private readonly ecs: World;
     private readonly itemID: string;
     private readonly map: GameMap;
-    private readonly entityMap: Map<string, Entity[]>;
+    private readonly entityMap: EntityMap;
     private readonly target: Point | undefined;
     private readonly rotation: number | undefined;
 
@@ -420,7 +421,7 @@ export class UseItemCommand implements Command {
         itemID: string,
         ecs: World,
         map: GameMap,
-        entityMap: Map<string, Entity[]>,
+        entityMap: EntityMap,
         target?: Point,
         rotation?: number) {
         this.itemID = itemID;
@@ -475,7 +476,7 @@ export class UseSpellCommand implements Command {
     private readonly ecs: World;
     private readonly spellID: string;
     private readonly map: GameMap;
-    private readonly entityMap: Map<string, Entity[]>;
+    private readonly entityMap: EntityMap;
     private readonly target: Point | undefined;
     private readonly rotation: number | undefined;
 
@@ -483,7 +484,7 @@ export class UseSpellCommand implements Command {
         spellID: string,
         ecs: World,
         map: GameMap,
-        entityMap: Map<string, Entity[]>,
+        entityMap: EntityMap,
         target?: Point,
         rotation?: number
     ) {

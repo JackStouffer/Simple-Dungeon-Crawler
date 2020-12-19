@@ -14,6 +14,7 @@ import { GameMap, isBlocked, isSightBlocked } from "../map";
 import {
     ConfusedAIComponent,
     DisplayNameComponent,
+    EntityMap,
     FearAIComponent,
     LevelComponent,
     LoseTargetAIComponent,
@@ -240,7 +241,7 @@ export function plannerAIGenerateCommand(
     ecs: World,
     ai: Entity,
     map: GameMap,
-    entityMap: Map<string, Entity[]>
+    entityMap: EntityMap
 ): Command {
     const aiState = ai.getOne(PlannerAIComponent);
     const pos = ai.getOne(PositionComponent);
@@ -275,7 +276,7 @@ export function confusedAIGenerateCommand(
     ecs: World,
     entity: Entity,
     map: GameMap,
-    entityMap: Map<string, Entity[]>
+    entityMap: EntityMap
 ): Command {
     const confusedState = entity.getOne(ConfusedAIComponent);
     if (confusedState === undefined) { throw new Error(`Entity ${entity.id} is missing a ConfusedAIComponent`); }
@@ -324,7 +325,7 @@ export function generateAICommand(
     ecs: World,
     ai: Entity,
     map: GameMap,
-    entityMap: Map<string, Entity[]>
+    entityMap: EntityMap
 ): Command {
     const aiState = ai.getOne(PlannerAIComponent);
     const confusedState = ai.getOne(ConfusedAIComponent);

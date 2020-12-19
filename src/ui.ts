@@ -15,6 +15,7 @@ import input from "./input";
 import { PlayerState, KeyCommand } from "./input-handler";
 import {
     DisplayNameComponent,
+    EntityMap,
     FlammableComponent,
     FreezableComponent,
     InputHandlingComponent,
@@ -32,7 +33,7 @@ export function drawStatusBar(
     display: Display,
     ecs: World,
     map: GameMap,
-    entityMap: Map<string, Entity[]>
+    entityMap: EntityMap
 ): void {
     const player = ecs.getEntity("player");
     if (player === undefined) { throw new Error("No player entity found"); }

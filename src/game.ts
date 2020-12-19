@@ -59,7 +59,8 @@ import {
     ChestGraphicsComponent,
     WetableComponent,
     SilenceableComponent,
-    UpdateEntityMapSystem
+    UpdateEntityMapSystem,
+    EntityMap
 } from "./entity";
 import {
     Command,
@@ -133,7 +134,7 @@ export class SimpleDungeonCrawler {
     currentActor: Nullable<Entity>;
     currentCommand: Nullable<Command>;
     map: GameMap;
-    entityMap: Map<string, Entity[]>;
+    entityMap: EntityMap;
 
     private readonly keyBindingMenu: KeyBindingMenu;
     private readonly inventoryMenu: InventoryMenu;

@@ -242,6 +242,26 @@ function resolveAtFallbackPosition(ecs: World, ai: Entity): boolean {
     return aiState.isAtFallbackPosition === true ? true : false;
 }
 
+function resolveAliveAllies(ecs: World, ai: Entity): boolean {
+    const pos = ai.getOne(PositionComponent)!;
+    const entities = ecs
+        .createQuery()
+        .fromAll(PositionComponent, PlannerAIComponent, HitPointsComponent)
+        .execute();
+
+    for (const e of entities) {
+        if (e.id === ai.id) { continue; }
+
+        const ePos = e.getOne(PositionComponent)!;
+        const hpData = e.getOne(HitPointsComponent)!;
+        if (distanceBetweenPoints(ePos, pos) < 12 && hpData.hp > 0) {
+            return true;
+        }
+    }
+
+    return false;
+}
+
 interface GoalDataDetails {
     resolver: (ecs: World, ai: Entity) => boolean
 }
@@ -260,9 +280,6 @@ export const GoalData: { [key: string]: GoalDataDetails } = {
     "nextToTarget": {
         resolver: resolveNextToTarget
     },
-    "atDesiredDistance": {
-        resolver: resolveAtDesiredDistance
-    },
     "lowHealth": {
         resolver: resolveLowHealth
     },
@@ -274,6 +291,9 @@ export const GoalData: { [key: string]: GoalDataDetails } = {
     },
     "hasOtherHealingSpell": {
         resolver: resolveHasOtherHealingSpell
+    },
+    "hasAliveAllies": {
+        resolver: resolveAliveAllies
     },
     "allyLowHealth": {
         resolver: resolveAllyLowHealth
@@ -289,6 +309,9 @@ export const GoalData: { [key: string]: GoalDataDetails } = {
     },
     "cowering": {
         resolver: resolveCowering
+    },
+    "atDesiredDistance": {
+        resolver: resolveAtDesiredDistance
     },
     "atFallbackPosition": {
         resolver: resolveAtFallbackPosition

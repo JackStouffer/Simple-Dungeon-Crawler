@@ -12,6 +12,7 @@ import {
 } from "../commands";
 import {
     DisplayNameComponent,
+    EntityMap,
     FearAIComponent,
     HitPointsComponent,
     InventoryComponent,
@@ -45,7 +46,7 @@ import { isPositionPotentiallyDangerous } from "./goals";
  */
 function getStepsTowardsTarget(
     ecs: World,
-    entityMap: Map<string, Entity[]>,
+    entityMap: EntityMap,
     actor: Entity,
     origin: Point,
     target: Point,
@@ -91,7 +92,7 @@ function wanderAction(
     ecs: World,
     ai: PlannerAIComponent,
     map: GameMap,
-    entityMap: Map<string, Entity[]>
+    entityMap: EntityMap
 ): Command {
     let blocks: boolean = true;
     let entity: Nullable<Entity> = null;
@@ -119,7 +120,7 @@ function patrolAction(
     ecs: World,
     aiState: PlannerAIComponent,
     map: GameMap,
-    entityMap: Map<string, Entity[]>
+    entityMap: EntityMap
 ): Command {
     const pos = aiState.entity.getOne(PositionComponent);
     const patrolState = aiState.entity.getOne(PatrolAIComponent);
@@ -174,7 +175,7 @@ function chaseAction(
     ecs: World,
     ai: PlannerAIComponent,
     map: GameMap,
-    entityMap: Map<string, Entity[]>
+    entityMap: EntityMap
 ): Command {
     if (ai.target === null) { throw new Error("Cannot perform chaseAction without a target"); }
 
@@ -257,7 +258,7 @@ function useHealingItemAction(
     ecs: World,
     aiState: PlannerAIComponent,
     map: GameMap,
-    entityMap: Map<string, Entity[]>
+    entityMap: EntityMap
 ): Command {
     const inventoryData = aiState.entity.getOne(InventoryComponent);
     const displayName = aiState.entity.getOne(DisplayNameComponent);
@@ -277,7 +278,7 @@ function useHealingSpellAction(
     ecs: World,
     aiState: PlannerAIComponent,
     map: GameMap,
-    entityMap: Map<string, Entity[]>
+    entityMap: EntityMap
 ): Command {
     const spells = aiState.entity.getOne(SpellsComponent);
     const displayName = aiState.entity.getOne(DisplayNameComponent);
@@ -297,7 +298,7 @@ function healAllyAction(
     ecs: World,
     aiState: PlannerAIComponent,
     map: GameMap,
-    entityMap: Map<string, Entity[]>
+    entityMap: EntityMap
 ): Command {
     const pos = aiState.entity.getOne(PositionComponent);
     const spells = aiState.entity.getOne(SpellsComponent);
@@ -354,7 +355,7 @@ function castSpellAction(spellID: string) {
         ecs: World,
         aiState: PlannerAIComponent,
         map: GameMap,
-        entityMap: Map<string, Entity[]>
+        entityMap: EntityMap
     ): Command {
         if (aiState.target === null) { throw new Error("Cannot cast spell without a target"); }
 
@@ -401,7 +402,7 @@ function runAwayAction(
     ecs: World,
     aiState: PlannerAIComponent,
     map: GameMap,
-    entityMap: Map<string, Entity[]>
+    entityMap: EntityMap
 ): Command {
     // TODO: Could improve this by using basic steering behaviors so that the
     // AI at first moves away from the target and then follows the path to the
@@ -463,7 +464,7 @@ function goToSafePositionAction(
     ecs: World,
     aiState: PlannerAIComponent,
     map: GameMap,
-    entityMap: Map<string, Entity[]>
+    entityMap: EntityMap
 ): Command {
     const pos = aiState.entity.getOne(PositionComponent);
     const speedData = aiState.entity.getOne(SpeedComponent);
@@ -496,7 +497,7 @@ function repositionAction(
     ecs: World,
     aiState: PlannerAIComponent,
     map: GameMap,
-    entityMap: Map<string, Entity[]>
+    entityMap: EntityMap
 ): Command {
     if (aiState.target === null) { throw new Error("Cannot perform chaseAction without a target"); }
 
@@ -531,25 +532,29 @@ function repositionAction(
     return new GoToLocationCommand(path, ecs, map, entityMap);
 }
 
+/**
+ * Stand by until you're the last man standing, then you should melee attack
+ * (or run away, but that's not handled here)
+ */
 function standbyWeight(ecs: World, aiState: PlannerAIComponent): number {
-    const pos = aiState.entity.getOne(PositionComponent)!;
+    if (aiState.target === null) { throw new Error("Cannot find standbyWeight without a target"); }
+    const hpData = aiState.target.getOne(HitPointsComponent);
+    if (hpData === undefined) {
+        throw new Error("target is missing a HitPointsComponent");
+    }
 
-    const entities = ecs
-        .createQuery()
-        .fromAll(PositionComponent, PlannerAIComponent, HitPointsComponent)
-        .execute();
-
-    for (const e of entities) {
-        if (e === aiState.entity) { continue; }
-
-        const ePos = e.getOne(PositionComponent)!;
-        const hpData = e.getOne(HitPointsComponent)!;
-        if (distanceBetweenPoints(ePos, pos) < 12 && hpData.hp > 0) {
-            return 1;
+    const spellData = aiState.entity.getOne(SpellsComponent);
+    if (spellData !== undefined) {
+        const spells = getKnownSpells(spellData);
+        for (let i = 0; i < spells.length; i++) {
+            const s = spells[i];
+            if (s.type === SpellType.DamageOther && s.count > 0) {
+                return hpData.hp;
+            }
         }
     }
 
-    return 100;
+    return 1;
 }
 
 interface Action {
@@ -559,7 +564,7 @@ interface Action {
         ecs: World,
         ai: PlannerAIComponent,
         map: GameMap,
-        entityMap: Map<string, Entity[]>
+        entityMap: EntityMap
     ) => Command,
     weight: (ecs: World, aiState: PlannerAIComponent) => number
 }
@@ -596,13 +601,23 @@ export const ActionData: { [key: string]: Action } = {
         weight: () => 1
     },
     "standby": {
-        preconditions: { targetPositionKnown: true, atDesiredDistance: true, targetKilled: false },
+        preconditions: {
+            targetPositionKnown: true,
+            atDesiredDistance: true,
+            hasAliveAllies: true,
+            targetKilled: false
+        },
         postconditions: { targetKilled: true },
         updateFunction: () => { return new NoOpCommand(true); },
         weight: standbyWeight
     },
     "reposition": {
-        preconditions: { targetPositionKnown: true, atDesiredDistance: false, targetKilled: false },
+        preconditions: {
+            targetPositionKnown: true,
+            atDesiredDistance: false,
+            hasAliveAllies: true,
+            targetKilled: false
+        },
         postconditions: { atDesiredDistance: true },
         updateFunction: repositionAction,
         weight: () => 1

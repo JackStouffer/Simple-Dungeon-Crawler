@@ -13,6 +13,7 @@ import * as dev_room from "./maps/dev_room";
 
 import {
     createEntity,
+    EntityMap,
     HitPointsComponent,
     InventoryComponent,
     PatrolPathComponent,
@@ -440,7 +441,7 @@ export function loadTiledMap(ecs: World, level: LevelName) {
  * Return all the objects at a given spot on the map
  */
 export function getEntitiesAtLocation(
-    entityMap: Map<string, Entity[]>,
+    entityMap: EntityMap,
     x: number,
     y: number
 ): Entity[] {
@@ -460,7 +461,7 @@ interface BlocksResult {
  */
 export function isBlocked(
     map: GameMap,
-    entityMap: Map<string, Entity[]>,
+    entityMap: EntityMap,
     x: number,
     y: number
 ): BlocksResult {
@@ -608,7 +609,7 @@ export function getRandomFighterWithinRange(
     return possible.length > 0 ? RNG.getItem(possible) : null;
 }
 
-export function getRandomOpenSpace(map: GameMap, entityMap: Map<string, Entity[]>): Point {
+export function getRandomOpenSpace(map: GameMap, entityMap: EntityMap): Point {
     const width = map[0].length;
     const height = map.length;
     let blocks = false;
