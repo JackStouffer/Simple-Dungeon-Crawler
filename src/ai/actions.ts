@@ -82,11 +82,7 @@ function getStepsTowardsTarget(
 
 /**
  * Generates a command to move in a random direction that is not
- * blocked.
- * @param ai The AI which is acting
- * @param map The current game map
- * @param gameObjects The current map's list of objects
- * @returns {Command} A move command
+ * blocked
  */
 function wanderAction(
     ecs: World,
@@ -168,8 +164,6 @@ function patrolAction(
 
 /**
  * Go towards the AI's target
- * @param {AIComponent} ai The ai to act
- * @returns {Command} a command to move
  */
 function chaseAction(
     ecs: World,
@@ -219,9 +213,7 @@ function chaseWeight(ecs: World, aiState: PlannerAIComponent): number {
 
 /**
  * Generate a command to attack the current AI's target. Should
- * only be called if the AI is in attack range.
- * @param ai The AI which is acting
- * @returns {Command} An attack command
+ * only be called if the AI is in attack range
  */
 function meleeAttackAction(
     ecs: World,
@@ -250,9 +242,7 @@ function meleeAttackWeight(ecs: World, aiState: PlannerAIComponent): number {
 
 /**
  * Generate a command to use the most effective healing item
- * in the AI's inventory.
- * @param ai The AI to act
- * @returns {Command} A use item command
+ * in the AI's inventory
  */
 function useHealingItemAction(
     ecs: World,
@@ -342,13 +332,8 @@ function healAllyAction(
 }
 
 /**
- * A generator for an Action Update function.
- *
- * The generated update function will return a command
- * which uses the specified spell.
- *
- * @param {string} spellID The ID of the spell to use
- * @returns {function} the action update function
+ * Create a function which will return a command
+ * which uses the specified spell
  */
 function castSpellAction(spellID: string) {
     return function (

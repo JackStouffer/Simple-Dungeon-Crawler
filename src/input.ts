@@ -33,8 +33,6 @@ function init(): void {
 
 /**
  * Test function to mark a key as pressed
- * @param {string} key The key to set to pressed
- * @returns {void}
  */
 function pressKey(key: string): void {
     pressed.add(key);
@@ -50,9 +48,7 @@ function pressMouse(): void {
 }
 
 /**
- * Check if a key is down.
- * @param key The key to check
- * @returns {boolean}
+ * Check if a key is down
  */
 function isDown(key: string): boolean {
     return pressed.has(key);

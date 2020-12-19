@@ -35,13 +35,11 @@ import { hasItem, useItem } from "./inventory";
 import { deepWaterTrigger, eventTrigger, fireTrigger, mudTrigger, shallowWaterTrigger } from "./trigger";
 import { giveItemsInteract, giveSpellsInteract, doorInteract, levelLoadInteract } from "./interactable";
 import { ItemData, SpellData, setOnFire } from "./skills";
+import { DIRS } from "./rot";
 
 /**
  * Creates a function which returns if an x and y coordinate
- * represents a passable spot on the map.
- *
- * @param  {GameObject} owner The game object to be used with this function
- * @return {Function}         the callback
+ * represents a passable spot on the map
  */
 export function createPassableCallback(origin: Point): PassableCallback {
     return function(x: number, y: number) {

@@ -35,9 +35,7 @@ export function getItems(inventory: InventoryComponent): InventoryItemDetails[] 
 }
 
 /**
- * Does the inventory contain at least one of the given item.
- * @param {String} id Item ID
- * @returns {Boolean} Has item
+ * Does the inventory contain at least one of the given item
  */
 export function hasItem(inventory: InventoryComponent, id: string): boolean {
     return inventory.inventory.has(id);
@@ -45,10 +43,7 @@ export function hasItem(inventory: InventoryComponent, id: string): boolean {
 
 /**
  * Add an item to the inventory by ID. Can add more than one
- * of the item with the count parameter.
- * @param {string} id Item ID
- * @param {number} count The number of the item to add
- * @returns {boolean} If the item was successfully added
+ * of the item with the count parameter
  */
 export function addItem(inventory: InventoryComponent, id: string, count: number = 1): boolean {
     if (globals.Game === null) { throw new Error("Global Game object is null"); }
@@ -81,9 +76,7 @@ export function addItem(inventory: InventoryComponent, id: string, count: number
 /**
  * Use an item by ID, thereby reducing its count in the
  * inventory or removing it from the list of items if the
- * count results in zero.
- * @param {string} id Item ID
- * @returns {void}
+ * count results in zero
  */
 export function useItem(inventory: InventoryComponent, id: string): void {
     if (!hasItem(inventory, id)) {

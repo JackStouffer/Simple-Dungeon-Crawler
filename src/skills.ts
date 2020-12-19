@@ -74,10 +74,7 @@ export type SkillFunction = (
 /**
  * Call the heal function on the user's fighter instance. Calls
  * the provided callback with true if the item was successfully used
- * and false otherwise.
- *
- * @param {Object} item The item data
- * @param {GameObject} user The object using the item
+ * and false otherwise
  */
 function castHeal(
     item: ItemDataDetails | SpellDataDetails,

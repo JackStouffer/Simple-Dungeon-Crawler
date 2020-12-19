@@ -491,10 +491,7 @@ export function isBlocked(
 }
 
 /**
- * Returns true if space blocks sight, false otherwise.
- * @param {number} x The x coordinate to check
- * @param {number} y The y coordinate to check
- * @returns {boolean} Does the spot block sight
+ * Returns true if space blocks sight, false otherwise
  */
 export function isSightBlocked(ecs: World, map: GameMap, x: number, y: number): boolean {
     if (map.length === 0) { throw new Error("Bad map data"); }
@@ -579,13 +576,7 @@ export function distanceBetweenPoints(a: Point, b: Point): number {
 
 /**
  * Find a random actor which has a fighter and an ai and is on a
- * visible tile and is within the given max distance.
- *
- * @param  {Array}      map          The current map
- * @param  {Array}      actors       The current list of actors
- * @param  {GameObject} origin       The starting object
- * @param  {Number}     maxDistance  The max allowed distance before giving up
- * @return {GameObject}              The closest actor
+ * visible tile and is within the given max distance
  */
 export function getRandomFighterWithinRange(
     ecs: World,
@@ -650,8 +641,6 @@ export function resetTilePathCosts(map: GameMap): void {
 
 /**
  * Set all the Tile objects in a map to explored
- * @param  {Array} map  An array of arrays of Tiles
- * @return {void}
  */
 export function setAllToExplored(
     map: GameMap,

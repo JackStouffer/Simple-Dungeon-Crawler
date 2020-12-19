@@ -24,6 +24,9 @@ import {
 import { displayMessage } from "../ui";
 import { Nullable } from "../util";
 
+/**
+ * Add fear to an entity when it sees an enemy
+ */
 function calcFearOnSight(ai: Entity): number {
     const aiState = ai.getOne(PlannerAIComponent)!;
     const levelData = ai.getOne(LevelComponent);
@@ -65,10 +68,7 @@ function createVisibilityCallback(ai: Entity): VisibilityCallback {
 
 /**
  * Creates a function which returns if an x and y coordinate
- * represents a spot on the map which can be seen through.
- *
- * @param  {GameObject} owner The game object to be used with this function
- * @return {Function}         the callback
+ * represents a spot on the map which can be seen through
  */
 export function createPassableSightCallback(origin: PositionComponent): PassableCallback {
     return function(x: number, y: number) {
@@ -231,11 +231,7 @@ export function getPlan(ecs: World, aiState: PlannerAIComponent): Nullable<strin
 }
 
 /**
- * Make a plan and return a command to fulfil the first step.
- * @param map {GameMap} The current map
- * @param gameObjects {GameObject[]} The world's game objects
- * @param pathNodes {Map<number, PathNode>} The map's nodes
- * @returns {Command} a command function
+ * Make a plan and return a command to fulfil the first step
  */
 export function plannerAIGenerateCommand(
     ecs: World,

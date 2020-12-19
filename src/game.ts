@@ -392,8 +392,7 @@ export class SimpleDungeonCrawler {
     }
 
     /**
-     * Load a tiled map into the game world
-     * @param name {string} the name of the level to load
+     * Load a tiled map into the game world by name
      */
     loadLevel(name: string): void {
         if (globals.gameEventEmitter === null) { throw new Error("Global gameEventEmitter cannot be null"); }

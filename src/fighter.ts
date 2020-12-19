@@ -411,9 +411,7 @@ export function getEffectiveAffinityData(entity: Entity) {
 
 /**
  * Take damage from an attacker. Takes this fighter's current defense
- * into account.
- * @param {Number} damage The amount of damage
- * @returns {Boolean} Did the attack kill the target
+ * into account
  */
 export function takeDamage(
     target: Entity,
@@ -468,8 +466,7 @@ export function takeDamage(
 
 /**
  * Have this fighter attack another game object. Adds experience
- * if the target was killed.
- * @param target the object to attack
+ * if the target was killed
  */
 export function attack(attacker: Entity, target: Entity): void {
     const attackerLevelData = attacker.getOne(LevelComponent);
@@ -529,10 +526,7 @@ export function useSpell(spellData: SpellsComponent, id: string) {
 
 /**
  * Add a spell to the set of known spells by this
- * fighter.
- * @param {Entity} entity The entity that should learn the spell
- * @param {String} id A spell id
- * @returns {Boolean} If the spell was successfully learned
+ * fighter
  */
 export function addSpellById(entity: Entity, id: string, count: number): boolean {
     if (globals.Game === null) { throw new Error("Global Game object is null"); }
