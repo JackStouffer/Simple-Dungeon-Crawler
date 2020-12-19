@@ -262,7 +262,7 @@ export function plannerAIGenerateCommand(
     aiState.hasTargetInSight = false;
 
     if (plan !== null) {
-        return ActionData[plan].updateFunction(ecs, aiState, map, entityMap);
+        return ActionData[plan].updateFunction(ecs, map, entityMap, aiState);
     } else {
         return new NoOpCommand(true);
     }

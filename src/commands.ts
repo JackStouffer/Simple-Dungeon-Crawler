@@ -57,6 +57,7 @@ export function createPassableCallback(origin: Point): PassableCallback {
 
 export function generateWeightCallback(
     ecs: World,
+    map: GameMap,
     entityMap: EntityMap,
     origin: Point
 ): WeightCallback {

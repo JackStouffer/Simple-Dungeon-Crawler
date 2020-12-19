@@ -46,6 +46,7 @@ import { isPositionPotentiallyDangerous } from "./goals";
  */
 function getStepsTowardsTarget(
     ecs: World,
+    map: GameMap,
     entityMap: EntityMap,
     actor: Entity,
     origin: Point,
@@ -57,7 +58,7 @@ function getStepsTowardsTarget(
         target.x,
         target.y,
         createPassableCallback(origin),
-        generateWeightCallback(ecs, entityMap, origin),
+        generateWeightCallback(ecs, map, entityMap, origin),
         { topology: 8 }
     );
 
@@ -86,16 +87,16 @@ function getStepsTowardsTarget(
  */
 function wanderAction(
     ecs: World,
-    ai: PlannerAIComponent,
     map: GameMap,
-    entityMap: EntityMap
+    entityMap: EntityMap,
+    aiState: PlannerAIComponent
 ): Command {
     let blocks: boolean = true;
     let entity: Nullable<Entity> = null;
     let newX: number = 0;
     let newY: number = 0;
     let dir: number = RNG.getItem([0, 1, 2, 3, 4, 5, 6, 7]) ?? 0;
-    const pos = ai.entity.getOne(PositionComponent)!;
+    const pos = aiState.entity.getOne(PositionComponent)!;
 
     do {
         dir = RNG.getItem([0, 1, 2, 3, 4, 5, 6, 7]) ?? 0;
@@ -114,9 +115,9 @@ function wanderAction(
  */
 function patrolAction(
     ecs: World,
-    aiState: PlannerAIComponent,
     map: GameMap,
-    entityMap: EntityMap
+    entityMap: EntityMap,
+    aiState: PlannerAIComponent
 ): Command {
     const pos = aiState.entity.getOne(PositionComponent);
     const patrolState = aiState.entity.getOne(PatrolAIComponent);
@@ -128,6 +129,7 @@ function patrolAction(
     let targetPos: PositionComponent = patrolState.patrolTarget.getOne(PositionComponent);
     let path: Nullable<number[][]> = getStepsTowardsTarget(
         ecs,
+        map,
         entityMap,
         aiState.entity,
         pos,
@@ -147,6 +149,7 @@ function patrolAction(
         targetPos = patrolState.patrolTarget.getOne(PositionComponent);
         path = getStepsTowardsTarget(
             ecs,
+            map,
             entityMap,
             aiState.entity,
             pos,
@@ -167,26 +170,27 @@ function patrolAction(
  */
 function chaseAction(
     ecs: World,
-    ai: PlannerAIComponent,
     map: GameMap,
-    entityMap: EntityMap
+    entityMap: EntityMap,
+    aiState: PlannerAIComponent
 ): Command {
-    if (ai.target === null) { throw new Error("Cannot perform chaseAction without a target"); }
+    if (aiState.target === null) { throw new Error("Cannot perform chaseAction without a target"); }
 
-    const speedData = ai.entity.getOne(SpeedComponent);
-    const posData = ai.entity.getOne(PositionComponent);
-    const targetPosData = ai.target.getOne(PositionComponent);
+    const speedData = aiState.entity.getOne(SpeedComponent);
+    const posData = aiState.entity.getOne(PositionComponent);
+    const targetPosData = aiState.target.getOne(PositionComponent);
     if (speedData === undefined || posData === undefined) {
-        throw new Error(`Missing data for ${ai.entity.id}`);
+        throw new Error(`Missing data for ${aiState.entity.id}`);
     }
     if (targetPosData === undefined) {
-        throw new Error(`Missing data for ${ai.target.id}`);
+        throw new Error(`Missing data for ${aiState.target.id}`);
     }
 
     const path: Nullable<number[][]> = getStepsTowardsTarget(
         ecs,
+        map,
         entityMap,
-        ai.entity,
+        aiState.entity,
         posData,
         targetPosData,
         speedData.maxTilesPerMove
@@ -200,8 +204,6 @@ function chaseAction(
 
 /**
  * Find the weight of chasing the AI's target
- * @param {AIComponent} ai the ai to calculate the weight for
- * @returns {number} the weight
  */
 function chaseWeight(ecs: World, aiState: PlannerAIComponent): number {
     if (aiState.target === null) { return 1; }
@@ -217,10 +219,12 @@ function chaseWeight(ecs: World, aiState: PlannerAIComponent): number {
  */
 function meleeAttackAction(
     ecs: World,
-    ai: PlannerAIComponent
+    map: GameMap,
+    entityMap: EntityMap,
+    aiState: PlannerAIComponent
 ): Command {
-    if (ai.target === null) { throw new Error("Cannot perform meleeAttackAction without a target"); }
-    return new InteractCommand(ai.target);
+    if (aiState.target === null) { throw new Error("Cannot perform meleeAttackAction without a target"); }
+    return new InteractCommand(aiState.target);
 }
 
 /**
@@ -246,9 +250,9 @@ function meleeAttackWeight(ecs: World, aiState: PlannerAIComponent): number {
  */
 function useHealingItemAction(
     ecs: World,
-    aiState: PlannerAIComponent,
     map: GameMap,
-    entityMap: EntityMap
+    entityMap: EntityMap,
+    aiState: PlannerAIComponent
 ): Command {
     const inventoryData = aiState.entity.getOne(InventoryComponent);
     const displayName = aiState.entity.getOne(DisplayNameComponent);
@@ -266,9 +270,9 @@ function useHealingItemAction(
 
 function useHealingSpellAction(
     ecs: World,
-    aiState: PlannerAIComponent,
     map: GameMap,
-    entityMap: EntityMap
+    entityMap: EntityMap,
+    aiState: PlannerAIComponent
 ): Command {
     const spells = aiState.entity.getOne(SpellsComponent);
     const displayName = aiState.entity.getOne(DisplayNameComponent);
@@ -286,9 +290,9 @@ function useHealingSpellAction(
 
 function healAllyAction(
     ecs: World,
-    aiState: PlannerAIComponent,
     map: GameMap,
-    entityMap: EntityMap
+    entityMap: EntityMap,
+    aiState: PlannerAIComponent
 ): Command {
     const pos = aiState.entity.getOne(PositionComponent);
     const spells = aiState.entity.getOne(SpellsComponent);
@@ -335,12 +339,12 @@ function healAllyAction(
  * Create a function which will return a command
  * which uses the specified spell
  */
-function castSpellAction(spellID: string) {
+function castSpellAction(spellID: string): ActionUpdateFunction {
     return function (
         ecs: World,
-        aiState: PlannerAIComponent,
         map: GameMap,
-        entityMap: EntityMap
+        entityMap: EntityMap,
+        aiState: PlannerAIComponent
     ): Command {
         if (aiState.target === null) { throw new Error("Cannot cast spell without a target"); }
 
@@ -385,9 +389,9 @@ function castSpellWeight(spellID: string) {
  */
 function runAwayAction(
     ecs: World,
-    aiState: PlannerAIComponent,
     map: GameMap,
-    entityMap: EntityMap
+    entityMap: EntityMap,
+    aiState: PlannerAIComponent
 ): Command {
     // TODO: Could improve this by using basic steering behaviors so that the
     // AI at first moves away from the target and then follows the path to the
@@ -412,6 +416,7 @@ function runAwayAction(
 
             path = getStepsTowardsTarget(
                 ecs,
+                map,
                 entityMap,
                 aiState.entity,
                 pos,
@@ -423,6 +428,7 @@ function runAwayAction(
     } else {
         path = getStepsTowardsTarget(
             ecs,
+            map,
             entityMap,
             aiState.entity,
             pos,
@@ -447,9 +453,9 @@ function runAwayAction(
 
 function goToSafePositionAction(
     ecs: World,
-    aiState: PlannerAIComponent,
     map: GameMap,
-    entityMap: EntityMap
+    entityMap: EntityMap,
+    aiState: PlannerAIComponent
 ): Command {
     const pos = aiState.entity.getOne(PositionComponent);
     const speedData = aiState.entity.getOne(SpeedComponent);
@@ -480,9 +486,9 @@ function goToSafePositionAction(
 
 function repositionAction(
     ecs: World,
-    aiState: PlannerAIComponent,
     map: GameMap,
-    entityMap: EntityMap
+    entityMap: EntityMap,
+    aiState: PlannerAIComponent
 ): Command {
     if (aiState.target === null) { throw new Error("Cannot perform chaseAction without a target"); }
 
@@ -542,15 +548,17 @@ function standbyWeight(ecs: World, aiState: PlannerAIComponent): number {
     return 1;
 }
 
+type ActionUpdateFunction = (
+    ecs: World,
+    map: GameMap,
+    entityMap: EntityMap,
+    ai: PlannerAIComponent
+) => Command;
+
 interface Action {
     preconditions: { [key: string]: boolean },
     postconditions: { [key: string]: boolean }
-    updateFunction: (
-        ecs: World,
-        ai: PlannerAIComponent,
-        map: GameMap,
-        entityMap: EntityMap
-    ) => Command,
+    updateFunction: ActionUpdateFunction,
     weight: (ecs: World, aiState: PlannerAIComponent) => number
 }
 
