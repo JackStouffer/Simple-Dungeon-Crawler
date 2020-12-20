@@ -2,9 +2,11 @@
 
 ## Version 10
 
-_In Development_
+_December 19, 2020_
 
 * Gameplay
+  * Spells are based around number of casts per spell rather than using mana entity mana
+  * Added a bandit healer who will stay back and heal allies
   * Replaced burn status effect with On Fire status
   * When walking over flammable things in the world while on fire, the objects have a chance to catch on fire
   * Added "Wet" status which
@@ -25,6 +27,7 @@ _In Development_
   * Enemies will now run away from fire
 * Technical
   * Refactor to Entity Component System design rather than the Unity-style Entity with plugin components
+  * Refactor collision detection to use a hash map of entity positions
 * Graphical Changes
   * Game display will now resize based on web browser window size
   * Changed the characters for both the ground and for trees
