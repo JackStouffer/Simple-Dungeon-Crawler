@@ -70,6 +70,7 @@ export class PositionComponent extends Component {
 export class TypeComponent extends Component {
     entityType: string;
 
+    static typeName = "TypeComponent";
     static properties = {
         entityType: "player"
     }
@@ -78,6 +79,7 @@ export class TypeComponent extends Component {
 export class DisplayNameComponent extends Component {
     name: string;
 
+    static typeName = "DisplayNameComponent";
     static properties = {
         name: "player"
     }
@@ -88,6 +90,7 @@ export class GraphicsComponent extends Component {
     fgColor: string;
     bgColor: Nullable<string>;
 
+    static typeName = "GraphicsComponent";
     static properties = {
         char: "",
         bgColor: null,
@@ -101,6 +104,7 @@ export class ChestGraphicsComponent extends Component {
     bgColor: string;
     emptyColor: string;
 
+    static typeName = "ChestGraphicsComponent";
     static properties = {
         char: "*",
         bgColor: "white",
@@ -114,6 +118,7 @@ export class LightingComponent extends Component {
     range: number;
     lightingType: LightingType;
 
+    static typeName = "LightingComponent";
     static properties = {
         color: "white",
         range: 10,
@@ -127,6 +132,7 @@ export class LightingComponent extends Component {
 export class InventoryComponent extends Component {
     inventory: Map<string, number>;
 
+    static typeName = "InventoryComponent";
     static properties = {
         inventory: new Map()
     }
@@ -137,6 +143,7 @@ export class HitPointsComponent extends Component {
     maxHp: number;
     onDeath: DeathType;
 
+    static typeName = "HitPointsComponent";
     static properties = {
         hp: 100,
         maxHp: 100,
@@ -151,6 +158,7 @@ export class HitPointsEffectComponent extends Component {
     turnsLeft: number;
     value: number;
 
+    static typeName = "HitPointsEffectComponent";
     static properties = {
         name: "",
         stat: "hp",
@@ -164,6 +172,7 @@ export class SpeedComponent extends Component {
     speed: number;
     maxTilesPerMove: number;
 
+    static typeName = "SpeedComponent";
     static properties = {
         speed: BASE_SPEED,
         maxTilesPerMove: 7
@@ -177,6 +186,7 @@ export class SpeedEffectComponent extends Component {
     turnsLeft: number;
     value: number;
 
+    static typeName = "SpeedEffectComponent";
     static properties = {
         name: "",
         stat: "speed",
@@ -193,6 +203,7 @@ export class StatsComponent extends Component {
     criticalDamageMultiplier: number;
     ailmentSusceptibility: number;
 
+    static typeName = "StatsComponent";
     static properties = {
         strength: 5,
         defense: 1,
@@ -209,6 +220,7 @@ export class StatsEffectComponent extends Component {
     turnsLeft: number;
     value: number;
 
+    static typeName = "StatsEffectComponent";
     static properties = {
         name: "",
         stat: "strength",
@@ -223,6 +235,7 @@ export class LevelComponent extends Component {
     experience: number;
     experienceGiven: number;
 
+    static typeName = "LevelComponent";
     static properties = {
         level: 1,
         experience: 0,
@@ -238,6 +251,7 @@ export class DamageAffinityComponent extends Component {
     [DamageType.Ice]: Affinity;
     [DamageType.Nature]: Affinity;
 
+    static typeName = "DamageAffinityComponent";
     static properties = {
         [DamageType.Physical]: Affinity.normal,
         [DamageType.Fire]: Affinity.normal,
@@ -251,6 +265,7 @@ export class DamageAffinityComponent extends Component {
 export class SpellsComponent extends Component {
     knownSpells: Map<string, number>;
 
+    static typeName = "SpellsComponent";
     static properties = {
         knownSpells: null
     }
@@ -291,6 +306,7 @@ export class LoseTargetAIComponent extends Component {
     turnsWithTargetOutOfSight: number;
     loseTrackAfterNTurns: number;
 
+    static typeName = "LoseTargetAIComponent";
     static properties = {
         turnsWithTargetOutOfSight: 0,
         loseTrackAfterNTurns: 10
@@ -303,6 +319,7 @@ export class FearAIComponent extends Component {
     runAwayTarget: Nullable<Point>;
     isCowering: boolean;
 
+    static typeName = "FearAIComponent";
     static properties = {
         fear: 0,
         fearThreshold: 10,
@@ -315,6 +332,7 @@ export class FallbackAIComponent extends Component {
     isAtFallbackPosition: boolean;
     fallbackPosition: any;
 
+    static typeName = "FallbackAIComponent";
     static properties = {
         isAtFallbackPosition: false,
         fallbackPosition: EntityRef
@@ -322,16 +340,18 @@ export class FallbackAIComponent extends Component {
 }
 
 export class PatrolAIComponent extends Component {
-    patrolTarget: any;
+    patrolTarget: any; // TODO
 
+    static typeName = "PatrolAIComponent";
     static properties = {
         patrolTarget: EntityRef
     }
 }
 
 export class PatrolPathComponent extends Component {
-    next: any;
+    next: any; // TODO
 
+    static typeName = "PatrolPathComponent";
     static properties = {
         next: EntityRef
     }
@@ -340,6 +360,7 @@ export class PatrolPathComponent extends Component {
 export class ConfusedAIComponent extends Component {
     turnsLeft: number;
 
+    static typeName = "ConfusedAIComponent";
     static properties = {
         turnsLeft: 0
     }
@@ -352,6 +373,7 @@ export class InputHandlingComponent extends Component {
     itemForTarget: Nullable<InventoryItemDetails>;
     spellForTarget: Nullable<SpellDataDetails>;
 
+    static typeName = "InputHandlingComponent";
     static properties = {
         state: PlayerState.Combat,
         reticleRotation: 0,
@@ -365,6 +387,7 @@ export class FreezableComponent extends Component {
     frozen: boolean;
     turnsLeft: number;
 
+    static typeName = "FreezableComponent";
     static properties = {
         frozen: false,
         turnsLeft: 0
@@ -376,6 +399,7 @@ export class FlammableComponent extends Component {
     fireDamage: number;
     turnsLeft: number;
 
+    static typeName = "FlammableComponent";
     static properties = {
         onFire: false,
         fireDamage: 0,
@@ -387,6 +411,7 @@ export class WetableComponent extends Component {
     wet: boolean;
     turnsLeft: number;
 
+    static typeName = "WetableComponent";
     static properties = {
         wet: false,
         turnsLeft: 0
@@ -397,6 +422,7 @@ export class SilenceableComponent extends Component {
     silenced: boolean;
     turnsLeft: number;
 
+    static typeName = "SilenceableComponent";
     static properties = {
         silenced: false,
         turnsLeft: 0
@@ -406,6 +432,7 @@ export class SilenceableComponent extends Component {
 export class TriggerTypeComponent extends Component {
     triggerType: TriggerType;
 
+    static typeName = "TriggerTypeComponent";
     static properties = {
         triggerType: null
     }
@@ -416,6 +443,7 @@ export class FireTriggerComponent extends Component {
     effectDamage: number;
     damage: number;
 
+    static typeName = "FireTriggerComponent";
     static properties = {
         effectTurns: 0,
         effectDamage: 0,
@@ -426,6 +454,7 @@ export class FireTriggerComponent extends Component {
 export class EventTriggerComponent extends Component {
     event: string;
 
+    static typeName = "EventTriggerComponent";
     static properties = {
         event: ""
     }
@@ -434,6 +463,7 @@ export class EventTriggerComponent extends Component {
 export class InteractableTypeComponent extends Component {
     interactableType: InteractableType;
 
+    static typeName = "InteractableTypeComponent";
     static properties = {
         interactableType: InteractableType.Door
     };
@@ -442,6 +472,7 @@ export class InteractableTypeComponent extends Component {
 export class LoadLevelComponent extends Component {
     levelName: string;
 
+    static typeName = "LoadLevelComponent";
     static properties = {
         levelName: ""
     };
@@ -450,6 +481,7 @@ export class LoadLevelComponent extends Component {
 export class RemoveAfterNTurnsComponent extends Component {
     turnsLeft: number;
 
+    static typeName = "RemoveAfterNTurnsComponent";
     static properties = {
         turnsLeft: 0
     };

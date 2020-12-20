@@ -29,6 +29,8 @@ _December 19, 2020_
   * Refactor to Entity Component System design rather than the Unity-style Entity with plugin components
   * Refactor collision detection to use a hash map of entity positions
 * Graphical Changes
+  * Inventory and spell menus will now show a small description at the bottom
+  * Inventory and spell menus can now paginate
   * Game display will now resize based on web browser window size
   * Changed the characters for both the ground and for trees
   * Entities that are on fire will now have a different background color
