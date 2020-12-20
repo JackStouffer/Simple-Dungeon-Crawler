@@ -20,6 +20,7 @@ import { assertUnreachable, Nullable, randomIntFromInterval } from "./util";
 import { displayMessage } from "./ui";
 import {
     EntityMap,
+    FireTriggerComponent,
     FlammableComponent,
     HitPointsComponent,
     InputHandlingComponent,
@@ -65,6 +66,16 @@ export function generateWeightCallback(
     return function (x: number, y: number): number {
         if (globals.Game === null) { throw new Error("Global game object is null"); }
 
+        const neighbors: [number, number][] = [];
+        for (let i=0; i < DIRS[8].length; i++) {
+            const dir = DIRS[8][i];
+            const dx = x + dir[0];
+            const dy = y + dir[1];
+
+            if (isBlocked(map, entityMap, dx, dy).blocks) { continue; }
+            neighbors.push([dx, dy]);
+        }
+
         let weight = Math.max(Math.abs(x - origin.x), Math.abs(y - origin.y));
         if (x !== origin.x || y !== origin.y) {
             const entities = getEntitiesAtLocation(entityMap, x, y);
@@ -91,6 +102,18 @@ export function generateWeightCallback(
                         default:
                             assertUnreachable(trigger.triggerType);
                     }
+                }
+            }
+
+            // Should avoid tiles with neighboring fire triggers to avoid being set on fire
+            for (let i = 0; i < neighbors.length; i++) {
+                const n = neighbors[i];
+                const entities = getEntitiesAtLocation(entityMap, n[0], n[1]);
+
+                for (let j = 0; j < entities.length; j++) {
+                    const e = entities[j];
+                    const trigger = e.getOne(FireTriggerComponent);
+                    if (trigger !== undefined) { weight += 5; }
                 }
             }
         }

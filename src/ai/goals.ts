@@ -1,6 +1,7 @@
 import { Entity, World } from "ape-ecs";
 import { ItemType, SpellType } from "../constants";
 import {
+    EntityMap,
     FallbackAIComponent,
     FearAIComponent,
     FireTriggerComponent,
@@ -14,22 +15,22 @@ import {
 } from "../entity";
 import { getEffectiveHitPointData, getKnownSpells } from "../fighter";
 import { getItems } from "../inventory";
-import { distanceBetweenPoints, Point } from "../map";
+import { distanceBetweenPoints, getEntitiesAtLocation, Point } from "../map";
 import { DIRS } from "../rot";
 import { SpellData } from "../skills";
 import { Nullable } from "../util";
 
-function resolveTargetPositionKnown(ecs: World, ai: Entity): boolean {
+function resolveTargetPositionKnown(ecs: World, entityMap: EntityMap, ai: Entity): boolean {
     const aiState = ai.getOne(PlannerAIComponent);
     return aiState?.knowsTargetPosition === true ? true : false;
 }
 
-function resolveTargetInLOS(ecs: World, ai: Entity): boolean {
+function resolveTargetInLOS(ecs: World, entityMap: EntityMap, ai: Entity): boolean {
     const aiState = ai.getOne(PlannerAIComponent);
     return aiState?.hasTargetInSight === true ? true : false;
 }
 
-function resolveNextToTarget(ecs: World, ai: Entity): boolean {
+function resolveNextToTarget(ecs: World, entityMap: EntityMap, ai: Entity): boolean {
     const aiState = ai.getOne(PlannerAIComponent);
     if (aiState === undefined || aiState.target === null) {
         throw new Error(`Entity ${ai.id} is missing a target`);
@@ -43,7 +44,7 @@ function resolveNextToTarget(ecs: World, ai: Entity): boolean {
     return distanceBetweenPoints(pos, targetPos) < 1.5;
 }
 
-function resolveAtDesiredDistance(ecs: World, ai: Entity): boolean {
+function resolveAtDesiredDistance(ecs: World, entityMap: EntityMap, ai: Entity): boolean {
     const aiState = ai.getOne(PlannerAIComponent);
     if (aiState === undefined || aiState.target === null) {
         throw new Error(`Entity ${ai.id} is missing a target`);
@@ -57,8 +58,8 @@ function resolveAtDesiredDistance(ecs: World, ai: Entity): boolean {
     return Math.floor(distanceBetweenPoints(pos, targetPos)) === aiState.desiredDistanceToTarget;
 }
 
-function resolveEnoughCastsForSpellGenerator(spellID: string) {
-    return function (ecs: World, ai: Entity): boolean {
+function resolveEnoughCastsForSpellGenerator(spellID: string): GoalResolver {
+    return function (ecs: World, entityMap: EntityMap, ai: Entity): boolean {
         const spellData = ai.getOne(SpellsComponent);
         if (spellData === undefined) { return false; }
 
@@ -69,7 +70,7 @@ function resolveEnoughCastsForSpellGenerator(spellID: string) {
     };
 }
 
-function resolveLowHealth(ecs: World, ai: Entity): boolean {
+function resolveLowHealth(ecs: World, entityMap: EntityMap, ai: Entity): boolean {
     const hpData = getEffectiveHitPointData(ai);
     const aiState = ai.getOne(PlannerAIComponent);
     if (hpData === null || aiState === undefined) { return false; }
@@ -77,7 +78,7 @@ function resolveLowHealth(ecs: World, ai: Entity): boolean {
     return (hpData.hp / hpData.maxHp) <= aiState.lowHealthThreshold;
 }
 
-function resolveHasHealingItem(ecs: World, ai: Entity): boolean {
+function resolveHasHealingItem(ecs: World, entityMap: EntityMap, ai: Entity): boolean {
     const inventoryData = ai.getOne(InventoryComponent);
     if (inventoryData === undefined) { return false; }
 
@@ -86,7 +87,7 @@ function resolveHasHealingItem(ecs: World, ai: Entity): boolean {
     return healthItems.length > 0;
 }
 
-function resolveHasSelfHealingSpell(ecs: World, ai: Entity): boolean {
+function resolveHasSelfHealingSpell(ecs: World, entityMap: EntityMap, ai: Entity): boolean {
     const spells = ai.getOne(SpellsComponent);
     if (spells === undefined) { return false; }
 
@@ -95,7 +96,7 @@ function resolveHasSelfHealingSpell(ecs: World, ai: Entity): boolean {
     return healthSpells.length > 0;
 }
 
-function resolveHasOtherHealingSpell(ecs: World, ai: Entity): boolean {
+function resolveHasOtherHealingSpell(ecs: World, entityMap: EntityMap, ai: Entity): boolean {
     const spells = ai.getOne(SpellsComponent);
     if (spells === undefined) { return false; }
 
@@ -104,7 +105,7 @@ function resolveHasOtherHealingSpell(ecs: World, ai: Entity): boolean {
     return healthSpells.length > 0;
 }
 
-function resolveAllyLowHealth(ecs: World, ai: Entity): boolean {
+function resolveAllyLowHealth(ecs: World, entityMap: EntityMap, ai: Entity): boolean {
     const pos = ai.getOne(PositionComponent)!;
     const aiData = ai.getOne(PlannerAIComponent)!;
     const entities = ecs
@@ -182,33 +183,27 @@ export function isPositionPotentiallyDangerous(
     return false;
 }
 
-function resolveInDangerousArea(ecs: World, ai: Entity): boolean {
-    // For now, check if own tile or any neighbors have on fire
-    // entities
+function resolveInDangerousArea(ecs: World, entityMap: EntityMap, ai: Entity): boolean {
     const pos = ai.getOne(PositionComponent)!;
-    const positions: Set<string> = new Set();
 
-    positions.add(`${pos.x},${pos.y}`);
-    for (let i = 0; i < DIRS[8].length; i++) {
+    const positions: [number, number][] = [[pos.x, pos.y]];
+    for (let i=0; i < DIRS[8].length; i++) {
         const dir = DIRS[8][i];
-        const cx = pos.x + dir[0];
-        const cy = pos.y + dir[1];
-        positions.add(`${cx},${cy}`);
+        const dx = pos.x + dir[0];
+        const dy = pos.y + dir[1];
+        positions.push([dx, dy]);
     }
 
-    // SPEED use quad tree
-    const entities = ecs.entities.values();
-    for (const e of entities) {
-        if (e === ai) { continue; }
+    // Check if own tile or any neighbors have on fire entities
+    for (let i = 0; i < positions.length; i++) {
+        const p = positions[i];
+        const entities = getEntitiesAtLocation(entityMap, p[0], p[1]);
 
-        const entityPos = e.getOne(PositionComponent);
-        if (entityPos !== undefined &&
-            positions.has(`${entityPos.x},${entityPos.y}`)) {
-
+        for (let j = 0; j < entities.length; j++) {
+            const e = entities[j];
             const flameData = e.getOne(FlammableComponent);
             const triggerData = e.getOne(FireTriggerComponent);
-
-            if (triggerData !== undefined || (flameData !== undefined && flameData.onFire)) {
+            if (triggerData !== undefined || (flameData !== undefined && flameData.onFire && !e.tags.has("sentient"))) {
                 return true;
             }
         }
@@ -217,32 +212,32 @@ function resolveInDangerousArea(ecs: World, ai: Entity): boolean {
     return false;
 }
 
-function resolveTargetKilled(ecs: World, ai: Entity) {
+function resolveTargetKilled(ecs: World, entityMap: EntityMap, ai: Entity) {
     const aiState = ai.getOne(PlannerAIComponent);
     if (aiState === undefined) { return false; }
     return aiState.target === null;
 }
 
-function resolveAfraid(ecs: World, ai: Entity) {
+function resolveAfraid(ecs: World, entityMap: EntityMap, ai: Entity) {
     const aiState = ai.getOne(FearAIComponent);
     if (aiState === undefined) { return false; }
     return aiState.fear >= aiState.fearThreshold;
 }
 
-function resolveCowering(ecs: World, ai: Entity) {
+function resolveCowering(ecs: World, entityMap: EntityMap, ai: Entity) {
     const aiState = ai.getOne(FearAIComponent);
     const pos = ai.getOne(PositionComponent);
     if (aiState === undefined || pos === undefined) { return false; }
     return pos.x === aiState.runAwayTarget?.x && pos.y === aiState.runAwayTarget?.y;
 }
 
-function resolveAtFallbackPosition(ecs: World, ai: Entity): boolean {
+function resolveAtFallbackPosition(ecs: World, entityMap: EntityMap, ai: Entity): boolean {
     const aiState = ai.getOne(FallbackAIComponent);
     if (aiState === undefined) { return false; }
     return aiState.isAtFallbackPosition === true ? true : false;
 }
 
-function resolveAliveAllies(ecs: World, ai: Entity): boolean {
+function resolveAliveAllies(ecs: World, entityMap: EntityMap, ai: Entity): boolean {
     const pos = ai.getOne(PositionComponent)!;
     const entities = ecs
         .createQuery()
@@ -262,8 +257,10 @@ function resolveAliveAllies(ecs: World, ai: Entity): boolean {
     return false;
 }
 
+type GoalResolver = (ecs: World, entityMap: EntityMap, ai: Entity) => boolean;
+
 interface GoalDataDetails {
-    resolver: (ecs: World, ai: Entity) => boolean
+    resolver: GoalResolver
 }
 
 /**

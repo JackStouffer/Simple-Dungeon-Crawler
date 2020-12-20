@@ -128,12 +128,16 @@ export function getStateName(aiState: PlannerAIComponent): string {
     }
 }
 
-export function generateWorldState(ecs: World, aiState: PlannerAIComponent): PlannerWorldState {
+function generateWorldState(
+    ecs: World,
+    entityMap: EntityMap,
+    aiState: PlannerAIComponent
+): PlannerWorldState {
     const state: PlannerWorldState = {};
 
     for (const goal of aiState.goals) {
         const goalData = GoalData[goal];
-        state[goal] = goalData.resolver(ecs, aiState.entity);
+        state[goal] = goalData.resolver(ecs, entityMap, aiState.entity);
     }
 
     return state;
@@ -143,11 +147,15 @@ export function generateWorldState(ecs: World, aiState: PlannerAIComponent): Pla
  * Set the world state and the weights of the actions on the
  * planner
  */
-export function getPlan(ecs: World, aiState: PlannerAIComponent): Nullable<string> {
+export function getPlan(
+    ecs: World,
+    entityMap: EntityMap,
+    aiState: PlannerAIComponent
+): Nullable<string> {
     const displayName = aiState.entity.getOne(DisplayNameComponent);
     if (displayName === undefined) { throw new Error(`Entity ${aiState.entity.id} is missing a DisplayNameComponent`); }
 
-    const worldState = generateWorldState(ecs, aiState);
+    const worldState = generateWorldState(ecs, entityMap, aiState);
 
     const loseTrackData = aiState.entity.getOne(LoseTargetAIComponent);
     // Lose knowledge of the target's position if the target
@@ -254,7 +262,7 @@ export function plannerAIGenerateCommand(
         createVisibilityCallback(ai)
     );
 
-    const plan = getPlan(ecs, aiState);
+    const plan = getPlan(ecs, entityMap, aiState);
 
     // Assume we've lost sight of the target after every turn,
     // so that when the visibility callback sets the flag to true,
