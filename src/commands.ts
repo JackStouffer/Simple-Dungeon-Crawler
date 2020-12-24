@@ -62,7 +62,6 @@ export function generateWeightCallback(
     entityMap: EntityMap,
     origin: Point
 ): WeightCallback {
-    // TODO tiles that neighbor fire trigger tiles should have a high weight as well
     return function (x: number, y: number): number {
         if (globals.Game === null) { throw new Error("Global game object is null"); }
 

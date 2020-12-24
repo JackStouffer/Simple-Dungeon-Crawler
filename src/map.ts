@@ -296,8 +296,8 @@ export function loadTiledMap(ecs: World, level: LevelName) {
         if (entity === undefined) { throw new Error(`Node ${o.id} not initialized in level load`); }
 
         const nextId = findProperty(o, "next") as number;
-        const next = nextId !== null ? ecs.getEntity(nextId.toString(10)) : null;
-        if (next !== null) {
+        const next = nextId !== null ? ecs.getEntity(nextId.toString(10)) : undefined;
+        if (next !== undefined) {
             const comp = entity.addComponent({
                 type: "PatrolPathComponent"
             }) as PatrolPathComponent;

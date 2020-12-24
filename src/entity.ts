@@ -340,7 +340,7 @@ export class FallbackAIComponent extends Component {
 }
 
 export class PatrolAIComponent extends Component {
-    patrolTarget: any; // TODO
+    patrolTarget: Nullable<Entity>;
 
     static typeName = "PatrolAIComponent";
     static properties = {
@@ -349,7 +349,7 @@ export class PatrolAIComponent extends Component {
 }
 
 export class PatrolPathComponent extends Component {
-    next: any; // TODO
+    next: Nullable<Entity>;
 
     static typeName = "PatrolPathComponent";
     static properties = {

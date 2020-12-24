@@ -126,7 +126,9 @@ function patrolAction(
     }
     if (patrolState.patrolTarget === null) { throw new Error(`Null patrol target for entity ${aiState.entity.id}`); }
 
-    let targetPos: PositionComponent = patrolState.patrolTarget.getOne(PositionComponent);
+    let targetPos = patrolState.patrolTarget.getOne(PositionComponent);
+    if (targetPos === undefined) { throw new Error("Patrol target doesn't have a position"); }
+
     let path: Nullable<number[][]> = getStepsTowardsTarget(
         ecs,
         map,
@@ -140,13 +142,14 @@ function patrolAction(
     if (path === null) {
         const next = patrolState.patrolTarget.getOne(PatrolPathComponent);
         if (next === undefined) { throw new Error(`Missing patrol link on node ${patrolState.patrolTarget.id}`); }
-        patrolState.patrolTarget = next.next;
 
-        if (patrolState.patrolTarget === null) {
+        if (next.next === null) {
             return new NoOpCommand(true);
         }
+        patrolState.patrolTarget = next.next;
 
         targetPos = patrolState.patrolTarget.getOne(PositionComponent);
+        if (targetPos === undefined) { throw new Error("Patrol target doesn't have a position"); }
         path = getStepsTowardsTarget(
             ecs,
             map,
