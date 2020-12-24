@@ -1,5 +1,12 @@
 # Changelog
 
+## Version 11
+
+_In Development_
+
+* Technical
+  * Use Tiled's JSON format instead of the JS format
+
 ## Version 10
 
 _December 19, 2020_

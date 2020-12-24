@@ -991,6 +991,38 @@ const ObjectData: { [key: string]: ObjectDataDetails } = {
             }
         }
     },
+    "thick_underbrush": {
+        staticallyKnownComponents: {
+            tags: ["blocksSight"],
+            c: {
+                TypeComponent: {
+                    entityType: "thick_underbrush"
+                },
+                DisplayNameComponent: {
+                    name: "Underbrush"
+                },
+                GraphicsComponent: {
+                    char: "\u1310",
+                    fgColor: "green",
+                    bgColor: null
+                },
+                FlammableComponent: {
+                    onFire: false,
+                    fireDamage: 0,
+                    turnsLeft: 0
+                },
+                WetableComponent: {
+                    wet: false,
+                    turnsLeft: 0
+                },
+                HitPointsComponent: {
+                    hp: 10,
+                    maxHp: 10,
+                    onDeath: DeathType.RemoveFromWorld
+                }
+            }
+        }
+    },
     "player": {
         addInventory: true,
         addInput: true,

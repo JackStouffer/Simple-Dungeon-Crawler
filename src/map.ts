@@ -4,12 +4,7 @@ import { Entity, World } from "ape-ecs";
 import { Display, RNG } from "./rot/index";
 import { toRGB, fromString, multiply } from "./rot/color";
 
-// @ts-expect-error
-import * as forrest_001 from "./maps/forrest_001";
-// @ts-expect-error
-import * as durdwin_001 from "./maps/durdwin_001";
-// @ts-expect-error
-import * as dev_room from "./maps/dev_room";
+import * as forrest_001 from "./maps/forrest_001.json";
 
 import {
     createEntity,
@@ -31,9 +26,7 @@ const COLOR_DARK_GROUND = "rgb(50, 50, 50)";
 const COLOR_AMBIENT_LIGHT = "rgb(50, 50, 50)";
 
 const LevelData: { [key: string]: any } = {
-    forrest_001,
-    durdwin_001,
-    dev_room
+    forrest_001
 };
 
 type LevelName = keyof typeof LevelData;
@@ -51,7 +44,7 @@ interface TileDataDetails {
 }
 
 const TileData: { [key: number]: TileDataDetails } = {
-    780: {
+    2010: {
         name: "Gravestone",
         char: "\u07E1",
         fgColor: "white",
@@ -62,7 +55,7 @@ const TileData: { [key: number]: TileDataDetails } = {
         blocksSight: false,
         reflectivity: 0.18
     },
-    964: {
+    6: {
         name: "grass",
         char: ".",
         fgColor: "green",
@@ -73,7 +66,7 @@ const TileData: { [key: number]: TileDataDetails } = {
         blocksSight: false,
         reflectivity: 0.18
     },
-    980: {
+    5805: {
         name: "A stove",
         char: "\u233B",
         fgColor: "black",
@@ -84,18 +77,7 @@ const TileData: { [key: number]: TileDataDetails } = {
         blocksSight: false,
         reflectivity: 0.18
     },
-    1048: {
-        name: "A wall",
-        char: "",
-        fgColor: "#352620",
-        bgColor: "#352620",
-        fgColorExplored: "black",
-        bgColorExplored: "black",
-        blocks: true,
-        blocksSight: true,
-        reflectivity: 0.18
-    },
-    1165: {
+    1620: {
         name: "A tree",
         char: "\u23C3",
         fgColor: "lightgreen",
@@ -106,7 +88,7 @@ const TileData: { [key: number]: TileDataDetails } = {
         blocksSight: true,
         reflectivity: 0.18
     },
-    1543: {
+    194: {
         name: "bed",
         char: "\u2583",
         fgColor: "gold",
@@ -117,7 +99,7 @@ const TileData: { [key: number]: TileDataDetails } = {
         blocksSight: false,
         reflectivity: 0.18
     },
-    2710: {
+    1090: {
         name: "A table",
         char: "\u03A0",
         fgColor: "tan",
@@ -128,7 +110,7 @@ const TileData: { [key: number]: TileDataDetails } = {
         blocksSight: false,
         reflectivity: 0.18
     },
-    2869: {
+    732: {
         name: "A chair",
         char: "\u043F",
         fgColor: "black",
@@ -139,7 +121,7 @@ const TileData: { [key: number]: TileDataDetails } = {
         blocksSight: false,
         reflectivity: 0.18
     },
-    2936: {
+    385: {
         name: "A cabinet",
         char: "\u2339",
         fgColor: "black",
@@ -154,10 +136,12 @@ const TileData: { [key: number]: TileDataDetails } = {
 Object.freeze(TileData);
 
 const TileToObject: Map<number, string> = new Map([
-    [28, "water"],
-    [32, "shallow_water"],
-    [900, "mud"],
-    [831, "tall_grass"]
+    [1350, "water"],
+    [1, "shallow_water"],
+    [7, "mud"],
+    [1981, "tall_grass"],
+    [1440, "campfire"],
+    [1805, "thick_underbrush"]
 ]);
 
 export class Tile {
@@ -235,7 +219,7 @@ export type GameMap = Tile[][];
 export function loadTiledMap(ecs: World, level: LevelName) {
     if (!(level in LevelData)) { throw new Error(`${level} is not a valid level`); }
 
-    const sourceData = LevelData[level];
+    const sourceData = LevelData[level].default;
     const tileSize: number = sourceData.tileheight;
     const map: GameMap = [];
     let playerLocation: [number, number] = [0, 0];
