@@ -1,8 +1,8 @@
 import { Entity, Query, System } from "ape-ecs";
+import { GlowFilter } from "pixi-filters";
 
 import {
     ChestGraphicsComponent,
-    EntityMap,
     FlammableComponent,
     GraphicsComponent,
     InputHandlingComponent,
@@ -11,39 +11,13 @@ import {
     WetableComponent
 } from "./entity";
 import input from "./input";
-import { distanceBetweenPoints, getEntitiesAtLocation } from "./map";
-import { getTargetingReticle, PlayerState } from "./input-handler";
+import { distanceBetweenPoints } from "./map";
+import { PlayerState } from "./input-handler";
 import { getPlayerMovementPath } from "./commands";
 import { getItems } from "./inventory";
 import globals from "./globals";
 import { getEffectiveSpeedData } from "./fighter";
-
-/**
- * Grab the first background color of an object on the position that doesn't
- * belong to the entity "id". If no objects, return the tile color
- */
-function getTransparencyBackground(
-    entityMap: EntityMap,
-    pos: PositionComponent,
-    id: string
-) {
-    let ret: string = globals.Game!.map[pos.y][pos.x].lightingColor;
-    const entitiesAtLocation = getEntitiesAtLocation(entityMap, pos.x, pos.y);
-    if (entitiesAtLocation.length > 0) {
-        for (let i = 0; i < entitiesAtLocation.length; i++) {
-            const entity = entitiesAtLocation[i];
-            if (entity.id === id) {
-                continue;
-            }
-            const graphicData = entity.getOne(GraphicsComponent);
-            if (graphicData !== undefined && graphicData.bgColor !== null) {
-                ret = graphicData.bgColor;
-                break;
-            }
-        }
-    }
-    return ret;
-}
+import { SpellData } from "./skills";
 
 /**
  * Draw all entities with a GraphicsComponent and a PositionComponent,
@@ -66,64 +40,37 @@ export class DrawSystem extends System {
      * x and y coordinates if the tile it's on is visible.
      */
     draw(entity: Entity, pos: PositionComponent, graphics: GraphicsComponent): void {
-        if (globals.Game!.map[pos.y][pos.x].isVisibleAndLit()) {
-            const { x, y } = globals.Game!.gameCamera.worldToScreen(pos.x, pos.y);
+        if (globals.Game!.map[pos.y][pos.x].isVisibleAndLit() && graphics.sprite !== null) {
+            graphics.sprite.visible = true;
+
+            const { x, y } = globals.Game!.gameCamera.tilePositionToScreen(pos.x, pos.y);
+            graphics.sprite.position.set(x, y);
+            graphics.sprite.scale.set(globals.Game!.gameCamera.zoom, globals.Game!.gameCamera.zoom);
 
             const flameData = entity.getOne(FlammableComponent);
             const wetData = entity.getOne(WetableComponent);
 
-            let bgColor = graphics.bgColor;
             if (flameData !== undefined && flameData.onFire === true) {
-                bgColor = "red";
+                graphics.sprite.tint = 0xFF0000;
             } else if (wetData !== undefined && wetData.wet === true) {
-                bgColor = "blue";
-            }
-
-            globals.Game!.display!.draw(x, y, graphics.char, graphics.fgColor, bgColor);
-        }
-    }
-
-    /**
-     * Draws the object's character and foreground color normally.
-     *
-     * If the tile is not occupied by anything else, use the lighting
-     * color of the owner occupied tile as the background. If there are
-     * other objects on the same tile, use that object's background color.
-     */
-    drawWithTransparency(
-        entity: Entity,
-        pos: PositionComponent,
-        graphics: GraphicsComponent,
-        id: string
-    ): void {
-        if (globals.Game!.map[pos.y][pos.x].isVisibleAndLit()) {
-            const flameData = entity.getOne(FlammableComponent);
-            const wetData = entity.getOne(WetableComponent);
-
-            let bgColor;
-            if (flameData !== undefined && flameData.onFire === true) {
-                bgColor = "red";
-            } else if (wetData !== undefined && wetData.wet === true) {
-                bgColor = "blue";
+                graphics.sprite.tint = 0x0000FF;
             } else {
-                bgColor = getTransparencyBackground(globals.Game!.entityMap, pos, id);
+                graphics.sprite.tint = 0xFFFFFF;
             }
-
-            const { x, y } = globals.Game!.gameCamera.worldToScreen(pos.x, pos.y);
-            globals.Game!.display!.draw(
-                x,
-                y,
-                graphics.char,
-                graphics.fgColor,
-                bgColor
-            );
+        } else if (graphics.sprite !== null) {
+            graphics.sprite.visible = false;
         }
     }
 
     drawAfterSeen(pos: PositionComponent, graphics: GraphicsComponent): void {
-        if (globals.Game!.map[pos.y][pos.x].explored) {
-            const { x, y } = globals.Game!.gameCamera.worldToScreen(pos.x, pos.y);
-            globals.Game!.display!.draw(x, y, graphics.char, graphics.fgColor, graphics.bgColor);
+        if (globals.Game!.map[pos.y][pos.x].explored && graphics.sprite !== null) {
+            graphics.sprite.visible = true;
+
+            const { x, y } = globals.Game!.gameCamera.tilePositionToScreen(pos.x, pos.y);
+            graphics.sprite.position.set(x, y);
+            graphics.sprite.scale.set(globals.Game!.gameCamera.zoom, globals.Game!.gameCamera.zoom);
+        } else if (graphics.sprite !== null) {
+            graphics.sprite.visible = false;
         }
     }
 
@@ -141,8 +88,6 @@ export class DrawSystem extends System {
 
             if (entity.tags.has("drawAfterSeen") === true) {
                 this.drawAfterSeen(pos, graphicData);
-            } else if (graphicData.bgColor === null) {
-                this.drawWithTransparency(entity, pos, graphicData, entity.id);
             } else {
                 this.draw(entity, pos, graphicData);
             }
@@ -171,29 +116,100 @@ export class DrawChestsSystem extends System {
         const entities = this.chestGraphics.execute();
         for (const entity of entities) {
             const pos = entity.getOne(PositionComponent)!;
+            const graphics = entity.getOne(ChestGraphicsComponent);
+
+            if (graphics === undefined || graphics.sprite === null) { throw new Error("Missing graphics data on chest"); }
 
             if (globals.Game.map[pos.y][pos.x].explored) {
-                const graphics = entity.getOne(ChestGraphicsComponent)!;
                 const inventory = entity.getOne(InventoryComponent)!;
-                const bgColor = getItems(inventory).length > 0 ?
-                    graphics.bgColor :
-                    graphics.emptyColor;
 
-                const { x, y } = globals.Game.gameCamera.worldToScreen(pos.x, pos.y);
-                globals.Game.display!.draw(x, y, graphics.char, graphics.fgColor, bgColor);
+                graphics.sprite.visible = false;
+
+                if (getItems(inventory).length > 0) {
+                    graphics.sprite.tint = 0xFFFFFF;
+                } else {
+                    graphics.sprite.tint = 0xFF00FF;
+                }
+
+                const { x, y } = globals.Game.gameCamera.tilePositionToScreen(pos.x, pos.y);
+                graphics.sprite.position.set(x, y);
+                graphics.sprite.scale.set(
+                    globals.Game!.gameCamera.zoom,
+                    globals.Game!.gameCamera.zoom
+                );
+            } else {
+                graphics.sprite.visible = false;
             }
         }
     }
 }
 
+/**
+ * Returns a list of Points that represent the area being targeted by
+ * the player.
+ */
+function getTargetingReticle(inputState: InputHandlingComponent): [number, number][] {
+    if (inputState.state !== PlayerState.Target) { throw new Error("Cannot get reticle outside of targeting state"); }
+
+    const ret: [number, number][] = [];
+
+    const mousePosition = input.getMousePosition();
+    if (mousePosition === null) { return ret; }
+
+    if (inputState.spellForTarget !== null) {
+        const spellData = SpellData[inputState.spellForTarget.id];
+        if (spellData.areaOfEffect !== undefined) {
+            for (let dx = 0; dx < spellData.areaOfEffect.width; dx++) {
+                for (let dy = 0; dy < spellData.areaOfEffect.height; dy++) {
+                    switch (inputState.reticleRotation) {
+                        case 0:
+                            ret.push([ mousePosition.x + dx, mousePosition.y + dy ]);
+                            break;
+                        case 90:
+                            ret.push([ mousePosition.x + dy, mousePosition.y + dx ]);
+                            break;
+                        case 180:
+                            ret.push([ mousePosition.x + dx, mousePosition.y - dy ]);
+                            break;
+                        case 270:
+                            ret.push([ mousePosition.x - dy, mousePosition.y + dx ]);
+                            break;
+                        default: break;
+                    }
+                }
+            }
+        } else {
+            ret.push([ mousePosition.x, mousePosition.y ]);
+        }
+    } else {
+        ret.push([ mousePosition.x, mousePosition.y ]);
+    }
+
+    return ret;
+}
+
 export class DrawPlayerSystem extends System {
     private query: Query;
+    private pathFilter: GlowFilter;
+    private targetFilter: GlowFilter;
+    private perviousPath: [number, number][];
 
     init() {
         this.query = this
             .createQuery()
             .fromAll(PositionComponent, InventoryComponent, "input")
             .persist();
+        this.pathFilter = new GlowFilter({
+            color: 0xFBFF00,
+            innerStrength: 2,
+            outerStrength: 0
+        });
+        this.targetFilter = new GlowFilter({
+            color: 0xFF0000,
+            innerStrength: 2,
+            outerStrength: 0
+        });
+        this.perviousPath = [];
     }
 
     update() {
@@ -208,31 +224,31 @@ export class DrawPlayerSystem extends System {
 
             if (speedData === null ||
                 inputStateData === undefined ||
-                graphics === undefined) {
+                graphics === undefined ||
+                graphics.sprite === null) {
                 throw new Error("Player missing speed or input data");
             }
 
             if (globals.Game!.map[pos.y][pos.x].isVisibleAndLit()) {
+                graphics.sprite.visible = true;
+
+                const { x, y } = globals.Game!.gameCamera.tilePositionToScreen(pos.x, pos.y);
+                graphics.sprite.position.set(x, y);
+                graphics.sprite.scale.set(
+                    globals.Game!.gameCamera.zoom,
+                    globals.Game!.gameCamera.zoom
+                );
+
                 const flameData = entity.getOne(FlammableComponent);
                 const wetData = entity.getOne(WetableComponent);
-                const { x, y } = globals.Game!.gameCamera.worldToScreen(pos.x, pos.y);
 
-                let bgColor;
                 if (flameData !== undefined && flameData.onFire === true) {
-                    bgColor = "red";
+                    graphics.sprite.tint = 0xFF0000;
                 } else if (wetData !== undefined && wetData.wet === true) {
-                    bgColor = "lightblue";
+                    graphics.sprite.tint = 0x0000FF;
                 } else {
-                    bgColor = getTransparencyBackground(globals.Game!.entityMap, pos, entity.id);
+                    graphics.sprite.tint = 0xFFFFFF;
                 }
-
-                globals.Game!.display!.draw(
-                    x,
-                    y,
-                    graphics.char,
-                    graphics.fgColor,
-                    bgColor
-                );
 
                 if (inputStateData.state === PlayerState.Combat) {
                     const mousePosition = input.getMousePosition();
@@ -245,6 +261,15 @@ export class DrawPlayerSystem extends System {
                     // quick distance check to cut down the number of
                     // AStar calcs
                     if (distanceBetweenPoints(pos, mousePosition) < 40) {
+                        // clear
+                        for (let i = 0; i < this.perviousPath.length; i++) {
+                            const step = this.perviousPath[i];
+                            globals.Game!
+                                .map[step[1]][step[0]]
+                                .sprite
+                                .filters = [];
+                        }
+
                         const path = getPlayerMovementPath(
                             pos,
                             mousePosition,
@@ -254,32 +279,43 @@ export class DrawPlayerSystem extends System {
                         );
                         if (path === null) { return; }
 
-                        for (let i = 0; i < path.length; i++) {
-                            const step = path[i];
-                            const { x, y } = globals
-                                .Game!
-                                .gameCamera
-                                .worldToScreen(step[0], step[1]);
-                            globals.Game!.display!.draw(x, y, "", "yellow", "yellow");
+                        for (let j = 0; j < path.length; j++) {
+                            const step = path[j];
+                            globals.Game!
+                                .map[step[1]][step[0]]
+                                .sprite
+                                .filters = [this.pathFilter];
                         }
+                        this.perviousPath = path;
                     }
                 } else if (inputStateData.state === PlayerState.Target) {
+                    // clear
+                    for (let i = 0; i < this.perviousPath.length; i++) {
+                        const step = this.perviousPath[i];
+                        globals.Game!
+                            .map[step[1]][step[0]]
+                            .sprite
+                            .filters = [];
+                    }
+
                     const targetArea = getTargetingReticle(inputStateData);
 
                     for (let i = 0; i < targetArea.length; i++) {
-                        if (targetArea[i].x >= globals.Game!.map[0].length ||
-                        targetArea[i].y >= globals.Game!.map.length ||
-                        globals.Game!.map[targetArea[i].y][targetArea[i].x].visible === false) {
+                        if (targetArea[i][0] >= globals.Game!.map[0].length ||
+                        targetArea[i][1] >= globals.Game!.map.length ||
+                        globals.Game!.map[targetArea[i][1]][targetArea[i][0]].visible === false) {
                             return;
                         }
 
-                        const { x, y } = globals
-                            .Game!
-                            .gameCamera
-                            .worldToScreen(targetArea[i].x, targetArea[i].y);
-                        globals.Game!.display!.draw(x, y, "X", "black", "yellow");
+                        globals.Game!
+                            .map[targetArea[i][1]][targetArea[i][0]]
+                            .sprite
+                            .filters = [this.targetFilter];
                     }
+                    this.perviousPath = targetArea;
                 }
+            } else {
+                graphics.sprite.visible = false;
             }
         }
     }

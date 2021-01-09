@@ -115,9 +115,13 @@ export default class Display {
     setOptions(options: Partial<DisplayOptions>) {
         Object.assign(this._options, options);
 
-        if (options.width || options.height || options.fontSize ||
-            options.fontFamily || options.spacing || options.layout) {
-            if (options.layout) {
+        if (options.width !== undefined ||
+            options.height !== undefined ||
+            options.fontSize !== undefined ||
+            options.fontFamily !== undefined ||
+            options.spacing !== undefined ||
+            options.layout !== undefined) {
+            if (options.layout !== undefined) {
                 const ctor = BACKENDS[options.layout];
                 this._backend = new ctor();
             }
@@ -218,7 +222,7 @@ export default class Display {
 
         const tokens = Text.tokenize(text, maxWidth);
 
-        while (tokens.length) { // interpret tokenized opcode stream
+        while (tokens.length > 0) { // interpret tokenized opcode stream
             const token = tokens.shift();
             let isSpace = false,
                 isPrevSpace = false,

@@ -1,8 +1,8 @@
 import { get } from "lodash";
 import { Entity, World } from "ape-ecs";
+import * as PIXI from "pixi.js";
 
-import { Display, RNG } from "./rot/index";
-import { toRGB, fromString, multiply } from "./rot/color";
+import { RNG } from "./rot/index";
 
 import * as forrest_001 from "./maps/forrest_001.json";
 
@@ -20,9 +20,6 @@ import { Nullable, randomIntFromInterval } from "./util";
 import { createPlanner } from "./ai/commands";
 import { ItemData } from "./skills";
 
-const COLOR_INVISIBLE_WALL = "black";
-const COLOR_INVISIBLE_GROUND = "black";
-const COLOR_DARK_GROUND = "rgb(50, 50, 50)";
 const COLOR_AMBIENT_LIGHT = "rgb(50, 50, 50)";
 
 const LevelData: { [key: string]: any } = {
@@ -33,11 +30,7 @@ type LevelName = keyof typeof LevelData;
 
 interface TileDataDetails {
     name: string;
-    char: string;
-    fgColor: string;
-    bgColor: string;
-    fgColorExplored: string;
-    bgColorExplored: string;
+    textureKey: string;
     blocks: boolean;
     blocksSight: boolean;
     reflectivity: number;
@@ -46,88 +39,56 @@ interface TileDataDetails {
 const TileData: { [key: number]: TileDataDetails } = {
     2010: {
         name: "Gravestone",
-        char: "\u07E1",
-        fgColor: "white",
-        bgColor: "brown",
-        fgColorExplored: "white",
-        bgColorExplored: "black",
+        textureKey: "gravestone_2",
         blocks: true,
         blocksSight: false,
         reflectivity: 0.18
     },
     6: {
         name: "grass",
-        char: ".",
-        fgColor: "green",
-        bgColor: "white",
-        fgColorExplored: "white",
-        bgColorExplored: "rgb(50, 50, 50)",
+        textureKey: "grass_1",
         blocks: false,
         blocksSight: false,
         reflectivity: 0.18
     },
     5805: {
         name: "A stove",
-        char: "\u233B",
-        fgColor: "black",
-        bgColor: "brown",
-        fgColorExplored: "white",
-        bgColorExplored: "black",
+        textureKey: "stove_1",
         blocks: true,
         blocksSight: false,
         reflectivity: 0.18
     },
     1620: {
         name: "A tree",
-        char: "\u23C3",
-        fgColor: "lightgreen",
-        bgColor: "darkgreen",
-        fgColorExplored: "grey",
-        bgColorExplored: "black",
+        textureKey: "short_pine_tree_1",
         blocks: true,
         blocksSight: true,
         reflectivity: 0.18
     },
     194: {
         name: "bed",
-        char: "\u2583",
-        fgColor: "gold",
-        bgColor: "white",
-        fgColorExplored: "white",
-        bgColorExplored: "black",
+        textureKey: "red_bed_1_front",
         blocks: true,
         blocksSight: false,
         reflectivity: 0.18
     },
     1090: {
         name: "A table",
-        char: "\u03A0",
-        fgColor: "tan",
-        bgColor: "brown",
-        fgColorExplored: "white",
-        bgColorExplored: "black",
+        textureKey: "long_wooden_table_1_middle",
         blocks: true,
         blocksSight: false,
         reflectivity: 0.18
     },
     732: {
         name: "A chair",
-        char: "\u043F",
-        fgColor: "black",
-        bgColor: "brown",
-        fgColorExplored: "white",
-        bgColorExplored: "black",
+        textureKey: "wooden_chair_1_front",
         blocks: true,
         blocksSight: false,
         reflectivity: 0.18
     },
     385: {
         name: "A cabinet",
-        char: "\u2339",
-        fgColor: "black",
-        bgColor: "brown",
-        fgColorExplored: "white",
-        bgColorExplored: "black",
+        textureKey: "cabinets_1",
         blocks: true,
         blocksSight: false,
         reflectivity: 0.18
@@ -146,11 +107,7 @@ const TileToObject: Map<number, string> = new Map([
 
 export class Tile {
     name: string;
-    char: string;
-    fgColor: string;
-    bgColor: string;
-    fgColorExplored: string;
-    bgColorExplored: string;
+    sprite: PIXI.Sprite;
     blocks: boolean;
     blocksSight: boolean;
     visible: boolean;
@@ -161,28 +118,23 @@ export class Tile {
 
     constructor(
         name: string,
-        char: string,
-        fgColor: string,
-        bgColor: string,
-        fgColorExplored: string,
-        bgColorExplored: string,
+        textures: PIXI.ITextureDictionary,
+        textureKey: string,
         blocks: boolean,
         blocksSight: boolean,
         visible: boolean = false,
-        explored : boolean= false
+        explored: boolean = false
     ) {
         this.name = name;
-        this.char = char;
-        this.fgColor = fgColor;
-        this.bgColor = bgColor;
-        this.fgColorExplored = fgColorExplored;
-        this.bgColorExplored = bgColorExplored;
+        if (textures[textureKey] === undefined) { throw new Error(`No texture ${textureKey} in atlas`); }
+        this.sprite = new PIXI.Sprite(textures[textureKey]);
+        this.sprite.zIndex = 0;
         this.blocks = blocks;
         this.blocksSight = blocksSight;
         this.visible = visible;
         this.explored = explored;
         this.reflectivity = 0.18;
-        this.lightingColor = bgColor;
+        this.lightingColor = "white";
     }
 
     /**
@@ -216,7 +168,12 @@ export type GameMap = Tile[][];
 /**
  * Load a Tiled map using its name.
  */
-export function loadTiledMap(ecs: World, level: LevelName) {
+export function loadTiledMap(
+    ecs: World,
+    stage: PIXI.Container,
+    textures: PIXI.ITextureDictionary,
+    level: LevelName
+) {
     if (!(level in LevelData)) { throw new Error(`${level} is not a valid level`); }
 
     const sourceData = LevelData[level].default;
@@ -243,16 +200,15 @@ export function loadTiledMap(ecs: World, level: LevelName) {
         if (!(tile in TileData)) { throw new Error(`${tile} is not valid tile`); }
 
         const data = TileData[tile];
-        return new Tile(
+        const t = new Tile(
             data.name,
-            data.char,
-            data.fgColor,
-            data.bgColor,
-            data.fgColorExplored,
-            data.bgColorExplored,
+            textures,
+            data.textureKey,
             data.blocks,
             data.blocksSight
         );
+        stage.addChild(t.sprite);
+        return t;
     });
 
     for (let i = 0; i < translated.length; i += sourceData.width) {
@@ -299,6 +255,7 @@ export function loadTiledMap(ecs: World, level: LevelName) {
 
         createEntity(
             ecs,
+            textures,
             type,
             Math.floor(i % sourceData.width),
             Math.floor(i / sourceData.width),
@@ -325,6 +282,7 @@ export function loadTiledMap(ecs: World, level: LevelName) {
                 } else {
                     const entity: Entity = createEntity(
                         ecs,
+                        textures,
                         type,
                         Math.floor(o.x / tileSize),
                         Math.floor(o.y / tileSize)
@@ -502,42 +460,43 @@ export function isSightBlocked(ecs: World, map: GameMap, x: number, y: number): 
  * @param {Number} x The x coordinate
  * @param {Number} y The y coordinate
  */
-export function drawTile(display: Display, tile: Tile, x: number, y: number): void {
-    if (x > display._options.width || x < 0 || y > display._options.height || y < 0) {
+export function drawTile(
+    tile: Tile,
+    x: number,
+    y: number,
+    zoom: number
+): void {
+    // FIXME
+    if (x > 928 || x < 0 || y > 608 || y < 0) {
+        tile.sprite.visible = false;
         return;
     }
 
-    let fgColor: string = "";
-    let bgColor: string = "";
+    tile.sprite.position.set(x, y);
+    tile.sprite.scale.set(zoom, zoom);
 
     if (tile.blocks) {
         if (tile.isVisibleAndLit()) {
-            fgColor = tile.fgColor;
-            bgColor = tile.bgColor;
+            tile.sprite.tint = 0xFFFFFF;
+            tile.sprite.visible = true;
         } else if (!tile.explored) {
-            fgColor = COLOR_INVISIBLE_WALL;
-            bgColor = COLOR_INVISIBLE_WALL;
+            tile.sprite.tint = 0xFFFFFF;
+            tile.sprite.visible = false;
         } else if (tile.explored && !tile.isVisibleAndLit()) {
-            fgColor = tile.fgColorExplored;
-            bgColor = tile.bgColorExplored;
+            tile.sprite.tint = 0x999999;
+            tile.sprite.visible = true;
         }
     } else {
         if (tile.isVisibleAndLit()) {
-            fgColor = tile.fgColor;
-            bgColor = toRGB(
-                multiply(fromString(tile.bgColor), fromString(tile.lightingColor))
-            );
+            tile.sprite.tint = 0xFFFFFF;
+            tile.sprite.visible = true;
         } else if (tile.explored) {
-            fgColor = COLOR_DARK_GROUND;
-            bgColor = COLOR_DARK_GROUND;
+            tile.sprite.tint = 0x999999;
+            tile.sprite.visible = true;
         } else {
-            fgColor = COLOR_INVISIBLE_GROUND;
-            bgColor = COLOR_INVISIBLE_GROUND;
+            tile.sprite.tint = 0x0;
+            tile.sprite.visible = false;
         }
-    }
-
-    if (!(fgColor === "black" && bgColor === "black")) {
-        display.draw(x, y, tile.char, fgColor, bgColor);
     }
 }
 
@@ -651,11 +610,11 @@ export function setAllToExplored(
  * @param  {Array}   map     An array of arrays of Tiles
  * @return {void}
  */
-export function drawMap(display: Display, camera: Camera, map: GameMap): void {
+export function drawMap(renderer: PIXI.Renderer, camera: Camera, map: GameMap): void {
     for (let y = 0; y < map.length; y++) {
         for (let x = 0; x < map[y].length; x++) {
-            const { x: screenX, y: screenY } = camera.worldToScreen(x, y);
-            drawTile(display, map[y][x], screenX, screenY);
+            const { x: screenX, y: screenY } = camera.tilePositionToScreen(x, y);
+            drawTile(map[y][x], screenX, screenY, camera.zoom);
         }
     }
 }

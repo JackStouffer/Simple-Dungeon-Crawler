@@ -8,3 +8,4 @@ dist/bin/
 *.tiled-session
 .nyc_output/
 coverage/
+ideas.md

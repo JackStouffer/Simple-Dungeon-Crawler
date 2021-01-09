@@ -20,7 +20,7 @@ function init(): void {
         pressed.add(e.key);
     });
 
-    globals.window.addEventListener("mousedown", function (e: MouseEvent) {
+    globals.Game.canvas.addEventListener("mousedown", function (e: MouseEvent) {
         e.preventDefault();
         mouseDownEvent = e;
     });
@@ -71,17 +71,25 @@ function getFirstKeyPressed(): Nullable<string> {
 function getLeftMouseDown(): Nullable<Point> {
     if (globals.Game === null ||
         globals.Game === undefined ||
-        globals.Game.display === null ||
         mouseDownEvent === null
-    ) { return null; }
-
-    const pos = globals.Game.display.eventToPosition(mouseDownEvent);
-
-    if (pos[0] < 0 || pos[1] < 0) {
+    ) {
         return null;
     }
 
-    return globals.Game.gameCamera.screenToWorld(pos[0], pos[1]);
+    const rect = (mouseDownEvent.target! as HTMLElement).getBoundingClientRect();
+    const x = mouseDownEvent.clientX - rect.left;
+    const y = mouseDownEvent.clientY - rect.top;
+
+    if (x < 0 || y < 0) {
+        return null;
+    }
+
+    const tilePos = globals.Game.gameCamera.screenToTilePosition(x, y);
+    if (tilePos.y >= globals.Game.map.length || tilePos.x >= globals.Game.map[0].length) {
+        return null;
+    }
+
+    return tilePos;
 }
 
 /**
@@ -92,12 +100,24 @@ function getLeftMouseDown(): Nullable<Point> {
 function getMousePosition(): Nullable<Point> {
     if (globals.Game === null ||
         globals.Game === undefined ||
-        globals.Game.display === null ||
         mouseMoveEvent === null
-    ) { return null; }
+    ) {
+        return null;
+    }
 
-    const pos = globals.Game.display.eventToPosition(mouseMoveEvent);
-    return globals.Game.gameCamera.screenToWorld(pos[0], pos[1]);
+    const rect = (mouseMoveEvent.target! as HTMLElement).getBoundingClientRect();
+    const x = mouseMoveEvent.clientX - rect.left;
+    const y = mouseMoveEvent.clientY - rect.top;
+
+    if (x < 0 || y < 0) {
+        return null;
+    }
+    const tilePos = globals.Game.gameCamera.screenToTilePosition(x, y);
+    if (tilePos.y >= globals.Game.map.length || tilePos.x >= globals.Game.map[0].length) {
+        return null;
+    }
+
+    return tilePos;
 }
 
 /**

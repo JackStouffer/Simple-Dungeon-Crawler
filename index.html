@@ -18,6 +18,11 @@
                 justify-content: center;
             }
 
+            #canvas canvas {
+                image-rendering: -webkit-optimize-contrast; /* historic fallback */
+	            image-rendering: crisp-edges; /* standard property */
+            }
+
             #log {
                 width: 200px;
                 max-height: 585px;

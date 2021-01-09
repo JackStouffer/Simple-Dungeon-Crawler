@@ -1,7 +1,7 @@
 import { EventEmitter } from "events";
 import { Entity, World } from "ape-ecs";
+import * as PIXI from "pixi.js";
 
-import { Display } from "./rot/index";
 import EntityScheduler from "./rot/scheduler/ecs";
 
 import globals from "./globals";
@@ -68,9 +68,9 @@ import {
     UseItemCommand,
     UseSpellCommand
 } from "./commands";
-import { WIDTH, HEIGHT, GameState, ItemType, SpellType } from "./constants";
+import { GameState, ItemType, SpellType } from "./constants";
 import input from "./input";
-import { handleInput, PlayerState } from "./input-handler";
+import { playerInput, PlayerState } from "./input-handler";
 import {
     GameMap,
     drawMap,
@@ -81,7 +81,7 @@ import {
     KeyBindingMenu,
     InventoryMenu,
     SpellSelectionMenu,
-    drawStatusBar,
+    StatusBar,
     displayMessage,
 } from "./ui";
 import {
@@ -107,7 +107,6 @@ import {
     SilenceSystem
 } from "./effects";
 import { generateAICommand } from "./ai/commands";
-import { debounce } from "lodash";
 
 globals.gameEventEmitter = new EventEmitter();
 
@@ -116,7 +115,9 @@ export class SimpleDungeonCrawler {
     state: GameState;
     totalTurns: number;
     canvas: Nullable<HTMLElement>;
-    display: Nullable<Display>;
+    tileSet: HTMLImageElement;
+    pixiApp: PIXI.Application;
+    textureAtlas: PIXI.ITextureDictionary;
     gameCamera: Camera;
 
     // debug flags
@@ -136,9 +137,15 @@ export class SimpleDungeonCrawler {
     map: GameMap;
     entityMap: EntityMap;
 
-    private readonly keyBindingMenu: KeyBindingMenu;
-    private readonly inventoryMenu: InventoryMenu;
-    private readonly spellSelectionMenu: SpellSelectionMenu;
+    keyBindingMenu: KeyBindingMenu;
+    inventoryMenu: InventoryMenu;
+    spellSelectionMenu: SpellSelectionMenu;
+    private statusBar: StatusBar;
+
+    openingText: PIXI.Text;
+    losingText: PIXI.Text;
+    winningText: PIXI.Text;
+    loadingText: PIXI.Text;
 
     constructor() {
         if (globals.window === null) { throw new Error("Global window cannot be null"); }
@@ -146,7 +153,6 @@ export class SimpleDungeonCrawler {
 
         this.state = GameState.OpeningCinematic;
         this.canvas = null;
-        this.display = null;
         this.currentActor = null;
         this.currentCommand = null;
         this.scheduler = new EntityScheduler();
@@ -159,42 +165,83 @@ export class SimpleDungeonCrawler {
         this.processCommands = true;
         this.isLightingEnabled = true;
         this.debugPathfinding = false;
-
-        this.display = new Display({
-            width: WIDTH,
-            height: HEIGHT,
-            fontSize: Math.max(
-                Math.floor(globals.window.innerHeight / 40),
-                12
-            ),
-            forceSquareRatio: true
-        });
-        this.canvas = this.display.getContainer();
-        if (this.canvas === null) { throw new Error("this.canvas cannot be null"); }
+        this.pixiApp = new PIXI.Application({ width: 928, height: 608 });
 
         const canvasContainer: Nullable<HTMLElement> = globals.document.getElementById("canvas");
         if (canvasContainer === null) { throw new Error("this.canvas cannot be null"); }
-        canvasContainer.prepend(this.canvas);
 
-        const loading: Nullable<HTMLElement> = globals.document.getElementById("loading");
-        if (loading === null || loading.parentNode === null) { throw new Error("this.canvas cannot be null"); }
-        loading.parentNode.removeChild(loading);
-
-        globals.window.addEventListener(
-            "resize",
-            debounce(resizeGameDisplay, 300),
-            { once: false }
-        );
-
-        this.keyBindingMenu = new KeyBindingMenu();
-        this.inventoryMenu = new InventoryMenu();
-        this.spellSelectionMenu = new SpellSelectionMenu();
-        this.gameCamera = new Camera();
-        this.ecs = new World({
-            trackChanges: true,
-            entityPool: 100,
-            cleanupPools: true
+        canvasContainer.prepend(this.pixiApp.view);
+        this.canvas = this.pixiApp.view;
+        PIXI.settings.RESOLUTION = window.devicePixelRatio ?? 1;
+        PIXI.settings.SCALE_MODE = PIXI.SCALE_MODES.NEAREST;
+        this.pixiApp.stage.sortableChildren = true;
+        PIXI.Loader.shared.onProgress.add((loader: PIXI.Loader) => {
+            parent.loadingText.text = `Loading Textures: ${loader.progress}%`;
         });
+
+        this.openingText = new PIXI.Text(
+            "This is an experiment to test a bunch of gameplay ideas I have. \nIt doesn't represent a finished product, but I hope you'll enjoy it anyway!\n\n\nPress [enter] to start",
+            { fontFamily : "monospace", fontSize: 14, fill : 0xFFFFFF, align : "center" }
+        );
+        this.openingText.x = 150;
+        this.openingText.y = 200;
+        this.openingText.visible = false;
+        this.pixiApp.stage.addChild(this.openingText);
+
+        this.losingText = new PIXI.Text(
+            "You have died\n\n\nPress [enter] to restart",
+            { fontFamily : "monospace", fontSize: 14, fill : 0xFFFFFF, align : "center" }
+        );
+        this.losingText.x = 150;
+        this.losingText.y = 300;
+        this.losingText.visible = false;
+        this.pixiApp.stage.addChild(this.losingText);
+
+        this.winningText = new PIXI.Text(
+            "Press [enter] to restart the game",
+            { fontFamily : "monospace", fontSize: 18, fill : 0xFFFFFF, align : "center" }
+        );
+        this.winningText.x = 150;
+        this.winningText.y = 300;
+        this.winningText.visible = false;
+        this.pixiApp.stage.addChild(this.winningText);
+
+        this.loadingText = new PIXI.Text(
+            "Loading",
+            { fontFamily : "monospace", fontSize: 14, fill : 0xFFFFFF, align : "center" }
+        );
+        this.loadingText.x = 350;
+        this.loadingText.y = 200;
+        this.loadingText.visible = true;
+        this.pixiApp.stage.addChild(this.loadingText);
+
+        const parent = this;
+        PIXI.Loader
+            .shared
+            .add("bin/images/packed_rougelike_sheet.png")
+            .add("bin/images/sprites.json")
+            .load((loader, resources) => {
+                parent.textureAtlas = resources["bin/images/sprites.json"]!.textures!;
+
+                const loading: Nullable<HTMLElement> = globals.document!.getElementById("loading");
+                if (loading === null || loading.parentNode === null) { throw new Error("this.canvas cannot be null"); }
+                loading.parentNode.removeChild(loading);
+
+                parent.keyBindingMenu = new KeyBindingMenu(parent.pixiApp.stage);
+                parent.inventoryMenu = new InventoryMenu(parent.pixiApp.stage);
+                parent.spellSelectionMenu = new SpellSelectionMenu(parent.pixiApp.stage);
+                parent.statusBar = new StatusBar(this.pixiApp.stage);
+                parent.gameCamera = new Camera(parent.pixiApp.screen);
+                parent.ecs = new World({
+                    trackChanges: true,
+                    entityPool: 100,
+                    cleanupPools: true
+                });
+
+                parent
+                    .startGameplay()
+                    .then(() => parent.pixiApp.ticker.add(parent.mainLoop.bind(parent)));
+            });
     }
 
     reset(): void {
@@ -204,7 +251,7 @@ export class SimpleDungeonCrawler {
         });
 
         this.currentActor = null;
-        this.player = createEntity(this.ecs, "player", 1, 1);
+        this.player = createEntity(this.ecs, this.textureAtlas, "player", 1, 1);
         this.map = [];
         this.totalTurns = 1;
 
@@ -220,17 +267,12 @@ export class SimpleDungeonCrawler {
     async startGameplay(): Promise<void> {
         if (globals.gameEventEmitter === null) { throw new Error("Global gameEventEmitter cannot be null"); }
 
-        if (this.display !== null) {
-            this.display.drawText(WIDTH - (WIDTH - 28), 22, "%c{white}Loading Sounds");
-        }
+        this.loadingText.text = "Loading Sounds";
 
         try {
             await loadSounds();
         } catch (err) {
-            if (this.display !== null) {
-                this.display.clear();
-                this.display.drawText(WIDTH - (WIDTH - 10), 22, "%c{white}Error loading game files, please reload the page");
-            }
+            this.loadingText.text = "There was an error when loading sounds. Please reload and try again";
             return;
         }
 
@@ -296,7 +338,6 @@ export class SimpleDungeonCrawler {
         this.ecs.registerSystem("postTurn", SilenceSystem);
         this.ecs.registerSystem("postTurn", LevelUpSystem);
 
-        this.player = createEntity(this.ecs, "player", 1, 1);
 
         globals.gameEventEmitter.on("ui.openInventory", playOpenInventory);
         globals.gameEventEmitter.on("ui.closeInventory", playCloseInventory);
@@ -323,72 +364,9 @@ export class SimpleDungeonCrawler {
         globals.gameEventEmitter.on("tutorial.spellTargeting", explainSpellTargeting);
         globals.gameEventEmitter.on("tutorial.wildSpells", explainWildSpells);
 
-        this.scheduler.add(this.player.id, true);
-        this.gameCamera.follow(this.player);
-
         input.init();
-
-        this.lastTimestamp = performance.now();
-        this.mainLoop(performance.now());
-    }
-
-    /**
-     * Draw the game world to the canvas
-     */
-    render(): void {
-        if (this.display === null) { throw new Error("Cannot render without a display"); }
-        if (this.player === null) { throw new Error("Cannot render without a player"); }
-
-        const inputHandlerData = this.player.getOne(InputHandlingComponent);
-        const inventoryData = this.player.getOne(InventoryComponent);
-        const spellsData = this.player.getOne(SpellsComponent);
-
-        switch (this.state) {
-            case GameState.Gameplay:
-                this.display.clear();
-                this.gameCamera.update(this.map);
-
-                drawMap(this.display, this.gameCamera, this.map);
-                this.ecs.runSystems("frame");
-                drawStatusBar(this.display, this.ecs, this.map, this.entityMap);
-                break;
-            case GameState.PauseMenu:
-                if (inputHandlerData === undefined) {
-                    return;
-                }
-                this.keyBindingMenu.draw(inputHandlerData.keyCommands);
-                break;
-            case GameState.InventoryMenu:
-                if (inventoryData === undefined) {
-                    return;
-                }
-                this.inventoryMenu.draw(getItems(inventoryData));
-                break;
-            case GameState.SpellMenu:
-                if (spellsData === undefined) {
-                    return;
-                }
-                this.spellSelectionMenu.draw(getKnownSpells(spellsData));
-                break;
-            case GameState.OpeningCinematic:
-                this.display.clear();
-                this.display.drawText(WIDTH - (WIDTH - 2), 15, "%c{white}This is an experiment to test a bunch of gameplay ideas I have. It doesn't represent a finished product, but I hope you'll enjoy it anyway!");
-                this.display.drawText(WIDTH - (WIDTH - 18), 25, "%c{white}Press [enter] to start");
-                break;
-            case GameState.LoseCinematic:
-                this.display.clear();
-                this.display.drawText(WIDTH - (WIDTH - 23), 12, "%c{white}You have died");
-                this.display.drawText(WIDTH - (WIDTH - 18), 15, "%c{white}Press [enter] to start");
-                break;
-            case GameState.WinCinematic:
-                this.display.clear();
-                this.display.drawText(WIDTH - (WIDTH - 18), 15, "%c{white}Press [enter] to restart the game");
-                break;
-            default:
-                assertUnreachable(this.state);
-        }
-
-        this.display.drawWithCache();
+        this.loadingText.visible = false;
+        this.openingText.visible = true;
     }
 
     /**
@@ -400,7 +378,12 @@ export class SimpleDungeonCrawler {
         this.scheduler.clear();
         this.scheduler.add(this.player.id, true);
 
-        const { map, playerLocation } = loadTiledMap(this.ecs, name);
+        const { map, playerLocation } = loadTiledMap(
+            this.ecs,
+            this.pixiApp.stage,
+            this.textureAtlas,
+            name
+        );
         this.map = map;
 
         const playerPos = this.player.getOne(PositionComponent);
@@ -414,26 +397,116 @@ export class SimpleDungeonCrawler {
         globals.gameEventEmitter.emit("level.loaded", name);
     }
 
+    update(): void {
+        switch (this.state) {
+            case GameState.Gameplay: {
+                if (this.currentActor === null) {
+                    this.currentActor = this.ecs.getEntity(
+                        this.scheduler.next()!
+                    )!;
+                }
+
+                // Command generation
+                if (this.currentActor !== null &&
+                    this.currentCommand === null &&
+                    this.currentActor !== this.player) {
+                    if (this.processAI) {
+                        this.currentCommand = generateAICommand(
+                            this.ecs,
+                            this.currentActor,
+                            this.map,
+                            this.entityMap
+                        );
+                    } else {
+                        this.currentCommand = new NoOpCommand(true);
+                    }
+                }
+
+                // Run the command
+                if (this.currentCommand !== null &&
+                    this.currentActor !== null &&
+                    this.processCommands === true) {
+                    this.currentCommand.execute(this.deltaTime, this.currentActor);
+                }
+
+                // Schedule the next actor and run post command systems if finished
+                if (this.currentCommand !== null && this.currentCommand.isFinished()) {
+                    if (this.currentCommand.usedTurn()) {
+                        if (this.currentActor === this.player) {
+                            this.ecs.runSystems("postTurn");
+                            this.totalTurns++;
+                        }
+
+                        this.ecs.runSystems("postCommand");
+
+                        this.currentActor = this.ecs.getEntity(
+                            this.scheduler.next()!
+                        )!;
+                    }
+
+                    this.currentCommand = null;
+
+                    if (this.debugPathfinding) {
+                        resetTilePathCosts(this.map);
+                    }
+                }
+
+                const hpData = getEffectiveHitPointData(this.player);
+                if (hpData === null || hpData.hp <= 0) {
+                    this.state = GameState.LoseCinematic;
+                    this.losingText.visible = true;
+                }
+
+                break;
+            }
+            default: break;
+        }
+
+        this.statusBar.update(this.state, this.ecs, this.map, this.entityMap);
+    }
+
+    /**
+     * Draw the game world to the canvas
+     */
+    render(): void {
+        if (this.player === null) { throw new Error("Cannot render without a player"); }
+
+        switch (this.state) {
+            case GameState.Gameplay:
+                this.gameCamera.update(this.map);
+
+                drawMap(this.pixiApp.renderer, this.gameCamera, this.map);
+                this.ecs.runSystems("frame");
+                break;
+            default: break;
+        }
+    }
+
     /**
      * Read the current inputs and act on them according to the game state
      */
     handleInput(): void {
         if (globals.gameEventEmitter === null) { throw new Error("Global gameEventEmitter cannot be null"); }
-        const inputHandlerState = this.player.getOne(InputHandlingComponent);
-        const playerInventory = this.player.getOne(InventoryComponent);
-        const playerSpells = this.player.getOne(SpellsComponent);
-        const playerSilence = this.player.getOne(SilenceableComponent);
 
         if (this.state === GameState.Gameplay) {
             if (input.isDown("Escape")) {
+                const inputHandlerState = this.player.getOne(InputHandlingComponent);
+                if (inputHandlerState === undefined) {
+                    return;
+                }
+
                 globals.gameEventEmitter.emit("ui.openKeybinding");
                 this.state = GameState.PauseMenu;
+                this.keyBindingMenu.open(inputHandlerState.keyCommands);
                 return;
             }
 
-            this.currentCommand = handleInput(this.ecs, this.map, this.entityMap, this.player);
+            if (this.currentActor === this.player && this.currentCommand === null) {
+                this.currentCommand = playerInput(this.ecs, this.map, this.entityMap, this.player);
+            }
             return;
         } else if (this.state === GameState.PauseMenu) {
+            const inputHandlerState = this.player.getOne(InputHandlingComponent);
             if (inputHandlerState === undefined) {
                 return;
             }
@@ -441,12 +514,14 @@ export class SimpleDungeonCrawler {
             if (input.isDown("Escape")) {
                 globals.gameEventEmitter.emit("ui.closeKeybinding");
                 this.state = GameState.Gameplay;
-                this.keyBindingMenu.resetState();
+                this.keyBindingMenu.close();
                 return;
             }
 
             this.keyBindingMenu.handleInput(inputHandlerState.keyCommands);
         } else if (this.state === GameState.InventoryMenu) {
+            const inputHandlerState = this.player.getOne(InputHandlingComponent);
+            const playerInventory = this.player.getOne(InventoryComponent);
             if (playerInventory === undefined ||
                 inputHandlerState === undefined) {
                 return;
@@ -455,7 +530,7 @@ export class SimpleDungeonCrawler {
             if (input.isDown("Escape")) {
                 globals.gameEventEmitter.emit("ui.closeInventory");
                 this.state = GameState.Gameplay;
-                this.inventoryMenu.resetState();
+                this.inventoryMenu.close();
                 return;
             }
 
@@ -480,6 +555,7 @@ export class SimpleDungeonCrawler {
                     case ItemType.SlowOther:
                     case ItemType.ConfuseScroll:
                         this.state = GameState.Gameplay;
+                        this.inventoryMenu.close();
                         inputHandlerState.itemForTarget = item;
                         inputHandlerState.state = PlayerState.Target;
                         inputHandlerState.update();
@@ -489,6 +565,9 @@ export class SimpleDungeonCrawler {
                 }
             }
         } else if (this.state === GameState.SpellMenu) {
+            const inputHandlerState = this.player.getOne(InputHandlingComponent);
+            const playerSpells = this.player.getOne(SpellsComponent);
+            const playerSilence = this.player.getOne(SilenceableComponent);
             if (playerSpells === undefined ||
                 inputHandlerState === undefined) {
                 return;
@@ -497,7 +576,7 @@ export class SimpleDungeonCrawler {
             if (input.isDown("Escape")) {
                 globals.gameEventEmitter.emit("ui.closeSpells");
                 this.state = GameState.Gameplay;
-                this.spellSelectionMenu.resetState();
+                this.spellSelectionMenu.close();
                 return;
             }
 
@@ -517,6 +596,7 @@ export class SimpleDungeonCrawler {
                     case SpellType.Passive:
                     case SpellType.WildDamage:
                         this.state = GameState.Gameplay;
+                        this.spellSelectionMenu.close();
 
                         this.currentCommand = new UseSpellCommand(
                             spell.id, this.ecs, this.map, this.entityMap
@@ -525,6 +605,8 @@ export class SimpleDungeonCrawler {
                     case SpellType.DamageOther:
                     case SpellType.HealOther:
                         this.state = GameState.Gameplay;
+                        this.spellSelectionMenu.close();
+
                         inputHandlerState.spellForTarget = spell;
                         inputHandlerState.state = PlayerState.Target;
                         inputHandlerState.update();
@@ -535,6 +617,11 @@ export class SimpleDungeonCrawler {
             }
         } else if (this.state === GameState.OpeningCinematic) {
             if (input.isDown("Enter")) {
+                this.player = createEntity(this.ecs, this.textureAtlas, "player", 1, 1);
+                this.scheduler.add(this.player.id, true);
+                this.gameCamera.follow(this.player);
+
+                this.openingText.visible = false;
                 this.loadLevel("forrest_001");
                 this.state = GameState.Gameplay;
                 globals.gameEventEmitter.emit("tutorial.start");
@@ -542,11 +629,13 @@ export class SimpleDungeonCrawler {
         } else if (this.state === GameState.WinCinematic) {
             if (input.isDown("Enter")) {
                 this.reset();
+                this.winningText.visible = false;
                 this.state = GameState.Gameplay;
             }
         } else if (this.state === GameState.LoseCinematic) {
             if (input.isDown("Enter")) {
                 this.reset();
+                this.losingText.visible = false;
                 this.state = GameState.Gameplay;
             }
         }
@@ -554,70 +643,9 @@ export class SimpleDungeonCrawler {
         return;
     }
 
-    mainLoop(timestamp: DOMHighResTimeStamp): void {
-        globals.animationFrameID = window.requestAnimationFrame(this.mainLoop.bind(this));
-
-        this.deltaTime = timestamp - this.lastTimestamp;
-        this.lastTimestamp = timestamp;
-
-        if (this.currentActor === null) {
-            this.currentActor = this.ecs.getEntity(
-                this.scheduler.next()!
-            )!;
-        }
-
-        // Command generation
-        if (this.currentActor !== null && this.currentCommand === null) {
-            if (this.currentActor === this.player) {
-                this.handleInput();
-            } else {
-                if (this.processAI) {
-                    this.currentCommand = generateAICommand(
-                        this.ecs,
-                        this.currentActor,
-                        this.map,
-                        this.entityMap
-                    );
-                } else {
-                    this.currentCommand = new NoOpCommand(true);
-                }
-            }
-        }
-
-        // Run the command
-        if (this.currentCommand !== null &&
-            this.currentActor !== null &&
-            this.processCommands === true) {
-            this.currentCommand.execute(this.deltaTime, this.currentActor);
-        }
-
-        // Schedule the next actor and run post command systems if finished
-        if (this.currentCommand !== null && this.currentCommand.isFinished()) {
-            if (this.currentCommand.usedTurn()) {
-                if (this.currentActor === this.player) {
-                    this.ecs.runSystems("postTurn");
-                    this.totalTurns++;
-                }
-
-                this.ecs.runSystems("postCommand");
-
-                this.currentActor = this.ecs.getEntity(
-                    this.scheduler.next()!
-                )!;
-            }
-
-            this.currentCommand = null;
-
-            if (this.debugPathfinding) {
-                resetTilePathCosts(this.map);
-            }
-        }
-
-        const hpData = getEffectiveHitPointData(this.player);
-        if (hpData === null || hpData.hp <= 0) {
-            this.state = GameState.LoseCinematic;
-        }
-
+    mainLoop(): void {
+        this.handleInput();
+        this.update();
         this.render();
         input.clearInputs();
         this.ecs.tick();
@@ -626,17 +654,4 @@ export class SimpleDungeonCrawler {
     getTurnNumber(): number {
         return this.totalTurns;
     }
-}
-
-function resizeGameDisplay() {
-    if (globals.Game === null ||
-        globals.Game.display === null ||
-        globals.window === null) { return; }
-
-    globals.Game.display.setOptions({
-        fontSize: Math.max(
-            Math.floor(globals.window.innerHeight / 40),
-            12
-        )
-    });
 }

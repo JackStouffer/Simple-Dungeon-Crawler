@@ -32,5 +32,3 @@ globals.window.stopGameLoop = stopGameLoop;
 globals.window.getEntity = getEntity;
 globals.window.getEntities = getEntities;
 globals.window.step = step;
-
-globals.Game.startGameplay();

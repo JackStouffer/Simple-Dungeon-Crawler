@@ -21,7 +21,6 @@ import {
     PositionComponent,
     SpeedComponent
 } from "./entity";
-import { SpellData } from "./skills";
 
 export interface KeyCommand {
     key: string;
@@ -73,51 +72,7 @@ export function mouseTarget(
     return res ?? null;
 }
 
-/**
- * Returns a list of Points that represent the area being targeted by
- * the player.
- */
-export function getTargetingReticle(inputState: InputHandlingComponent): Point[] {
-    if (inputState.state !== PlayerState.Target) { throw new Error("Cannot get reticle outside of targeting state"); }
-
-    const ret: Point[] = [];
-
-    const mousePosition = input.getMousePosition();
-    if (mousePosition === null) { return ret; }
-
-    if (inputState.spellForTarget !== null) {
-        const spellData = SpellData[inputState.spellForTarget.id];
-        if (spellData.areaOfEffect !== undefined) {
-            for (let dx = 0; dx < spellData.areaOfEffect.width; dx++) {
-                for (let dy = 0; dy < spellData.areaOfEffect.height; dy++) {
-                    switch (inputState.reticleRotation) {
-                        case 0:
-                            ret.push({ x: mousePosition.x + dx, y: mousePosition.y + dy });
-                            break;
-                        case 90:
-                            ret.push({ x: mousePosition.x + dy, y: mousePosition.y + dx });
-                            break;
-                        case 180:
-                            ret.push({ x: mousePosition.x + dx, y: mousePosition.y - dy });
-                            break;
-                        case 270:
-                            ret.push({ x: mousePosition.x - dy, y: mousePosition.y + dx });
-                            break;
-                        default: break;
-                    }
-                }
-            }
-        } else {
-            ret.push({ x: mousePosition.x, y: mousePosition.y });
-        }
-    } else {
-        ret.push({ x: mousePosition.x, y: mousePosition.y });
-    }
-
-    return ret;
-}
-
-export function handleInput(
+export function playerInput(
     ecs: World,
     map: GameMap,
     entityMap: EntityMap,

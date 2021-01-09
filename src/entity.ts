@@ -1,5 +1,6 @@
 import { World, Component, Entity, EntityRef, System, Query, IEntityConfig } from "ape-ecs";
 import { assignIn } from "lodash";
+import * as PIXI from "pixi.js";
 
 import { RNG } from "./rot/index";
 
@@ -86,30 +87,26 @@ export class DisplayNameComponent extends Component {
 }
 
 export class GraphicsComponent extends Component {
-    char: string;
-    fgColor: string;
-    bgColor: Nullable<string>;
+    textureKey: string;
+    sprite: Nullable<PIXI.Sprite>;
 
     static typeName = "GraphicsComponent";
     static properties = {
-        char: "",
-        bgColor: null,
-        fgColor: null
+        textureKey: "",
+        sprite: null
     }
 }
 
 export class ChestGraphicsComponent extends Component {
-    char: string;
-    fgColor: string;
-    bgColor: string;
-    emptyColor: string;
+    textureKey: string;
+    openTextureKey: string;
+    sprite: Nullable<PIXI.Sprite>;
 
     static typeName = "ChestGraphicsComponent";
     static properties = {
-        char: "*",
-        bgColor: "white",
-        fgColor: "brown",
-        emptyColor: "purple"
+        textureKey: "",
+        openTextureKey: "",
+        sprite: null
     }
 }
 
@@ -519,9 +516,8 @@ const ObjectData: { [key: string]: ObjectDataDetails } = {
                     entityType: "door"
                 },
                 GraphicsComponent: {
-                    char: "\u1882",
-                    fgColor: "white",
-                    bgColor: "brown"
+                    textureKey: "door_1_closed",
+                    sprite: null,
                 },
                 InteractableTypeComponent: {
                     interactableType: InteractableType.Door
@@ -540,9 +536,8 @@ const ObjectData: { [key: string]: ObjectDataDetails } = {
                     entityType: "load_door"
                 },
                 GraphicsComponent: {
-                    char: "\u1882",
-                    fgColor: "white",
-                    bgColor: "black",
+                    textureKey: "door_1_closed",
+                    sprite: null,
                 },
                 InteractableTypeComponent: {
                     interactableType: InteractableType.LoadLevel
@@ -561,9 +556,8 @@ const ObjectData: { [key: string]: ObjectDataDetails } = {
                     entityType: "stairs"
                 },
                 GraphicsComponent: {
-                    char: "\u1750",
-                    fgColor: "white",
-                    bgColor: "black",
+                    textureKey: "stone_stairs_right",
+                    sprite: null,
                 },
                 InteractableTypeComponent: {
                     interactableType: InteractableType.LoadLevel
@@ -583,10 +577,9 @@ const ObjectData: { [key: string]: ObjectDataDetails } = {
                     entityType: "chest"
                 },
                 ChestGraphicsComponent: {
-                    char: "*",
-                    fgColor: "white",
-                    bgColor: "brown",
-                    emptyColor: "purple"
+                    textureKey: "chest_1_closed",
+                    openTextureKey: "chest_1_open",
+                    sprite: null
                 },
                 InteractableTypeComponent: {
                     interactableType: InteractableType.GiveItems
@@ -611,9 +604,8 @@ const ObjectData: { [key: string]: ObjectDataDetails } = {
                     name: "Wooden Crate"
                 },
                 GraphicsComponent: {
-                    char: "\u2612",
-                    fgColor: "white",
-                    bgColor: "brown"
+                    textureKey: "wood_steel_crate",
+                    sprite: null
                 },
                 HitPointsComponent: {
                     hp: 5,
@@ -648,9 +640,8 @@ const ObjectData: { [key: string]: ObjectDataDetails } = {
                     name: "Wooden Barrel"
                 },
                 GraphicsComponent: {
-                    char: "\u232D",
-                    fgColor: "white",
-                    bgColor: "brown",
+                    textureKey: "barrel_3",
+                    sprite: null
                 },
                 HitPointsComponent: {
                     hp: 5,
@@ -683,9 +674,8 @@ const ObjectData: { [key: string]: ObjectDataDetails } = {
                     name: "Dead Body"
                 },
                 GraphicsComponent: {
-                    char: "%",
-                    fgColor: "black",
-                    bgColor: "red"
+                    textureKey: "skull_bone",
+                    sprite: null
                 }
             }
         }
@@ -701,9 +691,8 @@ const ObjectData: { [key: string]: ObjectDataDetails } = {
                     name: "Small Lantern"
                 },
                 GraphicsComponent: {
-                    char: "\u16E1",
-                    fgColor: "black",
-                    bgColor: "yellow",
+                    textureKey: "iron_lantern_lit",
+                    sprite: null
                 },
                 LightingComponent: {
                     color: "yellow",
@@ -723,9 +712,8 @@ const ObjectData: { [key: string]: ObjectDataDetails } = {
                     name: "Small Campfire"
                 },
                 GraphicsComponent: {
-                    char: "\u0436",
-                    fgColor: "black",
-                    bgColor: "orange",
+                    textureKey: "campfire_1_lit_1",
+                    sprite: null
                 },
                 LightingComponent: {
                     color: "orange",
@@ -753,9 +741,8 @@ const ObjectData: { [key: string]: ObjectDataDetails } = {
                     name: "Fire"
                 },
                 GraphicsComponent: {
-                    char: "\u0436",
-                    fgColor: "black",
-                    bgColor: "orange"
+                    textureKey: "campfire_1_lit_1",
+                    sprite: null
                 },
                 LightingComponent: {
                     color: "orange",
@@ -787,9 +774,8 @@ const ObjectData: { [key: string]: ObjectDataDetails } = {
                     name: "Ice Wall"
                 },
                 GraphicsComponent: {
-                    char: "\u2042",
-                    fgColor: "black",
-                    bgColor: "lightblue",
+                    textureKey: "ice_wall",
+                    sprite: null
                 },
                 HitPointsComponent: {
                     hp: 100,
@@ -818,9 +804,8 @@ const ObjectData: { [key: string]: ObjectDataDetails } = {
                     name: "Dropped Item"
                 },
                 GraphicsComponent: {
-                    char: "!",
-                    fgColor: "white",
-                    bgColor: "brown"
+                    textureKey: "yellow_and_green_bottle",
+                    sprite: null
                 },
                 InteractableTypeComponent: {
                     interactableType: InteractableType.GiveItems
@@ -839,9 +824,8 @@ const ObjectData: { [key: string]: ObjectDataDetails } = {
                     name: "Magicka Shrine"
                 },
                 GraphicsComponent: {
-                    char: "\u06DE",
-                    fgColor: "black",
-                    bgColor: "gold",
+                    textureKey: "mage_statue_bottom",
+                    sprite: null
                 },
                 InteractableTypeComponent: {
                     interactableType: InteractableType.GiveSpells
@@ -871,9 +855,8 @@ const ObjectData: { [key: string]: ObjectDataDetails } = {
                     name: "Water"
                 },
                 GraphicsComponent: {
-                    char: "~",
-                    fgColor: "blue",
-                    bgColor: "lightblue",
+                    textureKey: "water_1",
+                    sprite: null
                 },
                 TriggerTypeComponent: {
                     triggerType: TriggerType.ShallowWater
@@ -895,9 +878,8 @@ const ObjectData: { [key: string]: ObjectDataDetails } = {
                     name: "Puddle"
                 },
                 GraphicsComponent: {
-                    char: ".",
-                    fgColor: "blue",
-                    bgColor: "lightblue",
+                    textureKey: "water_1",
+                    sprite: null
                 },
                 TriggerTypeComponent: {
                     triggerType: TriggerType.ShallowWater
@@ -922,9 +904,8 @@ const ObjectData: { [key: string]: ObjectDataDetails } = {
                     name: "Deep Water"
                 },
                 GraphicsComponent: {
-                    char: "~",
-                    fgColor: "lightblue",
-                    bgColor: "blue"
+                    textureKey: "deep_water",
+                    sprite: null
                 },
                 TriggerTypeComponent: {
                     triggerType: TriggerType.DeepWater
@@ -946,9 +927,8 @@ const ObjectData: { [key: string]: ObjectDataDetails } = {
                     name: "Mud"
                 },
                 GraphicsComponent: {
-                    char: ".",
-                    fgColor: "tan",
-                    bgColor: "brown"
+                    textureKey: "mud_1",
+                    sprite: null
                 },
                 TriggerTypeComponent: {
                     triggerType: TriggerType.Mud
@@ -970,9 +950,8 @@ const ObjectData: { [key: string]: ObjectDataDetails } = {
                     name: "Tall Grass"
                 },
                 GraphicsComponent: {
-                    char: "\u15D0",
-                    fgColor: "green",
-                    bgColor: null
+                    textureKey: "tall_grass_2",
+                    sprite: null
                 },
                 FlammableComponent: {
                     onFire: false,
@@ -1002,9 +981,8 @@ const ObjectData: { [key: string]: ObjectDataDetails } = {
                     name: "Underbrush"
                 },
                 GraphicsComponent: {
-                    char: "\u1310",
-                    fgColor: "green",
-                    bgColor: null
+                    textureKey: "shrub_1",
+                    sprite: null
                 },
                 FlammableComponent: {
                     onFire: false,
@@ -1041,9 +1019,8 @@ const ObjectData: { [key: string]: ObjectDataDetails } = {
                     name: "The Player"
                 },
                 GraphicsComponent: {
-                    char: "@",
-                    fgColor: "blue",
-                    bgColor: null
+                    textureKey: "player",
+                    sprite: null
                 },
                 LightingComponent: {
                     color: "white",
@@ -1120,9 +1097,8 @@ const ObjectData: { [key: string]: ObjectDataDetails } = {
                     name: "Goblin"
                 },
                 GraphicsComponent: {
-                    char: "G",
-                    fgColor: "green",
-                    bgColor: null
+                    textureKey: "orc_body_1",
+                    sprite: null
                 },
                 LoseTargetAIComponent: {
                     turnsWithTargetOutOfSight: 0,
@@ -1199,9 +1175,8 @@ const ObjectData: { [key: string]: ObjectDataDetails } = {
                     name: "Goblin Brute"
                 },
                 GraphicsComponent: {
-                    char: "G",
-                    fgColor: "green",
-                    bgColor: "red"
+                    textureKey: "orc_body_1",
+                    sprite: null
                 },
                 LoseTargetAIComponent: {
                     turnsWithTargetOutOfSight: 0,
@@ -1267,9 +1242,8 @@ const ObjectData: { [key: string]: ObjectDataDetails } = {
                     name: "Rat"
                 },
                 GraphicsComponent: {
-                    char: "r",
-                    fgColor: "brown",
-                    bgColor: null
+                    textureKey: "rat",
+                    sprite: null
                 },
                 LoseTargetAIComponent: {
                     turnsWithTargetOutOfSight: 0,
@@ -1339,9 +1313,8 @@ const ObjectData: { [key: string]: ObjectDataDetails } = {
                     name: "Water Sprite"
                 },
                 GraphicsComponent: {
-                    char: "s",
-                    fgColor: "white",
-                    bgColor: "blue",
+                    textureKey: "rat",
+                    sprite: null
                 },
                 LoseTargetAIComponent: {
                     turnsWithTargetOutOfSight: 0,
@@ -1412,9 +1385,8 @@ const ObjectData: { [key: string]: ObjectDataDetails } = {
                     name: "Bandit"
                 },
                 GraphicsComponent: {
-                    char: "b",
-                    fgColor: "brown",
-                    bgColor: null
+                    textureKey: "bandit_1",
+                    sprite: null
                 },
                 LoseTargetAIComponent: {
                     turnsWithTargetOutOfSight: 0,
@@ -1501,9 +1473,8 @@ const ObjectData: { [key: string]: ObjectDataDetails } = {
                     name: "Bandit Mage"
                 },
                 GraphicsComponent: {
-                    char: "b",
-                    fgColor: "blue",
-                    bgColor: null,
+                    textureKey: "blue_mage_1",
+                    sprite: null
                 },
                 LoseTargetAIComponent: {
                     turnsWithTargetOutOfSight: 0,
@@ -1588,9 +1559,8 @@ const ObjectData: { [key: string]: ObjectDataDetails } = {
                     name: "Bandit White Mage"
                 },
                 GraphicsComponent: {
-                    char: "b",
-                    fgColor: "white",
-                    bgColor: "blue",
+                    textureKey: "red_mage_1",
+                    sprite: null
                 },
                 LoseTargetAIComponent: {
                     turnsWithTargetOutOfSight: 0,
@@ -1661,11 +1631,13 @@ for (const objectID in ObjectData) {
  */
 export function createEntity(
     ecs: World,
+    textures: PIXI.ITextureDictionary,
     type: string,
     x: Nullable<number>,
     y: Nullable<number>,
     id?: string
 ): Entity {
+    if (globals.Game === null) { throw new Error("Global game is null"); }
     if (!(type in ObjectData)) { throw new Error(`${type} is not valid object id`); }
 
     let hash = randomIntFromInterval(1, 2147483647);
@@ -1677,6 +1649,19 @@ export function createEntity(
 
     if (x !== null && y !== null && entity.has(PositionComponent) === false) {
         entity.addComponent({ type: "PositionComponent", x, y });
+    }
+
+    const graphics = entity.getOne(GraphicsComponent) ?? entity.getOne(ChestGraphicsComponent);
+    if (graphics !== undefined) {
+        graphics.sprite = new PIXI.Sprite(textures[graphics.textureKey]);
+
+        if ((data.staticallyKnownComponents.tags?.indexOf("sentient") ?? -1) > -1) {
+            graphics.sprite.zIndex = 5;
+        } else {
+            graphics.sprite.zIndex = 3;
+        }
+
+        globals.Game.pixiApp.stage.addChild(graphics.sprite);
     }
 
     if (data.spells !== undefined && entity.has(SpellsComponent) === false) {

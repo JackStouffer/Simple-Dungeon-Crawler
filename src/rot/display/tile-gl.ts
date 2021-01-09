@@ -39,8 +39,8 @@ export default class TileGL extends Backend {
     _program!: WebGLProgram;
     _uniforms: {[key:string]: WebGLUniformLocation | null};
 
-    static isSupported() {
-        return !!document.createElement("canvas").getContext("webgl2", {preserveDrawingBuffer:true});
+    static isSupported(): boolean {
+        return document.createElement("canvas").getContext("webgl2", {preserveDrawingBuffer:true}) !== null;
     }
 
     constructor() {
@@ -61,7 +61,7 @@ export default class TileGL extends Backend {
         this._updateSize();
 
         const tileSet = this._options.tileSet;
-        if (tileSet && "complete" in tileSet && !tileSet.complete) {
+        if (tileSet !== null && "complete" in tileSet && !tileSet.complete) {
             tileSet.addEventListener("load", () => this._updateTexture(tileSet as HTMLImageElement));
         } else {
             this._updateTexture(tileSet as HTMLImageElement);
@@ -78,7 +78,7 @@ export default class TileGL extends Backend {
         gl.scissor(x*opts.tileWidth, scissorY, opts.tileWidth, opts.tileHeight);
 
         if (clearBefore) {
-            if (opts.tileColorize) {
+            if (opts.tileColorize === true) {
                 gl.clearColor(0, 0, 0, 0);
             } else {
                 gl.clearColor(...parseColor(bg));
@@ -96,12 +96,12 @@ export default class TileGL extends Backend {
 
         for (let i = 0; i < chars.length; i++) {
             const tile = this._options.tileMap[chars[i]];
-            if (!tile) { throw new Error(`Char "${chars[i]}" not found in tileMap`); }
+            if (tile === undefined) { throw new Error(`Char "${chars[i]}" not found in tileMap`); }
 
-            gl.uniform1f(this._uniforms["colorize"], opts.tileColorize ? 1 : 0);
+            gl.uniform1f(this._uniforms["colorize"], opts.tileColorize === true ? 1 : 0);
             gl.uniform2fv(this._uniforms["tilesetPosAbs"], tile);
 
-            if (opts.tileColorize) {
+            if (opts.tileColorize === true) {
                 gl.uniform4fv(this._uniforms["tint"], parseColor(fgs[i]));
                 gl.uniform4fv(this._uniforms["bg"], parseColor(bgs[i]));
             }
@@ -149,7 +149,7 @@ export default class TileGL extends Backend {
         gl.useProgram(program);
         createQuad(gl);
 
-        UNIFORMS.forEach(name => this._uniforms[name] = gl.getUniformLocation(program, name));
+        UNIFORMS.forEach(name => { this._uniforms[name] = gl.getUniformLocation(program, name); });
         this._program = program;
 
         gl.enable(gl.BLEND);
@@ -280,7 +280,7 @@ function parseColor(color: string) {
         if (color === "transparent") {
             parsed = [0, 0, 0, 0];
         } else if (color.indexOf("rgba") > -1) {
-            parsed = (color.match(/[\d.]+/g) || []).map(Number) as GLColor;
+            parsed = (color.match(/[\d.]+/g) ?? []).map(Number) as GLColor;
             for (let i=0;i<3;i++) { parsed[i] = parsed[i]/255; }
         } else {
             parsed = Color.fromString(color).map($ => $/255) as GLColor;

@@ -483,7 +483,7 @@ function castWall(
                 continue;
             }
 
-            createEntity(ecs, objectId, locationX, locationY);
+            createEntity(ecs, globals.Game.textureAtlas, objectId, locationX, locationY);
         }
     }
 
@@ -563,6 +563,7 @@ export function castRain(
     map: GameMap,
     entityMap: EntityMap
 ): boolean {
+    if (globals.Game === null) { throw new Error("Global game object cannot be null"); }
     if (item.value === null) { throw new Error("value cannot be null for castRain"); }
 
     const entities = ecs.entities.values();
@@ -573,7 +574,7 @@ export function castRain(
     // Spawn puddles in random places on the map
     for (let i = 0; i < 30; i++) {
         const { x, y } = getRandomOpenSpace(map, entityMap);
-        createEntity(ecs, "puddle", x, y);
+        createEntity(ecs, globals.Game.textureAtlas, "puddle", x, y);
     }
 
     return true;

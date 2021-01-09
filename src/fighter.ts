@@ -84,6 +84,7 @@ export class DeathSystem extends System {
      * if there were items in the inventory
      */
     actorDeath(target: Entity): void {
+        if (globals.Game === null) { throw new Error("Global game object is null"); }
         if (globals.gameEventEmitter === null) { throw new Error("Global gameEventEmitter object is null"); }
 
         const nameData = target.getOne(DisplayNameComponent);
@@ -97,10 +98,8 @@ export class DeathSystem extends System {
         target.removeTag("blocksSight");
 
         const graphicData = target.getOne(GraphicsComponent);
-        if (graphicData !== undefined) {
-            graphicData.char = "%";
-            graphicData.fgColor = "black";
-            graphicData.bgColor = "red";
+        if (graphicData !== undefined && graphicData.sprite !== null) {
+            graphicData.sprite.texture = globals.Game.textureAtlas["skull_bone"];
             graphicData.update();
         }
 
@@ -146,7 +145,13 @@ export class DeathSystem extends System {
             inventoryData.inventory.size > 0) {
             globals.gameEventEmitter.emit("tutorial.pickUpItem");
 
-            const item = createEntity(this.world, "dropped_item", positionData.x, positionData.y);
+            const item = createEntity(
+                this.world,
+                globals.Game.textureAtlas,
+                "dropped_item",
+                positionData.x,
+                positionData.y
+            );
             const itemInventory = item.getOne(InventoryComponent);
             itemInventory!.inventory = inventoryData.inventory;
         }
@@ -159,6 +164,7 @@ export class DeathSystem extends System {
      * if there were items in the inventory.
      */
     removeDeath(target: Entity): void {
+        if (globals.Game === null) { throw new Error("Global game object is null"); }
         if (globals.gameEventEmitter === null) { throw new Error("Global gameEventEmitter object is null"); }
 
         const inventoryData = target.getOne(InventoryComponent);
@@ -168,7 +174,13 @@ export class DeathSystem extends System {
             inventoryData.inventory.size > 0) {
             globals.gameEventEmitter.emit("tutorial.pickUpItem");
 
-            const item = createEntity(this.world, "dropped_item", positionData.x, positionData.y);
+            const item = createEntity(
+                this.world,
+                globals.Game.textureAtlas,
+                "dropped_item",
+                positionData.x,
+                positionData.y
+            );
             const itemInventory = item.getOne(InventoryComponent);
             itemInventory!.inventory = inventoryData.inventory;
         }
@@ -181,6 +193,11 @@ export class DeathSystem extends System {
             globals.gameEventEmitter.emit("barrel.break");
         }
 
+        const graphicData = target.getOne(GraphicsComponent);
+        if (graphicData !== undefined && graphicData.sprite !== null) {
+            globals.Game.pixiApp.stage.removeChild(graphicData.sprite);
+            graphicData.sprite = null;
+        }
         this.world.removeEntity(target);
     }
 
