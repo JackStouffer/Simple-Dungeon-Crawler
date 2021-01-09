@@ -268,6 +268,7 @@ export class InventoryMenu {
     private readonly currentStage: Container;
 
     private readonly background: Graphics;
+    private readonly descriptionBackground: Graphics;
     private readonly titleText: Text;
     private readonly descriptionText: Text;
 
@@ -283,29 +284,41 @@ export class InventoryMenu {
         this.background = new Graphics();
         this.background.lineStyle(4, 0x999999, 1);
         this.background.beginFill(0x000000);
-        this.background.drawRect(0, 0, 928, 608);
+        this.background.drawRect(0, 0, 924, 604);
         this.background.endFill();
-        this.background.x = 0;
-        this.background.y = 0;
+        this.background.x = 2;
+        this.background.y = 2;
         this.background.zIndex = 20;
         this.background.visible = false;
 
+        this.descriptionBackground = new Graphics();
+        this.descriptionBackground.lineStyle(4, 0xFFFFFF, 1);
+        this.descriptionBackground.beginFill(0x000000);
+        this.descriptionBackground.drawRect(0, 0, 916, 100);
+        this.descriptionBackground.endFill();
+        this.descriptionBackground.x = 6;
+        this.descriptionBackground.y = 502;
+        this.descriptionBackground.zIndex = 22;
+        this.descriptionBackground.visible = false;
+
         this.titleText = new Text("Inventory", { fontFamily : "monospace", fontSize: 24, fill : 0xFFFFFF, align : "center" });
-        this.titleText.x = 400;
-        this.titleText.y = 0;
+        this.titleText.x = 410;
+        this.titleText.y = 5;
         this.titleText.zIndex = 21;
         this.titleText.visible = false;
 
         this.descriptionText = new Text("", { fontFamily : "monospace", fontSize: 14, fill : 0xFFFFFF });
         this.descriptionText.x = 20;
-        this.descriptionText.y = 400;
-        this.descriptionText.zIndex = 21;
+        this.descriptionText.y = 520;
+        this.descriptionText.zIndex = 23;
         this.descriptionText.visible = false;
 
         this.menuItems = [];
 
         this.currentStage.addChild(this.background);
         this.currentStage.addChild(this.titleText);
+        this.currentStage.addChild(this.descriptionBackground);
+        this.currentStage.addChild(this.descriptionText);
     }
 
     open(inventoryItems: InventoryItemDetails[]): void {
@@ -314,6 +327,7 @@ export class InventoryMenu {
         this.background.visible = true;
         this.titleText.visible = true;
         this.descriptionText.visible = true;
+        this.descriptionBackground.visible = true;
 
         const info = inventoryItems[this.currentSelection];
         if (info !== undefined) {
@@ -324,7 +338,7 @@ export class InventoryMenu {
         const start = currentPage * this.pageSize;
         const end = Math.min(start + this.pageSize, inventoryItems.length);
 
-        for (let i = start; i < end; i++) {
+        for (let i = 0; i < inventoryItems.length; i++) {
             const item = inventoryItems[i];
             const y = 20 * (i + 2);
 
@@ -364,6 +378,7 @@ export class InventoryMenu {
         this.background.visible = false;
         this.titleText.visible = false;
         this.descriptionText.visible = false;
+        this.descriptionBackground.visible = false;
         for (let i = 0; i < this.menuItems.length; i++) {
             const m = this.menuItems[i];
             this.currentStage.removeChild(m.bg);
@@ -424,6 +439,7 @@ export class SpellSelectionMenu {
     private readonly currentStage: Container;
 
     private readonly background: Graphics;
+    private readonly descriptionBackground: Graphics;
     private readonly titleText: Text;
     private readonly descriptionText: Text;
 
@@ -439,10 +455,10 @@ export class SpellSelectionMenu {
         this.background = new Graphics();
         this.background.lineStyle(4, 0x999999, 1);
         this.background.beginFill(0x000000);
-        this.background.drawRect(0, 0, 928, 608);
+        this.background.drawRect(0, 0, 924, 604);
         this.background.endFill();
-        this.background.x = 0;
-        this.background.y = 0;
+        this.background.x = 2;
+        this.background.y = 2;
         this.background.zIndex = 20;
         this.background.visible = false;
 
@@ -454,22 +470,37 @@ export class SpellSelectionMenu {
 
         this.descriptionText = new Text("Spells", { fontFamily : "monospace", fontSize: 14, fill : 0xFFFFFF });
         this.descriptionText.x = 20;
-        this.descriptionText.y = 400;
-        this.descriptionText.zIndex = 21;
+        this.descriptionText.y = 520;
+        this.descriptionText.zIndex = 23;
         this.descriptionText.visible = false;
+
+        this.descriptionBackground = new Graphics();
+        this.descriptionBackground.lineStyle(4, 0xFFFFFF, 1);
+        this.descriptionBackground.beginFill(0x000000);
+        this.descriptionBackground.drawRect(0, 0, 916, 100);
+        this.descriptionBackground.endFill();
+        this.descriptionBackground.x = 6;
+        this.descriptionBackground.y = 502;
+        this.descriptionBackground.zIndex = 22;
+        this.descriptionBackground.visible = false;
 
         this.menuItems = [];
 
         this.currentStage.addChild(this.background);
         this.currentStage.addChild(this.titleText);
+        this.currentStage.addChild(this.descriptionBackground);
+        this.currentStage.addChild(this.descriptionText);
     }
 
     open(spells: KnownSpellDetails[]): void {
         if (globals.Game === null) { throw new Error("Global Game object is null"); }
 
+        // SPEED: Mark all tiles and entities as invisible
+
         this.background.visible = true;
         this.titleText.visible = true;
         this.descriptionText.visible = true;
+        this.descriptionBackground.visible = true;
 
         const info = spells[this.currentSelection];
         this.descriptionText.text = info.description;
@@ -478,7 +509,7 @@ export class SpellSelectionMenu {
         const start = currentPage * this.pageSize;
         const end = Math.min(start + this.pageSize, spells.length);
 
-        for (let i = start; i < end; i++) {
+        for (let i = 0; i < spells.length; i++) {
             const spell = spells[i];
             const y = 20 * (i + 2);
 
@@ -552,6 +583,7 @@ export class SpellSelectionMenu {
         this.background.visible = false;
         this.titleText.visible = false;
         this.descriptionText.visible = false;
+        this.descriptionBackground.visible = false;
         for (let i = 0; i < this.menuItems.length; i++) {
             const m = this.menuItems[i];
             this.currentStage.removeChild(m.bg);
