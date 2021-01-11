@@ -30,15 +30,17 @@ export class Camera {
         const pos = this.following.getOne(PositionComponent);
         if (pos === undefined) { return; }
 
-        const screenTileWidth = Math.floor(this.viewport.width / (this.tileSize * this.zoom));
-        const screenTileHeight = Math.floor(this.viewport.height / (this.tileSize * this.zoom));
+        const tileWidth = this.tileSize * this.zoom;
+        const screenTileWidth = Math.floor(this.viewport.width / tileWidth);
+        const screenTileHeight = Math.floor(this.viewport.height / tileWidth);
 
         // make the camera follow the sprite
         this.x = Math.floor(pos.x - (screenTileWidth / 2));
         this.y = Math.floor(pos.y - (screenTileHeight / 2));
+
         // clamp values
-        this.x = Math.max(0, Math.min(this.x, map[0].length * this.tileSize * this.zoom));
-        this.y = Math.max(0, Math.min(this.y, map[0][0].length * this.tileSize * this.zoom));
+        this.x = Math.max(0, Math.min(this.x, map[0][0].length - screenTileWidth));
+        this.y = Math.max(0, Math.min(this.y, map[0].length - screenTileHeight));
     }
 
     tilePositionToScreen(x: number, y: number) {
