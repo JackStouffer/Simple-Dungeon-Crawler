@@ -1656,9 +1656,9 @@ export function createEntity(
         graphics.sprite = new PIXI.Sprite(textures[graphics.textureKey]);
 
         if ((data.staticallyKnownComponents.tags?.indexOf("sentient") ?? -1) > -1) {
-            graphics.sprite.zIndex = 5;
+            graphics.sprite.zIndex = 8;
         } else {
-            graphics.sprite.zIndex = 3;
+            graphics.sprite.zIndex = 5;
         }
 
         globals.Game.pixiApp.stage.addChild(graphics.sprite);

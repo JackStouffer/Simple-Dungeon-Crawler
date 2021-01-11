@@ -1,6 +1,7 @@
 import { get } from "lodash";
 import { Entity, World } from "ape-ecs";
 import * as PIXI from "pixi.js";
+import TiledMapOrthogonal, { TiledLayerTilelayer, TiledLayerObjectgroup } from "tiled-types";
 
 import { RNG } from "./rot/index";
 
@@ -22,8 +23,8 @@ import { ItemData } from "./skills";
 
 const COLOR_AMBIENT_LIGHT = "rgb(50, 50, 50)";
 
-const LevelData: { [key: string]: any } = {
-    forrest_001
+const LevelData: { [key: string]: TiledMapOrthogonal } = {
+    forrest_001: (forrest_001 as any).default as TiledMapOrthogonal
 };
 
 type LevelName = keyof typeof LevelData;
@@ -51,6 +52,48 @@ const TileData: { [key: number]: TileDataDetails } = {
         blocksSight: false,
         reflectivity: 0.18
     },
+    2678: {
+        name: "Stone Road",
+        textureKey: "stone_road_top_left_corner",
+        blocks: false,
+        blocksSight: false,
+        reflectivity: 0.18
+    },
+    2679: {
+        name: "Stone Road",
+        textureKey: "stone_road_top_edge",
+        blocks: false,
+        blocksSight: false,
+        reflectivity: 0.18
+    },
+    2680: {
+        name: "Stone Road",
+        textureKey: "stone_road_top_right_corner",
+        blocks: false,
+        blocksSight: false,
+        reflectivity: 0.18
+    },
+    2856: {
+        name: "Stone Road",
+        textureKey: "stone_road_left_edge",
+        blocks: false,
+        blocksSight: false,
+        reflectivity: 0.18
+    },
+    2857: {
+        name: "Stone Road",
+        textureKey: "stone_road_middle",
+        blocks: false,
+        blocksSight: false,
+        reflectivity: 0.18
+    },
+    2858: {
+        name: "Stone Road",
+        textureKey: "stone_road_right_edge",
+        blocks: false,
+        blocksSight: false,
+        reflectivity: 0.18
+    },
     5805: {
         name: "A stove",
         textureKey: "stove_1",
@@ -58,11 +101,81 @@ const TileData: { [key: number]: TileDataDetails } = {
         blocksSight: false,
         reflectivity: 0.18
     },
+    1619: {
+        name: "A tree",
+        textureKey: "short_pine_tree_1",
+        blocks: true,
+        blocksSight: true,
+        reflectivity: 0.18
+    },
     1620: {
         name: "A tree",
         textureKey: "short_pine_tree_1",
         blocks: true,
         blocksSight: true,
+        reflectivity: 0.18
+    },
+    1537: {
+        name: "Trees",
+        textureKey: "turquoise_copse_top_left_corner",
+        blocks: true,
+        blocksSight: false,
+        reflectivity: 0.18
+    },
+    1538: {
+        name: "Trees",
+        textureKey: "turquoise_copse_top_middle",
+        blocks: true,
+        blocksSight: false,
+        reflectivity: 0.18
+    },
+    1539: {
+        name: "Trees",
+        textureKey: "turquoise_copse_top_right_corner",
+        blocks: true,
+        blocksSight: false,
+        reflectivity: 0.18
+    },
+    1715: {
+        name: "Trees",
+        textureKey: "turquoise_copse_left_edge",
+        blocks: true,
+        blocksSight: false,
+        reflectivity: 0.18
+    },
+    1716: {
+        name: "Trees",
+        textureKey: "turquoise_copse_middle",
+        blocks: true,
+        blocksSight: false,
+        reflectivity: 0.18
+    },
+    1717: {
+        name: "Trees",
+        textureKey: "turquoise_copse_right_edge",
+        blocks: true,
+        blocksSight: false,
+        reflectivity: 0.18
+    },
+    1893: {
+        name: "Trees",
+        textureKey: "turquoise_copse_bottom_left_corner",
+        blocks: true,
+        blocksSight: false,
+        reflectivity: 0.18
+    },
+    1894: {
+        name: "Trees",
+        textureKey: "turquoise_copse_bottom_middle",
+        blocks: true,
+        blocksSight: false,
+        reflectivity: 0.18
+    },
+    1895: {
+        name: "Trees",
+        textureKey: "turquoise_copse_bottom_right_corner",
+        blocks: true,
+        blocksSight: false,
         reflectivity: 0.18
     },
     194: {
@@ -163,7 +276,7 @@ function findProperty(o: any, name: string): any {
     }
 }
 
-export type GameMap = Tile[][];
+export type GameMap = Nullable<Tile>[][][];
 
 /**
  * Load a Tiled map using its name.
@@ -176,17 +289,32 @@ export function loadTiledMap(
 ) {
     if (!(level in LevelData)) { throw new Error(`${level} is not a valid level`); }
 
-    const sourceData = LevelData[level].default;
+    const sourceData = LevelData[level];
     const tileSize: number = sourceData.tileheight;
     const map: GameMap = [];
     let playerLocation: [number, number] = [0, 0];
 
-    const tileLayer = get(sourceData.layers.filter((l: any) => l.name === "Tile Layer"), "[0]");
-    const objectLayer = get(sourceData.layers.filter((l: any) => l.name === "Object Layer"), "[0]");
-    const environmentLayer = get(sourceData.layers.filter((l: any) => l.name === "Environment Layer"), "[0]");
-    const nodeLayer = get(sourceData.layers.filter((l: any) => l.name === "Node Layer"), "[0]");
+    const tileLayers = sourceData.layers.filter(
+        l => get(l, "properties[0].value", null) === "tile"
+    ) as TiledLayerTilelayer[];
 
-    if (tileLayer === null) {
+    const environmentLayer = sourceData.layers.filter(
+        l => l.name === "Entity Layer"
+    )[0] as TiledLayerTilelayer;
+
+    const objectLayer = get(
+        sourceData.layers.filter(
+            l => l.name === "Object Layer"
+        ),
+        "[0]",
+        null
+    ) as TiledLayerObjectgroup<"orthogonal">;
+
+    const nodeLayer = get(sourceData.layers.filter(
+        (l) => l.name === "Node Layer"
+    ), "[0]", null) as TiledLayerObjectgroup<"orthogonal">;
+
+    if (tileLayers.length === 0) {
         throw new Error(`No tile layer in map ${level}`);
     }
     if (objectLayer === null) {
@@ -196,27 +324,41 @@ export function loadTiledMap(
         throw new Error(`No node layer in map ${level}`);
     }
 
-    const translated = tileLayer.data.map((tile: number) => {
-        if (!(tile in TileData)) { throw new Error(`${tile} is not valid tile`); }
+    for (let z = 0; z < tileLayers.length; z++) {
+        const layer = tileLayers[z].data as number[];
+        const translated = [];
+        for (let i = 0; i < layer.length; i++) {
+            const tile = layer[i];
+            if (tile === 0 && z === 0) {
+                throw new Error("Can't have a null tile in the base layer");
+            } else if (tile === 0 && z !== 0) {
+                translated.push(null);
+                continue;
+            }
+            if (!(tile in TileData)) { throw new Error(`${tile} is not valid tile`); }
 
-        const data = TileData[tile];
-        const t = new Tile(
-            data.name,
-            textures,
-            data.textureKey,
-            data.blocks,
-            data.blocksSight
-        );
-        stage.addChild(t.sprite);
-        return t;
-    });
+            const data = TileData[tile];
+            const t = new Tile(
+                data.name,
+                textures,
+                data.textureKey,
+                data.blocks,
+                data.blocksSight
+            );
+            t.sprite.zIndex = z;
+            stage.addChild(t.sprite);
+            translated.push(t);
+        }
 
-    for (let i = 0; i < translated.length; i += sourceData.width) {
-        map.push(translated.slice(i, i + sourceData.width));
+        const layerResult = [];
+        for (let i = 0; i < translated.length; i += sourceData.width) {
+            layerResult.push(translated.slice(i, i + sourceData.width));
+        }
+        map.push(layerResult);
     }
 
     // First create all of the nodes
-    nodeLayer.objects.forEach((o: any) => {
+    nodeLayer.objects.forEach(o => {
         ecs.createEntity({
             id: o.id.toString(10),
             c: {
@@ -231,7 +373,7 @@ export function loadTiledMap(
     // Do this is two passes because each node could reference
     // another node so make sure all of the nodes are created
     // before we try to create the references
-    nodeLayer.objects.forEach((o: any) => {
+    nodeLayer.objects.forEach(o => {
         const entity = ecs.getEntity(o.id.toString());
         if (entity === undefined) { throw new Error(`Node ${o.id} not initialized in level load`); }
 
@@ -245,7 +387,7 @@ export function loadTiledMap(
         }
     });
 
-    environmentLayer.data.forEach((tile: number, i: number) => {
+    (environmentLayer.data as number[]).forEach((tile: number, i: number) => {
         if (tile === 0) { return; }
 
         const type = TileToObject.get(tile);
@@ -409,8 +551,15 @@ export function isBlocked(
 ): BlocksResult {
     if (map.length === 0) { throw new Error("Bad map data"); }
 
-    if (x < 0 || y < 0 || x >= map[0].length || y >= map.length || map[y][x].blocks) {
+    // Assumes all layers are same size
+    if (x < 0 || y < 0 || x >= map[0][0].length || y >= map[0].length) {
         return { entity: null, blocks: true };
+    }
+
+    for (let z = 0; z < map.length; z++) {
+        if (map[z][y][x]?.blocks === true) {
+            return { entity: null, blocks: true };
+        }
     }
 
     const entities = entityMap.get(`${x},${y}`);
@@ -438,8 +587,15 @@ export function isBlocked(
 export function isSightBlocked(ecs: World, map: GameMap, x: number, y: number): boolean {
     if (map.length === 0) { throw new Error("Bad map data"); }
 
-    if (x < 0 || y < 0 || x >= map[0].length || y >= map.length || map[y][x].blocksSight) {
+    // Assumes all layers are same size
+    if (x < 0 || y < 0 || x >= map[0][0].length || y >= map[0].length) {
         return true;
+    }
+
+    for (let z = 0; z < map.length; z++) {
+        if (map[z][y][x] !== null && map[z][y][x]!.blocksSight === true) {
+            return true;
+        }
     }
 
     const entities = ecs.createQuery().fromAll(PositionComponent, "blocksSight").execute();
@@ -454,11 +610,7 @@ export function isSightBlocked(ecs: World, map: GameMap, x: number, y: number): 
 }
 
 /**
- * Draw a tile given the tile data and the coordinates.
- * @param {Display} display The ROT.js display object
- * @param {Tile} tile The tile to draw
- * @param {Number} x The x coordinate
- * @param {Number} y The y coordinate
+ * Draw a tile given the tile data and the coordinates
  */
 export function drawTile(
     tile: Tile,
@@ -566,18 +718,26 @@ export function getRandomOpenSpace(map: GameMap, entityMap: EntityMap): Point {
  * @return {void}
  */
 export function resetVisibility(map: GameMap): void {
-    for (let y = 0; y < map.length; y++) {
-        for (let x = 0; x < map[y].length; x++) {
-            map[y][x].visible = false;
-            map[y][x].lightingColor = COLOR_AMBIENT_LIGHT;
+    for (let z = 0; z < map.length; z++) {
+        for (let y = 0; y < map[z].length; y++) {
+            for (let x = 0; x < map[z][y].length; x++) {
+                if (map[z][y][x] !== null) {
+                    map[z][y][x]!.visible = false;
+                    map[z][y][x]!.lightingColor = COLOR_AMBIENT_LIGHT;
+                }
+            }
         }
     }
 }
 
 export function resetTilePathCosts(map: GameMap): void {
-    for (let y = 0; y < map.length; y++) {
-        for (let x = 0; x < map[y].length; x++) {
-            map[y][x].pathfindingCost = "0";
+    for (let z = 0; z < map.length; z++) {
+        for (let y = 0; y < map[z].length; y++) {
+            for (let x = 0; x < map[z][y].length; x++) {
+                if (map[z][y][x] !== null) {
+                    map[z][y][x]!.pathfindingCost = "0";
+                }
+            }
         }
     }
 }
@@ -590,14 +750,18 @@ export function setAllToExplored(
     visible: boolean = false,
     lit: boolean = false
 ): void {
-    for (let y = 0; y < map.length; y++) {
-        for (let x = 0; x < map[y].length; x++) {
-            map[y][x].explored = true;
-            if (visible) {
-                map[y][x].visible = true;
-            }
-            if (lit) {
-                map[y][x].lightingColor = "white";
+    for (let z = 0; z < map.length; z++) {
+        for (let y = 0; y < map[z].length; y++) {
+            for (let x = 0; x < map[z][y].length; x++) {
+                if (map[z][y][x] === null) { continue; }
+
+                map[z][y][x]!.explored = true;
+                if (visible) {
+                    map[z][y][x]!.visible = true;
+                }
+                if (lit) {
+                    map[z][y][x]!.lightingColor = "white";
+                }
             }
         }
     }
@@ -611,10 +775,14 @@ export function setAllToExplored(
  * @return {void}
  */
 export function drawMap(renderer: PIXI.Renderer, camera: Camera, map: GameMap): void {
-    for (let y = 0; y < map.length; y++) {
-        for (let x = 0; x < map[y].length; x++) {
-            const { x: screenX, y: screenY } = camera.tilePositionToScreen(x, y);
-            drawTile(map[y][x], screenX, screenY, camera.zoom);
+    for (let z = 0; z < map.length; z++) {
+        for (let y = 0; y < map[z].length; y++) {
+            for (let x = 0; x < map[z][y].length; x++) {
+                if (map[z][y][x] !== null) {
+                    const { x: screenX, y: screenY } = camera.tilePositionToScreen(x, y);
+                    drawTile(map[z][y][x]!, screenX, screenY, camera.zoom);
+                }
+            }
         }
     }
 }

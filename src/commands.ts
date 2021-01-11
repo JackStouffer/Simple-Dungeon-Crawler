@@ -118,7 +118,7 @@ export function generateWeightCallback(
         }
 
         if (globals.Game?.debugPathfinding === true) {
-            globals.Game.map[y][x].pathfindingCost = weight.toString(10);
+            globals.Game.map[0][y][x]!.pathfindingCost = weight.toString(10);
         }
 
         return weight;
@@ -164,7 +164,7 @@ export function getPlayerMovementPath(
             { topology: 8 }
         );
 
-        if (destination.y >= map.length || destination.x >= map[0].length) {
+        if (destination.y >= map[0].length || destination.x >= map[0][0].length) {
             return null;
         }
 

@@ -185,8 +185,8 @@ export class StatusBar {
             return;
         }
 
-        const tile = map[y][x];
-        if (!tile?.isVisibleAndLit()) {
+        const tile = map[0][y][x];
+        if (tile === null || tile.isVisibleAndLit() === false) {
             return;
         }
 
@@ -333,10 +333,6 @@ export class InventoryMenu {
         if (info !== undefined) {
             this.descriptionText.text = info.description;
         }
-
-        const currentPage = Math.floor(this.currentSelection / this.pageSize);
-        const start = currentPage * this.pageSize;
-        const end = Math.min(start + this.pageSize, inventoryItems.length);
 
         for (let i = 0; i < inventoryItems.length; i++) {
             const item = inventoryItems[i];
@@ -503,11 +499,9 @@ export class SpellSelectionMenu {
         this.descriptionBackground.visible = true;
 
         const info = spells[this.currentSelection];
-        this.descriptionText.text = info.description;
-
-        const currentPage = Math.floor(this.currentSelection / this.pageSize);
-        const start = currentPage * this.pageSize;
-        const end = Math.min(start + this.pageSize, spells.length);
+        if (info !== undefined) {
+            this.descriptionText.text = info.description;
+        }
 
         for (let i = 0; i < spells.length; i++) {
             const spell = spells[i];
@@ -568,14 +562,6 @@ export class SpellSelectionMenu {
             this.currentStage.addChild(info);
             this.currentStage.addChild(count);
         }
-
-        if (start > 0) {
-            // globals.Game.display.drawText((WIDTH / 2) - 2, 2, "%c{white}%b{black}\u25B2\u25B2\u25B2");
-        }
-        if (end < spells.length) {
-            // globals.Game.display.drawText((WIDTH / 2) - 2, (HEIGHT / 2) - 1, "%c{white}%b{black}\u25BC\u25BC\u25BC");
-        }
-
     }
 
     close(): void {
@@ -631,7 +617,6 @@ export class SpellSelectionMenu {
             }
         }
 
-        // INCOMPLETE: multiple pages does not work
         return null;
     }
 }

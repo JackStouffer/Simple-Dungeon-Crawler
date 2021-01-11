@@ -11,7 +11,7 @@ import {
     WetableComponent
 } from "./entity";
 import input from "./input";
-import { distanceBetweenPoints } from "./map";
+import { distanceBetweenPoints, GameMap } from "./map";
 import { PlayerState } from "./input-handler";
 import { getPlayerMovementPath } from "./commands";
 import { getItems } from "./inventory";
@@ -40,7 +40,10 @@ export class DrawSystem extends System {
      * x and y coordinates if the tile it's on is visible.
      */
     draw(entity: Entity, pos: PositionComponent, graphics: GraphicsComponent): void {
-        if (globals.Game!.map[pos.y][pos.x].isVisibleAndLit() && graphics.sprite !== null) {
+        if (globals.Game === null) { throw new Error("global Game object is null"); }
+
+        // assuming all tiles on the same position have the same visibility
+        if (globals.Game.map[0][pos.y][pos.x]!.isVisibleAndLit() && graphics.sprite !== null) {
             graphics.sprite.visible = true;
 
             const { x, y } = globals.Game!.gameCamera.tilePositionToScreen(pos.x, pos.y);
@@ -63,7 +66,9 @@ export class DrawSystem extends System {
     }
 
     drawAfterSeen(pos: PositionComponent, graphics: GraphicsComponent): void {
-        if (globals.Game!.map[pos.y][pos.x].explored && graphics.sprite !== null) {
+        if (globals.Game === null) { throw new Error("global Game object is null"); }
+
+        if (globals.Game.map[0][pos.y][pos.x]!.explored && graphics.sprite !== null) {
             graphics.sprite.visible = true;
 
             const { x, y } = globals.Game!.gameCamera.tilePositionToScreen(pos.x, pos.y);
@@ -120,7 +125,7 @@ export class DrawChestsSystem extends System {
 
             if (graphics === undefined || graphics.sprite === null) { throw new Error("Missing graphics data on chest"); }
 
-            if (globals.Game.map[pos.y][pos.x].explored) {
+            if (globals.Game.map[0][pos.y][pos.x]!.explored) {
                 const inventory = entity.getOne(InventoryComponent)!;
 
                 graphics.sprite.visible = false;
@@ -188,6 +193,20 @@ function getTargetingReticle(inputState: InputHandlingComponent): [number, numbe
     return ret;
 }
 
+/**
+ * Given an x, y position, give the highest z index in the map that has a non-null
+ * tile
+ */
+function getHighestZIndexWithTile(map: GameMap, x: number, y: number): number {
+    let ret = 0;
+    for (let z = 0; z < map.length; z++) {
+        const tile = map[z][y][x];
+        if (tile !== null) { ret = z; }
+    }
+
+    return ret;
+}
+
 export class DrawPlayerSystem extends System {
     private query: Query;
     private pathFilter: GlowFilter;
@@ -229,7 +248,7 @@ export class DrawPlayerSystem extends System {
                 throw new Error("Player missing speed or input data");
             }
 
-            if (globals.Game!.map[pos.y][pos.x].isVisibleAndLit()) {
+            if (globals.Game.map[0][pos.y][pos.x]!.isVisibleAndLit()) {
                 graphics.sprite.visible = true;
 
                 const { x, y } = globals.Game!.gameCamera.tilePositionToScreen(pos.x, pos.y);
@@ -253,8 +272,8 @@ export class DrawPlayerSystem extends System {
                 if (inputStateData.state === PlayerState.Combat) {
                     const mousePosition = input.getMousePosition();
                     if (mousePosition === null) { return; }
-                    const tile = globals.Game!.map[mousePosition.y][mousePosition.x];
-                    if (tile !== undefined && !tile.explored) {
+                    const tile = globals.Game.map[0][mousePosition.y][mousePosition.x];
+                    if (tile !== null && !tile.explored) {
                         return;
                     }
 
@@ -264,8 +283,9 @@ export class DrawPlayerSystem extends System {
                         // clear
                         for (let i = 0; i < this.perviousPath.length; i++) {
                             const step = this.perviousPath[i];
-                            globals.Game!
-                                .map[step[1]][step[0]]
+                            const z = getHighestZIndexWithTile(globals.Game.map, step[0], step[1]);
+                            globals.Game
+                                .map[z][step[1]][step[0]]!
                                 .sprite
                                 .filters = [];
                         }
@@ -281,8 +301,9 @@ export class DrawPlayerSystem extends System {
 
                         for (let j = 0; j < path.length; j++) {
                             const step = path[j];
-                            globals.Game!
-                                .map[step[1]][step[0]]
+                            const z = getHighestZIndexWithTile(globals.Game.map, step[0], step[1]);
+                            globals.Game
+                                .map[z][step[1]][step[0]]!
                                 .sprite
                                 .filters = [this.pathFilter];
                         }
@@ -292,8 +313,9 @@ export class DrawPlayerSystem extends System {
                     // clear
                     for (let i = 0; i < this.perviousPath.length; i++) {
                         const step = this.perviousPath[i];
+                        const z = getHighestZIndexWithTile(globals.Game.map, step[0], step[1]);
                         globals.Game!
-                            .map[step[1]][step[0]]
+                            .map[z][step[1]][step[0]]!
                             .sprite
                             .filters = [];
                     }
@@ -301,14 +323,21 @@ export class DrawPlayerSystem extends System {
                     const targetArea = getTargetingReticle(inputStateData);
 
                     for (let i = 0; i < targetArea.length; i++) {
-                        if (targetArea[i][0] >= globals.Game!.map[0].length ||
-                        targetArea[i][1] >= globals.Game!.map.length ||
-                        globals.Game!.map[targetArea[i][1]][targetArea[i][0]].visible === false) {
+                        const z = getHighestZIndexWithTile(
+                            globals.Game.map,
+                            targetArea[i][0],
+                            targetArea[i][1]
+                        );
+
+                        if (targetArea[i][0] >= globals.Game.map[z][0].length ||
+                        targetArea[i][1] >= globals.Game!.map[z].length ||
+                        globals.Game
+                            .map[z][targetArea[i][1]][targetArea[i][0]]!.visible === false) {
                             return;
                         }
 
-                        globals.Game!
-                            .map[targetArea[i][1]][targetArea[i][0]]
+                        globals.Game
+                            .map[z][targetArea[i][1]][targetArea[i][0]]!
                             .sprite
                             .filters = [this.targetFilter];
                     }

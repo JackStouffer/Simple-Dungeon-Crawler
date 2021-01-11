@@ -45,9 +45,9 @@ export function mouseTarget(
 ): Nullable<Entity> {
     const entities = getEntitiesAtLocation(entityMap, mousePosition.x, mousePosition.y);
 
-    if (mousePosition.x >= map[0].length ||
-        mousePosition.y >= map.length ||
-        map[mousePosition.y][mousePosition.x].visible === false) {
+    if (mousePosition.x >= map[0][0].length ||
+        mousePosition.y >= map[0].length ||
+        map[0][mousePosition.y][mousePosition.x]!.visible === false) {
         return null;
     }
 
@@ -115,8 +115,8 @@ export function playerInput(
                 }
             }
 
-            const tile = globals.Game!.map[mouseDownPosition.y][mouseDownPosition.x];
-            if (tile === undefined || tile.explored === false) { return null; }
+            const tile = globals.Game!.map[0][mouseDownPosition.y][mouseDownPosition.x];
+            if (tile === null || tile.explored === false) { return null; }
 
             // Movement
             const path = getPlayerMovementPath(

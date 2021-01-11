@@ -6,6 +6,10 @@ _In Development_
 
 * Technical
   * Use Tiled's JSON format instead of the JS format
+  * Use Pixi.js for rendering
+* Graphical
+  * Use 16x16 sprites instead of console display
+  * Allow maps to have arbitrary number of tile layers
 
 ## Version 10
 

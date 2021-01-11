@@ -16,7 +16,7 @@ function createReflectivityCallback(map: GameMap): ReflectivityCallback {
         if (x < 0 || y < 0 || y >= map.length || x >= map[y].length) {
             return 0;
         }
-        return map[y][x].blocksSight ? 0 : map[y][x].reflectivity;
+        return map[0][y][x]!.blocksSight ? 0 : map[0][y][x]!.reflectivity;
     };
 }
 
@@ -38,15 +38,22 @@ export class LightingSystem extends System {
             createPassableSightCallback(pos)
         );
         sightFov.compute(pos.x, pos.y, WIDTH + 2, function(x, y) {
-            if (x < 0 ||
+            if (globals.Game === null ||
+                x < 0 ||
                 y < 0 ||
-                y >= globals.Game!.map.length ||
-                x >= globals.Game!.map[y].length) {
+                y >= globals.Game.map[0].length ||
+                x >= globals.Game.map[0][y].length) {
                 return;
             }
-            globals.Game!.map[y][x].explored = true;
-            globals.Game!.map[y][x].visible = true;
-            globals.Game!.map[y][x].lightingColor = light.color;
+
+            for (let z = 0; z < globals.Game.map.length; z++) {
+                const tile = globals.Game.map[z][y][x];
+                if (tile !== null) {
+                    tile.explored = true;
+                    tile.visible = true;
+                    tile.lightingColor = light.color;
+                }
+            }
         });
     }
 
@@ -58,13 +65,13 @@ export class LightingSystem extends System {
                 x >= globals.Game!.map[y].length) {
                 return;
             }
-            globals.Game!.map[y][x].lightingColor = toRGB(
+            globals.Game!.map[0][y][x]!.lightingColor = toRGB(
                 add(
-                    fromString(globals.Game!.map[y][x].lightingColor),
+                    fromString(globals.Game!.map[0][y][x]!.lightingColor),
                     color
                 )
             );
-            globals.Game!.map[y][x].explored = true;
+            globals.Game!.map[0][y][x]!.explored = true;
         }
 
         const sightFov = new FOV.PreciseShadowcasting(
@@ -77,7 +84,7 @@ export class LightingSystem extends System {
                 x >= globals.Game!.map[y].length) {
                 return;
             }
-            globals.Game!.map[y][x].visible = true;
+            globals.Game!.map[0][y][x]!.visible = true;
         });
 
         const lightingFov = new FOV.PreciseShadowcasting(
@@ -100,9 +107,9 @@ export class LightingSystem extends System {
                 x >= globals.Game!.map[y].length) {
                 return;
             }
-            globals.Game!.map[y][x].lightingColor = toRGB(
+            globals.Game!.map[0][y][x]!.lightingColor = toRGB(
                 add(
-                    fromString(globals.Game!.map[y][x].lightingColor),
+                    fromString(globals.Game!.map[0][y][x]!.lightingColor),
                     color
                 )
             );
@@ -119,7 +126,7 @@ export class LightingSystem extends System {
         lighting.setLight(pos.x, pos.y, light.color);
         lighting.compute(lightingCallback);
         // For some reason the tile you're on doesn't get lit
-        globals.Game!.map[pos.y][pos.x].lightingColor = light.color;
+        globals.Game!.map[0][pos.y][pos.x]!.lightingColor = light.color;
     }
 
     update() {

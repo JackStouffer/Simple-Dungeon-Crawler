@@ -51,6 +51,7 @@
     "howler": "^2.2.1",
     "lodash": "^4.17.20",
     "pixi-filters": "^3.2.2",
-    "pixi.js": "^5.3.7"
+    "pixi.js": "^5.3.7",
+    "tiled-types": "^1.2.1"
   }
 }

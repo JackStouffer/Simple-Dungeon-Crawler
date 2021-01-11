@@ -37,8 +37,8 @@ export class Camera {
         this.x = Math.floor(pos.x - (screenTileWidth / 2));
         this.y = Math.floor(pos.y - (screenTileHeight / 2));
         // clamp values
-        this.x = Math.max(0, Math.min(this.x, map.length * this.tileSize * this.zoom));
-        this.y = Math.max(0, Math.min(this.y, map[0].length * this.tileSize * this.zoom));
+        this.x = Math.max(0, Math.min(this.x, map[0].length * this.tileSize * this.zoom));
+        this.y = Math.max(0, Math.min(this.y, map[0][0].length * this.tileSize * this.zoom));
     }
 
     tilePositionToScreen(x: number, y: number) {
