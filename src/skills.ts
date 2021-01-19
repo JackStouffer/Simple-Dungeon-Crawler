@@ -30,6 +30,7 @@ import {
 import { randomIntFromInterval, Nullable, assertUnreachable } from "./util";
 import { mouseTarget } from "./input-handler";
 import { getEffectiveHitPointData, getEffectiveStatData, heal, takeDamage } from "./fighter";
+import { getTargetingReticle } from "./graphics";
 
 export interface Area {
     width: number;
@@ -37,6 +38,7 @@ export interface Area {
 }
 
 export interface ItemDataDetails {
+    id: string;
     displayName: string,
     description: string;
     type: ItemType,
@@ -454,37 +456,16 @@ function castWall(
     if (globals.Game === null) { throw new Error("Global game object is null"); }
     if (item.areaOfEffect === undefined) { throw new Error("areaOfEffect cannot be null for castWall"); }
 
-    for (let dx = 0; dx < item.areaOfEffect.width; dx++) {
-        for (let dy = 0; dy < item.areaOfEffect.height; dy++) {
-            let locationX: number, locationY: number;
-            switch (rotation) {
-                default:
-                case 0:
-                    locationX = target.x + dx;
-                    locationY = target.y + dy;
-                    break;
-                case 90:
-                    locationX = target.x + dy;
-                    locationY = target.y + dx;
-                    break;
-                case 180:
-                    locationX = target.x + dx;
-                    locationY = target.y - dy;
-                    break;
-                case 270:
-                    locationX = target.x - dy;
-                    locationY = target.y + dx;
-                    break;
-            }
+    const tiles = getTargetingReticle(item, target, rotation);
 
-            const { blocks, entity } = isBlocked(map, entityMap, locationX, locationY);
+    for (let i = 0; i < tiles.length; i++) {
+        const { blocks, entity } = isBlocked(map, entityMap, tiles[i][0], tiles[i][1]);
 
-            if (blocks === true && entity === null) {
-                continue;
-            }
-
-            createEntity(ecs, globals.Game.textureAtlas, objectId, locationX, locationY);
+        if (blocks === true && entity === null) {
+            continue;
         }
+
+        createEntity(ecs, globals.Game.textureAtlas, objectId, tiles[i][0], tiles[i][1]);
     }
 
     return true;
@@ -622,6 +603,7 @@ export function castSilence(
  */
 export const ItemData: { [key: string]: ItemDataDetails } = {
     "health_potion_weak": {
+        id: "health_potion_weak",
         displayName: "Weak Potion of Healing",
         description: "Potion that restores a small amount of health",
         value: 25,
@@ -629,6 +611,7 @@ export const ItemData: { [key: string]: ItemDataDetails } = {
         useFunc: castHeal
     },
     "health_potion": {
+        id: "health_potion",
         displayName: "Potion of Healing",
         description: "Potion that restores a some health",
         value: 50,
@@ -636,6 +619,7 @@ export const ItemData: { [key: string]: ItemDataDetails } = {
         useFunc: castHeal
     },
     "health_potion_strong": {
+        id: "health_potion_strong",
         displayName: "Strong Potion of Healing",
         description: "Potion that restores a large amount of health",
         value: 100,
@@ -643,6 +627,7 @@ export const ItemData: { [key: string]: ItemDataDetails } = {
         useFunc: castHeal
     },
     "lightning_scroll_weak": {
+        id: "lightning_scroll_weak",
         displayName: "Weak Scroll of Lightning Bolt",
         description: "Conjure a lightning bolt that damages a target with lightning damage",
         value: 20,
@@ -651,6 +636,7 @@ export const ItemData: { [key: string]: ItemDataDetails } = {
         useFunc: castDamageSpell
     },
     "lightning_scroll": {
+        id: "lightning_scroll",
         displayName: "Scroll of Lightning",
         description: "Conjure a lightning bolt that damages a target with lightning damage",
         value: 50,
@@ -659,6 +645,7 @@ export const ItemData: { [key: string]: ItemDataDetails } = {
         useFunc: castDamageSpell
     },
     "lightning_scroll_strong": {
+        id: "lightning_scroll_strong",
         displayName: "Strong Scroll of Lightning",
         description: "Conjure a lightning bolt that damages a target with lightning damage",
         value: 100,
@@ -667,6 +654,7 @@ export const ItemData: { [key: string]: ItemDataDetails } = {
         useFunc: castDamageSpell
     },
     "fireball_scroll_weak": {
+        id: "fireball_scroll_weak",
         displayName: "Weak Scroll of Fire",
         description: "Conjure a ball of fire that damages a target with fire damage",
         value: 20,
@@ -676,6 +664,7 @@ export const ItemData: { [key: string]: ItemDataDetails } = {
         statusEffect: StatusEffectType.OnFire
     },
     "fireball_scroll": {
+        id: "fireball_scroll",
         displayName: "Scroll of Fire",
         description: "Conjure a ball of fire that damages a target with fire damage",
         value: 50,
@@ -685,6 +674,7 @@ export const ItemData: { [key: string]: ItemDataDetails } = {
         statusEffect: StatusEffectType.OnFire
     },
     "fireball_scroll_strong": {
+        id: "fireball_scroll_strong",
         displayName: "Strong Scroll of Fire",
         description: "Conjure a ball of fire that damages a target with fire damage",
         value: 100,
@@ -694,6 +684,7 @@ export const ItemData: { [key: string]: ItemDataDetails } = {
         statusEffect: StatusEffectType.OnFire
     },
     "lightning_scroll_weak_wild": {
+        id: "lightning_scroll_weak_wild",
         displayName: "Weak Scroll of Wild Lightning",
         description: "Summons a lightning bolt that's beyond your control and attacks randomly with lightning damage",
         value: 50,
@@ -702,6 +693,7 @@ export const ItemData: { [key: string]: ItemDataDetails } = {
         useFunc: castWildDamageSpell
     },
     "lightning_scroll_wild": {
+        id: "lightning_scroll_wild",
         displayName: "Scroll of Wild Lightning",
         description: "Summons a lightning bolt that's beyond your control and attacks randomly with lightning damage",
         value: 100,
@@ -710,6 +702,7 @@ export const ItemData: { [key: string]: ItemDataDetails } = {
         useFunc: castWildDamageSpell,
     },
     "lightning_scroll_strong_wild": {
+        id: "lightning_scroll_strong_wild",
         displayName: "Strong Scroll of Wild Lightning",
         description: "Summons a lightning bolt that's beyond your control and attacks randomly with lightning damage",
         value: 150,
@@ -718,6 +711,7 @@ export const ItemData: { [key: string]: ItemDataDetails } = {
         useFunc: castWildDamageSpell
     },
     "fireball_scroll_weak_wild": {
+        id: "fireball_scroll_weak_wild",
         displayName: "Weak Scroll of Wild Fire",
         description: "Summons a ball of fire that's beyond your control and attacks randomly with fire damage",
         value: 50,
@@ -727,6 +721,7 @@ export const ItemData: { [key: string]: ItemDataDetails } = {
         statusEffect: StatusEffectType.OnFire
     },
     "fireball_scroll_wild": {
+        id: "fireball_scroll_wild",
         displayName: "Scroll of Wild Fire",
         description: "Summons a ball of fire that's beyond your control and attacks randomly with fire damage",
         value: 100,
@@ -736,6 +731,7 @@ export const ItemData: { [key: string]: ItemDataDetails } = {
         statusEffect: StatusEffectType.OnFire
     },
     "fireball_scroll_strong_wild": {
+        id: "fireball_scroll_strong_wild",
         displayName: "Strong Scroll of Wild Fire",
         description: "Summons a ball of fire that's beyond your control and attacks randomly with fire damage",
         value: 150,
@@ -745,6 +741,7 @@ export const ItemData: { [key: string]: ItemDataDetails } = {
         statusEffect: StatusEffectType.OnFire
     },
     "confuse_scroll": {
+        id: "confuse_scroll",
         displayName: "Scroll of Confuse Enemy",
         description: "Your target loses control of their actions",
         value: 8,
@@ -752,6 +749,7 @@ export const ItemData: { [key: string]: ItemDataDetails } = {
         useFunc: castConfuse,
     },
     "clairvoyance_scroll": {
+        id: "clairvoyance_scroll",
         displayName: "Scroll of Clairvoyance",
         description: "Use sensory magics to learn the layout of the whole map",
         value: null,
@@ -759,6 +757,7 @@ export const ItemData: { [key: string]: ItemDataDetails } = {
         useFunc: castClairvoyance
     },
     "haste_potion_weak": {
+        id: "haste_potion_weak",
         displayName: "Weak Potion of Haste",
         description: "Haste gives you more actions per turn",
         value: 5,
@@ -766,6 +765,7 @@ export const ItemData: { [key: string]: ItemDataDetails } = {
         useFunc: castHaste,
     },
     "slow_poison_weak": {
+        id: "slow_poison_weak",
         displayName: "Weak Poison of Slow",
         description: "Only allow your target to take one action per two turns",
         value: 5,
@@ -805,6 +805,10 @@ export const SpellData: { [key: string]: SpellDataDetails } = {
         type: SpellType.DamageOther,
         damageType: DamageType.Fire,
         useFunc: castDamageSpell,
+        areaOfEffect: {
+            width: 4,
+            height: 4
+        },
         statusEffect: StatusEffectType.OnFire
     },
     "wild_fireball": {

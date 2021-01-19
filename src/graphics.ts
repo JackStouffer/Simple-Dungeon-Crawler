@@ -11,13 +11,14 @@ import {
     WetableComponent
 } from "./entity";
 import input from "./input";
-import { distanceBetweenPoints, getHighestZIndexWithTile } from "./map";
+import { distanceBetweenPoints, getHighestZIndexWithTile, Point } from "./map";
 import { PlayerState } from "./input-handler";
 import { getPlayerMovementPath } from "./commands";
 import { getItems } from "./inventory";
 import globals from "./globals";
 import { getEffectiveSpeedData } from "./fighter";
-import { SpellData } from "./skills";
+import { ItemDataDetails, SpellDataDetails } from "./skills";
+import { Nullable } from "./util";
 
 /**
  * Draw all entities with a GraphicsComponent and a PositionComponent,
@@ -153,41 +154,56 @@ export class DrawChestsSystem extends System {
  * Returns a list of Points that represent the area being targeted by
  * the player.
  */
-function getTargetingReticle(inputState: InputHandlingComponent): [number, number][] {
-    if (inputState.state !== PlayerState.Target) { throw new Error("Cannot get reticle outside of targeting state"); }
-
+export function getTargetingReticle(
+    data: ItemDataDetails | SpellDataDetails | null,
+    pos: Nullable<Point>,
+    rotation: number
+): [number, number][] {
     const ret: [number, number][] = [];
 
-    const mousePosition = input.getMousePosition();
-    if (mousePosition === null) { return ret; }
+    if (pos === null) {
+        return [];
+    }
 
-    if (inputState.spellForTarget !== null) {
-        const spellData = SpellData[inputState.spellForTarget.id];
-        if (spellData.areaOfEffect !== undefined) {
-            for (let dx = 0; dx < spellData.areaOfEffect.width; dx++) {
-                for (let dy = 0; dy < spellData.areaOfEffect.height; dy++) {
-                    switch (inputState.reticleRotation) {
-                        case 0:
-                            ret.push([ mousePosition.x + dx, mousePosition.y + dy ]);
-                            break;
-                        case 90:
-                            ret.push([ mousePosition.x + dy, mousePosition.y + dx ]);
-                            break;
-                        case 180:
-                            ret.push([ mousePosition.x + dx, mousePosition.y - dy ]);
-                            break;
-                        case 270:
-                            ret.push([ mousePosition.x - dy, mousePosition.y + dx ]);
-                            break;
-                        default: break;
-                    }
+    if (data === null) {
+        ret.push([ pos.x, pos.y ]);
+        return ret;
+    }
+
+    if (data.areaOfEffect !== undefined) {
+        for (let dx = 0; dx < data.areaOfEffect.width; dx++) {
+            for (let dy = 0; dy < data.areaOfEffect.height; dy++) {
+                switch (rotation) {
+                    case 0:
+                        ret.push([
+                            pos.x + dx,
+                            (pos.y - Math.floor(data.areaOfEffect.height / 2)) + dy
+                        ]);
+                        break;
+                    case 90:
+                        ret.push([
+                            (pos.x - Math.floor(data.areaOfEffect.height / 2)) + dy,
+                            pos.y + dx
+                        ]);
+                        break;
+                    case 180:
+                        ret.push([
+                            pos.x + dx,
+                            (pos.y + Math.floor(data.areaOfEffect.height / 2)) - dy
+                        ]);
+                        break;
+                    case 270:
+                        ret.push([
+                            (pos.x + Math.floor(data.areaOfEffect.height / 2)) - dy,
+                            pos.y + dx
+                        ]);
+                        break;
+                    default: break;
                 }
             }
-        } else {
-            ret.push([ mousePosition.x, mousePosition.y ]);
         }
     } else {
-        ret.push([ mousePosition.x, mousePosition.y ]);
+        ret.push([ pos.x, pos.y ]);
     }
 
     return ret;
@@ -306,7 +322,13 @@ export class DrawPlayerSystem extends System {
                             .filters = [];
                     }
 
-                    const targetArea = getTargetingReticle(inputStateData);
+
+                    const mousePosition = input.getMousePosition();
+                    const targetArea = getTargetingReticle(
+                        inputStateData.spellForTarget ?? inputStateData.itemForTarget,
+                        mousePosition,
+                        inputStateData.reticleRotation
+                    );
 
                     for (let i = 0; i < targetArea.length; i++) {
                         const z = getHighestZIndexWithTile(

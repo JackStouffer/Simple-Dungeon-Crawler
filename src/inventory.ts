@@ -1,16 +1,10 @@
 import globals from "./globals";
 import { ItemType } from "./constants";
-import { Nullable } from "./util";
 import { InventoryComponent } from "./entity";
-import { ItemData } from "./skills";
+import { ItemData, ItemDataDetails } from "./skills";
 
-export interface InventoryItemDetails {
-    id: string;
-    displayName: string;
-    description: string;
-    type: ItemType;
+export interface InventoryItemDetails extends ItemDataDetails {
     count: number;
-    value: Nullable<number>;
 }
 
 /**
@@ -28,7 +22,8 @@ export function getItems(inventory: InventoryComponent): InventoryItemDetails[] 
             description: data.description,
             type: data.type,
             count: v,
-            value: data.value
+            value: data.value,
+            useFunc: data.useFunc
         });
     }
     return res;

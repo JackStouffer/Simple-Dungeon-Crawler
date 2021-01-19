@@ -16,7 +16,6 @@ import {
 } from "./constants";
 import { Nullable, randomIntFromInterval } from "./util";
 import { KeyCommand, PlayerState } from "./input-handler";
-import { InventoryItemDetails } from "./inventory";
 import { Planner, PlannerWorldState } from "./ai/planner";
 import {
     NoOpCommand,
@@ -25,7 +24,7 @@ import {
     RotateReticleCommand
 } from "./commands";
 import { createPlanner } from "./ai/commands";
-import { SpellDataDetails } from "./skills";
+import { ItemDataDetails, SpellDataDetails } from "./skills";
 import { Point } from "./map";
 
 export type EntityMap = Map<string, Entity[]>;
@@ -367,7 +366,7 @@ export class InputHandlingComponent extends Component {
     state: PlayerState;
     reticleRotation: 0 | 90 | 180 | 270;
     keyCommands: KeyCommand[];
-    itemForTarget: Nullable<InventoryItemDetails>;
+    itemForTarget: Nullable<ItemDataDetails>;
     spellForTarget: Nullable<SpellDataDetails>;
 
     static typeName = "InputHandlingComponent";
@@ -1005,7 +1004,8 @@ const ObjectData: { [key: string]: ObjectDataDetails } = {
         addInventory: true,
         addInput: true,
         spells: [
-            ["fireball", 10],
+            ["lightning_bolt", 10],
+            ["fireball", 3],
             ["lesser_heal", 5]
         ],
         staticallyKnownComponents: {
