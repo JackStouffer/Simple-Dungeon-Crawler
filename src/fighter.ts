@@ -185,6 +185,7 @@ export class DeathSystem extends System {
             itemInventory!.inventory = inventoryData.inventory;
         }
 
+        // TODO define these sounds in data on the entity or fighter instance or something
         const typeData = target.getOne(TypeComponent);
         if (typeData?.entityType === "crate") {
             globals.gameEventEmitter.emit("crate.break");
@@ -455,17 +456,21 @@ export function takeDamage(
     }
 
     if (damage > 0) {
-        hpData.hp -= damage;
-        hpData.update();
-
         const aiState = target.getOne(PlannerAIComponent);
         // Update the AI state to know where the target is
         // This is of course assuming that all damage is done by
         // the target and that the target is in line of sight
+        // TODO: Target acquisition code
         if (aiState !== undefined && aiState.knowsTargetPosition === false) {
             aiState.knowsTargetPosition = true;
             aiState.update();
+            // Bonus damage for sneak attack
+            damage = Math.ceil(damage * 1.5);
+            critical = true;
         }
+
+        hpData.hp -= damage;
+        hpData.update();
     }
 
     // TODO fix messages to say who did the attacking
