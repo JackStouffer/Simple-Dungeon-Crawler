@@ -52,6 +52,13 @@ const TileData: { [key: number]: TileDataDetails } = {
         blocksSight: false,
         reflectivity: 0.18
     },
+    184: {
+        name: "grass",
+        textureKey: "grass_2",
+        blocks: false,
+        blocksSight: false,
+        reflectivity: 0.18
+    },
     2678: {
         name: "Stone Road",
         textureKey: "stone_road_top_left_corner",
@@ -97,6 +104,223 @@ const TileData: { [key: number]: TileDataDetails } = {
     5805: {
         name: "A stove",
         textureKey: "stove_1",
+        blocks: true,
+        blocksSight: false,
+        reflectivity: 0.18
+    },
+    1610: {
+        name: "Dirt",
+        textureKey: "dirt_top_left_corner",
+        blocks: false,
+        blocksSight: false,
+        reflectivity: 0.18
+    },
+    1611: {
+        name: "Dirt",
+        textureKey: "dirt_top_edge",
+        blocks: false,
+        blocksSight: false,
+        reflectivity: 0.18
+    },
+    1612: {
+        name: "Dirt",
+        textureKey: "dirt_top_right_corner",
+        blocks: false,
+        blocksSight: false,
+        reflectivity: 0.18
+    },
+    1788: {
+        name: "Dirt",
+        textureKey: "dirt_left_edge",
+        blocks: false,
+        blocksSight: false,
+        reflectivity: 0.18
+    },
+    1789: {
+        name: "Dirt",
+        textureKey: "dirt_middle",
+        blocks: false,
+        blocksSight: false,
+        reflectivity: 0.18
+    },
+    1790: {
+        name: "Dirt",
+        textureKey: "dirt_right_edge",
+        blocks: false,
+        blocksSight: false,
+        reflectivity: 0.18
+    },
+    1966: {
+        name: "Dirt",
+        textureKey: "dirt_bottom_left_corner",
+        blocks: false,
+        blocksSight: false,
+        reflectivity: 0.18
+    },
+    1967: {
+        name: "Dirt",
+        textureKey: "dirt_bottom_edge",
+        blocks: false,
+        blocksSight: false,
+        reflectivity: 0.18
+    },
+    1968: {
+        name: "Dirt",
+        textureKey: "dirt_bottom_right_corner",
+        blocks: false,
+        blocksSight: false,
+        reflectivity: 0.18
+    },
+    1827: {
+        name: "Tent",
+        textureKey: "green_tent_top_left",
+        blocks: true,
+        blocksSight: false,
+        reflectivity: 0.18
+    },
+    1828: {
+        name: "Tent",
+        textureKey: "green_tent_top_right",
+        blocks: true,
+        blocksSight: false,
+        reflectivity: 0.18
+    },
+    2005: {
+        name: "Tent",
+        textureKey: "green_tent_bottom_left",
+        blocks: true,
+        blocksSight: false,
+        reflectivity: 0.18
+    },
+    2006: {
+        name: "Tent",
+        textureKey: "green_tent_bottom_right",
+        blocks: true,
+        blocksSight: false,
+        reflectivity: 0.18
+    },
+    3934: {
+        name: "Building",
+        textureKey: "tan_building_exterior_left_edge",
+        blocks: true,
+        blocksSight: false,
+        reflectivity: 0.18
+    },
+    3935: {
+        name: "Building",
+        textureKey: "tan_building_exterior_middle",
+        blocks: true,
+        blocksSight: false,
+        reflectivity: 0.18
+    },
+    3936: {
+        name: "Building",
+        textureKey: "tan_building_exterior_right_edge",
+        blocks: true,
+        blocksSight: false,
+        reflectivity: 0.18
+    },
+    4112: {
+        name: "Building",
+        textureKey: "tan_building_exterior_bottom_right_corner",
+        blocks: true,
+        blocksSight: false,
+        reflectivity: 0.18
+    },
+    4113: {
+        name: "Building",
+        textureKey: "tan_building_exterior_bottom_edge",
+        blocks: true,
+        blocksSight: false,
+        reflectivity: 0.18
+    },
+    4114: {
+        name: "Building",
+        textureKey: "tan_building_exterior_bottom_left_corner",
+        blocks: true,
+        blocksSight: false,
+        reflectivity: 0.18
+    },
+    3759: {
+        name: "Roof",
+        textureKey: "brown_roof_rear_left_slope",
+        blocks: true,
+        blocksSight: false,
+        reflectivity: 0.18
+    },
+    3760: {
+        name: "Roof",
+        textureKey: "brown_roof_rear_right_slope",
+        blocks: true,
+        blocksSight: false,
+        reflectivity: 0.18
+    },
+    3937: {
+        name: "Roof",
+        textureKey: "brown_roof_left_slope",
+        blocks: true,
+        blocksSight: false,
+        reflectivity: 0.18
+    },
+    3938: {
+        name: "Roof",
+        textureKey: "brown_roof_right_slope",
+        blocks: true,
+        blocksSight: false,
+        reflectivity: 0.18
+    },
+    4115: {
+        name: "Roof",
+        textureKey: "brown_roof_front_left_slope",
+        blocks: true,
+        blocksSight: false,
+        reflectivity: 0.18
+    },
+    4116: {
+        name: "Roof",
+        textureKey: "brown_roof_front_right_slope",
+        blocks: true,
+        blocksSight: false,
+        reflectivity: 0.18
+    },
+    3939: {
+        name: "Roof",
+        textureKey: "brown_roof_edge_1",
+        blocks: true,
+        blocksSight: false,
+        reflectivity: 0.18
+    },
+    3942: {
+        name: "Building",
+        textureKey: "brown_building_exterior_middle",
+        blocks: true,
+        blocksSight: false,
+        reflectivity: 0.18
+    },
+    3764: {
+        name: "Building",
+        textureKey: "brown_building_exterior_top_edge",
+        blocks: true,
+        blocksSight: false,
+        reflectivity: 0.18
+    },
+    218: {
+        name: "Door",
+        textureKey: "brown_door_steel_frame_barred",
+        blocks: true,
+        blocksSight: false,
+        reflectivity: 0.18
+    },
+    221: {
+        name: "Window",
+        textureKey: "brown_square_4x4_window",
+        blocks: true,
+        blocksSight: false,
+        reflectivity: 0.18
+    },
+    935: {
+        name: "Window",
+        textureKey: "brown_window_curved_top_open_shutters",
         blocks: true,
         blocksSight: false,
         reflectivity: 0.18
@@ -213,6 +437,7 @@ const TileToObject: Map<number, string> = new Map([
     [1350, "water"],
     [1, "shallow_water"],
     [7, "mud"],
+    [211, "door"],
     [1981, "tall_grass"],
     [1440, "campfire"],
     [1805, "thick_underbrush"]
