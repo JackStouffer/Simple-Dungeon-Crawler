@@ -22,7 +22,7 @@ import {
 } from "./entity";
 import { InventoryItemDetails } from "./inventory";
 import { getEffectiveHitPointData, getEffectiveStatData, KnownSpellDetails } from "./fighter";
-import { GameMap, getEntitiesAtLocation } from "./map";
+import { GameMap, getEntitiesAtLocation, getHighestZIndexWithTile } from "./map";
 import { assertUnreachable, Nullable } from "./util";
 import { SpellData, SpellDataDetails } from "./skills";
 import { Container, Graphics, Sprite, Text, Texture } from "pixi.js";
@@ -135,7 +135,10 @@ export class StatusBar {
             this.stateText.visible = true;
             this.statusText.visible = true;
             this.targetText.visible = true;
-            this.debugPathfindingText.visible = true;
+
+            if (globals.Game?.debugPathfinding === true) {
+                this.debugPathfindingText.visible = true;
+            }
         }
 
         const player = ecs.getEntity("player");
@@ -181,38 +184,32 @@ export class StatusBar {
         if (mousePosition === null) { return; }
         const { x, y } = mousePosition;
 
-        if (x < 0 || y < 0 || x >= map[0].length || y >= map.length) {
-            return;
-        }
+        if (x >= 0 && y >= 0 && x < map[0][0].length && y < map[0].length) {
+            const tile = map[getHighestZIndexWithTile(map, x, y)][y][x];
+            if (tile !== null && tile.isVisibleAndLit() === true) {
+                const target: Nullable<Entity> = get(getEntitiesAtLocation(entityMap, x, y), "[0]", null);
+                if (target === null) {
+                    this.targetText.text = `${tile.name}`;
+                } else {
+                    const targetNameData = target.getOne(DisplayNameComponent);
+                    const targetHPData = getEffectiveHitPointData(target);
+                    const targetAIData = target.getOne(PlannerAIComponent);
 
-        const tile = map[0][y][x];
-        if (tile === null || tile.isVisibleAndLit() === false) {
-            return;
-        }
+                    if (targetNameData !== undefined &&
+                        targetAIData !== undefined &&
+                        targetHPData !== null) {
+                        this.targetText.text = `A ${targetNameData.name} (${targetHPData.hp}/${targetHPData.maxHp}) (${targetAIData.knowsTargetPosition})`;
+                    } else if (targetNameData !== undefined && targetHPData !== null) {
+                        this.targetText.text = `A ${targetNameData.name} (${targetHPData.hp}/${targetHPData.maxHp})`;
+                    } else if (targetNameData !== undefined) {
+                        this.targetText.text = `A ${targetNameData.name}`;
+                    }
+                }
+            }
 
-        if (globals.Game?.debugPathfinding === true) {
-            this.debugPathfindingText.text = `(${x}, ${y}): ${tile.pathfindingCost}`;
-            this.debugPathfindingText.visible = true;
-        } else {
-            this.debugPathfindingText.visible = false;
-        }
-
-        const target: Nullable<Entity> = get(getEntitiesAtLocation(entityMap, x, y), "[0]", null);
-        if (target === null) {
-            this.targetText.text = `${tile.name}`;
-            return;
-        }
-
-        const targetNameData = target.getOne(DisplayNameComponent);
-        const targetHPData = getEffectiveHitPointData(target);
-        const targetAIData = target.getOne(PlannerAIComponent);
-
-        if (targetNameData !== undefined && targetAIData !== undefined && targetHPData !== null) {
-            this.targetText.text = `A ${targetNameData.name} (${targetHPData.hp}/${targetHPData.maxHp}) (${targetAIData.knowsTargetPosition})`;
-        } else if (targetNameData !== undefined && targetHPData !== null) {
-            this.targetText.text = `A ${targetNameData.name} (${targetHPData.hp}/${targetHPData.maxHp})`;
-        } else if (targetNameData !== undefined) {
-            this.targetText.text = `A ${targetNameData.name}`;
+            if (globals.Game?.debugPathfinding === true && tile !== null) {
+                this.debugPathfindingText.text = `(${x}, ${y}): ${tile.pathfindingCost}`;
+            }
         }
     }
 }

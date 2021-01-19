@@ -1011,3 +1011,17 @@ export function drawMap(renderer: PIXI.Renderer, camera: Camera, map: GameMap): 
         }
     }
 }
+
+/**
+ * Given an x, y position, give the highest z index in the map that has a non-null
+ * tile
+ */
+export function getHighestZIndexWithTile(map: GameMap, x: number, y: number): number {
+    let ret = 0;
+    for (let z = 0; z < map.length; z++) {
+        const tile = map[z][y][x];
+        if (tile !== null) { ret = z; }
+    }
+
+    return ret;
+}

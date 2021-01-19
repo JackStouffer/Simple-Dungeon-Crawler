@@ -11,7 +11,7 @@ import {
     WetableComponent
 } from "./entity";
 import input from "./input";
-import { distanceBetweenPoints, GameMap } from "./map";
+import { distanceBetweenPoints, getHighestZIndexWithTile } from "./map";
 import { PlayerState } from "./input-handler";
 import { getPlayerMovementPath } from "./commands";
 import { getItems } from "./inventory";
@@ -188,20 +188,6 @@ function getTargetingReticle(inputState: InputHandlingComponent): [number, numbe
         }
     } else {
         ret.push([ mousePosition.x, mousePosition.y ]);
-    }
-
-    return ret;
-}
-
-/**
- * Given an x, y position, give the highest z index in the map that has a non-null
- * tile
- */
-function getHighestZIndexWithTile(map: GameMap, x: number, y: number): number {
-    let ret = 0;
-    for (let z = 0; z < map.length; z++) {
-        const tile = map[z][y][x];
-        if (tile !== null) { ret = z; }
     }
 
     return ret;
