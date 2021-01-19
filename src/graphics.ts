@@ -171,34 +171,46 @@ export function getTargetingReticle(
     }
 
     if (data.areaOfEffect !== undefined) {
-        for (let dx = 0; dx < data.areaOfEffect.width; dx++) {
-            for (let dy = 0; dy < data.areaOfEffect.height; dy++) {
-                switch (rotation) {
-                    case 0:
-                        ret.push([
-                            pos.x + dx,
-                            (pos.y - Math.floor(data.areaOfEffect.height / 2)) + dy
-                        ]);
-                        break;
-                    case 90:
-                        ret.push([
-                            (pos.x - Math.floor(data.areaOfEffect.height / 2)) + dy,
-                            pos.y + dx
-                        ]);
-                        break;
-                    case 180:
-                        ret.push([
-                            pos.x + dx,
-                            (pos.y + Math.floor(data.areaOfEffect.height / 2)) - dy
-                        ]);
-                        break;
-                    case 270:
-                        ret.push([
-                            (pos.x + Math.floor(data.areaOfEffect.height / 2)) - dy,
-                            pos.y + dx
-                        ]);
-                        break;
-                    default: break;
+        if (data.areaOfEffect.type === "rectangle") {
+            for (let dx = 0; dx < data.areaOfEffect.width!; dx++) {
+                for (let dy = 0; dy < data.areaOfEffect.height!; dy++) {
+                    switch (rotation) {
+                        case 0:
+                            ret.push([
+                                pos.x + dx,
+                                (pos.y - Math.floor(data.areaOfEffect.height! / 2)) + dy
+                            ]);
+                            break;
+                        case 90:
+                            ret.push([
+                                (pos.x - Math.floor(data.areaOfEffect.height! / 2)) + dy,
+                                pos.y + dx
+                            ]);
+                            break;
+                        case 180:
+                            ret.push([
+                                pos.x + dx,
+                                (pos.y + Math.floor(data.areaOfEffect.height! / 2)) - dy
+                            ]);
+                            break;
+                        case 270:
+                            ret.push([
+                                (pos.x + Math.floor(data.areaOfEffect.height! / 2)) - dy,
+                                pos.y + dx
+                            ]);
+                            break;
+                        default: break;
+                    }
+                }
+            }
+        } else if (data.areaOfEffect.type === "circle") {
+            for (let dx = -data.areaOfEffect.radius!; dx < data.areaOfEffect.radius!; dx++) {
+                const height = Math.round(Math.sqrt(
+                    data.areaOfEffect.radius! * data.areaOfEffect.radius! - dx * dx
+                ));
+
+                for (let dy = -height; dy < height; dy++) {
+                    ret.push([ pos.x + dx, pos.y + dy ]);
                 }
             }
         }

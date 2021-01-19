@@ -33,8 +33,10 @@ import { getEffectiveHitPointData, getEffectiveStatData, heal, takeDamage } from
 import { getTargetingReticle } from "./graphics";
 
 export interface Area {
-    width: number;
-    height: number;
+    type: "rectangle" | "circle";
+    width?: number;
+    height?: number;
+    radius?: number;
 }
 
 export interface ItemDataDetails {
@@ -228,7 +230,7 @@ function rollForStatusEffect(
     item: ItemDataDetails | SpellDataDetails,
     target: Entity,
     targetStats: any,
-    targetHp: any
+    targetHp: Pick<HitPointsComponent, "hp" | "maxHp">
 ): void {
     if (item.statusEffect === undefined) { return; }
 
@@ -276,6 +278,45 @@ export function castDamageSpell(
     const hp = getEffectiveHitPointData(targetedEntity);
     if (stats === null || hp === null) { return true; }
     rollForStatusEffect(item, targetedEntity, stats, hp);
+    return true;
+}
+
+export function castFireBall(
+    item: ItemDataDetails | SpellDataDetails,
+    user: Entity,
+    ecs: World,
+    map: GameMap,
+    entityMap: EntityMap,
+    target: Point,
+    rotation: number
+): boolean {
+    if (item.value === null) { throw new Error("Item does not have a value for castDamageSpell"); }
+
+    const tiles = getTargetingReticle(item, target, rotation);
+    for (let i = 0; i < tiles.length; i++) {
+        const { entity } = isBlocked(map, entityMap, tiles[i][0], tiles[i][1]);
+        if (entity !== null) {
+            const targetHPData = entity.getOne(HitPointsComponent);
+            if (targetHPData !== undefined) {
+                // Make the spell dangerous by having it set things on fire rather than
+                // destroy them if they're not actors
+                if (item.statusEffect === StatusEffectType.OnFire && !entity.tags.has("sentient")) {
+                    if (Math.random() <= 0.5) {
+                        setOnFire(entity);
+                    }
+                } else {
+                    takeDamage(entity, item.value, false, item.damageType ?? DamageType.Physical);
+
+                    const stats = getEffectiveStatData(entity);
+                    const hp = getEffectiveHitPointData(entity);
+                    if (stats !== null && hp !== null) {
+                        rollForStatusEffect(item, entity, stats, hp);
+                    }
+                }
+            }
+        }
+    }
+
     return true;
 }
 
@@ -804,10 +845,10 @@ export const SpellData: { [key: string]: SpellDataDetails } = {
         value: 20,
         type: SpellType.DamageOther,
         damageType: DamageType.Fire,
-        useFunc: castDamageSpell,
+        useFunc: castFireBall,
         areaOfEffect: {
-            width: 4,
-            height: 4
+            type: "circle",
+            radius: 3
         },
         statusEffect: StatusEffectType.OnFire
     },
@@ -892,6 +933,7 @@ export const SpellData: { [key: string]: SpellDataDetails } = {
         type: SpellType.DamageOther,
         damageType: DamageType.Fire,
         areaOfEffect: {
+            type: "rectangle",
             width: 1,
             height: 6
         },
@@ -904,6 +946,7 @@ export const SpellData: { [key: string]: SpellDataDetails } = {
         value: null,
         type: SpellType.DamageOther,
         areaOfEffect: {
+            type: "rectangle",
             width: 1,
             height: 6
         },
