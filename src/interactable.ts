@@ -1,7 +1,7 @@
 import { Entity } from "ape-ecs";
 
 import globals from "./globals";
-import { SpellsComponent, InventoryComponent, TypeComponent, LoadLevelComponent } from "./entity";
+import { SpellsComponent, InventoryComponent, TypeComponent, LoadLevelComponent, GraphicsComponent } from "./entity";
 import { addItem, getItems, useItem } from "./inventory";
 import { displayMessage } from "./ui";
 import { addSpellById } from "./fighter";
@@ -32,6 +32,12 @@ export function giveItemsInteract(actor: Entity, interactable: Entity) {
                 globals.gameEventEmitter.emit("chest.open");
             }
             if (interactableEntityType?.entityType === "dropped_item") {
+                const graphicData = interactable.getOne(GraphicsComponent);
+                if (graphicData !== undefined && graphicData.sprite !== null) {
+                    globals.Game!.pixiApp.stage.removeChild(graphicData.sprite);
+                    graphicData.sprite.visible = false;
+                    graphicData.sprite = null;
+                }
                 interactable.destroy();
             }
         } else {
@@ -70,6 +76,13 @@ export function doorInteract(actor: Entity, interactable: Entity): void {
     if (globals.gameEventEmitter === null) { throw new Error("Global gameEventEmitter object is null"); }
 
     globals.gameEventEmitter.emit("door.open");
+
+    const graphicData = interactable.getOne(GraphicsComponent);
+    if (graphicData !== undefined && graphicData.sprite !== null) {
+        globals.Game!.pixiApp.stage.removeChild(graphicData.sprite);
+        graphicData.sprite.visible = false;
+        graphicData.sprite = null;
+    }
     interactable.destroy();
 }
 
