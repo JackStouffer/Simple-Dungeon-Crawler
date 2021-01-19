@@ -1772,6 +1772,12 @@ export class RemoveAfterNTurnsSystem extends System {
             turnData.turnsLeft--;
 
             if (turnData.turnsLeft === 0) {
+                const graphicData = e.getOne(GraphicsComponent);
+                if (graphicData !== undefined && graphicData.sprite !== null) {
+                    globals.Game!.pixiApp.stage.removeChild(graphicData.sprite);
+                    graphicData.sprite.visible = false;
+                    graphicData.sprite = null;
+                }
                 e.destroy();
             } else {
                 turnData.update();
