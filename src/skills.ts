@@ -1,6 +1,6 @@
 import { Entity, World } from "ape-ecs";
 
-import { RNG } from "./rot/index";
+import { DIRS, RNG } from "./rot/index";
 
 import globals from "./globals";
 import {
@@ -31,6 +31,7 @@ import { randomIntFromInterval, Nullable, assertUnreachable } from "./util";
 import { mouseTarget } from "./input-handler";
 import { getEffectiveHitPointData, getEffectiveStatData, heal, takeDamage } from "./fighter";
 import { getTargetingReticle } from "./graphics";
+import { PushBackCommand, Command } from "./commands";
 
 export interface Area {
     type: "rectangle" | "circle";
@@ -638,6 +639,54 @@ export function castSilence(
     return true;
 }
 
+export function castExpel(
+    item: ItemDataDetails | SpellDataDetails,
+    user: Entity,
+    ecs: World,
+    map: GameMap,
+    entityMap: EntityMap
+): boolean {
+    if (item.value === null) { throw new Error("Item has missing data"); }
+
+    const pos = user.getOne(PositionComponent);
+    if (pos === undefined) { throw new Error("can't call castWildDamageSpell with a user without a position"); }
+    const commands: Command[] = [];
+    const entities: Entity[] = [];
+
+    for (let i = 0; i < DIRS[8].length; i++) {
+        const dir = DIRS[8][i];
+        const dx = pos.x + dir[0];
+        const dy = pos.y + dir[1];
+
+        const { entity } = isBlocked(map, entityMap, dx, dy);
+        if (entity !== null) {
+            if (entity.tags.has("moveable")) {
+                commands.push(new PushBackCommand(i, 3, ecs, map, entityMap));
+                entities.push(entity);
+            }
+        }
+    }
+
+    // TODO: Commands which return commands. It's a bit odd that we're doing a command
+    // loop here, should move this logic to game loop and have recursive commands
+    while (true) {
+        let done = true;
+        for (let i = 0; i < commands.length; i++) {
+            const c = commands[i];
+            c.execute(globals.Game!.deltaTime, entities[i]);
+            if (!c.isFinished()) {
+                done = false;
+            }
+        }
+
+        if (done) {
+            break;
+        }
+    }
+
+    return true;
+}
+
 /**
  * Map of item IDs and their data, including a function pointer
  * to the implementation of the item's behavior
@@ -852,15 +901,6 @@ export const SpellData: { [key: string]: SpellDataDetails } = {
         },
         statusEffect: StatusEffectType.OnFire
     },
-    "wild_fireball": {
-        id: "wild_fireball",
-        displayName: "Wild Fireball",
-        description: "Summons a ball of fire that's beyond your control and attacks randomly",
-        value: 30,
-        type: SpellType.WildDamage,
-        damageType: DamageType.Fire,
-        useFunc: castWildDamageSpell
-    },
     "confuse": {
         id: "confuse",
         displayName: "Confuse",
@@ -975,5 +1015,13 @@ export const SpellData: { [key: string]: SpellDataDetails } = {
         value: 3,
         type: SpellType.DamageOther,
         useFunc: castSilence
+    },
+    "expel": {
+        id: "expel",
+        displayName: "Expel",
+        description: "Send out a burst of air from your body in all directions, pushing away anything that's too close",
+        value: 3,
+        type: SpellType.Push,
+        useFunc: castExpel
     }
 };

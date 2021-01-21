@@ -48,50 +48,50 @@ export class StatusBar {
         this.background.zIndex = 20;
         this.background.visible = false;
 
-        this.healthText = new Text("", { fontFamily : "monospace", fontSize: 12, fill : 0xFFFFFF });
+        this.healthText = new Text("", { fontFamily : "monospace", fontSize: 14, fill : 0xFFFFFF });
         this.healthText.x = 20;
         this.healthText.y = 520;
         this.healthText.zIndex = 21;
         this.healthText.visible = false;
 
-        this.strengthText = new Text("", { fontFamily : "monospace", fontSize: 12, fill : 0xFFFFFF });
+        this.strengthText = new Text("", { fontFamily : "monospace", fontSize: 14, fill : 0xFFFFFF });
         this.strengthText.x = 200;
         this.strengthText.y = 520;
         this.strengthText.zIndex = 21;
         this.strengthText.visible = false;
 
-        this.defenseText = new Text("", { fontFamily : "monospace", fontSize: 12, fill : 0xFFFFFF });
-        this.defenseText.x = 600;
+        this.defenseText = new Text("", { fontFamily : "monospace", fontSize: 14, fill : 0xFFFFFF });
+        this.defenseText.x = 350;
         this.defenseText.y = 520;
         this.defenseText.zIndex = 21;
         this.defenseText.visible = false;
 
-        this.experienceText = new Text("", { fontFamily : "monospace", fontSize: 12, fill : 0xFFFFFF });
-        this.experienceText.x = 700;
+        this.experienceText = new Text("", { fontFamily : "monospace", fontSize: 14, fill : 0xFFFFFF });
+        this.experienceText.x = 500;
         this.experienceText.y = 520;
         this.experienceText.zIndex = 21;
         this.experienceText.visible = false;
 
-        this.stateText = new Text("", { fontFamily : "monospace", fontSize: 12, fill : 0xFFFFFF });
+        this.stateText = new Text("", { fontFamily : "monospace", fontSize: 14, fill : 0xFFFFFF });
         this.stateText.x = 20;
         this.stateText.y = 560;
         this.stateText.zIndex = 21;
         this.stateText.visible = false;
 
-        this.statusText = new Text("", { fontFamily : "monospace", fontSize: 12, fill : 0xFFFFFF });
+        this.statusText = new Text("", { fontFamily : "monospace", fontSize: 14, fill : 0xFFFFFF });
         this.statusText.x = 200;
         this.statusText.y = 560;
         this.statusText.zIndex = 21;
         this.statusText.visible = false;
 
-        this.targetText = new Text("", { fontFamily : "monospace", fontSize: 12, fill : 0xFFFFFF });
-        this.targetText.x = 400;
+        this.targetText = new Text("", { fontFamily : "monospace", fontSize: 14, fill : 0xFFFFFF });
+        this.targetText.x = 350;
         this.targetText.y = 560;
         this.targetText.zIndex = 21;
         this.targetText.visible = false;
 
-        this.debugPathfindingText = new Text("", { fontFamily : "monospace", fontSize: 12, fill : 0xFFFFFF });
-        this.debugPathfindingText.x = 500;
+        this.debugPathfindingText = new Text("", { fontFamily : "monospace", fontSize: 14, fill : 0xFFFFFF });
+        this.debugPathfindingText.x = 600;
         this.debugPathfindingText.y = 560;
         this.debugPathfindingText.zIndex = 21;
         this.debugPathfindingText.visible = false;
@@ -535,6 +535,9 @@ export class SpellSelectionMenu {
                 case SpellType.HealSelf:
                 case SpellType.HealOther:
                     info.text = `health: ${spell.value}`;
+                    break;
+                case SpellType.Push:
+                    info.text = `tiles: ${spell.value}`;
                     break;
                 case SpellType.Passive:
                     break;

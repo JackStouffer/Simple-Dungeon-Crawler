@@ -283,7 +283,8 @@ export class SimpleDungeonCrawler {
             "blocksSight",
             "drawAfterSeen",
             "input",
-            "sentient"
+            "sentient",
+            "moveable"
         );
         this.ecs.registerComponent(PositionComponent, 100);
         this.ecs.registerComponent(TypeComponent, 100);
@@ -595,6 +596,7 @@ export class SimpleDungeonCrawler {
                     case SpellType.HealSelf:
                     case SpellType.Passive:
                     case SpellType.WildDamage:
+                    case SpellType.Push:
                         this.state = GameState.Gameplay;
                         this.spellSelectionMenu.close();
 

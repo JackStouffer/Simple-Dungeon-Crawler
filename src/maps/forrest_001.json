@@ -147,8 +147,8 @@
                  "type":"object",
                  "visible":true,
                  "width":0,
-                 "x":621.339546977492,
-                 "y":1468.52006324435
+                 "x":646.338448835154,
+                 "y":1158.10162906207
                 }, 
                 {
                  "height":0,
@@ -188,8 +188,8 @@
                  "type":"object",
                  "visible":true,
                  "width":0,
-                 "x":714.539419543809,
-                 "y":1547.09645052051
+                 "x":488.558477311557,
+                 "y":1592.03061343674
                 }, 
                 {
                  "height":0,
@@ -244,8 +244,8 @@
                  "type":"object",
                  "visible":true,
                  "width":0,
-                 "x":348.994809047487,
-                 "y":1311.76517041311
+                 "x":588.342211434972,
+                 "y":1216.85433216775
                 }],
          "opacity":1,
          "type":"objectgroup",
@@ -267,81 +267,12 @@
                  "type":"fallback_node",
                  "visible":true,
                  "width":0,
-                 "x":792.366187449594,
-                 "y":1477.11489239145
+                 "x":650.229552878296,
+                 "y":959.00393411543
                 }, 
                 {
                  "height":0,
                  "id":15,
-                 "name":"Patrol Path",
-                 "point":true,
-                 "properties":[
-                        {
-                         "name":"next",
-                         "type":"object",
-                         "value":16
-                        }, 
-                        {
-                         "name":"pathName",
-                         "type":"string",
-                         "value":"forrest_path_01"
-                        }],
-                 "rotation":0,
-                 "type":"path_node",
-                 "visible":true,
-                 "width":0,
-                 "x":526.050706033147,
-                 "y":1428.82692048627
-                }, 
-                {
-                 "height":0,
-                 "id":16,
-                 "name":"Patrol Path",
-                 "point":true,
-                 "properties":[
-                        {
-                         "name":"next",
-                         "type":"object",
-                         "value":18
-                        }, 
-                        {
-                         "name":"pathName",
-                         "type":"string",
-                         "value":"forrest_path_01"
-                        }],
-                 "rotation":0,
-                 "type":"path_node",
-                 "visible":true,
-                 "width":0,
-                 "x":527.513977909061,
-                 "y":1232.74848911372
-                }, 
-                {
-                 "height":0,
-                 "id":17,
-                 "name":"Patrol Path",
-                 "point":true,
-                 "properties":[
-                        {
-                         "name":"next",
-                         "type":"object",
-                         "value":15
-                        }, 
-                        {
-                         "name":"pathName",
-                         "type":"string",
-                         "value":"forrest_path_01"
-                        }],
-                 "rotation":0,
-                 "type":"path_node",
-                 "visible":true,
-                 "width":0,
-                 "x":269.978127748101,
-                 "y":1440.53309549359
-                }, 
-                {
-                 "height":0,
-                 "id":18,
                  "name":"Patrol Path",
                  "point":true,
                  "properties":[
@@ -359,17 +290,86 @@
                  "type":"path_node",
                  "visible":true,
                  "width":0,
-                 "x":262.661768368529,
-                 "y":1241.52812036921
+                 "x":773.643553350891,
+                 "y":1235.10844272378
+                }, 
+                {
+                 "height":0,
+                 "id":16,
+                 "name":"Patrol Path",
+                 "point":true,
+                 "properties":[
+                        {
+                         "name":"next",
+                         "type":"object",
+                         "value":15
+                        }, 
+                        {
+                         "name":"pathName",
+                         "type":"string",
+                         "value":"forrest_path_01"
+                        }],
+                 "rotation":0,
+                 "type":"path_node",
+                 "visible":true,
+                 "width":0,
+                 "x":779.691877954912,
+                 "y":1043.61506407933
+                }, 
+                {
+                 "height":0,
+                 "id":17,
+                 "name":"Patrol Path",
+                 "point":true,
+                 "properties":[
+                        {
+                         "name":"next",
+                         "type":"object",
+                         "value":18
+                        }, 
+                        {
+                         "name":"pathName",
+                         "type":"string",
+                         "value":"forrest_path_01"
+                        }],
+                 "rotation":0,
+                 "type":"path_node",
+                 "visible":true,
+                 "width":0,
+                 "x":531.326133250164,
+                 "y":1237.64451227488
+                }, 
+                {
+                 "height":0,
+                 "id":18,
+                 "name":"Patrol Path",
+                 "point":true,
+                 "properties":[
+                        {
+                         "name":"next",
+                         "type":"object",
+                         "value":16
+                        }, 
+                        {
+                         "name":"pathName",
+                         "type":"string",
+                         "value":"forrest_path_01"
+                        }],
+                 "rotation":0,
+                 "type":"path_node",
+                 "visible":true,
+                 "width":0,
+                 "x":538.911195236938,
+                 "y":1042.07832669658
                 }],
          "opacity":1,
          "type":"objectgroup",
-         "visible":false,
+         "visible":true,
          "x":0,
          "y":0
         }],
  "nextlayerid":8,
- "nextobjectid":19,
+ "nextobjectid":20,
  "orientation":"orthogonal",
  "renderorder":"right-down",
  "tiledversion":"1.4.3",

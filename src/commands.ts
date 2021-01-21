@@ -66,7 +66,7 @@ export function generateWeightCallback(
         if (globals.Game === null) { throw new Error("Global game object is null"); }
 
         const neighbors: [number, number][] = [];
-        for (let i=0; i < DIRS[8].length; i++) {
+        for (let i = 0; i < DIRS[8].length; i++) {
             const dir = DIRS[8][i];
             const dx = x + dir[0];
             const dy = y + dir[1];
@@ -325,6 +325,107 @@ export class GoToLocationCommand implements Command {
 }
 
 /**
+ * Push an actor back a specified number of tiles
+ */
+export class PushBackCommand implements Command {
+    private readonly dir: number;
+    private numTiles: number;
+    private readonly map: GameMap;
+    private readonly ecs: World;
+    private readonly entityMap: EntityMap;
+    private tilesMoved: number = 0;
+    private readonly usesTurn: boolean = true;
+
+    constructor(dir: number, numTiles: number, ecs: World, map: GameMap, entityMap: EntityMap) {
+        this.dir = dir;
+        this.numTiles = numTiles;
+        this.ecs = ecs;
+        this.map = map;
+        this.entityMap = entityMap;
+    }
+
+    usedTurn(): boolean {
+        return false;
+    }
+
+    isFinished(): boolean {
+        return this.tilesMoved === this.numTiles;
+    }
+
+    execute(deltaTime: DOMHighResTimeStamp, actor: Entity): void {
+        const pos = actor.getOne(PositionComponent);
+        if (pos === undefined) { throw new Error(`Entity ${actor.id} does not have a position for PushBackCommand`); }
+
+        const step = DIRS[8][this.dir];
+        const { blocks } = isBlocked(
+            this.map,
+            this.entityMap,
+            pos.x + step[0],
+            pos.y + step[1]
+        );
+        if (blocks === true) {
+            this.numTiles = this.tilesMoved;
+            // STUN ME HERE
+            return;
+        }
+
+        pos.x += step[0];
+        pos.y += step[1];
+        pos.update();
+
+        this.tilesMoved++;
+
+        // Triggers and spreading fire
+        const actorFlammableData = actor.getOne(FlammableComponent);
+        const entities = this.entityMap.get(`${pos.x},${pos.y}`) ?? [];
+        for (let i = 0; i < entities.length; i++) {
+            const e = entities[i];
+            const triggerData = e.getOne(TriggerTypeComponent);
+            const flammableData = e.getOne(FlammableComponent);
+
+            // If we're walking over a flammable entity and we're
+            // on fire, roll to set the entity on fire if the entity
+            // in question is flammable
+            if (actorFlammableData !== undefined &&
+                actorFlammableData.onFire === true &&
+                flammableData !== undefined &&
+                flammableData.onFire === false &&
+                Math.random() >= .5) {
+                setOnFire(
+                    e,
+                    actorFlammableData.fireDamage,
+                    randomIntFromInterval(3, 6)
+                );
+            }
+
+            // Check to see if the current tile is a trigger
+            // and activate it
+            if (triggerData !== undefined) {
+                switch (triggerData.triggerType) {
+                    case TriggerType.Event:
+                        eventTrigger(actor, e);
+                        break;
+                    case TriggerType.Fire:
+                        fireTrigger(actor, e);
+                        break;
+                    case TriggerType.ShallowWater:
+                        shallowWaterTrigger(actor);
+                        break;
+                    case TriggerType.DeepWater:
+                        deepWaterTrigger(actor);
+                        break;
+                    case TriggerType.Mud:
+                        mudTrigger(actor);
+                        break;
+                    default:
+                        assertUnreachable(triggerData.triggerType);
+                }
+            }
+        }
+    }
+}
+
+/**
  * Interact with the target, either calling the interactable or
  * attacking the fighter
  */
@@ -499,7 +600,7 @@ export class UseItemCommand implements Command {
  * and call its use function.
  */
 export class UseSpellCommand implements Command {
-    private didUseSpell: boolean = false;
+    private didUseTurn: boolean = false;
     private readonly ecs: World;
     private readonly spellID: string;
     private readonly map: GameMap;
@@ -524,7 +625,7 @@ export class UseSpellCommand implements Command {
     }
 
     usedTurn(): boolean {
-        return this.didUseSpell;
+        return this.didUseTurn;
     }
 
     isFinished(): boolean {
@@ -540,9 +641,9 @@ export class UseSpellCommand implements Command {
 
         const details = SpellData[this.spellID];
 
-        // fix me
+        // FIX ME
         if ((spellData.knownSpells.get(this.spellID) ?? -1) < 1) {
-            this.didUseSpell = false;
+            this.didUseTurn = false;
 
             if (actor === globals.Game?.player) {
                 displayMessage(`You don't have enough casts to use ${details.displayName}`);
@@ -551,7 +652,7 @@ export class UseSpellCommand implements Command {
             return;
         }
 
-        this.didUseSpell = details.useFunc(
+        this.didUseTurn = details.useFunc(
             details,
             actor,
             this.ecs,
@@ -561,7 +662,7 @@ export class UseSpellCommand implements Command {
             this.rotation
         );
 
-        if (this.didUseSpell) {
+        if (this.didUseTurn) {
             const statData = actor.getOne(SpellsComponent)!;
             useSpell(statData, details.id);
         }

@@ -596,6 +596,8 @@ export const ActionData: { [key: string]: Action } = {
         updateFunction: chaseAction,
         weight: () => 1
     },
+    // FIX ME: White mage currently will stand by even when they can't see the target
+    // They should case if they lose sight
     "standby": {
         preconditions: {
             targetPositionKnown: true,

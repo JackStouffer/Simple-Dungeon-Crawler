@@ -4,9 +4,12 @@
 
 _In Development_
 
+* Gameplay
+  * Damage done to enemies that aren't alerted do bonus damage
+  * Fireball spell now does fire damage in a circle
 * Technical
   * Use Tiled's JSON format instead of the JS format
-  * Use Pixi.js for rendering
+  * Use Pixi.js for rendering sprites in WebGL
 * Graphical
   * Use 16x16 sprites instead of console display
   * Allow maps to have arbitrary number of tile layers

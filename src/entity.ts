@@ -594,7 +594,7 @@ const ObjectData: { [key: string]: ObjectDataDetails } = {
     "crate": {
         addInventory: true,
         staticallyKnownComponents: {
-            tags: ["blocks"],
+            tags: ["blocks", "moveable"],
             c: {
                 TypeComponent: {
                     entityType: "crate"
@@ -630,7 +630,7 @@ const ObjectData: { [key: string]: ObjectDataDetails } = {
     "barrel": {
         addInventory: true,
         staticallyKnownComponents: {
-            tags: ["blocks"],
+            tags: ["blocks", "moveable"],
             c: {
                 TypeComponent: {
                     entityType: "barrel"
@@ -795,6 +795,7 @@ const ObjectData: { [key: string]: ObjectDataDetails } = {
     "dropped_item": {
         addInventory: true,
         staticallyKnownComponents: {
+            tags: ["moveable"],
             c: {
                 TypeComponent: {
                     entityType: "dropped_item"
@@ -1010,7 +1011,7 @@ const ObjectData: { [key: string]: ObjectDataDetails } = {
         ],
         staticallyKnownComponents: {
             id: "player",
-            tags: ["blocks", "input", "sentient"],
+            tags: ["blocks", "input", "sentient", "moveable"],
             c: {
                 TypeComponent: {
                     entityType: "player"
@@ -1088,7 +1089,7 @@ const ObjectData: { [key: string]: ObjectDataDetails } = {
             }
         ],
         staticallyKnownComponents: {
-            tags: ["blocks", "sentient"],
+            tags: ["blocks", "sentient", "moveable"],
             c: {
                 TypeComponent: {
                     entityType: "goblin"
@@ -1166,7 +1167,7 @@ const ObjectData: { [key: string]: ObjectDataDetails } = {
             }
         ],
         staticallyKnownComponents: {
-            tags: ["blocks", "sentient"],
+            tags: ["blocks", "sentient", "moveable"],
             c: {
                 TypeComponent: {
                     entityType: "goblin_brute"
@@ -1233,7 +1234,7 @@ const ObjectData: { [key: string]: ObjectDataDetails } = {
             "runAway"
         ],
         staticallyKnownComponents: {
-            tags: ["blocks", "sentient"],
+            tags: ["blocks", "sentient", "moveable"],
             c: {
                 TypeComponent: {
                     entityType: "rat"
@@ -1304,7 +1305,7 @@ const ObjectData: { [key: string]: ObjectDataDetails } = {
             "meleeAttack"
         ],
         staticallyKnownComponents: {
-            tags: ["blocks", "sentient"],
+            tags: ["blocks", "sentient", "moveable"],
             c: {
                 TypeComponent: {
                     entityType: "water_sprite"
@@ -1376,7 +1377,7 @@ const ObjectData: { [key: string]: ObjectDataDetails } = {
             }
         ],
         staticallyKnownComponents: {
-            tags: ["blocks", "sentient"],
+            tags: ["blocks", "sentient", "moveable"],
             c: {
                 TypeComponent: {
                     entityType: "bandit"
@@ -1442,7 +1443,7 @@ const ObjectData: { [key: string]: ObjectDataDetails } = {
         lowHealthThreshold: 0.5,
         desiredDistanceToTarget: 5,
         spells: [
-            ["fireball", 3],
+            ["lightning_bolt", 3],
             ["lesser_heal", 1]
         ],
         actions: [
@@ -1464,7 +1465,7 @@ const ObjectData: { [key: string]: ObjectDataDetails } = {
             }
         ],
         staticallyKnownComponents: {
-            tags: ["blocks", "sentient"],
+            tags: ["blocks", "sentient", "moveable"],
             c: {
                 TypeComponent: {
                     entityType: "bandit_mage"
@@ -1550,7 +1551,7 @@ const ObjectData: { [key: string]: ObjectDataDetails } = {
             "meleeAttack"
         ],
         staticallyKnownComponents: {
-            tags: ["blocks", "sentient"],
+            tags: ["blocks", "sentient", "moveable"],
             c: {
                 TypeComponent: {
                     entityType: "bandit_white_mage"
