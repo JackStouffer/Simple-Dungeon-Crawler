@@ -34,10 +34,11 @@ export class LightingSystem extends System {
     }
 
     computePlayerLighting(pos: PositionComponent, light: LightingComponent) {
+        const tilePos = pos.tilePosition();
         const sightFov = new FOV.PreciseShadowcasting(
-            createPassableSightCallback(pos)
+            createPassableSightCallback(tilePos)
         );
-        sightFov.compute(pos.x, pos.y, WIDTH + 2, function(x, y) {
+        sightFov.compute(tilePos.x, tilePos.y, WIDTH + 2, function(x, y) {
             if (globals.Game === null ||
                 x < 0 ||
                 y < 0 ||
@@ -58,6 +59,8 @@ export class LightingSystem extends System {
     }
 
     computePlayerIndoorLighting(pos: PositionComponent, light: LightingComponent) {
+        const tilePos = pos.tilePosition();
+
         function lightingCallback(x: number, y: number, color: Color) {
             if (x < 0 ||
                 y < 0 ||
@@ -75,9 +78,9 @@ export class LightingSystem extends System {
         }
 
         const sightFov = new FOV.PreciseShadowcasting(
-            createPassableSightCallback(pos)
+            createPassableSightCallback(tilePos)
         );
-        sightFov.compute(pos.x, pos.y, 50, function(x, y) {
+        sightFov.compute(tilePos.x, tilePos.y, 50, function(x, y) {
             if (x < 0 ||
                 y < 0 ||
                 y >= globals.Game!.map.length ||
@@ -88,18 +91,20 @@ export class LightingSystem extends System {
         });
 
         const lightingFov = new FOV.PreciseShadowcasting(
-            createPassableSightCallback(pos)
+            createPassableSightCallback(tilePos)
         );
         const lighting = new Lighting(
             createReflectivityCallback(globals.Game!.map),
             { range: light.range, passes: 2 }
         );
         lighting.setFOV(lightingFov);
-        lighting.setLight(pos.x, pos.y, light.color);
+        lighting.setLight(tilePos.x, tilePos.y, light.color);
         lighting.compute(lightingCallback);
     }
 
     computeReflectivityLighting(pos: PositionComponent, light: LightingComponent) {
+        const tilePos = pos.tilePosition();
+
         function lightingCallback(x: number, y: number, color: Color) {
             if (x < 0 ||
                 y < 0 ||
@@ -116,17 +121,17 @@ export class LightingSystem extends System {
         }
 
         const fov = new FOV.PreciseShadowcasting(
-            createPassableSightCallback(pos)
+            createPassableSightCallback(tilePos)
         );
         const lighting = new Lighting(
             createReflectivityCallback(globals.Game!.map),
             { range: light.range, passes: 2 }
         );
         lighting.setFOV(fov);
-        lighting.setLight(pos.x, pos.y, light.color);
+        lighting.setLight(tilePos.x, tilePos.y, light.color);
         lighting.compute(lightingCallback);
         // For some reason the tile you're on doesn't get lit
-        globals.Game!.map[0][pos.y][pos.x]!.lightingColor = light.color;
+        globals.Game!.map[0][tilePos.y][tilePos.x]!.lightingColor = light.color;
     }
 
     update() {

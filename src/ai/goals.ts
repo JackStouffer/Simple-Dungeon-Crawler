@@ -41,7 +41,7 @@ function resolveNextToTarget(ecs: World, entityMap: EntityMap, ai: Entity): bool
     if (pos === undefined || targetPos === undefined) {
         throw new Error(`Entity ${ai.id} is missing data for resolveNextToTarget`);
     }
-    return distanceBetweenPoints(pos, targetPos) < 1.5;
+    return distanceBetweenPoints(pos.tilePosition(), targetPos.tilePosition()) < 1.5;
 }
 
 function resolveAtDesiredDistance(ecs: World, entityMap: EntityMap, ai: Entity): boolean {
@@ -55,7 +55,9 @@ function resolveAtDesiredDistance(ecs: World, entityMap: EntityMap, ai: Entity):
     if (pos === undefined || targetPos === undefined) {
         throw new Error(`Entity ${ai.id} is missing data for resolveNextToTarget`);
     }
-    return Math.floor(distanceBetweenPoints(pos, targetPos)) === aiState.desiredDistanceToTarget;
+
+    const distance = distanceBetweenPoints(pos.tilePosition(), targetPos.tilePosition());
+    return Math.floor(distance) === aiState.desiredDistanceToTarget;
 }
 
 function resolveEnoughCastsForSpellGenerator(spellID: string): GoalResolver {
@@ -126,10 +128,10 @@ function resolveAllyLowHealth(ecs: World, entityMap: EntityMap, ai: Entity): boo
         const aiState = e.getOne(PlannerAIComponent)!;
         const isLowHealth = (hpData.hp / hpData.maxHp) <= aiState.lowHealthThreshold;
 
-        if (distanceBetweenPoints(pos, ePos) < 10 &&
+        if (distanceBetweenPoints(pos.tilePosition(), ePos.tilePosition()) < 10 &&
             isLowHealth &&
             (target === null || hpData.hp < targetHPData!.hp)) {
-            target = ePos;
+            target = ePos.tilePosition();
             targetHPData = hpData;
         }
     }
@@ -249,7 +251,7 @@ function resolveAliveAllies(ecs: World, entityMap: EntityMap, ai: Entity): boole
 
         const ePos = e.getOne(PositionComponent)!;
         const hpData = e.getOne(HitPointsComponent)!;
-        if (distanceBetweenPoints(ePos, pos) < 12 && hpData.hp > 0) {
+        if (distanceBetweenPoints(ePos.tilePosition(), pos.tilePosition()) < 12 && hpData.hp > 0) {
             return true;
         }
     }

@@ -3,6 +3,7 @@ export const HEIGHT = 38;
 export const UI_HEIGHT = 6;
 export const WORLD_WIDTH = WIDTH;
 export const WORLD_HEIGHT = HEIGHT - UI_HEIGHT - 1;
+export const TILE_SIZE = 16;
 
 export const MAP_FILLED_SPACE = "#";
 export const MAP_EMPTY_SPACE = ".";

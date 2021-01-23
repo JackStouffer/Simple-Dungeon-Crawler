@@ -10,7 +10,7 @@ import { Planner, ActionList, PlannerWorldState } from "./planner";
 import { Command, GoToLocationCommand, NoOpCommand } from "../commands";
 import { GoalData } from "./goals";
 import { ActionData } from "./actions";
-import { GameMap, isBlocked, isSightBlocked } from "../map";
+import { GameMap, isBlocked, isSightBlocked, Point } from "../map";
 import {
     ConfusedAIComponent,
     DisplayNameComponent,
@@ -49,7 +49,7 @@ function calcFearOnSight(ai: Entity): number {
 function createVisibilityCallback(ai: Entity): VisibilityCallback {
     const aiState = ai.getOne(PlannerAIComponent)!;
     const fearState = ai.getOne(FearAIComponent)!;
-    const targetPos = aiState.target?.getOne(PositionComponent);
+    const targetPos = aiState.target?.getOne(PositionComponent)?.tilePosition();
 
     return function(x: number, y: number, r: number, visibility: number) {
         if (targetPos === undefined) { return; }
@@ -70,7 +70,7 @@ function createVisibilityCallback(ai: Entity): VisibilityCallback {
  * Creates a function which returns if an x and y coordinate
  * represents a spot on the map which can be seen through
  */
-export function createPassableSightCallback(origin: PositionComponent): PassableCallback {
+export function createPassableSightCallback(origin: Point): PassableCallback {
     return function(x: number, y: number) {
         if (globals.Game === null) { throw new Error("Global game object is null"); }
 
@@ -248,7 +248,7 @@ export function plannerAIGenerateCommand(
     entityMap: EntityMap
 ): Command {
     const aiState = ai.getOne(PlannerAIComponent);
-    const pos = ai.getOne(PositionComponent);
+    const pos = ai.getOne(PositionComponent)?.tilePosition();
     if (pos === undefined || aiState === undefined) {
         throw new Error(`Entity ${ai.id} is missing a position component`);
     }

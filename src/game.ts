@@ -391,9 +391,13 @@ export class SimpleDungeonCrawler {
         if (playerPos === undefined) { throw new Error("Player doesn't have a PositionComponent"); }
         playerPos.x = playerLocation[0];
         playerPos.y = playerLocation[1];
+        const tile = this.gameCamera.worldPositionToTile(playerPos.x, playerPos.y);
+        playerPos.tileX = tile.x;
+        playerPos.tileY = tile.y;
         playerPos.update();
 
         this.ecs.runSystems("postCommand");
+        this.gameCamera.update(this.map);
 
         globals.gameEventEmitter.emit("level.loaded", name);
     }
@@ -475,7 +479,6 @@ export class SimpleDungeonCrawler {
         switch (this.state) {
             case GameState.Gameplay:
                 this.gameCamera.update(this.map);
-
                 drawMap(this.pixiApp.renderer, this.gameCamera, this.map);
                 this.ecs.runSystems("frame");
                 break;
@@ -646,6 +649,7 @@ export class SimpleDungeonCrawler {
     }
 
     mainLoop(): void {
+        this.deltaTime = this.pixiApp.ticker.deltaMS;
         this.handleInput();
         this.update();
         this.render();

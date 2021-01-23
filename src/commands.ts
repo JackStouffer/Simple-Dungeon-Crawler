@@ -22,6 +22,7 @@ import {
     EntityMap,
     FireTriggerComponent,
     FlammableComponent,
+    GraphicsComponent,
     HitPointsComponent,
     InputHandlingComponent,
     InteractableTypeComponent,
@@ -251,76 +252,103 @@ export class GoToLocationCommand implements Command {
             return;
         }
 
+        const graphics = actor.getOne(GraphicsComponent);
+        if (graphics === undefined || graphics.sprite === null) { throw new Error("No graphics for entity"); }
+
         const pos = actor.getOne(PositionComponent);
         if (pos === undefined) { throw new Error(`Entity ${actor.id} does not have a position for GoToLocationCommand`); }
-        pos.x = destination[0];
-        pos.y = destination[1];
+
+        const speed = .25;
+        const tilePos = pos.tilePosition();
+        const startDistance = distanceBetweenPoints(
+            globals.Game!.gameCamera.tilePositionToWorld(tilePos.x, tilePos.y),
+            globals.Game!.gameCamera.tilePositionToWorld(destination[0], destination[1])
+        );
+
+        const dir: [number, number] = [ destination[0] - tilePos.x, destination[1] - tilePos.y ];
+
+        pos.x += dir[0] * speed * deltaTime;
+        pos.y += dir[1] * speed * deltaTime;
         pos.update();
 
-        this.tilesMoved++;
-        this.path.shift();
+        const distance = distanceBetweenPoints(
+            globals.Game!.gameCamera.tilePositionToWorld(tilePos.x, tilePos.y),
+            pos
+        );
 
-        // Triggers and spreading fire
-        const actorFlammableData = actor.getOne(FlammableComponent);
-        const entities = this.entityMap.get(`${pos.x},${pos.y}`) ?? [];
-        for (let i = 0; i < entities.length; i++) {
-            const e = entities[i];
-            const triggerData = e.getOne(TriggerTypeComponent);
-            const flammableData = e.getOne(FlammableComponent);
+        if (distance >= startDistance) {
+            const end = globals.Game!.gameCamera.tilePositionToWorld(
+                destination[0], destination[1]
+            );
+            pos.x = end.x;
+            pos.y = end.y;
+            pos.tileX = destination[0];
+            pos.tileY = destination[1];
+            pos.update();
 
-            // If we're walking over a flammable entity and we're
-            // on fire, roll to set the entity on fire if the entity
-            // in question is flammable
-            if (actorFlammableData !== undefined &&
-                actorFlammableData.onFire === true &&
-                flammableData !== undefined &&
-                flammableData.onFire === false &&
-                Math.random() >= .5) {
-                setOnFire(
-                    e,
-                    actorFlammableData.fireDamage,
-                    randomIntFromInterval(3, 6)
-                );
-            }
+            this.tilesMoved++;
+            this.path.shift();
 
-            // Check to see if the current tile is a trigger
-            // and activate it
-            if (triggerData !== undefined) {
-                switch (triggerData.triggerType) {
-                    case TriggerType.Event:
-                        eventTrigger(actor, e);
-                        break;
-                    case TriggerType.Fire:
-                        fireTrigger(actor, e);
-                        break;
-                    case TriggerType.ShallowWater:
-                        shallowWaterTrigger(actor);
-                        break;
-                    case TriggerType.DeepWater:
-                        deepWaterTrigger(actor);
-                        break;
-                    case TriggerType.Mud:
-                        mudTrigger(actor);
-                        break;
-                    default:
-                        assertUnreachable(triggerData.triggerType);
+            // Triggers and spreading fire
+            const actorFlammableData = actor.getOne(FlammableComponent);
+            const entities = this.entityMap.get(`${pos.x},${pos.y}`) ?? [];
+            for (let i = 0; i < entities.length; i++) {
+                const e = entities[i];
+                const triggerData = e.getOne(TriggerTypeComponent);
+                const flammableData = e.getOne(FlammableComponent);
+
+                // If we're walking over a flammable entity and we're
+                // on fire, roll to set the entity on fire if the entity
+                // in question is flammable
+                if (actorFlammableData !== undefined &&
+                    actorFlammableData.onFire === true &&
+                    flammableData !== undefined &&
+                    flammableData.onFire === false &&
+                    Math.random() >= .5) {
+                    setOnFire(
+                        e,
+                        actorFlammableData.fireDamage,
+                        randomIntFromInterval(3, 6)
+                    );
+                }
+
+                // Check to see if the current tile is a trigger
+                // and activate it
+                if (triggerData !== undefined) {
+                    switch (triggerData.triggerType) {
+                        case TriggerType.Event:
+                            eventTrigger(actor, e);
+                            break;
+                        case TriggerType.Fire:
+                            fireTrigger(actor, e);
+                            break;
+                        case TriggerType.ShallowWater:
+                            shallowWaterTrigger(actor);
+                            break;
+                        case TriggerType.DeepWater:
+                            deepWaterTrigger(actor);
+                            break;
+                        case TriggerType.Mud:
+                            mudTrigger(actor);
+                            break;
+                        default:
+                            assertUnreachable(triggerData.triggerType);
+                    }
                 }
             }
-        }
 
-        // check for max movement differences in case one of the
-        // triggers changed it
-        const speedData = getEffectiveSpeedData(actor);
-        if (speedData !== null && speedData.maxTilesPerMove <= this.tilesMoved) {
-            this.done = true;
-            return;
-        }
+            // check for max movement differences in case one of the
+            // triggers changed it
+            const speedData = getEffectiveSpeedData(actor);
+            if (speedData !== null && speedData.maxTilesPerMove <= this.tilesMoved) {
+                this.done = true;
+                return;
+            }
 
-        if (this.path.length === 0) {
-            this.done = true;
+            if (this.path.length === 0) {
+                this.done = true;
+            }
         }
-
-        return;
     }
 }
 
@@ -356,12 +384,13 @@ export class PushBackCommand implements Command {
         const pos = actor.getOne(PositionComponent);
         if (pos === undefined) { throw new Error(`Entity ${actor.id} does not have a position for PushBackCommand`); }
 
+        const tilePos = pos.tilePosition();
         const step = DIRS[8][this.dir];
         const { blocks } = isBlocked(
             this.map,
             this.entityMap,
-            pos.x + step[0],
-            pos.y + step[1]
+            tilePos.x + step[0],
+            tilePos.y + step[1]
         );
         if (blocks === true) {
             this.numTiles = this.tilesMoved;
@@ -369,8 +398,11 @@ export class PushBackCommand implements Command {
             return;
         }
 
-        pos.x += step[0];
-        pos.y += step[1];
+        const end = globals.Game!.gameCamera.tilePositionToWorld(
+            tilePos.x + step[0], tilePos.y + step[1]
+        );
+        pos.x = end.x;
+        pos.y = end.y;
         pos.update();
 
         this.tilesMoved++;

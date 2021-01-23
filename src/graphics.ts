@@ -42,12 +42,14 @@ export class DrawSystem extends System {
      */
     draw(entity: Entity, pos: PositionComponent, graphics: GraphicsComponent): void {
         if (globals.Game === null) { throw new Error("global Game object is null"); }
+        const tilePos = pos.tilePosition();
 
         // assuming all tiles on the same position have the same visibility
-        if (globals.Game.map[0][pos.y][pos.x]!.isVisibleAndLit() && graphics.sprite !== null) {
+        if (globals.Game.map[0][tilePos.y][tilePos.x]!.isVisibleAndLit() &&
+            graphics.sprite !== null) {
             graphics.sprite.visible = true;
 
-            const { x, y } = globals.Game!.gameCamera.tilePositionToScreen(pos.x, pos.y);
+            const { x, y } = globals.Game!.gameCamera.worldPositionToScreen(pos.x, pos.y);
             graphics.sprite.position.set(x, y);
             graphics.sprite.scale.set(globals.Game!.gameCamera.zoom, globals.Game!.gameCamera.zoom);
 
@@ -68,11 +70,12 @@ export class DrawSystem extends System {
 
     drawAfterSeen(pos: PositionComponent, graphics: GraphicsComponent): void {
         if (globals.Game === null) { throw new Error("global Game object is null"); }
+        const tilePos = pos.tilePosition();
 
-        if (globals.Game.map[0][pos.y][pos.x]!.explored && graphics.sprite !== null) {
+        if (globals.Game.map[0][tilePos.y][tilePos.x]!.explored && graphics.sprite !== null) {
             graphics.sprite.visible = true;
 
-            const { x, y } = globals.Game!.gameCamera.tilePositionToScreen(pos.x, pos.y);
+            const { x, y } = globals.Game!.gameCamera.tilePositionToScreen(tilePos.x, tilePos.y);
             graphics.sprite.position.set(x, y);
             graphics.sprite.scale.set(globals.Game!.gameCamera.zoom, globals.Game!.gameCamera.zoom);
         } else if (graphics.sprite !== null) {
@@ -122,11 +125,12 @@ export class DrawChestsSystem extends System {
         const entities = this.chestGraphics.execute();
         for (const entity of entities) {
             const pos = entity.getOne(PositionComponent)!;
+            const tilePos = pos.tilePosition();
             const graphics = entity.getOne(ChestGraphicsComponent);
 
             if (graphics === undefined || graphics.sprite === null) { throw new Error("Missing graphics data on chest"); }
 
-            if (globals.Game.map[0][pos.y][pos.x]!.explored) {
+            if (globals.Game.map[0][tilePos.y][tilePos.x]!.explored) {
                 const inventory = entity.getOne(InventoryComponent)!;
 
                 graphics.sprite.visible = false;
@@ -137,7 +141,7 @@ export class DrawChestsSystem extends System {
                     graphics.sprite.tint = 0xFF00FF;
                 }
 
-                const { x, y } = globals.Game.gameCamera.tilePositionToScreen(pos.x, pos.y);
+                const { x, y } = globals.Game.gameCamera.tilePositionToScreen(tilePos.x, tilePos.y);
                 graphics.sprite.position.set(x, y);
                 graphics.sprite.scale.set(
                     globals.Game!.gameCamera.zoom,
@@ -251,6 +255,7 @@ export class DrawPlayerSystem extends System {
         const entities = this.query.execute();
         for (const entity of entities) {
             const pos = entity.getOne(PositionComponent)!;
+            const tilePosition = pos.tilePosition();
             const inputStateData = entity.getOne(InputHandlingComponent);
             const speedData = getEffectiveSpeedData(entity);
             const graphics = entity.getOne(GraphicsComponent);
@@ -262,10 +267,10 @@ export class DrawPlayerSystem extends System {
                 throw new Error("Player missing speed or input data");
             }
 
-            if (globals.Game.map[0][pos.y][pos.x]!.isVisibleAndLit()) {
+            if (globals.Game.map[0][tilePosition.y][tilePosition.x]!.isVisibleAndLit()) {
                 graphics.sprite.visible = true;
 
-                const { x, y } = globals.Game!.gameCamera.tilePositionToScreen(pos.x, pos.y);
+                const { x, y } = globals.Game!.gameCamera.worldPositionToScreen(pos.x, pos.y);
                 graphics.sprite.position.set(x, y);
                 graphics.sprite.scale.set(
                     globals.Game!.gameCamera.zoom,
@@ -293,7 +298,7 @@ export class DrawPlayerSystem extends System {
 
                     // quick distance check to cut down the number of
                     // AStar calcs
-                    if (distanceBetweenPoints(pos, mousePosition) < 40) {
+                    if (distanceBetweenPoints(pos.tilePosition(), mousePosition) < 40) {
                         // clear
                         for (let i = 0; i < this.perviousPath.length; i++) {
                             const step = this.perviousPath[i];
@@ -305,7 +310,7 @@ export class DrawPlayerSystem extends System {
                         }
 
                         const path = getPlayerMovementPath(
-                            pos,
+                            pos.tilePosition(),
                             mousePosition,
                             speedData.maxTilesPerMove,
                             globals.Game!.map,

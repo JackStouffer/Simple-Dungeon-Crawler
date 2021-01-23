@@ -60,8 +60,9 @@ export class OnFireSystem extends System {
                     // If there is one, roll to see if the entity will
                     // be set to on fire
                     // SPEED: use Quad Tree, O(m*n)
-                    const firePos = entity.getOne(PositionComponent);
-                    if (firePos !== undefined) {
+                    const pos = entity.getOne(PositionComponent);
+                    if (pos !== undefined) {
+                        const firePos = pos.tilePosition();
                         // TODO just use DIRSs
                         const neighborPositions = new Set([
                             `${firePos.x-1},${firePos.y}`,

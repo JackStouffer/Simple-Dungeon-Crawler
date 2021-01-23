@@ -57,13 +57,27 @@ const waterTypeDamageValues: DamageAffinityMap = {
 };
 
 export class PositionComponent extends Component {
+    // World coords
     x: number;
     y: number;
+
+    // Tile coords
+    tileX: number;
+    tileY: number;
 
     static typeName = "PositionComponent";
     static properties = {
         x: 0,
-        y: 0
+        y: 0,
+        tileX: 0,
+        tileY: 0
+    }
+
+    tilePosition(): Point {
+        return {
+            x: this.tileX,
+            y: this.tileY
+        };
     }
 }
 
@@ -1649,7 +1663,14 @@ export function createEntity(
     const entity = ecs.createEntity(assignIn({}, { id: entityId }, data.staticallyKnownComponents));
 
     if (x !== null && y !== null && entity.has(PositionComponent) === false) {
-        entity.addComponent({ type: "PositionComponent", x, y });
+        const { x: wx, y: wy } = globals.Game.gameCamera.tilePositionToWorld(x, y);
+        entity.addComponent({
+            type: "PositionComponent",
+            x: wx,
+            y: wy,
+            tileX: x,
+            tileY: y
+        });
     }
 
     const graphics = entity.getOne(GraphicsComponent) ?? entity.getOne(ChestGraphicsComponent);
@@ -1742,7 +1763,7 @@ export class UpdateEntityMapSystem extends System {
         globals.Game.entityMap.clear();
 
         for (const e of entities) {
-            const pos = e.getOne(PositionComponent)!;
+            const pos = e.getOne(PositionComponent)!.tilePosition();
             const key = `${pos.x},${pos.y}`;
             const val = globals.Game.entityMap.get(key) ?? [];
             val.push(e);

@@ -103,7 +103,7 @@ export function playerInput(
         const mouseDownPosition = input.getLeftMouseDown();
         if (mouseDownPosition !== null) {
             // Attacking
-            if (distanceBetweenPoints(mouseDownPosition, playerPosition) < 1.5) {
+            if (distanceBetweenPoints(mouseDownPosition, playerPosition.tilePosition()) < 1.5) {
                 const target = mouseTarget(
                     ecs,
                     map,
@@ -120,7 +120,7 @@ export function playerInput(
 
             // Movement
             const path = getPlayerMovementPath(
-                playerPosition,
+                playerPosition.tilePosition(),
                 mouseDownPosition,
                 speedData.maxTilesPerMove,
                 map,

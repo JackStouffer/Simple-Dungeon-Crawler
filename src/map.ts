@@ -645,7 +645,10 @@ export function loadTiledMap(
                 }
 
                 if (type === "player") {
-                    playerLocation = [Math.floor(o.x / tileSize), Math.floor(o.y / tileSize)];
+                    playerLocation = [
+                        Math.floor(o.x / tileSize) * tileSize,
+                        Math.floor(o.y / tileSize) * tileSize
+                    ];
                 } else {
                     const entity: Entity = createEntity(
                         ecs,
@@ -912,7 +915,8 @@ export function getRandomFighterWithinRange(
     const possible = [];
     for (const e of entities) {
         const pos = e.getOne(PositionComponent)!;
-        if (pos !== origin && distanceBetweenPoints(origin, pos) <= maxDistance) {
+        const d = distanceBetweenPoints(origin.tilePosition(), pos.tilePosition());
+        if (pos !== origin && d <= maxDistance) {
             possible.push(e);
         }
     }

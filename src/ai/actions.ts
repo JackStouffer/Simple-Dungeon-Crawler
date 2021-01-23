@@ -96,7 +96,7 @@ function wanderAction(
     let newX: number = 0;
     let newY: number = 0;
     let dir: number = RNG.getItem([0, 1, 2, 3, 4, 5, 6, 7]) ?? 0;
-    const pos = aiState.entity.getOne(PositionComponent)!;
+    const pos = aiState.entity.getOne(PositionComponent)!.tilePosition();
 
     do {
         dir = RNG.getItem([0, 1, 2, 3, 4, 5, 6, 7]) ?? 0;
@@ -134,8 +134,8 @@ function patrolAction(
         map,
         entityMap,
         aiState.entity,
-        pos,
-        targetPos,
+        pos.tilePosition(),
+        targetPos.tilePosition(),
         2
     );
     // try the next node
@@ -155,8 +155,8 @@ function patrolAction(
             map,
             entityMap,
             aiState.entity,
-            pos,
-            targetPos,
+            pos.tilePosition(),
+            targetPos.tilePosition(),
             2
         );
     }
@@ -194,8 +194,8 @@ function chaseAction(
         map,
         entityMap,
         aiState.entity,
-        posData,
-        targetPosData,
+        posData.tilePosition(),
+        targetPosData.tilePosition(),
         speedData.maxTilesPerMove
     );
     if (path === null) {
@@ -213,7 +213,7 @@ function chaseWeight(ecs: World, aiState: PlannerAIComponent): number {
     const posData = aiState.entity.getOne(PositionComponent);
     const targetPosData = aiState.target.getOne(PositionComponent);
     if (posData === undefined || targetPosData === undefined) { throw new Error("no position data for ai"); }
-    return distanceBetweenPoints(posData, targetPosData);
+    return distanceBetweenPoints(posData.tilePosition(), targetPosData.tilePosition());
 }
 
 /**
@@ -322,9 +322,9 @@ function healAllyAction(
         const ePos = e.getOne(PositionComponent)!;
         const hpPercent = hpData.hp / hpData.maxHp;
 
-        if (distanceBetweenPoints(pos, ePos) < 10 &&
+        if (distanceBetweenPoints(pos.tilePosition(), ePos.tilePosition()) < 10 &&
             (target === null || hpPercent < targetHPPercent!)) {
-            target = ePos;
+            target = ePos.tilePosition();
             targetHPPercent = hpPercent;
         }
     }
@@ -363,7 +363,7 @@ function castSpellAction(spellID: string): ActionUpdateFunction {
         const targetPos = aiState.target.getOne(PositionComponent);
         if (targetPos === undefined) { throw new Error(`Target entity ${aiState.target.id} is missing PositionComponent`); }
 
-        return new UseSpellCommand(spellID, ecs, map, entityMap, targetPos);
+        return new UseSpellCommand(spellID, ecs, map, entityMap, targetPos.tilePosition());
     };
 }
 
@@ -422,7 +422,7 @@ function runAwayAction(
                 map,
                 entityMap,
                 aiState.entity,
-                pos,
+                pos.tilePosition(),
                 fearState.runAwayTarget,
                 speedData.maxTilesPerMove
             );
@@ -434,7 +434,7 @@ function runAwayAction(
             map,
             entityMap,
             aiState.entity,
-            pos,
+            pos.tilePosition(),
             fearState.runAwayTarget,
             speedData.maxTilesPerMove,
             false
@@ -468,7 +468,7 @@ function goToSafePositionAction(
 
     const bfs = new Path.ReverseAStar(
         (x, y) => !isPositionPotentiallyDangerous(ecs, aiState.entity, x, y),
-        createPassableCallback(pos)
+        createPassableCallback(pos.tilePosition())
     );
 
     let path: number[][] = [];
@@ -504,10 +504,10 @@ function repositionAction(
 
     const bfs = new Path.ReverseAStar(
         (x, y) => {
-            const d = distanceBetweenPoints({ x, y }, targetPosData);
+            const d = distanceBetweenPoints({ x, y }, targetPosData.tilePosition());
             return Math.floor(d) === aiState.desiredDistanceToTarget;
         },
-        createPassableCallback(pos)
+        createPassableCallback(pos.tilePosition())
     );
 
     let path: number[][] = [];

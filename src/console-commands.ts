@@ -5,6 +5,7 @@ import { addSpellById } from "./fighter";
 import { Entity } from "ape-ecs";
 import { ItemData, SpellData } from "./skills";
 import { getEntitiesAtLocation } from "./map";
+import { Nullable } from "./util";
 
 /**
  * Start the game loop
@@ -97,6 +98,10 @@ export function getEntity(id: string): Entity | undefined {
 
 export function getEntities(x: number, y: number): Entity[] {
     if (globals.Game === null) { throw new Error("Global game object is null"); }
+
+    if (x === undefined || y === undefined) {
+        return [...globals.Game.ecs.entities.values()];
+    }
 
     return getEntitiesAtLocation(globals.Game.entityMap, x, y);
 }
