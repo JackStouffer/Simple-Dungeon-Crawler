@@ -383,14 +383,16 @@ export class PushBackCommand implements Command {
     execute(deltaTime: DOMHighResTimeStamp, actor: Entity): void {
         const pos = actor.getOne(PositionComponent);
         if (pos === undefined) { throw new Error(`Entity ${actor.id} does not have a position for PushBackCommand`); }
-
         const tilePos = pos.tilePosition();
+
         const step = DIRS[8][this.dir];
+        const destinationX = tilePos.x + step[0];
+        const destinationY = tilePos.y + step[1];
         const { blocks } = isBlocked(
             this.map,
             this.entityMap,
-            tilePos.x + step[0],
-            tilePos.y + step[1]
+            destinationX,
+            destinationY
         );
         if (blocks === true) {
             this.numTiles = this.tilesMoved;
@@ -398,59 +400,78 @@ export class PushBackCommand implements Command {
             return;
         }
 
-        const end = globals.Game!.gameCamera.tilePositionToWorld(
-            tilePos.x + step[0], tilePos.y + step[1]
+        const speed = .5;
+        const startDistance = distanceBetweenPoints(
+            globals.Game!.gameCamera.tilePositionToWorld(tilePos.x, tilePos.y),
+            globals.Game!.gameCamera.tilePositionToWorld(destinationX, destinationY)
         );
-        pos.x = end.x;
-        pos.y = end.y;
+
+        pos.x += step[0] * speed * deltaTime;
+        pos.y += step[1] * speed * deltaTime;
         pos.update();
 
-        this.tilesMoved++;
+        const distance = distanceBetweenPoints(
+            globals.Game!.gameCamera.tilePositionToWorld(tilePos.x, tilePos.y),
+            pos
+        );
 
-        // Triggers and spreading fire
-        const actorFlammableData = actor.getOne(FlammableComponent);
-        const entities = this.entityMap.get(`${pos.x},${pos.y}`) ?? [];
-        for (let i = 0; i < entities.length; i++) {
-            const e = entities[i];
-            const triggerData = e.getOne(TriggerTypeComponent);
-            const flammableData = e.getOne(FlammableComponent);
+        if (distance >= startDistance) {
+            const end = globals.Game!.gameCamera.tilePositionToWorld(
+                destinationX, destinationY
+            );
+            pos.x = end.x;
+            pos.y = end.y;
+            pos.tileX = destinationX;
+            pos.tileY = destinationY;
+            pos.update();
 
-            // If we're walking over a flammable entity and we're
-            // on fire, roll to set the entity on fire if the entity
-            // in question is flammable
-            if (actorFlammableData !== undefined &&
-                actorFlammableData.onFire === true &&
-                flammableData !== undefined &&
-                flammableData.onFire === false &&
-                Math.random() >= .5) {
-                setOnFire(
-                    e,
-                    actorFlammableData.fireDamage,
-                    randomIntFromInterval(3, 6)
-                );
-            }
+            this.tilesMoved++;
 
-            // Check to see if the current tile is a trigger
-            // and activate it
-            if (triggerData !== undefined) {
-                switch (triggerData.triggerType) {
-                    case TriggerType.Event:
-                        eventTrigger(actor, e);
-                        break;
-                    case TriggerType.Fire:
-                        fireTrigger(actor, e);
-                        break;
-                    case TriggerType.ShallowWater:
-                        shallowWaterTrigger(actor);
-                        break;
-                    case TriggerType.DeepWater:
-                        deepWaterTrigger(actor);
-                        break;
-                    case TriggerType.Mud:
-                        mudTrigger(actor);
-                        break;
-                    default:
-                        assertUnreachable(triggerData.triggerType);
+            // Triggers and spreading fire
+            const actorFlammableData = actor.getOne(FlammableComponent);
+            const entities = this.entityMap.get(`${pos.x},${pos.y}`) ?? [];
+            for (let i = 0; i < entities.length; i++) {
+                const e = entities[i];
+                const triggerData = e.getOne(TriggerTypeComponent);
+                const flammableData = e.getOne(FlammableComponent);
+
+                // If we're walking over a flammable entity and we're
+                // on fire, roll to set the entity on fire if the entity
+                // in question is flammable
+                if (actorFlammableData !== undefined &&
+                    actorFlammableData.onFire === true &&
+                    flammableData !== undefined &&
+                    flammableData.onFire === false &&
+                    Math.random() >= .5) {
+                    setOnFire(
+                        e,
+                        actorFlammableData.fireDamage,
+                        randomIntFromInterval(3, 6)
+                    );
+                }
+
+                // Check to see if the current tile is a trigger
+                // and activate it
+                if (triggerData !== undefined) {
+                    switch (triggerData.triggerType) {
+                        case TriggerType.Event:
+                            eventTrigger(actor, e);
+                            break;
+                        case TriggerType.Fire:
+                            fireTrigger(actor, e);
+                            break;
+                        case TriggerType.ShallowWater:
+                            shallowWaterTrigger(actor);
+                            break;
+                        case TriggerType.DeepWater:
+                            deepWaterTrigger(actor);
+                            break;
+                        case TriggerType.Mud:
+                            mudTrigger(actor);
+                            break;
+                        default:
+                            assertUnreachable(triggerData.triggerType);
+                    }
                 }
             }
         }

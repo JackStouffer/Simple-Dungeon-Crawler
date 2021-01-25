@@ -1,7 +1,10 @@
 import { get } from "lodash";
 import { Entity, World } from "ape-ecs";
 import * as PIXI from "pixi.js";
-import TiledMapOrthogonal, { TiledLayerTilelayer, TiledLayerObjectgroup } from "tiled-types";
+import TiledMapOrthogonal, {
+    TiledLayerTilelayer as TiledLayerTileLayer,
+    TiledLayerObjectgroup as TiledLayerObjectGroup
+} from "tiled-types";
 
 import { RNG } from "./rot/index";
 
@@ -522,11 +525,11 @@ export function loadTiledMap(
 
     const tileLayers = sourceData.layers.filter(
         l => get(l, "properties[0].value", null) === "tile"
-    ) as TiledLayerTilelayer[];
+    ) as TiledLayerTileLayer[];
 
     const environmentLayer = sourceData.layers.filter(
         l => l.name === "Entity Layer"
-    )[0] as TiledLayerTilelayer;
+    )[0] as TiledLayerTileLayer;
 
     const objectLayer = get(
         sourceData.layers.filter(
@@ -534,11 +537,11 @@ export function loadTiledMap(
         ),
         "[0]",
         null
-    ) as TiledLayerObjectgroup<"orthogonal">;
+    ) as TiledLayerObjectGroup<"orthogonal">;
 
     const nodeLayer = get(sourceData.layers.filter(
         (l) => l.name === "Node Layer"
-    ), "[0]", null) as TiledLayerObjectgroup<"orthogonal">;
+    ), "[0]", null) as TiledLayerObjectGroup<"orthogonal">;
 
     if (tileLayers.length === 0) {
         throw new Error(`No tile layer in map ${level}`);

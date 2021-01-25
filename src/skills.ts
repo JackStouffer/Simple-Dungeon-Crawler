@@ -650,13 +650,15 @@ export function castExpel(
 
     const pos = user.getOne(PositionComponent);
     if (pos === undefined) { throw new Error("can't call castWildDamageSpell with a user without a position"); }
+    const tilePos = pos.tilePosition();
+
     const commands: Command[] = [];
     const entities: Entity[] = [];
 
     for (let i = 0; i < DIRS[8].length; i++) {
         const dir = DIRS[8][i];
-        const dx = pos.x + dir[0];
-        const dy = pos.y + dir[1];
+        const dx = tilePos.x + dir[0];
+        const dy = tilePos.y + dir[1];
 
         const { entity } = isBlocked(map, entityMap, dx, dy);
         if (entity !== null) {

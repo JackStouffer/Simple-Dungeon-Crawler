@@ -5,7 +5,6 @@ import { addSpellById } from "./fighter";
 import { Entity } from "ape-ecs";
 import { ItemData, SpellData } from "./skills";
 import { getEntitiesAtLocation } from "./map";
-import { Nullable } from "./util";
 
 /**
  * Start the game loop
