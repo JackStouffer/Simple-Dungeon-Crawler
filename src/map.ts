@@ -20,6 +20,7 @@ import { Camera } from "./camera";
 import { Nullable, randomIntFromInterval } from "./util";
 import { createPlanner } from "./ai/commands";
 import { ItemData } from "./skills";
+import { TILE_SIZE } from "./constants";
 
 const COLOR_AMBIENT_LIGHT = "rgb(50, 50, 50)";
 
@@ -841,19 +842,23 @@ export function isSightBlocked(ecs: World, map: GameMap, x: number, y: number): 
  * Draw a tile given the tile data and the coordinates
  */
 export function drawTile(
+    viewport: PIXI.Rectangle,
     tile: Tile,
     x: number,
     y: number,
-    zoom: number
+    scale: number
 ): void {
-    // FIXME
-    if (x > 928 || x < 0 || y > 608 || y < 0) {
+    const tileSize = TILE_SIZE * scale;
+    if (x > viewport.width + tileSize ||
+        x < 0 - tileSize ||
+        y > viewport.height + tileSize ||
+        y < 0 - tileSize) {
         tile.sprite.visible = false;
         return;
     }
 
     tile.sprite.position.set(x, y);
-    tile.sprite.scale.set(zoom, zoom);
+    tile.sprite.scale.set(scale, scale);
 
     if (tile.blocks) {
         if (tile.isVisibleAndLit()) {
@@ -1003,13 +1008,13 @@ export function setAllToExplored(
  * @param  {Array}   map     An array of arrays of Tiles
  * @return {void}
  */
-export function drawMap(renderer: PIXI.Renderer, camera: Camera, map: GameMap): void {
+export function drawMap(camera: Camera, map: GameMap): void {
     for (let z = 0; z < map.length; z++) {
         for (let y = 0; y < map[z].length; y++) {
             for (let x = 0; x < map[z][y].length; x++) {
                 if (map[z][y][x] !== null) {
                     const { x: screenX, y: screenY } = camera.tilePositionToScreen(x, y);
-                    drawTile(map[z][y][x]!, screenX, screenY, camera.zoom);
+                    drawTile(camera.viewport, map[z][y][x]!, screenX, screenY, camera.zoom);
                 }
             }
         }

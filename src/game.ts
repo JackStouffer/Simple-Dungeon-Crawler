@@ -257,7 +257,7 @@ export class SimpleDungeonCrawler {
 
         this.loadLevel("forrest_001");
         this.scheduler.add(this.player.id, true);
-        this.gameCamera.follow(this.player);
+        this.gameCamera.following = this.player;
 
         const log = globals.document.getElementById("log");
         if (log === null) { return; }
@@ -479,7 +479,7 @@ export class SimpleDungeonCrawler {
         switch (this.state) {
             case GameState.Gameplay:
                 this.gameCamera.update(this.map);
-                drawMap(this.pixiApp.renderer, this.gameCamera, this.map);
+                drawMap(this.gameCamera, this.map);
                 this.ecs.runSystems("frame");
                 break;
             default: break;
@@ -624,7 +624,7 @@ export class SimpleDungeonCrawler {
             if (input.isDown("Enter")) {
                 this.player = createEntity(this.ecs, this.textureAtlas, "player", 1, 1);
                 this.scheduler.add(this.player.id, true);
-                this.gameCamera.follow(this.player);
+                this.gameCamera.following = this.player;
 
                 this.openingText.visible = false;
                 this.loadLevel("forrest_001");
