@@ -7,9 +7,12 @@ _In Development_
 * Gameplay
   * Damage done to enemies that aren't alerted do bonus damage
   * Fireball spell now does fire damage in a circle
+  * Added "exhale" spell which pushes back everything around the player in a circle
+  * Added Paralyzed status which removes an entities ability to act for a certain number of turns
 * Technical
   * Use Tiled's JSON format instead of the JS format
   * Use Pixi.js for rendering sprites in WebGL
+  * Commands can now generate more commands to be executed so that turns can have secondary effects
 * Graphical
   * Use 16x16 sprites instead of console display
   * Allow maps to have arbitrary number of tile layers

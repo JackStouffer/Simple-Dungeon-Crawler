@@ -60,7 +60,8 @@ import {
     WetableComponent,
     SilenceableComponent,
     UpdateEntityMapSystem,
-    EntityMap
+    EntityMap,
+    ParalyzableComponent
 } from "./entity";
 import {
     Command,
@@ -104,7 +105,8 @@ import {
     UpdateStatsEffectsSystem,
     UpdateSpeedEffectsSystem,
     WetSystem,
-    SilenceSystem
+    SilenceSystem,
+    ParalyzeSystem
 } from "./effects";
 import { generateAICommand } from "./ai/commands";
 
@@ -316,6 +318,7 @@ export class SimpleDungeonCrawler {
         this.ecs.registerComponent(FlammableComponent, 50);
         this.ecs.registerComponent(WetableComponent, 50);
         this.ecs.registerComponent(SilenceableComponent, 50);
+        this.ecs.registerComponent(ParalyzableComponent, 50);
         this.ecs.registerComponent(TriggerTypeComponent, 50);
         this.ecs.registerComponent(FireTriggerComponent, 20);
         this.ecs.registerComponent(EventTriggerComponent, 20);
@@ -328,18 +331,19 @@ export class SimpleDungeonCrawler {
         this.ecs.registerSystem("frame", DrawChestsSystem);
         this.ecs.registerSystem("frame", DrawPlayerSystem);
 
-        this.ecs.registerSystem("postCommand", DeathSystem);
-        this.ecs.registerSystem("postCommand", UpdateSchedulerSystem);
-        this.ecs.registerSystem("postCommand", UpdateEntityMapSystem);
+        this.ecs.registerSystem("postTurn", DeathSystem);
+        this.ecs.registerSystem("postTurn", UpdateSchedulerSystem);
+        this.ecs.registerSystem("postTurn", UpdateEntityMapSystem);
 
-        this.ecs.registerSystem("postTurn", RemoveAfterNTurnsSystem);
-        this.ecs.registerSystem("postTurn", UpdateHitPointsEffectsSystem);
-        this.ecs.registerSystem("postTurn", UpdateStatsEffectsSystem);
-        this.ecs.registerSystem("postTurn", UpdateSpeedEffectsSystem);
-        this.ecs.registerSystem("postTurn", WetSystem);
-        this.ecs.registerSystem("postTurn", OnFireSystem);
-        this.ecs.registerSystem("postTurn", SilenceSystem);
-        this.ecs.registerSystem("postTurn", LevelUpSystem);
+        this.ecs.registerSystem("postOneTurnCycle", RemoveAfterNTurnsSystem);
+        this.ecs.registerSystem("postOneTurnCycle", UpdateHitPointsEffectsSystem);
+        this.ecs.registerSystem("postOneTurnCycle", UpdateStatsEffectsSystem);
+        this.ecs.registerSystem("postOneTurnCycle", UpdateSpeedEffectsSystem);
+        this.ecs.registerSystem("postOneTurnCycle", WetSystem);
+        this.ecs.registerSystem("postOneTurnCycle", OnFireSystem);
+        this.ecs.registerSystem("postOneTurnCycle", SilenceSystem);
+        this.ecs.registerSystem("postOneTurnCycle", ParalyzeSystem);
+        this.ecs.registerSystem("postOneTurnCycle", LevelUpSystem);
 
 
         globals.gameEventEmitter.on("ui.openInventory", playOpenInventory);
@@ -398,7 +402,7 @@ export class SimpleDungeonCrawler {
         playerPos.tileY = tile.y;
         playerPos.update();
 
-        this.ecs.runSystems("postCommand");
+        this.ecs.runSystems("postTurn");
         this.gameCamera.update(this.map);
 
         globals.gameEventEmitter.emit("level.loaded", name);
@@ -442,11 +446,11 @@ export class SimpleDungeonCrawler {
                 if (this.currentCommand !== null && this.currentCommand.isFinished()) {
                     if (this.currentCommand.usedTurn()) {
                         if (this.currentActor === this.player) {
-                            this.ecs.runSystems("postTurn");
+                            this.ecs.runSystems("postOneTurnCycle");
                             this.totalTurns++;
                         }
 
-                        this.ecs.runSystems("postCommand");
+                        this.ecs.runSystems("postTurn");
 
                         this.currentActor = this.ecs.getEntity(
                             this.scheduler.next()!

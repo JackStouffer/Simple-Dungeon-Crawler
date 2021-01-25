@@ -27,6 +27,7 @@ import {
     InventoryComponent,
     LevelComponent,
     LoseTargetAIComponent,
+    ParalyzableComponent,
     PlannerAIComponent,
     PositionComponent,
     SpeedComponent,
@@ -127,7 +128,8 @@ export class DeathSystem extends System {
             FlammableComponent,
             WetableComponent,
             TriggerTypeComponent,
-            FireTriggerComponent
+            FireTriggerComponent,
+            ParalyzableComponent
         ];
 
         for (let i = 0; i < compArray.length; i++) {
@@ -144,13 +146,14 @@ export class DeathSystem extends System {
             positionData !== undefined &&
             inventoryData.inventory.size > 0) {
             globals.gameEventEmitter.emit("tutorial.pickUpItem");
+            const tilePos = positionData.tilePosition();
 
             const item = createEntity(
                 this.world,
                 globals.Game.textureAtlas,
                 "dropped_item",
-                positionData.x,
-                positionData.y
+                tilePos.x,
+                tilePos.y
             );
             const itemInventory = item.getOne(InventoryComponent);
             itemInventory!.inventory = inventoryData.inventory;
@@ -173,13 +176,14 @@ export class DeathSystem extends System {
             positionData !== undefined &&
             inventoryData.inventory.size > 0) {
             globals.gameEventEmitter.emit("tutorial.pickUpItem");
+            const tilePos = positionData.tilePosition();
 
             const item = createEntity(
                 this.world,
                 globals.Game.textureAtlas,
                 "dropped_item",
-                positionData.x,
-                positionData.y
+                tilePos.x,
+                tilePos.y
             );
             const itemInventory = item.getOne(InventoryComponent);
             itemInventory!.inventory = inventoryData.inventory;

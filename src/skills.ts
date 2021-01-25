@@ -19,6 +19,7 @@ import {
     EntityMap,
     FlammableComponent,
     HitPointsComponent,
+    ParalyzableComponent,
     PlannerAIComponent,
     PositionComponent,
     SilenceableComponent,
@@ -227,6 +228,27 @@ export function setWet(target: Entity, turns?: number): boolean {
     return false;
 }
 
+export function setParalyzed(target: Entity, turns?: number): boolean {
+    const paralyzableData = target.getOne(ParalyzableComponent);
+    if (paralyzableData === undefined) { return false; }
+
+    turns = turns ?? randomIntFromInterval(2, 4);
+
+    if (paralyzableData.paralyzed && paralyzableData.turnsLeft >= turns) {
+        return false;
+    } else if (paralyzableData.paralyzed && paralyzableData.turnsLeft < turns) {
+        paralyzableData.turnsLeft = turns ?? 0;
+        paralyzableData.update();
+        return true;
+    }
+
+    paralyzableData.paralyzed = true;
+    paralyzableData.turnsLeft = turns;
+    paralyzableData.update();
+
+    return true;
+}
+
 function rollForStatusEffect(
     item: ItemDataDetails | SpellDataDetails,
     target: Entity,
@@ -243,7 +265,8 @@ function rollForStatusEffect(
             case StatusEffectType.Frozen:
                 throw new Error("Not implemented");
             case StatusEffectType.Paralyzed:
-                throw new Error("Not implemented");
+                setParalyzed(target, randomIntFromInterval(2, 4));
+                break;
             default:
                 assertUnreachable(item.statusEffect);
         }
@@ -374,6 +397,8 @@ export function castConfuse(
         return false;
     }
 
+    // TODO: Make confused an already existing component like Flammable
+    // so that not every AI is confusable
     entity.addComponent({
         type: "ConfusedAIComponent",
         turnsLeft: item.value

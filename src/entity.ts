@@ -439,6 +439,17 @@ export class SilenceableComponent extends Component {
     }
 }
 
+export class ParalyzableComponent extends Component {
+    paralyzed: boolean;
+    turnsLeft: number;
+
+    static typeName = "ParalyzableComponent";
+    static properties = {
+        paralyzed: false,
+        turnsLeft: 0
+    }
+}
+
 export class TriggerTypeComponent extends Component {
     triggerType: TriggerType;
 
@@ -1153,6 +1164,10 @@ const ObjectData: { [key: string]: ObjectDataDetails } = {
                 WetableComponent: {
                     wet: false,
                     turnsLeft: 0
+                },
+                ParalyzableComponent: {
+                    paralyzed: false,
+                    turnsLeft: 0
                 }
             }
         }
@@ -1231,6 +1246,10 @@ const ObjectData: { [key: string]: ObjectDataDetails } = {
                 WetableComponent: {
                     wet: false,
                     turnsLeft: 0
+                },
+                ParalyzableComponent: {
+                    paralyzed: false,
+                    turnsLeft: 0
                 }
             }
         }
@@ -1303,6 +1322,10 @@ const ObjectData: { [key: string]: ObjectDataDetails } = {
                 WetableComponent: {
                     wet: false,
                     turnsLeft: 0
+                },
+                ParalyzableComponent: {
+                    paralyzed: false,
+                    turnsLeft: 0
                 }
             }
         }
@@ -1364,6 +1387,10 @@ const ObjectData: { [key: string]: ObjectDataDetails } = {
                 DamageAffinityComponent: waterTypeDamageValues,
                 FreezableComponent: {
                     frozen: false,
+                    turnsLeft: 0
+                },
+                ParalyzableComponent: {
+                    paralyzed: false,
                     turnsLeft: 0
                 }
             }
@@ -1445,6 +1472,10 @@ const ObjectData: { [key: string]: ObjectDataDetails } = {
                 },
                 WetableComponent: {
                     wet: false,
+                    turnsLeft: 0
+                },
+                ParalyzableComponent: {
+                    paralyzed: false,
                     turnsLeft: 0
                 }
             }
@@ -1538,6 +1569,10 @@ const ObjectData: { [key: string]: ObjectDataDetails } = {
                 SilenceableComponent: {
                     silenced: false,
                     turnsLeft: 0
+                },
+                ParalyzableComponent: {
+                    paralyzed: false,
+                    turnsLeft: 0
                 }
             }
         }
@@ -1623,6 +1658,10 @@ const ObjectData: { [key: string]: ObjectDataDetails } = {
                 },
                 SilenceableComponent: {
                     silenced: false,
+                    turnsLeft: 0
+                },
+                ParalyzableComponent: {
+                    paralyzed: false,
                     turnsLeft: 0
                 }
             }

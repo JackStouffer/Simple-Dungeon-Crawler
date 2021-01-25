@@ -5,6 +5,7 @@ import { WeightCallback, PassableCallback } from "./rot/path/path";
 
 import globals from "./globals";
 import {
+    DamageType,
     GameState,
     InteractableType,
     TriggerType
@@ -19,6 +20,7 @@ import {
 import { assertUnreachable, Nullable, randomIntFromInterval } from "./util";
 import { displayMessage } from "./ui";
 import {
+    DisplayNameComponent,
     EntityMap,
     FireTriggerComponent,
     FlammableComponent,
@@ -32,11 +34,11 @@ import {
     StatsComponent,
     TriggerTypeComponent
 } from "./entity";
-import { attack, getEffectiveSpeedData, getKnownSpells, useSpell } from "./fighter";
+import { attack, getEffectiveSpeedData, getKnownSpells, takeDamage, useSpell } from "./fighter";
 import { getItems, hasItem, useItem } from "./inventory";
 import { deepWaterTrigger, eventTrigger, fireTrigger, mudTrigger, shallowWaterTrigger } from "./trigger";
 import { giveItemsInteract, giveSpellsInteract, doorInteract, levelLoadInteract } from "./interactable";
-import { ItemData, SpellData, setOnFire } from "./skills";
+import { ItemData, SpellData, setOnFire, setParalyzed } from "./skills";
 import { DIRS } from "./rot";
 
 /**
@@ -385,8 +387,18 @@ export class PushBackCommand implements Command {
             destinationY
         );
         if (blocks === true) {
+            // make damage function of numTiles + the number of tiles that were skipped
+            const damage = (this.numTiles * 3) + (this.numTiles - this.tilesMoved * 2);
+            takeDamage(this.entity, damage, false, DamageType.Physical);
+            if (Math.random() > 0.2) {
+                const paralyzed = setParalyzed(this.entity, 3);
+                if (paralyzed) {
+                    const displayName = this.entity.getOne(DisplayNameComponent)!;
+                    displayMessage(`${displayName.name} is now paralyzed`);
+                }
+            }
+
             this.numTiles = this.tilesMoved;
-            // STUN ME HERE
             return;
         }
 

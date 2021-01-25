@@ -18,6 +18,7 @@ import {
     FearAIComponent,
     LevelComponent,
     LoseTargetAIComponent,
+    ParalyzableComponent,
     PlannerAIComponent,
     PositionComponent
 } from "../entity";
@@ -331,6 +332,12 @@ export function generateAICommand(
 ): Command {
     const aiState = ai.getOne(PlannerAIComponent);
     const confusedState = ai.getOne(ConfusedAIComponent);
+    const paralyzableData = ai.getOne(ParalyzableComponent);
+
+    if (paralyzableData !== undefined &&
+        paralyzableData.paralyzed) {
+        return new NoOpCommand(true);
+    }
 
     if (confusedState !== undefined) {
         return confusedAIGenerateCommand(ecs, ai, map, entityMap);

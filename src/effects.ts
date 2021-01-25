@@ -9,6 +9,7 @@ import {
     FlammableComponent,
     HitPointsComponent,
     HitPointsEffectComponent,
+    ParalyzableComponent,
     PositionComponent,
     SilenceableComponent,
     SpeedEffectComponent,
@@ -119,10 +120,10 @@ export class WetSystem extends System {
         const entities = this.mainQuery.execute();
         for (const entity of entities) {
             const effect = entity.getOne(WetableComponent)!;
-            if (effect.turnsLeft > 0) {
+            if (effect.wet && effect.turnsLeft > 0) {
                 effect.turnsLeft--;
                 effect.update();
-            } else if (effect.turnsLeft <= 0) {
+            } else if (effect.wet && effect.turnsLeft <= 0) {
                 effect.wet = false;
                 effect.update();
             }
@@ -144,12 +145,40 @@ export class SilenceSystem extends System {
         const entities = this.mainQuery.execute();
         for (const entity of entities) {
             const effect = entity.getOne(SilenceableComponent)!;
-            if (effect.turnsLeft > 0) {
+            if (effect.silenced && effect.turnsLeft > 0) {
                 effect.turnsLeft--;
                 effect.update();
-            } else if (effect.turnsLeft <= 0) {
+            } else if (effect.silenced && effect.turnsLeft <= 0) {
                 effect.silenced = false;
                 effect.update();
+            }
+        }
+    }
+}
+
+export class ParalyzeSystem extends System {
+    private mainQuery: Query;
+
+    init() {
+        this.mainQuery = this
+            .createQuery()
+            .fromAll(ParalyzableComponent)
+            .persist();
+    }
+
+    update() {
+        const entities = this.mainQuery.execute();
+        for (const entity of entities) {
+            const effect = entity.getOne(ParalyzableComponent)!;
+            if (effect.paralyzed && effect.turnsLeft > 0) {
+                effect.turnsLeft--;
+                effect.update();
+            } else if (effect.paralyzed && effect.turnsLeft <= 0) {
+                effect.paralyzed = false;
+                effect.update();
+
+                const displayName = entity.getOne(DisplayNameComponent)!;
+                displayMessage(`${displayName.name} has recovered from being paralyzed`);
             }
         }
     }
