@@ -288,7 +288,19 @@ export class DrawPlayerSystem extends System {
                     graphics.sprite.tint = 0xFFFFFF;
                 }
 
-                if (inputStateData.state === PlayerState.Combat) {
+                // Remove effects from last path draw
+                for (let i = 0; i < this.perviousPath.length; i++) {
+                    const step = this.perviousPath[i];
+                    const z = getHighestZIndexWithTile(globals.Game.map, step[0], step[1]);
+                    globals.Game
+                        .map[z][step[1]][step[0]]!
+                        .sprite
+                        .filters = [];
+                }
+
+                if (inputStateData.state === PlayerState.Combat &&
+                    globals.Game.currentActor === entity &&
+                    globals.Game.currentCommand === null) {
                     const mousePosition = input.getMousePosition();
                     if (mousePosition === null) { return; }
                     const tile = globals.Game.map[0][mousePosition.y][mousePosition.x];
@@ -299,16 +311,6 @@ export class DrawPlayerSystem extends System {
                     // quick distance check to cut down the number of
                     // AStar calcs
                     if (distanceBetweenPoints(pos.tilePosition(), mousePosition) < 40) {
-                        // clear
-                        for (let i = 0; i < this.perviousPath.length; i++) {
-                            const step = this.perviousPath[i];
-                            const z = getHighestZIndexWithTile(globals.Game.map, step[0], step[1]);
-                            globals.Game
-                                .map[z][step[1]][step[0]]!
-                                .sprite
-                                .filters = [];
-                        }
-
                         const path = getPlayerMovementPath(
                             pos.tilePosition(),
                             mousePosition,
@@ -328,18 +330,9 @@ export class DrawPlayerSystem extends System {
                         }
                         this.perviousPath = path;
                     }
-                } else if (inputStateData.state === PlayerState.Target) {
-                    // clear
-                    for (let i = 0; i < this.perviousPath.length; i++) {
-                        const step = this.perviousPath[i];
-                        const z = getHighestZIndexWithTile(globals.Game.map, step[0], step[1]);
-                        globals.Game!
-                            .map[z][step[1]][step[0]]!
-                            .sprite
-                            .filters = [];
-                    }
-
-
+                } else if (inputStateData.state === PlayerState.Target &&
+                    globals.Game.currentActor === entity &&
+                    globals.Game.currentCommand === null) {
                     const mousePosition = input.getMousePosition();
                     const targetArea = getTargetingReticle(
                         inputStateData.spellForTarget ?? inputStateData.itemForTarget,
