@@ -111,7 +111,7 @@ export function playerInput(
                     mouseDownPosition
                 );
                 if (target !== null && target !== inputState.entity) {
-                    return new InteractCommand(target);
+                    return new InteractCommand(player, target);
                 }
             }
 
@@ -128,10 +128,8 @@ export function playerInput(
             );
             if (path !== null) {
                 return new GoToLocationCommand(
-                    path,
-                    ecs,
-                    map,
-                    entityMap
+                    player,
+                    path
                 );
             }
         }
@@ -156,19 +154,15 @@ export function playerInput(
         let command: Nullable<Command> = null;
         if (inputState.itemForTarget !== null) {
             command = new UseItemCommand(
+                player,
                 inputState.itemForTarget.id,
-                ecs,
-                map,
-                entityMap,
                 position,
                 inputState.reticleRotation
             );
         } else if (inputState.spellForTarget !== null) {
             command = new UseSpellCommand(
+                player,
                 inputState.spellForTarget.id,
-                ecs,
-                map,
-                entityMap,
                 position,
                 inputState.reticleRotation
             );

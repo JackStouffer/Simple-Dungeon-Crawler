@@ -307,10 +307,8 @@ export function confusedAIGenerateCommand(
 
         confusedState.update();
         return new GoToLocationCommand(
-            [[newX, newY]],
-            ecs,
-            map,
-            entityMap
+            entity,
+            [[newX, newY]]
         );
     } else {
         confusedState.destroy();

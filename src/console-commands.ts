@@ -110,8 +110,7 @@ export function step(): void {
 
     if (globals.Game.currentCommand !== null && globals.Game.currentActor !== null) {
         globals.Game.currentCommand.execute(
-            globals.Game.deltaTime,
-            globals.Game.currentActor
+            globals.Game.deltaTime
         );
     }
 }

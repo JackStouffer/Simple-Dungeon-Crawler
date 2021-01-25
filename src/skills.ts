@@ -31,7 +31,7 @@ import { randomIntFromInterval, Nullable, assertUnreachable } from "./util";
 import { mouseTarget } from "./input-handler";
 import { getEffectiveHitPointData, getEffectiveStatData, heal, takeDamage } from "./fighter";
 import { getTargetingReticle } from "./graphics";
-import { PushBackCommand, Command } from "./commands";
+import { PushBackCommand } from "./commands";
 
 export interface Area {
     type: "rectangle" | "circle";
@@ -652,9 +652,6 @@ export function castExpel(
     if (pos === undefined) { throw new Error("can't call castWildDamageSpell with a user without a position"); }
     const tilePos = pos.tilePosition();
 
-    const commands: Command[] = [];
-    const entities: Entity[] = [];
-
     for (let i = 0; i < DIRS[8].length; i++) {
         const dir = DIRS[8][i];
         const dx = tilePos.x + dir[0];
@@ -663,26 +660,8 @@ export function castExpel(
         const { entity } = isBlocked(map, entityMap, dx, dy);
         if (entity !== null) {
             if (entity.tags.has("moveable")) {
-                commands.push(new PushBackCommand(i, 3, ecs, map, entityMap));
-                entities.push(entity);
+                globals.Game!.commandQueue.push(new PushBackCommand(entity, i, 3));
             }
-        }
-    }
-
-    // TODO: Commands which return commands. It's a bit odd that we're doing a command
-    // loop here, should move this logic to game loop and have recursive commands
-    while (true) {
-        let done = true;
-        for (let i = 0; i < commands.length; i++) {
-            const c = commands[i];
-            c.execute(globals.Game!.deltaTime, entities[i]);
-            if (!c.isFinished()) {
-                done = false;
-            }
-        }
-
-        if (done) {
-            break;
         }
     }
 

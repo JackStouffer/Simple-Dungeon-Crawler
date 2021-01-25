@@ -134,6 +134,7 @@ export class SimpleDungeonCrawler {
     player: Entity;
     currentActor: Nullable<Entity>;
     currentCommand: Nullable<Command>;
+    commandQueue: Command[];
     map: GameMap;
     entityMap: EntityMap;
 
@@ -155,6 +156,7 @@ export class SimpleDungeonCrawler {
         this.canvas = null;
         this.currentActor = null;
         this.currentCommand = null;
+        this.commandQueue = [];
         this.scheduler = new EntityScheduler();
         this.map = [];
         this.entityMap = new Map();
@@ -412,18 +414,20 @@ export class SimpleDungeonCrawler {
                 }
 
                 // Command generation
-                if (this.currentActor !== null &&
-                    this.currentCommand === null &&
-                    this.currentActor !== this.player) {
-                    if (this.processAI) {
-                        this.currentCommand = generateAICommand(
-                            this.ecs,
-                            this.currentActor,
-                            this.map,
-                            this.entityMap
-                        );
-                    } else {
-                        this.currentCommand = new NoOpCommand(true);
+                if (this.currentActor !== null && this.currentCommand === null) {
+                    if (this.commandQueue.length > 0) {
+                        this.currentCommand = this.commandQueue.shift()!;
+                    } else if (this.currentActor !== this.player) {
+                        if (this.processAI) {
+                            this.currentCommand = generateAICommand(
+                                this.ecs,
+                                this.currentActor,
+                                this.map,
+                                this.entityMap
+                            );
+                        } else {
+                            this.currentCommand = new NoOpCommand(true);
+                        }
                     }
                 }
 
@@ -431,7 +435,7 @@ export class SimpleDungeonCrawler {
                 if (this.currentCommand !== null &&
                     this.currentActor !== null &&
                     this.processCommands === true) {
-                    this.currentCommand.execute(this.deltaTime, this.currentActor);
+                    this.currentCommand.execute(this.deltaTime);
                 }
 
                 // Schedule the next actor and run post command systems if finished
@@ -551,7 +555,7 @@ export class SimpleDungeonCrawler {
                         this.state = GameState.Gameplay;
 
                         this.currentCommand = new UseItemCommand(
-                            item.id, this.ecs, this.map, this.entityMap
+                            this.player, item.id
                         );
                         break;
                     // Items that need to be targeted
@@ -604,7 +608,8 @@ export class SimpleDungeonCrawler {
                         this.spellSelectionMenu.close();
 
                         this.currentCommand = new UseSpellCommand(
-                            spell.id, this.ecs, this.map, this.entityMap
+                            this.player,
+                            spell.id
                         );
                         break;
                     case SpellType.DamageOther:

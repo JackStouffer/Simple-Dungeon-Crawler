@@ -1710,7 +1710,7 @@ export function createEntity(
         const keyCommands: KeyCommand[] = [
             { key: "i", description: "Inventory", command: new OpenInventoryCommand() },
             { key: "m", description: "Spell Menu", command: new OpenSpellsCommand() },
-            { key: "r", description: "Rotate Target Reticle", command: new RotateReticleCommand() },
+            { key: "r", description: "Rotate Target Reticle", command: new RotateReticleCommand(entity) },
             { key: "x", description: "Do Nothing", command: new NoOpCommand(true) }
         ];
 

@@ -105,7 +105,7 @@ function wanderAction(
         ({ blocks, entity } = isBlocked(map, entityMap, newX, newY));
     } while (blocks === true || entity !== null);
 
-    return new GoToLocationCommand([[newX, newY]], ecs, map, entityMap);
+    return new GoToLocationCommand(aiState.entity, [[newX, newY]]);
 }
 
 /**
@@ -165,7 +165,7 @@ function patrolAction(
         return new NoOpCommand(true);
     }
 
-    return new GoToLocationCommand(path, ecs, map, entityMap);
+    return new GoToLocationCommand(aiState.entity, path);
 }
 
 /**
@@ -202,7 +202,7 @@ function chaseAction(
         return new NoOpCommand(true);
     }
 
-    return new GoToLocationCommand(path, ecs, map, entityMap);
+    return new GoToLocationCommand(aiState.entity, path);
 }
 
 /**
@@ -227,7 +227,7 @@ function meleeAttackAction(
     aiState: PlannerAIComponent
 ): Command {
     if (aiState.target === null) { throw new Error("Cannot perform meleeAttackAction without a target"); }
-    return new InteractCommand(aiState.target);
+    return new InteractCommand(aiState.entity, aiState.target);
 }
 
 /**
@@ -268,7 +268,7 @@ function useHealingItemAction(
 
     displayMessage(`${displayName.name} used a ${item.displayName}`);
 
-    return new UseItemCommand(item.id, ecs, map, entityMap);
+    return new UseItemCommand(aiState.entity, item.id);
 }
 
 function useHealingSpellAction(
@@ -288,7 +288,7 @@ function useHealingSpellAction(
 
     displayMessage(`${displayName.name} casted ${spell.displayName}`);
 
-    return new UseSpellCommand(spell.id, ecs, map, entityMap);
+    return new UseSpellCommand(aiState.entity, spell.id);
 }
 
 function healAllyAction(
@@ -335,7 +335,7 @@ function healAllyAction(
 
     displayMessage(`${displayName.name} casted ${spell.displayName}`);
 
-    return new UseSpellCommand(spell.id, ecs, map, entityMap, target);
+    return new UseSpellCommand(aiState.entity, spell.id, target);
 }
 
 /**
@@ -363,7 +363,7 @@ function castSpellAction(spellID: string): ActionUpdateFunction {
         const targetPos = aiState.target.getOne(PositionComponent);
         if (targetPos === undefined) { throw new Error(`Target entity ${aiState.target.id} is missing PositionComponent`); }
 
-        return new UseSpellCommand(spellID, ecs, map, entityMap, targetPos.tilePosition());
+        return new UseSpellCommand(aiState.entity, spellID, targetPos.tilePosition());
     };
 }
 
@@ -451,7 +451,7 @@ function runAwayAction(
         fearState.runAwayTarget = null;
     }
 
-    return new GoToLocationCommand(path, ecs, map, entityMap);
+    return new GoToLocationCommand(aiState.entity, path);
 }
 
 function goToSafePositionAction(
@@ -484,7 +484,7 @@ function goToSafePositionAction(
     // remove our own position
     path.shift();
     path = path.slice(0, speedData.maxTilesPerMove);
-    return new GoToLocationCommand(path, ecs, map, entityMap);
+    return new GoToLocationCommand(aiState.entity, path);
 }
 
 function repositionAction(
@@ -523,7 +523,7 @@ function repositionAction(
     // remove our own position
     path.shift();
     path = path.slice(0, speedData.maxTilesPerMove);
-    return new GoToLocationCommand(path, ecs, map, entityMap);
+    return new GoToLocationCommand(aiState.entity, path);
 }
 
 /**

@@ -144,7 +144,7 @@ export function generatePlayerWeightCallback(origin: Point): WeightCallback {
 export interface Command {
     usedTurn: () => boolean;
     isFinished: () => boolean;
-    execute: (dt: DOMHighResTimeStamp, actor: Entity) => void;
+    execute: (dt: DOMHighResTimeStamp) => void;
 }
 
 export function getPlayerMovementPath(
@@ -216,19 +216,14 @@ export class NoOpCommand implements Command {
  * Move the game object to a specific point on the map
  */
 export class GoToLocationCommand implements Command {
+    private readonly entity: Entity;
     private readonly path: number[][];
-    private readonly map: GameMap;
-    private readonly ecs: World;
-    private readonly entityMap: EntityMap;
     private tilesMoved: number = 0;
-    private readonly usesTurn: boolean = true;
     private done: boolean = false;
 
-    constructor(path: number[][], ecs: World, map: GameMap, entityMap: EntityMap) {
+    constructor(entity: Entity, path: number[][]) {
+        this.entity = entity;
         this.path = path;
-        this.ecs = ecs;
-        this.map = map;
-        this.entityMap = entityMap;
     }
 
     usedTurn(): boolean {
@@ -239,11 +234,11 @@ export class GoToLocationCommand implements Command {
         return this.done;
     }
 
-    execute(deltaTime: DOMHighResTimeStamp, actor: Entity): void {
+    execute(deltaTime: DOMHighResTimeStamp): void {
         const destination = this.path[0];
         const { blocks } = isBlocked(
-            this.map,
-            this.entityMap,
+            globals.Game!.map,
+            globals.Game!.entityMap,
             destination[0],
             destination[1]
         );
@@ -252,11 +247,11 @@ export class GoToLocationCommand implements Command {
             return;
         }
 
-        const graphics = actor.getOne(GraphicsComponent);
+        const graphics = this.entity.getOne(GraphicsComponent);
         if (graphics === undefined || graphics.sprite === null) { throw new Error("No graphics for entity"); }
 
-        const pos = actor.getOne(PositionComponent);
-        if (pos === undefined) { throw new Error(`Entity ${actor.id} does not have a position for GoToLocationCommand`); }
+        const pos = this.entity.getOne(PositionComponent);
+        if (pos === undefined) { throw new Error(`Entity ${this.entity.id} does not have a position for GoToLocationCommand`); }
 
         const speed = .25;
         const tilePos = pos.tilePosition();
@@ -290,8 +285,8 @@ export class GoToLocationCommand implements Command {
             this.path.shift();
 
             // Triggers and spreading fire
-            const actorFlammableData = actor.getOne(FlammableComponent);
-            const entities = this.entityMap.get(`${pos.x},${pos.y}`) ?? [];
+            const actorFlammableData = this.entity.getOne(FlammableComponent);
+            const entities = globals.Game!.entityMap.get(`${pos.x},${pos.y}`) ?? [];
             for (let i = 0; i < entities.length; i++) {
                 const e = entities[i];
                 const triggerData = e.getOne(TriggerTypeComponent);
@@ -317,19 +312,19 @@ export class GoToLocationCommand implements Command {
                 if (triggerData !== undefined) {
                     switch (triggerData.triggerType) {
                         case TriggerType.Event:
-                            eventTrigger(actor, e);
+                            eventTrigger(this.entity, e);
                             break;
                         case TriggerType.Fire:
-                            fireTrigger(actor, e);
+                            fireTrigger(this.entity, e);
                             break;
                         case TriggerType.ShallowWater:
-                            shallowWaterTrigger(actor);
+                            shallowWaterTrigger(this.entity);
                             break;
                         case TriggerType.DeepWater:
-                            deepWaterTrigger(actor);
+                            deepWaterTrigger(this.entity);
                             break;
                         case TriggerType.Mud:
-                            mudTrigger(actor);
+                            mudTrigger(this.entity);
                             break;
                         default:
                             assertUnreachable(triggerData.triggerType);
@@ -339,7 +334,7 @@ export class GoToLocationCommand implements Command {
 
             // check for max movement differences in case one of the
             // triggers changed it
-            const speedData = getEffectiveSpeedData(actor);
+            const speedData = getEffectiveSpeedData(this.entity);
             if (speedData !== null && speedData.maxTilesPerMove <= this.tilesMoved) {
                 this.done = true;
                 return;
@@ -356,20 +351,15 @@ export class GoToLocationCommand implements Command {
  * Push an actor back a specified number of tiles
  */
 export class PushBackCommand implements Command {
+    private readonly entity: Entity;
     private readonly dir: number;
     private numTiles: number;
-    private readonly map: GameMap;
-    private readonly ecs: World;
-    private readonly entityMap: EntityMap;
     private tilesMoved: number = 0;
-    private readonly usesTurn: boolean = true;
 
-    constructor(dir: number, numTiles: number, ecs: World, map: GameMap, entityMap: EntityMap) {
+    constructor(entity: Entity, dir: number, numTiles: number) {
+        this.entity = entity;
         this.dir = dir;
         this.numTiles = numTiles;
-        this.ecs = ecs;
-        this.map = map;
-        this.entityMap = entityMap;
     }
 
     usedTurn(): boolean {
@@ -380,17 +370,17 @@ export class PushBackCommand implements Command {
         return this.tilesMoved === this.numTiles;
     }
 
-    execute(deltaTime: DOMHighResTimeStamp, actor: Entity): void {
-        const pos = actor.getOne(PositionComponent);
-        if (pos === undefined) { throw new Error(`Entity ${actor.id} does not have a position for PushBackCommand`); }
+    execute(deltaTime: DOMHighResTimeStamp): void {
+        const pos = this.entity.getOne(PositionComponent);
+        if (pos === undefined) { throw new Error(`Entity ${this.entity.id} does not have a position for PushBackCommand`); }
         const tilePos = pos.tilePosition();
 
         const step = DIRS[8][this.dir];
         const destinationX = tilePos.x + step[0];
         const destinationY = tilePos.y + step[1];
         const { blocks } = isBlocked(
-            this.map,
-            this.entityMap,
+            globals.Game!.map,
+            globals.Game!.entityMap,
             destinationX,
             destinationY
         );
@@ -428,8 +418,8 @@ export class PushBackCommand implements Command {
             this.tilesMoved++;
 
             // Triggers and spreading fire
-            const actorFlammableData = actor.getOne(FlammableComponent);
-            const entities = this.entityMap.get(`${pos.x},${pos.y}`) ?? [];
+            const actorFlammableData = this.entity.getOne(FlammableComponent);
+            const entities = globals.Game!.entityMap.get(`${pos.x},${pos.y}`) ?? [];
             for (let i = 0; i < entities.length; i++) {
                 const e = entities[i];
                 const triggerData = e.getOne(TriggerTypeComponent);
@@ -455,19 +445,19 @@ export class PushBackCommand implements Command {
                 if (triggerData !== undefined) {
                     switch (triggerData.triggerType) {
                         case TriggerType.Event:
-                            eventTrigger(actor, e);
+                            eventTrigger(this.entity, e);
                             break;
                         case TriggerType.Fire:
-                            fireTrigger(actor, e);
+                            fireTrigger(this.entity, e);
                             break;
                         case TriggerType.ShallowWater:
-                            shallowWaterTrigger(actor);
+                            shallowWaterTrigger(this.entity);
                             break;
                         case TriggerType.DeepWater:
-                            deepWaterTrigger(actor);
+                            deepWaterTrigger(this.entity);
                             break;
                         case TriggerType.Mud:
-                            mudTrigger(actor);
+                            mudTrigger(this.entity);
                             break;
                         default:
                             assertUnreachable(triggerData.triggerType);
@@ -483,10 +473,12 @@ export class PushBackCommand implements Command {
  * attacking the fighter
  */
 export class InteractCommand implements Command {
+    private readonly entity: Entity;
     private interacted: boolean = true;
     private readonly target: Entity;
 
-    constructor(target: Entity) {
+    constructor(entity: Entity, target: Entity) {
+        this.entity = entity;
         this.target = target;
     }
 
@@ -498,24 +490,24 @@ export class InteractCommand implements Command {
         return true;
     }
 
-    execute(deltaTime: DOMHighResTimeStamp, actor: Entity): void {
-        const actorStats = actor.getOne(StatsComponent);
+    execute(): void {
+        const actorStats = this.entity.getOne(StatsComponent);
         const interactableData = this.target.getOne(InteractableTypeComponent);
         const hpData = this.target.getOne(HitPointsComponent);
 
         if (interactableData !== undefined) {
             switch (interactableData.interactableType) {
                 case InteractableType.Door:
-                    doorInteract(actor, this.target);
+                    doorInteract(this.entity, this.target);
                     break;
                 case InteractableType.GiveItems:
-                    giveItemsInteract(actor, this.target);
+                    giveItemsInteract(this.entity, this.target);
                     break;
                 case InteractableType.GiveSpells:
-                    giveSpellsInteract(actor, this.target);
+                    giveSpellsInteract(this.entity, this.target);
                     break;
                 case InteractableType.LoadLevel:
-                    levelLoadInteract(actor, this.target);
+                    levelLoadInteract(this.entity, this.target);
                     break;
                 default:
                     assertUnreachable(interactableData.interactableType);
@@ -526,7 +518,7 @@ export class InteractCommand implements Command {
         }
 
         if (hpData !== undefined && actorStats !== undefined) {
-            attack(actor, this.target);
+            attack(this.entity, this.target);
             this.interacted = true;
             return;
         }
@@ -590,26 +582,16 @@ export class OpenSpellsCommand implements Command {
  * and call its use function.
  */
 export class UseItemCommand implements Command {
+    private readonly entity: Entity;
     private didUseItem: boolean = true;
-    private readonly ecs: World;
     private readonly itemID: string;
-    private readonly map: GameMap;
-    private readonly entityMap: EntityMap;
     private readonly target: Point | undefined;
     private readonly rotation: number | undefined;
 
-    constructor(
-        itemID: string,
-        ecs: World,
-        map: GameMap,
-        entityMap: EntityMap,
-        target?: Point,
-        rotation?: number) {
+    constructor(entity: Entity, itemID: string, target?: Point, rotation?: number) {
+        this.entity = entity;
         this.itemID = itemID;
         this.target = target;
-        this.map = map;
-        this.ecs = ecs;
-        this.entityMap = entityMap;
         this.rotation = rotation;
     }
 
@@ -621,18 +603,18 @@ export class UseItemCommand implements Command {
         return true;
     }
 
-    execute(deltaTime: DOMHighResTimeStamp, actor: Entity): void {
-        const actorInventory = actor.getOne(InventoryComponent);
+    execute(): void {
+        const actorInventory = this.entity.getOne(InventoryComponent);
         if (actorInventory === undefined) { throw new Error("Cannot use an item without an inventory"); }
         if (!hasItem(actorInventory, this.itemID)) { throw new Error(`Cannot use ${this.itemID}, not in inventory`); }
 
         const itemDetails = ItemData[this.itemID];
         const used = itemDetails.useFunc(
             itemDetails,
-            actor,
-            this.ecs,
-            this.map,
-            this.entityMap,
+            this.entity,
+            globals.Game!.ecs,
+            globals.Game!.map,
+            globals.Game!.entityMap,
             this.target,
             this.rotation
         );
@@ -654,25 +636,14 @@ export class UseItemCommand implements Command {
  */
 export class UseSpellCommand implements Command {
     private didUseTurn: boolean = false;
-    private readonly ecs: World;
+    private readonly entity: Entity;
     private readonly spellID: string;
-    private readonly map: GameMap;
-    private readonly entityMap: EntityMap;
     private readonly target: Point | undefined;
     private readonly rotation: number | undefined;
 
-    constructor(
-        spellID: string,
-        ecs: World,
-        map: GameMap,
-        entityMap: EntityMap,
-        target?: Point,
-        rotation?: number
-    ) {
+    constructor(entity: Entity, spellID: string, target?: Point, rotation?: number) {
+        this.entity = entity;
         this.spellID = spellID;
-        this.ecs = ecs;
-        this.map = map;
-        this.entityMap = entityMap;
         this.target = target;
         this.rotation = rotation;
     }
@@ -685,8 +656,8 @@ export class UseSpellCommand implements Command {
         return true;
     }
 
-    execute(deltaTime: DOMHighResTimeStamp, actor: Entity): void {
-        const spellData = actor.getOne(SpellsComponent);
+    execute(): void {
+        const spellData = this.entity.getOne(SpellsComponent);
         if (spellData === undefined ||
             spellData.knownSpells.has(this.spellID) === false) {
             return;
@@ -698,7 +669,7 @@ export class UseSpellCommand implements Command {
         if ((spellData.knownSpells.get(this.spellID) ?? -1) < 1) {
             this.didUseTurn = false;
 
-            if (actor === globals.Game?.player) {
+            if (this.entity === globals.Game?.player) {
                 displayMessage(`You don't have enough casts to use ${details.displayName}`);
             }
 
@@ -707,22 +678,28 @@ export class UseSpellCommand implements Command {
 
         this.didUseTurn = details.useFunc(
             details,
-            actor,
-            this.ecs,
-            this.map,
-            this.entityMap,
+            this.entity,
+            globals.Game!.ecs,
+            globals.Game!.map,
+            globals.Game!.entityMap,
             this.target,
             this.rotation
         );
 
         if (this.didUseTurn) {
-            const statData = actor.getOne(SpellsComponent)!;
+            const statData = this.entity.getOne(SpellsComponent)!;
             useSpell(statData, details.id);
         }
     }
 }
 
 export class RotateReticleCommand implements Command {
+    private readonly entity: Entity;
+
+    constructor(entity: Entity) {
+        this.entity = entity;
+    }
+
     usedTurn(): boolean {
         return false;
     }
@@ -731,8 +708,8 @@ export class RotateReticleCommand implements Command {
         return true;
     }
 
-    execute(deltaTime: DOMHighResTimeStamp, actor: Entity): void {
-        const inputHandlerState = actor.getOne(InputHandlingComponent);
+    execute(): void {
+        const inputHandlerState = this.entity.getOne(InputHandlingComponent);
         if (inputHandlerState === undefined) { return; }
 
         switch(inputHandlerState.reticleRotation) {
