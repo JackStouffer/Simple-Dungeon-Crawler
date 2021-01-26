@@ -8,18 +8,12 @@ import globals from "./globals";
 import {
     loadSounds,
     loadEventualSounds,
-    playOpenInventory,
     playCloseInventory,
-    playOpenSpells,
     playCloseSpells,
     playUIClick,
-    playUIRollover,
     playLevelTheme,
     pauseMusic,
-    resumeMusic,
-    playDoorOpen,
-    playChestOpen,
-    playBoxBreak
+    resumeMusic
 } from "./audio";
 import { Camera } from "./camera";
 import {
@@ -345,24 +339,6 @@ export class SimpleDungeonCrawler {
         this.ecs.registerSystem("postOneTurnCycle", ParalyzeSystem);
         this.ecs.registerSystem("postOneTurnCycle", LevelUpSystem);
 
-
-        globals.gameEventEmitter.on("ui.openInventory", playOpenInventory);
-        globals.gameEventEmitter.on("ui.closeInventory", playCloseInventory);
-        globals.gameEventEmitter.on("ui.openSpells", playOpenSpells);
-        globals.gameEventEmitter.on("ui.closeSpells", playCloseSpells);
-        globals.gameEventEmitter.on("ui.openKeybinding", pauseMusic);
-        globals.gameEventEmitter.on("ui.openKeybinding", playUIClick);
-        globals.gameEventEmitter.on("ui.closeKeybinding", resumeMusic);
-        globals.gameEventEmitter.on("ui.closeKeybinding", playUIClick);
-        globals.gameEventEmitter.on("ui.select", playUIClick);
-        globals.gameEventEmitter.on("ui.cursorMove", playUIRollover);
-
-        globals.gameEventEmitter.on("level.loaded", playLevelTheme);
-        globals.gameEventEmitter.on("door.open", playDoorOpen);
-        globals.gameEventEmitter.on("chest.open", playChestOpen);
-        globals.gameEventEmitter.on("crate.break", playBoxBreak);
-        globals.gameEventEmitter.on("barrel.break", playBoxBreak);
-
         globals.gameEventEmitter.on("tutorial.start", explainMovement);
         globals.gameEventEmitter.on("tutorial.attacking", explainAttacking);
         globals.gameEventEmitter.on("tutorial.inventory", explainInventory);
@@ -405,7 +381,7 @@ export class SimpleDungeonCrawler {
         this.ecs.runSystems("postTurn");
         this.gameCamera.update(this.map);
 
-        globals.gameEventEmitter.emit("level.loaded", name);
+        playLevelTheme(name);
     }
 
     update(): void {
@@ -507,7 +483,8 @@ export class SimpleDungeonCrawler {
                     return;
                 }
 
-                globals.gameEventEmitter.emit("ui.openKeybinding");
+                pauseMusic();
+                playUIClick();
                 this.state = GameState.PauseMenu;
                 this.keyBindingMenu.open(inputHandlerState.keyCommands);
                 return;
@@ -524,7 +501,8 @@ export class SimpleDungeonCrawler {
             }
 
             if (input.isDown("Escape")) {
-                globals.gameEventEmitter.emit("ui.closeKeybinding");
+                resumeMusic();
+                playUIClick();
                 this.state = GameState.Gameplay;
                 this.keyBindingMenu.close();
                 return;
@@ -540,7 +518,7 @@ export class SimpleDungeonCrawler {
             }
 
             if (input.isDown("Escape")) {
-                globals.gameEventEmitter.emit("ui.closeInventory");
+                playCloseInventory();
                 this.state = GameState.Gameplay;
                 this.inventoryMenu.close();
                 return;
@@ -586,7 +564,7 @@ export class SimpleDungeonCrawler {
             }
 
             if (input.isDown("Escape")) {
-                globals.gameEventEmitter.emit("ui.closeSpells");
+                playCloseSpells();
                 this.state = GameState.Gameplay;
                 this.spellSelectionMenu.close();
                 return;

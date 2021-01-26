@@ -26,6 +26,7 @@ import { GameMap, getEntitiesAtLocation, getHighestZIndexWithTile } from "./map"
 import { assertUnreachable, Nullable } from "./util";
 import { SpellData, SpellDataDetails } from "./skills";
 import { Container, Graphics, Sprite, Text, Texture } from "pixi.js";
+import { playUIClick, playUIRollover } from "./audio";
 
 export class StatusBar {
     private readonly background: Graphics;
@@ -385,18 +386,18 @@ export class InventoryMenu {
         if (globals.gameEventEmitter === null) { throw new Error("Global gameEventEmitter is null"); }
 
         if (input.isDown("Enter")) {
-            globals.gameEventEmitter.emit("ui.select");
+            playUIClick();
             return inventoryItems[this.currentSelection];
         }
 
         if (input.isDown("ArrowUp") && this.currentSelection > 0) {
-            globals.gameEventEmitter.emit("ui.cursorMove");
+            playUIRollover();
             this.currentSelection--;
             this.descriptionText.text = inventoryItems[this.currentSelection].description;
         }
 
         if (input.isDown("ArrowDown") && this.currentSelection < inventoryItems.length - 1) {
-            globals.gameEventEmitter.emit("ui.cursorMove");
+            playUIRollover();
             this.currentSelection++;
             this.descriptionText.text = inventoryItems[this.currentSelection].description;
         }
@@ -584,19 +585,19 @@ export class SpellSelectionMenu {
         if (globals.gameEventEmitter === null) { throw new Error("Global gameEventEmitter is null"); }
 
         if (input.isDown("Enter")) {
-            globals.gameEventEmitter.emit("ui.select");
+            playUIClick();
             return SpellData[spells[this.currentSelection].id];
         }
 
         if (input.isDown("ArrowUp") && this.currentSelection > 0) {
-            globals.gameEventEmitter.emit("ui.cursorMove");
+            playUIRollover();
             this.currentSelection--;
             const info = spells[this.currentSelection];
             this.descriptionText.text = info.description;
         }
 
         if (input.isDown("ArrowDown") && this.currentSelection < spells.length - 1) {
-            globals.gameEventEmitter.emit("ui.cursorMove");
+            playUIRollover();
             this.currentSelection++;
             const info = spells[this.currentSelection];
             this.descriptionText.text = info.description;
@@ -727,27 +728,27 @@ export class KeyBindingMenu {
 
         if (this.state === "selection") {
             if (input.isDown("Escape")) {
-                globals.gameEventEmitter.emit("ui.select");
+                playUIClick();
                 return;
             }
 
             if (input.isDown("ArrowUp") && this.currentSelection > 0) {
-                globals.gameEventEmitter.emit("ui.cursorMove");
+                playUIRollover();
                 this.currentSelection--;
             }
 
             if (input.isDown("ArrowDown") && this.currentSelection < keyCommands.length - 1) {
-                globals.gameEventEmitter.emit("ui.cursorMove");
+                playUIRollover();
                 this.currentSelection++;
             }
 
             if (input.isDown("Enter")) {
-                globals.gameEventEmitter.emit("ui.select");
+                playUIClick();
                 this.state = "change";
                 this.menuItems[this.currentSelection].key.text = "";
             }
         } else if (this.state === "change") {
-            globals.gameEventEmitter.emit("ui.select");
+            playUIClick();
 
             const key: Nullable<string> = input.getFirstKeyPressed();
             if (key !== null) {

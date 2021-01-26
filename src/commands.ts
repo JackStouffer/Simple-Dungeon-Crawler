@@ -40,6 +40,7 @@ import { deepWaterTrigger, eventTrigger, fireTrigger, mudTrigger, shallowWaterTr
 import { giveItemsInteract, giveSpellsInteract, doorInteract, levelLoadInteract } from "./interactable";
 import { ItemData, SpellData, setOnFire, setParalyzed } from "./skills";
 import { DIRS } from "./rot";
+import { playOpenInventory, playOpenSpells } from "./audio";
 
 /**
  * Creates a function which returns if an x and y coordinate
@@ -570,7 +571,7 @@ export class OpenInventoryCommand implements Command {
         if (g === null) { throw new Error("Global Game object is null"); }
         if (globals.gameEventEmitter === null) { throw new Error("Global gameEventEmitter is null"); }
 
-        globals.gameEventEmitter.emit("ui.openInventory");
+        playOpenInventory();
         g.state = GameState.InventoryMenu;
         const invData = g.player.getOne(InventoryComponent)!;
         g.inventoryMenu.open(getItems(invData));
@@ -595,7 +596,7 @@ export class OpenSpellsCommand implements Command {
         if (g === null) { throw new Error("Global Game object is null"); }
         if (globals.gameEventEmitter === null) { throw new Error("Global gameEventEmitter is null"); }
 
-        globals.gameEventEmitter.emit("ui.openSpells");
+        playOpenSpells();
         g.state = GameState.SpellMenu;
         const spellsData = g.player.getOne(SpellsComponent)!;
         g.spellSelectionMenu.open(getKnownSpells(spellsData));

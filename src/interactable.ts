@@ -6,6 +6,7 @@ import { addItem, getItems, useItem } from "./inventory";
 import { displayMessage } from "./ui";
 import { addSpellById } from "./fighter";
 import { ItemData, SpellData } from "./skills";
+import { playChestOpen, playDoorOpen } from "./audio";
 
 /**
  * Give the actor all of the items in the interactable's inventory
@@ -29,7 +30,7 @@ export function giveItemsInteract(actor: Entity, interactable: Entity) {
 
             const interactableEntityType = interactable.getOne(TypeComponent);
             if (actor === globals.Game.player && interactableEntityType?.entityType === "chest") {
-                globals.gameEventEmitter.emit("chest.open");
+                playChestOpen();
             }
             if (interactableEntityType?.entityType === "dropped_item") {
                 const graphicData = interactable.getOne(GraphicsComponent);
@@ -75,7 +76,7 @@ export function giveSpellsInteract(actor: Entity, interactable: Entity): void {
 export function doorInteract(actor: Entity, interactable: Entity): void {
     if (globals.gameEventEmitter === null) { throw new Error("Global gameEventEmitter object is null"); }
 
-    globals.gameEventEmitter.emit("door.open");
+    playDoorOpen();
 
     const graphicData = interactable.getOne(GraphicsComponent);
     if (graphicData !== undefined && graphicData.sprite !== null) {
@@ -99,6 +100,6 @@ export function levelLoadInteract(actor: Entity, interactable: Entity): void {
     globals.Game.loadLevel(loadLevelData.levelName);
 
     if (typeData?.entityType === "load_door") {
-        globals.gameEventEmitter.emit("door.open");
+        playDoorOpen();
     }
 }

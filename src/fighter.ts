@@ -44,6 +44,7 @@ import { assertUnreachable, Nullable } from "./util";
 import { SpellData, Area } from "./skills";
 import { createPassableSightCallback } from "./ai/commands";
 import { getEntitiesAtLocation } from "./map";
+import { playBoxBreak } from "./audio";
 
 /**
  * Find all entities with HitPointsComponents and when hp is <= 0,
@@ -192,10 +193,10 @@ export class DeathSystem extends System {
         // TODO define these sounds in data on the entity or fighter instance or something
         const typeData = target.getOne(TypeComponent);
         if (typeData?.entityType === "crate") {
-            globals.gameEventEmitter.emit("crate.break");
+            playBoxBreak();
         }
         if (typeData?.entityType === "barrel") {
-            globals.gameEventEmitter.emit("barrel.break");
+            playBoxBreak();
         }
 
         const graphicData = target.getOne(GraphicsComponent);
