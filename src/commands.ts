@@ -380,21 +380,35 @@ export class PushBackCommand implements Command {
         const step = DIRS[8][this.dir];
         const destinationX = tilePos.x + step[0];
         const destinationY = tilePos.y + step[1];
-        const { blocks } = isBlocked(
+        const { blocks, entity: blocker } = isBlocked(
             globals.Game!.map,
             globals.Game!.entityMap,
             destinationX,
             destinationY
         );
         if (blocks === true) {
+            const tilesLeft = this.numTiles - this.tilesMoved;
             // make damage function of numTiles + the number of tiles that were skipped
-            const damage = (this.numTiles * 3) + (this.numTiles - this.tilesMoved * 2);
+            const damage = (this.numTiles * 3) + (tilesLeft * 2);
             takeDamage(this.entity, damage, false, DamageType.Physical);
-            if (Math.random() > 0.2) {
+            if (Math.random() > 0.3) {
                 const paralyzed = setParalyzed(this.entity, 3);
                 if (paralyzed) {
                     const displayName = this.entity.getOne(DisplayNameComponent)!;
                     displayMessage(`${displayName.name} is now paralyzed`);
+                }
+            }
+
+            if (blocker !== null) {
+                takeDamage(blocker, damage, false, DamageType.Physical);
+                globals.Game?.commandQueue.push(new PushBackCommand(blocker, this.dir, tilesLeft));
+
+                if (Math.random() > 0.3) {
+                    const paralyzed = setParalyzed(blocker, 3);
+                    if (paralyzed) {
+                        const displayName = blocker.getOne(DisplayNameComponent)!;
+                        displayMessage(`${displayName.name} is now paralyzed`);
+                    }
                 }
             }
 

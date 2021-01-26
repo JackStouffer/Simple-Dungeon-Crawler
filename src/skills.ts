@@ -325,9 +325,7 @@ export function castFireBall(
                 // Make the spell dangerous by having it set things on fire rather than
                 // destroy them if they're not actors
                 if (item.statusEffect === StatusEffectType.OnFire && !entity.tags.has("sentient")) {
-                    if (Math.random() <= 0.5) {
-                        setOnFire(entity);
-                    }
+                    setOnFire(entity);
                 } else {
                     takeDamage(entity, item.value, false, item.damageType ?? DamageType.Physical);
 
@@ -664,7 +662,7 @@ export function castSilence(
     return true;
 }
 
-export function castExpel(
+export function castExhale(
     item: ItemDataDetails | SpellDataDetails,
     user: Entity,
     ecs: World,
@@ -1022,12 +1020,12 @@ export const SpellData: { [key: string]: SpellDataDetails } = {
         type: SpellType.DamageOther,
         useFunc: castSilence
     },
-    "expel": {
-        id: "expel",
-        displayName: "Expel",
+    "exhale": {
+        id: "exhale",
+        displayName: "Exhale",
         description: "Send out a burst of air from your body in all directions, pushing away anything that's too close",
-        value: 3,
+        value: 4,
         type: SpellType.Push,
-        useFunc: castExpel
+        useFunc: castExhale
     }
 };
