@@ -207,6 +207,9 @@ export class UpdateHitPointsEffectsSystem extends System {
                 if (effect.turnsLeft === 0) {
                     entity.removeComponent(effect);
                     effect.destroy();
+
+                    const displayName = entity.getOne(DisplayNameComponent)!;
+                    displayMessage(`${effect.name} has ended for ${displayName.name}`);
                 } else {
                     effect.update();
                 }
@@ -237,6 +240,9 @@ export class UpdateStatsEffectsSystem extends System {
                 if (effect.turnsLeft === 0) {
                     entity.removeComponent(effect);
                     effect.destroy();
+
+                    const displayName = entity.getOne(DisplayNameComponent)!;
+                    displayMessage(`${effect.name} has ended for ${displayName.name}`);
                 } else {
                     effect.update();
                 }
@@ -267,6 +273,9 @@ export class UpdateSpeedEffectsSystem extends System {
                 if (effect.turnsLeft === 0) {
                     entity.removeComponent(effect);
                     effect.destroy();
+
+                    const displayName = entity.getOne(DisplayNameComponent)!;
+                    displayMessage(`${effect.name} has ended for ${displayName.name}`);
                 } else {
                     effect.update();
                 }

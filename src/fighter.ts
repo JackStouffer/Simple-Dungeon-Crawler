@@ -444,7 +444,7 @@ export function takeDamage(
 ): boolean {
     const name = target.getOne(DisplayNameComponent);
     const hpData = target.getOne(HitPointsComponent);
-    if (hpData === undefined) { throw new Error("Cannot take damage without a HitPointsComponent"); }
+    if (hpData === undefined) { return false; }
 
     const targetStats = getEffectiveStatData(target);
     const damageAffinity = getEffectiveAffinityData(target);

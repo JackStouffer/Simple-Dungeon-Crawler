@@ -388,7 +388,6 @@ export class PushBackCommand implements Command {
         );
         if (blocks === true) {
             const tilesLeft = this.numTiles - this.tilesMoved;
-            // make damage function of numTiles + the number of tiles that were skipped
             const damage = (this.numTiles * 3) + (tilesLeft * 2);
             takeDamage(this.entity, damage, false, DamageType.Physical);
             if (Math.random() > 0.3) {
@@ -399,7 +398,7 @@ export class PushBackCommand implements Command {
                 }
             }
 
-            if (blocker !== null) {
+            if (blocker !== null && blocker.tags.has("moveable")) {
                 takeDamage(blocker, damage, false, DamageType.Physical);
                 globals.Game?.commandQueue.push(new PushBackCommand(blocker, this.dir, tilesLeft));
 
