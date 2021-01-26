@@ -465,17 +465,18 @@ function goToSafePositionAction(
     if (pos === undefined || speedData === undefined) {
         throw new Error("Missing data when trying to run away");
     }
+    const tilePos = pos.tilePosition();
 
     const bfs = new Path.ReverseAStar(
         (x, y) => !isPositionPotentiallyDangerous(ecs, aiState.entity, x, y),
-        createPassableCallback(pos.tilePosition())
+        createPassableCallback(tilePos)
     );
 
     let path: number[][] = [];
     function pathCallback(x: number, y: number) {
         path.splice(0, 0, [x, y]);
     }
-    bfs.compute(pos.x, pos.y, pathCallback);
+    bfs.compute(tilePos.x, tilePos.y, pathCallback);
 
     if (path.length === 0) {
         return new NoOpCommand(true);
@@ -501,20 +502,21 @@ function repositionAction(
     if (pos === undefined || speedData === undefined || targetPosData === undefined) {
         throw new Error("Missing data when trying to reposition");
     }
+    const tilePos = pos.tilePosition();
 
     const bfs = new Path.ReverseAStar(
         (x, y) => {
             const d = distanceBetweenPoints({ x, y }, targetPosData.tilePosition());
             return Math.floor(d) === aiState.desiredDistanceToTarget;
         },
-        createPassableCallback(pos.tilePosition())
+        createPassableCallback(tilePos)
     );
 
     let path: number[][] = [];
     function pathCallback(x: number, y: number) {
         path.splice(0, 0, [x, y]);
     }
-    bfs.compute(pos.x, pos.y, pathCallback);
+    bfs.compute(tilePos.x, tilePos.y, pathCallback);
 
     if (path.length === 0) {
         return new NoOpCommand(true);
