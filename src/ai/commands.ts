@@ -79,7 +79,7 @@ export function createPassableSightCallback(origin: Point): PassableCallback {
         if (origin.x === x && origin.y === y) {
             return true;
         }
-        return isSightBlocked(globals.Game.ecs, globals.Game.map, x, y) === false;
+        return isSightBlocked(globals.Game.map, globals.Game.entityMap, x, y) === false;
     };
 }
 

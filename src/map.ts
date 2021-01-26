@@ -816,7 +816,7 @@ export function isBlocked(
 /**
  * Returns true if space blocks sight, false otherwise
  */
-export function isSightBlocked(ecs: World, map: GameMap, x: number, y: number): boolean {
+export function isSightBlocked(map: GameMap, entityMap: EntityMap, x: number, y: number): boolean {
     if (map.length === 0) { throw new Error("Bad map data"); }
 
     // Assumes all layers are same size
@@ -830,12 +830,10 @@ export function isSightBlocked(ecs: World, map: GameMap, x: number, y: number): 
         }
     }
 
-    const entities = ecs.createQuery().fromAll(PositionComponent, "blocksSight").execute();
-    for (const e of entities) {
-        const pos = e.getOne(PositionComponent)!;
-        if (pos.x === x && pos.y === y) {
-            return true;
-        }
+    const entities = getEntitiesAtLocation(entityMap, x, y);
+    for (let i = 0; i < entities.length; i++) {
+        const e = entities[i];
+        if (e.tags.has("blocksSight")) { return true; }
     }
 
     return false;
