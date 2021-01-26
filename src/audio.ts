@@ -1,5 +1,5 @@
 import { Howl } from "howler";
-import { Nullable } from "./util";
+import { Nullable, randomFromInterval } from "./util";
 
 const sounds: { [key: string]: Howl } = {};
 
@@ -124,6 +124,10 @@ export function playUIClick() {
 }
 
 export function playUIRollover() {
+    // perturbation
+    sounds.uiRollover.rate(randomFromInterval(0.88, 1.12));
+    sounds.uiRollover.volume(randomFromInterval(0.7, 1));
+
     sounds.uiRollover.play();
 }
 
