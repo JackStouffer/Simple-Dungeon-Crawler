@@ -92,7 +92,7 @@ export class StatusBar {
         this.targetText.visible = false;
 
         this.debugPathfindingText = new Text("", { fontFamily : "monospace", fontSize: 14, fill : 0xFFFFFF });
-        this.debugPathfindingText.x = 600;
+        this.debugPathfindingText.x = 650;
         this.debugPathfindingText.y = 560;
         this.debugPathfindingText.zIndex = 21;
         this.debugPathfindingText.visible = false;

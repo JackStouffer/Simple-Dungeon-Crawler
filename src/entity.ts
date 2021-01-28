@@ -1790,7 +1790,7 @@ export function createEntity(
 export function removeEntity(ecs: World, entity: Entity) {
     if (globals.Game === null) { throw new Error("Global game is null"); }
 
-    const graphicData = entity.getOne(GraphicsComponent);
+    const graphicData = entity.getOne(GraphicsComponent) ?? entity.getOne(ChestGraphicsComponent);
     if (graphicData !== undefined && graphicData.sprite !== null) {
         globals.Game.pixiApp.stage.removeChild(graphicData.sprite);
         graphicData.sprite.visible = false;
@@ -1798,7 +1798,6 @@ export function removeEntity(ecs: World, entity: Entity) {
         graphicData.sprite = null;
     }
     ecs.removeEntity(entity);
-    entity.destroy();
 }
 
 export class UpdateEntityMapSystem extends System {
