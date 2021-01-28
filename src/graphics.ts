@@ -133,12 +133,10 @@ export class DrawChestsSystem extends System {
             if (globals.Game.map[0][tilePos.y][tilePos.x]!.explored) {
                 const inventory = entity.getOne(InventoryComponent)!;
 
-                graphics.sprite.visible = false;
+                graphics.sprite.visible = true;
 
-                if (getItems(inventory).length > 0) {
-                    graphics.sprite.tint = 0xFFFFFF;
-                } else {
-                    graphics.sprite.tint = 0xFF00FF;
+                if (getItems(inventory).length === 0) {
+                    graphics.sprite.texture = globals.Game.textureAtlas[graphics.openTextureKey];
                 }
 
                 const { x, y } = globals.Game.gameCamera.tilePositionToScreen(tilePos.x, tilePos.y);
@@ -291,6 +289,15 @@ export class DrawPlayerSystem extends System {
                 // Remove effects from last path draw
                 for (let i = 0; i < this.perviousPath.length; i++) {
                     const step = this.perviousPath[i];
+
+                    // TODO, CLEANUP, this sucks. Find a way to not have
+                    // tile indexes across frames
+                    if (globals.Game.map[0][step[1]] === undefined) {
+                        // Assume we've just loaded a level and clear the path
+                        this.perviousPath = [];
+                        break;
+                    }
+
                     const z = getHighestZIndexWithTile(globals.Game.map, step[0], step[1]);
                     globals.Game
                         .map[z][step[1]][step[0]]!
