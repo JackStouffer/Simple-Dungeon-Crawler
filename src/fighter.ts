@@ -30,6 +30,7 @@ import {
     ParalyzableComponent,
     PlannerAIComponent,
     PositionComponent,
+    removeEntity,
     SpeedComponent,
     SpeedEffectComponent,
     SpellsComponent,
@@ -199,13 +200,7 @@ export class DeathSystem extends System {
             playBoxBreak();
         }
 
-        const graphicData = target.getOne(GraphicsComponent);
-        if (graphicData !== undefined && graphicData.sprite !== null) {
-            globals.Game.pixiApp.stage.removeChild(graphicData.sprite);
-            graphicData.sprite.visible = false;
-            graphicData.sprite = null;
-        }
-        this.world.removeEntity(target);
+        removeEntity(this.world, target);
     }
 
     update() {

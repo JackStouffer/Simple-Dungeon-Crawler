@@ -1,7 +1,13 @@
 import { Entity } from "ape-ecs";
 
 import globals from "./globals";
-import { SpellsComponent, InventoryComponent, TypeComponent, LoadLevelComponent, GraphicsComponent } from "./entity";
+import {
+    SpellsComponent,
+    InventoryComponent,
+    TypeComponent,
+    LoadLevelComponent,
+    removeEntity
+} from "./entity";
 import { addItem, getItems, useItem } from "./inventory";
 import { displayMessage } from "./ui";
 import { addSpellById } from "./fighter";
@@ -16,7 +22,6 @@ export function giveItemsInteract(actor: Entity, interactable: Entity) {
     const interactableInventory = interactable.getOne(InventoryComponent);
 
     if (globals.Game === null) { throw new Error("Global game object is null"); }
-    if (globals.gameEventEmitter === null) { throw new Error("Global gameEventEmitter object is null"); }
 
     if (actorInventory !== undefined && interactableInventory !== undefined) {
         const items = getItems(interactableInventory);
@@ -33,13 +38,7 @@ export function giveItemsInteract(actor: Entity, interactable: Entity) {
                 playChestOpen();
             }
             if (interactableEntityType?.entityType === "dropped_item") {
-                const graphicData = interactable.getOne(GraphicsComponent);
-                if (graphicData !== undefined && graphicData.sprite !== null) {
-                    globals.Game!.pixiApp.stage.removeChild(graphicData.sprite);
-                    graphicData.sprite.visible = false;
-                    graphicData.sprite = null;
-                }
-                interactable.destroy();
+                removeEntity(globals.Game.ecs, interactable);
             }
         } else {
             displayMessage("Empty");
@@ -74,17 +73,10 @@ export function giveSpellsInteract(actor: Entity, interactable: Entity): void {
  * Simply removes the interactable from the world and plays a sound
  */
 export function doorInteract(actor: Entity, interactable: Entity): void {
-    if (globals.gameEventEmitter === null) { throw new Error("Global gameEventEmitter object is null"); }
+    if (globals.Game === null) { throw new Error("Global game object is null"); }
 
     playDoorOpen();
-
-    const graphicData = interactable.getOne(GraphicsComponent);
-    if (graphicData !== undefined && graphicData.sprite !== null) {
-        globals.Game!.pixiApp.stage.removeChild(graphicData.sprite);
-        graphicData.sprite.visible = false;
-        graphicData.sprite = null;
-    }
-    interactable.destroy();
+    removeEntity(globals.Game.ecs, interactable);
 }
 
 export function levelLoadInteract(actor: Entity, interactable: Entity): void {

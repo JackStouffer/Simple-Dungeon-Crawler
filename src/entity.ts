@@ -1787,6 +1787,20 @@ export function createEntity(
     return entity;
 }
 
+export function removeEntity(ecs: World, entity: Entity) {
+    if (globals.Game === null) { throw new Error("Global game is null"); }
+
+    const graphicData = entity.getOne(GraphicsComponent);
+    if (graphicData !== undefined && graphicData.sprite !== null) {
+        globals.Game.pixiApp.stage.removeChild(graphicData.sprite);
+        graphicData.sprite.visible = false;
+        graphicData.sprite.destroy();
+        graphicData.sprite = null;
+    }
+    ecs.removeEntity(entity);
+    entity.destroy();
+}
+
 export class UpdateEntityMapSystem extends System {
     private mainQuery: Query;
 
@@ -1833,13 +1847,7 @@ export class RemoveAfterNTurnsSystem extends System {
             turnData.turnsLeft--;
 
             if (turnData.turnsLeft === 0) {
-                const graphicData = e.getOne(GraphicsComponent);
-                if (graphicData !== undefined && graphicData.sprite !== null) {
-                    globals.Game!.pixiApp.stage.removeChild(graphicData.sprite);
-                    graphicData.sprite.visible = false;
-                    graphicData.sprite = null;
-                }
-                e.destroy();
+                removeEntity(this.world, e);
             } else {
                 turnData.update();
             }

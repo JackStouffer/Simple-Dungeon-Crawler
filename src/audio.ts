@@ -166,7 +166,7 @@ export function playBoxBreak() {
 export function playLevelTheme(levelName: string) {
     const levelTheme = sounds[levelThemes[levelName]];
 
-    if (musicChannel.sound === levelTheme) {
+    if (levelTheme === undefined || musicChannel.sound === levelTheme) {
         return;
     }
 

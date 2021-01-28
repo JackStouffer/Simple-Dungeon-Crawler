@@ -55,7 +55,8 @@ import {
     SilenceableComponent,
     UpdateEntityMapSystem,
     EntityMap,
-    ParalyzableComponent
+    ParalyzableComponent,
+    removeEntity
 } from "./entity";
 import {
     Command,
@@ -357,6 +358,26 @@ export class SimpleDungeonCrawler {
      */
     loadLevel(name: string): void {
         if (globals.gameEventEmitter === null) { throw new Error("Global gameEventEmitter cannot be null"); }
+
+        const entities = this.ecs.entities.values();
+        for (const e of entities) {
+            if (e.id !== this.player.id) {
+                removeEntity(this.ecs, e);
+            }
+        }
+
+        for (let z = 0; z < this.map.length; z++) {
+            for (let y = 0; y < this.map[0].length; y++) {
+                for (let x = 0; x < this.map[0][0].length; x++) {
+                    const tile = this.map[z][y][x];
+                    if (tile !== null) {
+                        tile.sprite.visible = false;
+                        this.pixiApp.stage.removeChild(tile.sprite);
+                        tile.sprite.destroy();
+                    }
+                }
+            }
+        }
 
         this.scheduler.clear();
         this.scheduler.add(this.player.id, true);
