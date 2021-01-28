@@ -9,6 +9,7 @@ import TiledMapOrthogonal, {
 import { RNG } from "./rot/index";
 
 import * as forrest_001 from "./maps/forrest_001.json";
+import * as forrest_001_interior_001 from "./maps/forrest_001_interior_001.json";
 
 import {
     createEntity,
@@ -28,7 +29,8 @@ import { TILE_SIZE } from "./constants";
 const COLOR_AMBIENT_LIGHT = "rgb(50, 50, 50)";
 
 const LevelData: { [key: string]: TiledMapOrthogonal } = {
-    forrest_001: (forrest_001 as any).default as TiledMapOrthogonal
+    forrest_001: (forrest_001 as any).default as TiledMapOrthogonal,
+    forrest_001_interior_001: (forrest_001_interior_001 as any).default as TiledMapOrthogonal,
 };
 
 type LevelName = keyof typeof LevelData;
@@ -42,16 +44,16 @@ interface TileDataDetails {
 }
 
 const TileData: { [key: number]: TileDataDetails } = {
-    2010: {
-        name: "Gravestone",
-        textureKey: "gravestone_2",
-        blocks: true,
-        blocksSight: false,
-        reflectivity: 0.18
-    },
     6: {
         name: "grass",
         textureKey: "grass_1",
+        blocks: false,
+        blocksSight: false,
+        reflectivity: 0.18
+    },
+    25: {
+        name: "grass",
+        textureKey: "barrel_3",
         blocks: false,
         blocksSight: false,
         reflectivity: 0.18
@@ -63,51 +65,170 @@ const TileData: { [key: number]: TileDataDetails } = {
         blocksSight: false,
         reflectivity: 0.18
     },
-    2678: {
-        name: "Stone Road",
-        textureKey: "stone_road_top_left_corner",
+    194: {
+        name: "bed",
+        textureKey: "red_bed_1_front",
+        blocks: true,
+        blocksSight: false,
+        reflectivity: 0.18
+    },
+    218: {
+        name: "Door",
+        textureKey: "brown_door_steel_frame_barred",
+        blocks: true,
+        blocksSight: false,
+        reflectivity: 0.18
+    },
+    221: {
+        name: "Window",
+        textureKey: "brown_square_4x4_window",
+        blocks: true,
+        blocksSight: false,
+        reflectivity: 0.18
+    },
+    365: {
+        name: "Wood floor",
+        textureKey: "sprite373",
         blocks: false,
         blocksSight: false,
         reflectivity: 0.18
     },
-    2679: {
-        name: "Stone Road",
-        textureKey: "stone_road_top_edge",
+    380: {
+        name: "Dresser",
+        textureKey: "sprite457",
+        blocks: true,
+        blocksSight: false,
+        reflectivity: 0.18
+    },
+    382: {
+        name: "Sack of food",
+        textureKey: "sprite493",
+        blocks: true,
+        blocksSight: false,
+        reflectivity: 0.18
+    },
+    383: {
+        name: "Sack of food",
+        textureKey: "sprite510",
+        blocks: true,
+        blocksSight: false,
+        reflectivity: 0.18
+    },
+    384: {
+        name: "Sack of food",
+        textureKey: "sprite494",
+        blocks: true,
+        blocksSight: false,
+        reflectivity: 0.18
+    },
+    385: {
+        name: "A cabinet",
+        textureKey: "cabinets_1",
+        blocks: true,
+        blocksSight: false,
+        reflectivity: 0.18
+    },
+    399: {
+        name: "A window",
+        textureKey: "sprite467",
+        blocks: true,
+        blocksSight: false,
+        reflectivity: 0.18
+    },
+    543: {
+        name: "wood floor",
+        textureKey: "sprite549",
         blocks: false,
         blocksSight: false,
         reflectivity: 0.18
     },
-    2680: {
-        name: "Stone Road",
-        textureKey: "stone_road_top_right_corner",
-        blocks: false,
+    563: {
+        name: "Cabinets",
+        textureKey: "sprite559",
+        blocks: true,
         blocksSight: false,
         reflectivity: 0.18
     },
-    2856: {
-        name: "Stone Road",
-        textureKey: "stone_road_left_edge",
-        blocks: false,
+    565: {
+        name: "Vanity",
+        textureKey: "sprite668",
+        blocks: true,
         blocksSight: false,
         reflectivity: 0.18
     },
-    2857: {
-        name: "Stone Road",
-        textureKey: "stone_road_middle",
-        blocks: false,
+    732: {
+        name: "A chair",
+        textureKey: "wooden_chair_1_front",
+        blocks: true,
         blocksSight: false,
         reflectivity: 0.18
     },
-    2858: {
-        name: "Stone Road",
-        textureKey: "stone_road_right_edge",
-        blocks: false,
+    741: {
+        name: "Cabinets",
+        textureKey: "sprite732",
+        blocks: true,
         blocksSight: false,
         reflectivity: 0.18
     },
-    5805: {
-        name: "A stove",
-        textureKey: "stove_1",
+    743: {
+        name: "Vanity",
+        textureKey: "sprite734",
+        blocks: true,
+        blocksSight: false,
+        reflectivity: 0.18
+    },
+    917: {
+        name: "Armoire",
+        textureKey: "sprite974",
+        blocks: true,
+        blocksSight: false,
+        reflectivity: 0.18
+    },
+    935: {
+        name: "Window",
+        textureKey: "brown_window_curved_top_open_shutters",
+        blocks: true,
+        blocksSight: false,
+        reflectivity: 0.18
+    },
+    1090: {
+        name: "A table",
+        textureKey: "long_wooden_table_1_middle",
+        blocks: true,
+        blocksSight: false,
+        reflectivity: 0.18
+    },
+    1095: {
+        name: "Armoire",
+        textureKey: "sprite1072",
+        blocks: true,
+        blocksSight: false,
+        reflectivity: 0.18
+    },
+    1438: {
+        name: "An unlit fire",
+        textureKey: "campfire_1_unlit",
+        blocks: true,
+        blocksSight: false,
+        reflectivity: 0.18
+    },
+    1537: {
+        name: "Trees",
+        textureKey: "turquoise_copse_top_left_corner",
+        blocks: true,
+        blocksSight: false,
+        reflectivity: 0.18
+    },
+    1538: {
+        name: "Trees",
+        textureKey: "turquoise_copse_top_middle",
+        blocks: true,
+        blocksSight: false,
+        reflectivity: 0.18
+    },
+    1539: {
+        name: "Trees",
+        textureKey: "turquoise_copse_top_right_corner",
         blocks: true,
         blocksSight: false,
         reflectivity: 0.18
@@ -133,202 +254,6 @@ const TileData: { [key: number]: TileDataDetails } = {
         blocksSight: false,
         reflectivity: 0.18
     },
-    1788: {
-        name: "Dirt",
-        textureKey: "dirt_left_edge",
-        blocks: false,
-        blocksSight: false,
-        reflectivity: 0.18
-    },
-    1789: {
-        name: "Dirt",
-        textureKey: "dirt_middle",
-        blocks: false,
-        blocksSight: false,
-        reflectivity: 0.18
-    },
-    1790: {
-        name: "Dirt",
-        textureKey: "dirt_right_edge",
-        blocks: false,
-        blocksSight: false,
-        reflectivity: 0.18
-    },
-    1966: {
-        name: "Dirt",
-        textureKey: "dirt_bottom_left_corner",
-        blocks: false,
-        blocksSight: false,
-        reflectivity: 0.18
-    },
-    1967: {
-        name: "Dirt",
-        textureKey: "dirt_bottom_edge",
-        blocks: false,
-        blocksSight: false,
-        reflectivity: 0.18
-    },
-    1968: {
-        name: "Dirt",
-        textureKey: "dirt_bottom_right_corner",
-        blocks: false,
-        blocksSight: false,
-        reflectivity: 0.18
-    },
-    1827: {
-        name: "Tent",
-        textureKey: "green_tent_top_left",
-        blocks: true,
-        blocksSight: false,
-        reflectivity: 0.18
-    },
-    1828: {
-        name: "Tent",
-        textureKey: "green_tent_top_right",
-        blocks: true,
-        blocksSight: false,
-        reflectivity: 0.18
-    },
-    2005: {
-        name: "Tent",
-        textureKey: "green_tent_bottom_left",
-        blocks: true,
-        blocksSight: false,
-        reflectivity: 0.18
-    },
-    2006: {
-        name: "Tent",
-        textureKey: "green_tent_bottom_right",
-        blocks: true,
-        blocksSight: false,
-        reflectivity: 0.18
-    },
-    3934: {
-        name: "Building",
-        textureKey: "tan_building_exterior_left_edge",
-        blocks: true,
-        blocksSight: false,
-        reflectivity: 0.18
-    },
-    3935: {
-        name: "Building",
-        textureKey: "tan_building_exterior_middle",
-        blocks: true,
-        blocksSight: false,
-        reflectivity: 0.18
-    },
-    3936: {
-        name: "Building",
-        textureKey: "tan_building_exterior_right_edge",
-        blocks: true,
-        blocksSight: false,
-        reflectivity: 0.18
-    },
-    4112: {
-        name: "Building",
-        textureKey: "tan_building_exterior_bottom_right_corner",
-        blocks: true,
-        blocksSight: false,
-        reflectivity: 0.18
-    },
-    4113: {
-        name: "Building",
-        textureKey: "tan_building_exterior_bottom_edge",
-        blocks: true,
-        blocksSight: false,
-        reflectivity: 0.18
-    },
-    4114: {
-        name: "Building",
-        textureKey: "tan_building_exterior_bottom_left_corner",
-        blocks: true,
-        blocksSight: false,
-        reflectivity: 0.18
-    },
-    3759: {
-        name: "Roof",
-        textureKey: "brown_roof_rear_left_slope",
-        blocks: true,
-        blocksSight: false,
-        reflectivity: 0.18
-    },
-    3760: {
-        name: "Roof",
-        textureKey: "brown_roof_rear_right_slope",
-        blocks: true,
-        blocksSight: false,
-        reflectivity: 0.18
-    },
-    3937: {
-        name: "Roof",
-        textureKey: "brown_roof_left_slope",
-        blocks: true,
-        blocksSight: false,
-        reflectivity: 0.18
-    },
-    3938: {
-        name: "Roof",
-        textureKey: "brown_roof_right_slope",
-        blocks: true,
-        blocksSight: false,
-        reflectivity: 0.18
-    },
-    4115: {
-        name: "Roof",
-        textureKey: "brown_roof_front_left_slope",
-        blocks: true,
-        blocksSight: false,
-        reflectivity: 0.18
-    },
-    4116: {
-        name: "Roof",
-        textureKey: "brown_roof_front_right_slope",
-        blocks: true,
-        blocksSight: false,
-        reflectivity: 0.18
-    },
-    3939: {
-        name: "Roof",
-        textureKey: "brown_roof_edge_1",
-        blocks: true,
-        blocksSight: false,
-        reflectivity: 0.18
-    },
-    3942: {
-        name: "Building",
-        textureKey: "brown_building_exterior_middle",
-        blocks: true,
-        blocksSight: false,
-        reflectivity: 0.18
-    },
-    3764: {
-        name: "Building",
-        textureKey: "brown_building_exterior_top_edge",
-        blocks: true,
-        blocksSight: false,
-        reflectivity: 0.18
-    },
-    218: {
-        name: "Door",
-        textureKey: "brown_door_steel_frame_barred",
-        blocks: true,
-        blocksSight: false,
-        reflectivity: 0.18
-    },
-    221: {
-        name: "Window",
-        textureKey: "brown_square_4x4_window",
-        blocks: true,
-        blocksSight: false,
-        reflectivity: 0.18
-    },
-    935: {
-        name: "Window",
-        textureKey: "brown_window_curved_top_open_shutters",
-        blocks: true,
-        blocksSight: false,
-        reflectivity: 0.18
-    },
     1619: {
         name: "A tree",
         textureKey: "short_pine_tree_1",
@@ -343,24 +268,10 @@ const TileData: { [key: number]: TileDataDetails } = {
         blocksSight: true,
         reflectivity: 0.18
     },
-    1537: {
-        name: "Trees",
-        textureKey: "turquoise_copse_top_left_corner",
-        blocks: true,
-        blocksSight: false,
-        reflectivity: 0.18
-    },
-    1538: {
-        name: "Trees",
-        textureKey: "turquoise_copse_top_middle",
-        blocks: true,
-        blocksSight: false,
-        reflectivity: 0.18
-    },
-    1539: {
-        name: "Trees",
-        textureKey: "turquoise_copse_top_right_corner",
-        blocks: true,
+    1788: {
+        name: "Dirt",
+        textureKey: "dirt_left_edge",
+        blocks: false,
         blocksSight: false,
         reflectivity: 0.18
     },
@@ -381,6 +292,34 @@ const TileData: { [key: number]: TileDataDetails } = {
     1717: {
         name: "Trees",
         textureKey: "turquoise_copse_right_edge",
+        blocks: true,
+        blocksSight: false,
+        reflectivity: 0.18
+    },
+    1789: {
+        name: "Dirt",
+        textureKey: "dirt_middle",
+        blocks: false,
+        blocksSight: false,
+        reflectivity: 0.18
+    },
+    1790: {
+        name: "Dirt",
+        textureKey: "dirt_right_edge",
+        blocks: false,
+        blocksSight: false,
+        reflectivity: 0.18
+    },
+    1827: {
+        name: "Tent",
+        textureKey: "green_tent_top_left",
+        blocks: true,
+        blocksSight: false,
+        reflectivity: 0.18
+    },
+    1828: {
+        name: "Tent",
+        textureKey: "green_tent_top_right",
         blocks: true,
         blocksSight: false,
         reflectivity: 0.18
@@ -406,34 +345,384 @@ const TileData: { [key: number]: TileDataDetails } = {
         blocksSight: false,
         reflectivity: 0.18
     },
-    194: {
-        name: "bed",
-        textureKey: "red_bed_1_front",
+    1966: {
+        name: "Dirt",
+        textureKey: "dirt_bottom_left_corner",
+        blocks: false,
+        blocksSight: false,
+        reflectivity: 0.18
+    },
+    1967: {
+        name: "Dirt",
+        textureKey: "dirt_bottom_edge",
+        blocks: false,
+        blocksSight: false,
+        reflectivity: 0.18
+    },
+    1968: {
+        name: "Dirt",
+        textureKey: "dirt_bottom_right_corner",
+        blocks: false,
+        blocksSight: false,
+        reflectivity: 0.18
+    },
+    2005: {
+        name: "Tent",
+        textureKey: "green_tent_bottom_left",
         blocks: true,
         blocksSight: false,
         reflectivity: 0.18
     },
-    1090: {
-        name: "A table",
-        textureKey: "long_wooden_table_1_middle",
+    2006: {
+        name: "Tent",
+        textureKey: "green_tent_bottom_right",
         blocks: true,
         blocksSight: false,
         reflectivity: 0.18
     },
-    732: {
-        name: "A chair",
-        textureKey: "wooden_chair_1_front",
+    2010: {
+        name: "Gravestone",
+        textureKey: "gravestone_2",
         blocks: true,
         blocksSight: false,
         reflectivity: 0.18
     },
-    385: {
-        name: "A cabinet",
-        textureKey: "cabinets_1",
+    2151: {
+        name: "Building",
+        textureKey: "sprite2006",
         blocks: true,
         blocksSight: false,
         reflectivity: 0.18
-    }
+    },
+    2153: {
+        name: "Building",
+        textureKey: "sprite2008",
+        blocks: true,
+        blocksSight: false,
+        reflectivity: 0.18
+    },
+    2154: {
+        name: "Building",
+        textureKey: "sprite2009",
+        blocks: true,
+        blocksSight: false,
+        reflectivity: 0.18
+    },
+    2156: {
+        name: "Building",
+        textureKey: "sprite2011",
+        blocks: true,
+        blocksSight: false,
+        reflectivity: 0.18
+    },
+    2328: {
+        name: "Building",
+        textureKey: "sprite2153",
+        blocks: true,
+        blocksSight: false,
+        reflectivity: 0.18
+    },
+    2329: {
+        name: "Building",
+        textureKey: "sprite2154",
+        blocks: true,
+        blocksSight: false,
+        reflectivity: 0.18
+    },
+    2330: {
+        name: "Building",
+        textureKey: "sprite2155",
+        blocks: true,
+        blocksSight: false,
+        reflectivity: 0.18
+    },
+    2331: {
+        name: "Building",
+        textureKey: "sprite2156",
+        blocks: true,
+        blocksSight: false,
+        reflectivity: 0.18
+    },
+    2332: {
+        name: "Building",
+        textureKey: "sprite2157",
+        blocks: true,
+        blocksSight: false,
+        reflectivity: 0.18
+    },
+    2334: {
+        name: "Building",
+        textureKey: "sprite2159",
+        blocks: true,
+        blocksSight: false,
+        reflectivity: 0.18
+    },
+    2506: {
+        name: "Building",
+        textureKey: "sprite2307",
+        blocks: true,
+        blocksSight: false,
+        reflectivity: 0.18
+    },
+    2678: {
+        name: "Stone Road",
+        textureKey: "stone_road_top_left_corner",
+        blocks: false,
+        blocksSight: false,
+        reflectivity: 0.18
+    },
+    2679: {
+        name: "Stone Road",
+        textureKey: "stone_road_top_edge",
+        blocks: false,
+        blocksSight: false,
+        reflectivity: 0.18
+    },
+    2680: {
+        name: "Stone Road",
+        textureKey: "stone_road_top_right_corner",
+        blocks: false,
+        blocksSight: false,
+        reflectivity: 0.18
+    },
+    2684: {
+        name: "Building",
+        textureKey: "sprite2462",
+        blocks: true,
+        blocksSight: false,
+        reflectivity: 0.18
+    },
+    2685: {
+        name: "Building",
+        textureKey: "sprite2463",
+        blocks: true,
+        blocksSight: false,
+        reflectivity: 0.18
+    },
+    2686: {
+        name: "Building",
+        textureKey: "sprite2464",
+        blocks: true,
+        blocksSight: false,
+        reflectivity: 0.18
+    },
+    2687: {
+        name: "Building",
+        textureKey: "sprite2465",
+        blocks: true,
+        blocksSight: false,
+        reflectivity: 0.18
+    },
+    2689: {
+        name: "Building",
+        textureKey: "sprite2467",
+        blocks: true,
+        blocksSight: false,
+        reflectivity: 0.18
+    },
+    2856: {
+        name: "Stone Road",
+        textureKey: "stone_road_left_edge",
+        blocks: false,
+        blocksSight: false,
+        reflectivity: 0.18
+    },
+    2857: {
+        name: "Stone Road",
+        textureKey: "stone_road_middle",
+        blocks: false,
+        blocksSight: false,
+        reflectivity: 0.18
+    },
+    2858: {
+        name: "Stone Road",
+        textureKey: "stone_road_right_edge",
+        blocks: false,
+        blocksSight: false,
+        reflectivity: 0.18
+    },
+    2705: {
+        name: "Building",
+        textureKey: "sprite2483",
+        blocks: true,
+        blocksSight: false,
+        reflectivity: 0.18
+    },
+    3299: {
+        name: "Table",
+        textureKey: "sprite2973",
+        blocks: true,
+        blocksSight: false,
+        reflectivity: 0.18
+    },
+    3300: {
+        name: "Table",
+        textureKey: "sprite2974",
+        blocks: true,
+        blocksSight: false,
+        reflectivity: 0.18
+    },
+    3301: {
+        name: "Table",
+        textureKey: "sprite2975",
+        blocks: true,
+        blocksSight: false,
+        reflectivity: 0.18
+    },
+    3489: {
+        name: "Bed1",
+        textureKey: "sprite3148",
+        blocks: true,
+        blocksSight: false,
+        reflectivity: 0.18
+    },
+    3311: {
+        name: "Bed2",
+        textureKey: "sprite3052",
+        blocks: true,
+        blocksSight: false,
+        reflectivity: 0.18
+    },
+    3599: {
+        name: "Building",
+        textureKey: "sprite3258",
+        blocks: true,
+        blocksSight: false,
+        reflectivity: 0.18
+    },
+    3668: {
+        name: "Bed3",
+        textureKey: "sprite3361",
+        blocks: true,
+        blocksSight: false,
+        reflectivity: 0.18
+    },
+    3759: {
+        name: "Roof",
+        textureKey: "brown_roof_rear_left_slope",
+        blocks: true,
+        blocksSight: false,
+        reflectivity: 0.18
+    },
+    3760: {
+        name: "Roof",
+        textureKey: "brown_roof_rear_right_slope",
+        blocks: true,
+        blocksSight: false,
+        reflectivity: 0.18
+    },
+    3846: {
+        name: "Bed4",
+        textureKey: "sprite3457",
+        blocks: true,
+        blocksSight: false,
+        reflectivity: 0.18
+    },
+    3934: {
+        name: "Building",
+        textureKey: "tan_building_exterior_left_edge",
+        blocks: true,
+        blocksSight: false,
+        reflectivity: 0.18
+    },
+    3935: {
+        name: "Building",
+        textureKey: "tan_building_exterior_middle",
+        blocks: true,
+        blocksSight: false,
+        reflectivity: 0.18
+    },
+    3936: {
+        name: "Building",
+        textureKey: "tan_building_exterior_right_edge",
+        blocks: true,
+        blocksSight: false,
+        reflectivity: 0.18
+    },
+    3937: {
+        name: "Roof",
+        textureKey: "brown_roof_left_slope",
+        blocks: true,
+        blocksSight: false,
+        reflectivity: 0.18
+    },
+    3938: {
+        name: "Roof",
+        textureKey: "brown_roof_right_slope",
+        blocks: true,
+        blocksSight: false,
+        reflectivity: 0.18
+    },
+    3939: {
+        name: "Roof",
+        textureKey: "brown_roof_edge_1",
+        blocks: true,
+        blocksSight: false,
+        reflectivity: 0.18
+    },
+    3942: {
+        name: "Building",
+        textureKey: "brown_building_exterior_middle",
+        blocks: true,
+        blocksSight: false,
+        reflectivity: 0.18
+    },
+    3949: {
+        name: "Building",
+        textureKey: "sprite3576",
+        blocks: true,
+        blocksSight: false,
+        reflectivity: 0.18
+    },
+    4112: {
+        name: "Building",
+        textureKey: "tan_building_exterior_bottom_right_corner",
+        blocks: true,
+        blocksSight: false,
+        reflectivity: 0.18
+    },
+    4113: {
+        name: "Building",
+        textureKey: "tan_building_exterior_bottom_edge",
+        blocks: true,
+        blocksSight: false,
+        reflectivity: 0.18
+    },
+    4114: {
+        name: "Building",
+        textureKey: "tan_building_exterior_bottom_left_corner",
+        blocks: true,
+        blocksSight: false,
+        reflectivity: 0.18
+    },
+    4115: {
+        name: "Roof",
+        textureKey: "brown_roof_front_left_slope",
+        blocks: true,
+        blocksSight: false,
+        reflectivity: 0.18
+    },
+    4116: {
+        name: "Roof",
+        textureKey: "brown_roof_front_right_slope",
+        blocks: true,
+        blocksSight: false,
+        reflectivity: 0.18
+    },
+    3764: {
+        name: "Building",
+        textureKey: "brown_building_exterior_top_edge",
+        blocks: true,
+        blocksSight: false,
+        reflectivity: 0.18
+    },
+    5805: {
+        name: "A stove",
+        textureKey: "stove_1",
+        blocks: true,
+        blocksSight: false,
+        reflectivity: 0.18
+    },
 };
 Object.freeze(TileData);
 
