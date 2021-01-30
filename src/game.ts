@@ -101,7 +101,8 @@ import {
     UpdateSpeedEffectsSystem,
     WetSystem,
     SilenceSystem,
-    ParalyzeSystem
+    ParalyzeSystem,
+    FrozenSystem
 } from "./effects";
 import { generateAICommand } from "./ai/commands";
 
@@ -338,6 +339,7 @@ export class SimpleDungeonCrawler {
         this.ecs.registerSystem("postOneTurnCycle", OnFireSystem);
         this.ecs.registerSystem("postOneTurnCycle", SilenceSystem);
         this.ecs.registerSystem("postOneTurnCycle", ParalyzeSystem);
+        this.ecs.registerSystem("postOneTurnCycle", FrozenSystem);
         this.ecs.registerSystem("postOneTurnCycle", LevelUpSystem);
 
         globals.gameEventEmitter.on("tutorial.start", explainMovement);

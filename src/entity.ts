@@ -528,7 +528,7 @@ interface ObjectDataDetails {
     staticallyKnownComponents: IEntityConfig;
 }
 
-const ObjectData: { [key: string]: ObjectDataDetails } = {
+export const ObjectData: { [key: string]: ObjectDataDetails } = {
     "door": {
         staticallyKnownComponents: {
             tags: ["blocks", "blocksSight"],
@@ -1649,8 +1649,7 @@ const ObjectData: { [key: string]: ObjectDataDetails } = {
                     turnsLeft: 0
                 },
                 FreezableComponent: {
-                    frozen: false,
-                    turnsLeft: 0
+                    frozen: false
                 },
                 WetableComponent: {
                     wet: false,
@@ -1750,7 +1749,7 @@ export function createEntity(
             { key: "i", description: "Inventory", command: new OpenInventoryCommand() },
             { key: "m", description: "Spell Menu", command: new OpenSpellsCommand() },
             { key: "r", description: "Rotate Target Reticle", command: new RotateReticleCommand(entity) },
-            { key: "x", description: "Do Nothing", command: new NoOpCommand(true) }
+            { key: "x", description: "Pass Turn", command: new NoOpCommand(true) }
         ];
 
         entity.addComponent({

@@ -16,6 +16,7 @@ import {
     DisplayNameComponent,
     EntityMap,
     FearAIComponent,
+    FreezableComponent,
     LevelComponent,
     LoseTargetAIComponent,
     ParalyzableComponent,
@@ -333,9 +334,14 @@ export function generateAICommand(
     const aiState = ai.getOne(PlannerAIComponent);
     const confusedState = ai.getOne(ConfusedAIComponent);
     const paralyzableData = ai.getOne(ParalyzableComponent);
+    const freezableData = ai.getOne(FreezableComponent);
 
     if (paralyzableData !== undefined &&
         paralyzableData.paralyzed) {
+        return new NoOpCommand(true);
+    }
+
+    if (freezableData !== undefined && freezableData.frozen) {
         return new NoOpCommand(true);
     }
 

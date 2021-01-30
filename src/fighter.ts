@@ -20,6 +20,7 @@ import {
     FearAIComponent,
     FireTriggerComponent,
     FlammableComponent,
+    FreezableComponent,
     GraphicsComponent,
     HitPointsComponent,
     HitPointsEffectComponent,
@@ -66,7 +67,6 @@ export class DeathSystem extends System {
         return function (x: number, y: number) {
             if (targetLevelData === undefined) { return; }
 
-            // SPEED: use quad tree
             const entities = getEntitiesAtLocation(globals.Game!.entityMap, x, y);
             for (const e of entities) {
                 const fearData = e.getOne(FearAIComponent);
@@ -406,23 +406,32 @@ export function getEffectiveSpeedData(entity: Entity) {
     return newStats;
 }
 
-export function getEffectiveAffinityData(entity: Entity) {
+export function getEffectiveDamageAffinity(entity: Entity) {
     const affinity = entity.getOne(DamageAffinityComponent);
     const wetData = entity.getOne(WetableComponent);
+    const frozenData = entity.getOne(FreezableComponent);
     if (affinity === undefined) { return null; }
-    if (wetData === undefined) { return affinity; }
+    if (wetData === undefined && frozenData === undefined) { return affinity; }
 
     const newAffinity = pick(
         affinity,
-        DamageType.Physical,
-        DamageType.Fire,
-        DamageType.Electric,
-        DamageType.Water,
-        DamageType.Ice,
-        DamageType.Nature
+        ...Object.keys(DamageType)
     );
-    if (wetData.wet && newAffinity[DamageType.Electric] !== Affinity.strong) {
+
+    if (wetData !== undefined &&
+        wetData.wet &&
+        newAffinity[DamageType.Electric] !== Affinity.strong &&
+        newAffinity[DamageType.Electric] !== Affinity.nullified
+    ) {
         newAffinity[DamageType.Electric] = Affinity.weak;
+    }
+
+    if (frozenData !== undefined &&
+        frozenData.frozen &&
+        newAffinity[DamageType.Physical] !== Affinity.strong &&
+        newAffinity[DamageType.Physical] !== Affinity.nullified
+    ) {
+        newAffinity[DamageType.Physical] = Affinity.weak;
     }
 
     return newAffinity;
@@ -443,7 +452,7 @@ export function takeDamage(
     if (hpData === undefined) { return false; }
 
     const targetStats = getEffectiveStatData(target);
-    const damageAffinity = getEffectiveAffinityData(target);
+    const damageAffinity = getEffectiveDamageAffinity(target);
 
     if (targetStats !== null && damageAffinity !== null) {
         damage = damage * damageAffinity[damageType];

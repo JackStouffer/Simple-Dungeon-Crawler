@@ -18,6 +18,8 @@ import {
     DisplayNameComponent,
     EntityMap,
     FlammableComponent,
+    FreezableComponent,
+    GraphicsComponent,
     HitPointsComponent,
     ParalyzableComponent,
     PlannerAIComponent,
@@ -247,6 +249,50 @@ export function setParalyzed(target: Entity, turns?: number): boolean {
     paralyzableData.update();
 
     return true;
+}
+
+export function setFrozen(target: Entity, turns: number): boolean {
+    const name = target.getOne(DisplayNameComponent);
+
+    // Put the fire out if the actor is on fire
+    const flammableData = target.getOne(FlammableComponent);
+    if (flammableData !== undefined && flammableData.onFire) {
+        flammableData.onFire = false;
+        flammableData.turnsLeft = 0;
+        flammableData.fireDamage = 0;
+        flammableData.update();
+
+        if (target === globals.Game?.player) {
+            displayMessage("Instead of being frozen, the fire was extinguished");
+        } else if (name !== undefined) {
+            displayMessage(`Instead of ${name.name} being frozen, it is no longer on fire`);
+        }
+        return false;
+    }
+
+    const frozenData = target.getOne(FreezableComponent);
+    if (frozenData !== undefined && (frozenData.frozen === false || frozenData.turnsLeft < turns)) {
+        frozenData.frozen = true;
+        frozenData.turnsLeft = turns;
+        frozenData.update();
+
+        const graphics = target.getOne(GraphicsComponent);
+        if (graphics !== undefined &&
+            graphics.sprite !== null &&
+            target.tags.has("sentient")) {
+            graphics.sprite.texture = globals.Game!.textureAtlas["ice_wall"];
+        }
+
+        if (target === globals.Game?.player) {
+            displayMessage("You are frozen");
+        } else if (name !== undefined) {
+            displayMessage(`${name.name} is now frozen`);
+        }
+
+        return true;
+    }
+
+    return false;
 }
 
 function rollForStatusEffect(
@@ -646,11 +692,11 @@ export function castSilence(
     const targetName = targetedEntity.getOne(DisplayNameComponent)!;
     const targetSpellData = targetedEntity.getOne(SpellsComponent);
     const targetSilenceableData = targetedEntity.getOne(SilenceableComponent);
-    if (targetSilenceableData === undefined && targetSpellData !== undefined) {
+    if (targetSilenceableData === undefined) {
         displayMessage(`${targetName.name} is immune to silence effects`);
         return false;
     }
-    if (targetSilenceableData === undefined) {
+    if (targetSpellData === undefined) {
         displayMessage(`${targetName.name} cannot be silenced because it doesn't know any spells`);
         return false;
     }
@@ -689,6 +735,32 @@ export function castExhale(
     }
 
     return true;
+}
+
+export function castFreeze(
+    item: ItemDataDetails | SpellDataDetails,
+    user: Entity,
+    ecs: World,
+    map: GameMap,
+    entityMap: EntityMap,
+    target: Point
+): boolean {
+    if (item.value === null) { throw new Error("Item does not have a value for castFreeze"); }
+
+    const targetedEntity = mouseTarget(ecs, map, entityMap, target);
+    if (targetedEntity === null) {
+        displayMessage("Canceled casting");
+        return false;
+    }
+
+    const targetName = targetedEntity.getOne(DisplayNameComponent)!;
+    const targetFreezableData = targetedEntity.getOne(FreezableComponent);
+    if (targetFreezableData === undefined) {
+        displayMessage(`${targetName.name} cannot be frozen`);
+        return false;
+    }
+
+    return setFrozen(targetedEntity, item.value);
 }
 
 /**
@@ -876,7 +948,7 @@ export const SpellData: { [key: string]: SpellDataDetails } = {
     "lightning_bolt": {
         id: "lightning_bolt",
         displayName: "Lightning Bolt",
-        description: "Send a bolt of lighting hurtling towards your foes",
+        description: "Send a bolt of lighting hurtling towards your foes. Deals electric damage.",
         value: 20,
         type: SpellType.DamageOther,
         damageType: DamageType.Electric,
@@ -885,7 +957,7 @@ export const SpellData: { [key: string]: SpellDataDetails } = {
     "wild_lightning_bolt": {
         id: "wild_lightning_bolt",
         displayName: "Wild Lightning Bolt",
-        description: "Summons a lightning bolt that's beyond your control and attacks randomly with lightning damage",
+        description: "Summons a lightning bolt that's beyond your control and attacks a random target within 10 spaces. Deals lightning damage",
         value: 30,
         type: SpellType.WildDamage,
         damageType: DamageType.Electric,
@@ -894,7 +966,7 @@ export const SpellData: { [key: string]: SpellDataDetails } = {
     "fireball": {
         id: "fireball",
         displayName: "Fireball",
-        description: "Hurl a ball of fire",
+        description: "Hurl a ball of fire towards a specific spot that deals fire damage and has a chance to catch targets on fire. Explodes in a large radius, possibly dealing self-damage or friendly fire",
         value: 20,
         type: SpellType.DamageOther,
         damageType: DamageType.Fire,
@@ -908,7 +980,7 @@ export const SpellData: { [key: string]: SpellDataDetails } = {
     "confuse": {
         id: "confuse",
         displayName: "Confuse",
-        description: "Your target loses control of their actions",
+        description: "Your target loses control of their actions for the given number of turns",
         value: 8,
         type: SpellType.DamageOther,
         useFunc: castConfuse
@@ -916,7 +988,7 @@ export const SpellData: { [key: string]: SpellDataDetails } = {
     "clairvoyance": {
         id: "clairvoyance",
         displayName: "Clairvoyance",
-        description: "Use sensory magics to learn the layout of the whole map",
+        description: "Use sensory magics to learn the layout of the whole map.",
         value: null,
         type: SpellType.Passive,
         useFunc: castClairvoyance
@@ -956,7 +1028,7 @@ export const SpellData: { [key: string]: SpellDataDetails } = {
     "lesser_haste": {
         id: "lesser_haste",
         displayName: "Lesser Haste",
-        description: "Haste gives you more actions per turn",
+        description: "You can make two actions for every one turn for the given number of turns.",
         value: 10,
         type: SpellType.Effect,
         useFunc: castHaste
@@ -1023,9 +1095,17 @@ export const SpellData: { [key: string]: SpellDataDetails } = {
     "exhale": {
         id: "exhale",
         displayName: "Exhale",
-        description: "Send out a burst of air from your body in all directions, pushing away anything that's too close",
+        description: "Send out a burst of air from your body in all directions, pushing away anything that's too close. Enemies which slam into objects take physical damage and have a chance to be stunned.",
         value: 4,
         type: SpellType.Push,
         useFunc: castExhale
+    },
+    "freeze": {
+        id: "freeze",
+        displayName: "Freeze",
+        description: "Freezes the target solid so they can't move and they become weak to physical damage. Does not damage the target.",
+        value: 4,
+        type: SpellType.DamageOther,
+        useFunc: castFreeze
     }
 };

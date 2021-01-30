@@ -4,9 +4,12 @@ import globals from "./globals";
 import { DamageType } from "./constants";
 import { displayMessage } from "./ui";
 import {
+    ObjectData,
     DisplayNameComponent,
     FireTriggerComponent,
     FlammableComponent,
+    FreezableComponent,
+    GraphicsComponent,
     HitPointsComponent,
     HitPointsEffectComponent,
     ParalyzableComponent,
@@ -15,6 +18,7 @@ import {
     SpeedEffectComponent,
     StatsEffectComponent,
     TriggerTypeComponent,
+    TypeComponent,
     WetableComponent
 } from "./entity";
 import { takeDamage } from "./fighter";
@@ -179,6 +183,45 @@ export class ParalyzeSystem extends System {
 
                 const displayName = entity.getOne(DisplayNameComponent)!;
                 displayMessage(`${displayName.name} has recovered from being paralyzed`);
+            }
+        }
+    }
+}
+
+export class FrozenSystem extends System {
+    private mainQuery: Query;
+
+    init() {
+        this.mainQuery = this
+            .createQuery()
+            .fromAll(FreezableComponent)
+            .persist();
+    }
+
+    update() {
+        const entities = this.mainQuery.execute();
+        for (const entity of entities) {
+            const effect = entity.getOne(FreezableComponent)!;
+            if (effect.frozen && effect.turnsLeft > 0) {
+                effect.turnsLeft--;
+                effect.update();
+            } else if (effect.frozen && effect.turnsLeft <= 0) {
+                effect.frozen = false;
+                effect.update();
+
+                const typeInfo = entity.getOne(TypeComponent);
+                const graphics = entity.getOne(GraphicsComponent);
+                if (typeInfo !== undefined && graphics !== undefined && graphics.sprite !== null) {
+                    graphics.sprite.texture = globals.Game!.textureAtlas[
+                        ObjectData[typeInfo.entityType]
+                            .staticallyKnownComponents.c!.GraphicsComponent.textureKey
+                    ];
+                }
+
+                const name = entity.getOne(DisplayNameComponent);
+                if (name !== undefined) {
+                    displayMessage(`${name.name} is no longer frozen`);
+                }
             }
         }
     }
