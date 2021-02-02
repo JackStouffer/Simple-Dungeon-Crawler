@@ -278,6 +278,39 @@
         }, 
         {
          "draworder":"topdown",
+         "id":8,
+         "name":"Shadow Boxes",
+         "objects":[
+                {
+                 "height":105.70885419667,
+                 "id":28,
+                 "name":"",
+                 "rotation":0,
+                 "type":"",
+                 "visible":true,
+                 "width":73.7369664151161,
+                 "x":595.080361771991,
+                 "y":1587.36102310041
+                }, 
+                {
+                 "height":74.8945811567753,
+                 "id":29,
+                 "name":"",
+                 "rotation":0,
+                 "type":"",
+                 "visible":true,
+                 "width":39.6500723771163,
+                 "x":323.494241299012,
+                 "y":1554.53458367424
+                }],
+         "opacity":1,
+         "type":"objectgroup",
+         "visible":true,
+         "x":0,
+         "y":0
+        }, 
+        {
+         "draworder":"topdown",
          "id":4,
          "name":"Node Layer",
          "objects":[
@@ -391,8 +424,8 @@
          "x":0,
          "y":0
         }],
- "nextlayerid":8,
- "nextobjectid":21,
+ "nextlayerid":9,
+ "nextobjectid":30,
  "orientation":"orthogonal",
  "renderorder":"right-down",
  "tiledversion":"1.4.3",

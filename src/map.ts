@@ -391,77 +391,77 @@ const TileData: { [key: number]: TileDataDetails } = {
         name: "Building",
         textureKey: "sprite2006",
         blocks: true,
-        blocksSight: false,
+        blocksSight: true,
         reflectivity: 0.18
     },
     2153: {
         name: "Building",
         textureKey: "sprite2008",
         blocks: true,
-        blocksSight: false,
+        blocksSight: true,
         reflectivity: 0.18
     },
     2154: {
         name: "Building",
         textureKey: "sprite2009",
         blocks: true,
-        blocksSight: false,
+        blocksSight: true,
         reflectivity: 0.18
     },
     2156: {
         name: "Building",
         textureKey: "sprite2011",
         blocks: true,
-        blocksSight: false,
+        blocksSight: true,
         reflectivity: 0.18
     },
     2328: {
         name: "Building",
         textureKey: "sprite2153",
         blocks: true,
-        blocksSight: false,
+        blocksSight: true,
         reflectivity: 0.18
     },
     2329: {
         name: "Building",
         textureKey: "sprite2154",
         blocks: true,
-        blocksSight: false,
+        blocksSight: true,
         reflectivity: 0.18
     },
     2330: {
         name: "Building",
         textureKey: "sprite2155",
         blocks: true,
-        blocksSight: false,
+        blocksSight: true,
         reflectivity: 0.18
     },
     2331: {
         name: "Building",
         textureKey: "sprite2156",
         blocks: true,
-        blocksSight: false,
+        blocksSight: true,
         reflectivity: 0.18
     },
     2332: {
         name: "Building",
         textureKey: "sprite2157",
         blocks: true,
-        blocksSight: false,
+        blocksSight: true,
         reflectivity: 0.18
     },
     2334: {
         name: "Building",
         textureKey: "sprite2159",
         blocks: true,
-        blocksSight: false,
+        blocksSight: true,
         reflectivity: 0.18
     },
     2506: {
         name: "Building",
         textureKey: "sprite2307",
         blocks: true,
-        blocksSight: false,
+        blocksSight: true,
         reflectivity: 0.18
     },
     2678: {
@@ -489,35 +489,35 @@ const TileData: { [key: number]: TileDataDetails } = {
         name: "Building",
         textureKey: "sprite2462",
         blocks: true,
-        blocksSight: false,
+        blocksSight: true,
         reflectivity: 0.18
     },
     2685: {
         name: "Building",
         textureKey: "sprite2463",
         blocks: true,
-        blocksSight: false,
+        blocksSight: true,
         reflectivity: 0.18
     },
     2686: {
         name: "Building",
         textureKey: "sprite2464",
         blocks: true,
-        blocksSight: false,
+        blocksSight: true,
         reflectivity: 0.18
     },
     2687: {
         name: "Building",
         textureKey: "sprite2465",
         blocks: true,
-        blocksSight: false,
+        blocksSight: true,
         reflectivity: 0.18
     },
     2689: {
         name: "Building",
         textureKey: "sprite2467",
         blocks: true,
-        blocksSight: false,
+        blocksSight: true,
         reflectivity: 0.18
     },
     2856: {
@@ -601,14 +601,14 @@ const TileData: { [key: number]: TileDataDetails } = {
         name: "Roof",
         textureKey: "brown_roof_rear_left_slope",
         blocks: true,
-        blocksSight: false,
+        blocksSight: true,
         reflectivity: 0.18
     },
     3760: {
         name: "Roof",
         textureKey: "brown_roof_rear_right_slope",
         blocks: true,
-        blocksSight: false,
+        blocksSight: true,
         reflectivity: 0.18
     },
     3846: {
@@ -622,98 +622,98 @@ const TileData: { [key: number]: TileDataDetails } = {
         name: "Building",
         textureKey: "tan_building_exterior_left_edge",
         blocks: true,
-        blocksSight: false,
+        blocksSight: true,
         reflectivity: 0.18
     },
     3935: {
         name: "Building",
         textureKey: "tan_building_exterior_middle",
         blocks: true,
-        blocksSight: false,
+        blocksSight: true,
         reflectivity: 0.18
     },
     3936: {
         name: "Building",
         textureKey: "tan_building_exterior_right_edge",
         blocks: true,
-        blocksSight: false,
+        blocksSight: true,
         reflectivity: 0.18
     },
     3937: {
         name: "Roof",
         textureKey: "brown_roof_left_slope",
         blocks: true,
-        blocksSight: false,
+        blocksSight: true,
         reflectivity: 0.18
     },
     3938: {
         name: "Roof",
         textureKey: "brown_roof_right_slope",
         blocks: true,
-        blocksSight: false,
+        blocksSight: true,
         reflectivity: 0.18
     },
     3939: {
         name: "Roof",
         textureKey: "brown_roof_edge_1",
         blocks: true,
-        blocksSight: false,
+        blocksSight: true,
         reflectivity: 0.18
     },
     3942: {
         name: "Building",
         textureKey: "brown_building_exterior_middle",
         blocks: true,
-        blocksSight: false,
+        blocksSight: true,
         reflectivity: 0.18
     },
     3949: {
         name: "Building",
         textureKey: "sprite3576",
         blocks: true,
-        blocksSight: false,
+        blocksSight: true,
         reflectivity: 0.18
     },
     4112: {
         name: "Building",
         textureKey: "tan_building_exterior_bottom_right_corner",
         blocks: true,
-        blocksSight: false,
+        blocksSight: true,
         reflectivity: 0.18
     },
     4113: {
         name: "Building",
         textureKey: "tan_building_exterior_bottom_edge",
         blocks: true,
-        blocksSight: false,
+        blocksSight: true,
         reflectivity: 0.18
     },
     4114: {
         name: "Building",
         textureKey: "tan_building_exterior_bottom_left_corner",
         blocks: true,
-        blocksSight: false,
+        blocksSight: true,
         reflectivity: 0.18
     },
     4115: {
         name: "Roof",
         textureKey: "brown_roof_front_left_slope",
         blocks: true,
-        blocksSight: false,
+        blocksSight: true,
         reflectivity: 0.18
     },
     4116: {
         name: "Roof",
         textureKey: "brown_roof_front_right_slope",
         blocks: true,
-        blocksSight: false,
+        blocksSight: true,
         reflectivity: 0.18
     },
     3764: {
         name: "Building",
         textureKey: "brown_building_exterior_top_edge",
         blocks: true,
-        blocksSight: false,
+        blocksSight: true,
         reflectivity: 0.18
     },
     5805: {
@@ -794,7 +794,46 @@ function findProperty(o: any, name: string): any {
     }
 }
 
+// TODO change to class with precaled width height and depth
 export type GameMap = Nullable<Tile>[][][];
+
+export class ShadowBox {
+    x: number;
+    y: number;
+    width: number;
+    height: number;
+    seen: boolean;
+
+    constructor(x: number, y: number, width: number, height: number) {
+        this.x = x;
+        this.y = y;
+        this.width = width;
+        this.height = height;
+        this.seen = false;
+    }
+
+    contains(x: number, y: number): boolean {
+        if (x >= this.x && x <= this.x + this.width &&
+            y >= this.y && y <= this.y + this.height) {
+            return true;
+        }
+        return false;
+    }
+
+    center(): Point {
+        return { x: this.x + Math.round(this.width / 2), y: this.y + Math.round(this.height / 2) };
+    }
+
+    tiles(): Point[] {
+        const ret = [];
+        for (let x = this.x; x < this.x + this.width + 1; x++) {
+            for (let y = this.y; y < this.y + this.height + 1; y++) {
+                ret.push({x, y});
+            }
+        }
+        return ret;
+    }
+}
 
 /**
  * Load a Tiled map using its name.
@@ -832,6 +871,10 @@ export function loadTiledMap(
         (l) => l.name === "Node Layer"
     ), "[0]", null) as TiledLayerObjectGroup<"orthogonal">;
 
+    const shadowBoxLayer = get(sourceData.layers.filter(
+        (l) => l.name === "Shadow Boxes"
+    ), "[0]", null) as TiledLayerObjectGroup<"orthogonal">;
+
     if (tileLayers.length === 0) {
         throw new Error(`No tile layer in map ${level}`);
     }
@@ -840,6 +883,9 @@ export function loadTiledMap(
     }
     if (nodeLayer === null) {
         throw new Error(`No node layer in map ${level}`);
+    }
+    if (shadowBoxLayer === null) {
+        throw new Error(`No shadow box layer in map ${level}`);
     }
 
     for (let z = 0; z < tileLayers.length; z++) {
@@ -922,7 +968,7 @@ export function loadTiledMap(
         );
     });
 
-    objectLayer.objects.forEach((o: any) => {
+    objectLayer.objects.forEach(o => {
         if (o.point !== undefined) {
             if (o.type === "object") {
                 const type = findProperty(o, "objectType") as string,
@@ -1039,7 +1085,16 @@ export function loadTiledMap(
         }
     });
 
-    return { map, playerLocation };
+    const shadowBoxes = shadowBoxLayer.objects.map(o => {
+        return new ShadowBox(
+            Math.floor(o.x / tileSize),
+            Math.floor(o.y / tileSize),
+            Math.floor(o.width / tileSize),
+            Math.floor(o.height / tileSize)
+        );
+    });
+
+    return { map, playerLocation, shadowBoxes };
 }
 
 /**
@@ -1241,7 +1296,7 @@ export function getRandomOpenSpace(map: GameMap, entityMap: EntityMap): Point {
  * @param  {Array} map  An array of arrays of Tiles
  * @return {void}
  */
-export function resetVisibility(map: GameMap): void {
+export function resetVisibility(map: GameMap, shadowBoxes: ShadowBox[]): void {
     for (let z = 0; z < map.length; z++) {
         for (let y = 0; y < map[z].length; y++) {
             for (let x = 0; x < map[z][y].length; x++) {
@@ -1251,6 +1306,10 @@ export function resetVisibility(map: GameMap): void {
                 }
             }
         }
+    }
+
+    for (let i = 0; i < shadowBoxes.length; i++) {
+        shadowBoxes[i].seen = false;
     }
 }
 

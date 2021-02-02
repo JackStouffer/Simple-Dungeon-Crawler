@@ -551,7 +551,7 @@ export const ObjectData: { [key: string]: ObjectDataDetails } = {
     },
     "load_door": {
         staticallyKnownComponents: {
-            tags: ["blocks", "blocksSight", "drawAfterSeen"],
+            tags: ["blocks", "drawAfterSeen"],
             c: {
                 DisplayNameComponent: {
                     name: "Door to new area"

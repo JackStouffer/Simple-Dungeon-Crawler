@@ -71,7 +71,8 @@ import {
     GameMap,
     drawMap,
     loadTiledMap,
-    resetTilePathCosts
+    resetTilePathCosts,
+    ShadowBox
 } from "./map";
 import {
     KeyBindingMenu,
@@ -135,6 +136,8 @@ export class SimpleDungeonCrawler {
     commandQueue: Command[];
     map: GameMap;
     entityMap: EntityMap;
+    // Shadow boxes are a way of forcing multi-tiled entities and static tile objects to be lit properly
+    shadowBoxes: ShadowBox[];
 
     keyBindingMenu: KeyBindingMenu;
     inventoryMenu: InventoryMenu;
@@ -158,6 +161,7 @@ export class SimpleDungeonCrawler {
         this.scheduler = new EntityScheduler();
         this.map = [];
         this.entityMap = new Map();
+        this.shadowBoxes = [];
         this.totalTurns = 1;
 
         // debug flags
@@ -384,13 +388,14 @@ export class SimpleDungeonCrawler {
         this.scheduler.clear();
         this.scheduler.add(this.player.id, true);
 
-        const { map, playerLocation } = loadTiledMap(
+        const { map, playerLocation, shadowBoxes } = loadTiledMap(
             this.ecs,
             this.pixiApp.stage,
             this.textureAtlas,
             name
         );
         this.map = map;
+        this.shadowBoxes = shadowBoxes;
 
         const playerPos = this.player.getOne(PositionComponent);
         if (playerPos === undefined) { throw new Error("Player doesn't have a PositionComponent"); }

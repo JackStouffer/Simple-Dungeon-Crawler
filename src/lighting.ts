@@ -6,7 +6,7 @@ import { ReflectivityCallback } from "./rot/lighting";
 
 import globals from "./globals";
 import { createPassableSightCallback } from "./ai/commands";
-import { LightingType, WIDTH } from "./constants";
+import { LightingType } from "./constants";
 import { LightingComponent, PositionComponent } from "./entity";
 import { GameMap, resetVisibility, setAllToExplored } from "./map";
 import { assertUnreachable } from "./util";
@@ -38,7 +38,7 @@ export class LightingSystem extends System {
         const sightFov = new FOV.PreciseShadowcasting(
             createPassableSightCallback(tilePos)
         );
-        sightFov.compute(tilePos.x, tilePos.y, WIDTH + 2, function(x, y) {
+        sightFov.compute(tilePos.x, tilePos.y, 30, function(x, y, r, visibility) {
             if (globals.Game === null ||
                 x < 0 ||
                 y < 0 ||
@@ -55,7 +55,34 @@ export class LightingSystem extends System {
                     tile.lightingColor = light.color;
                 }
             }
+
+            if (visibility > 0) {
+                const rect = globals.Game.shadowBoxes.filter(b => b.contains(x, y))[0];
+                if (rect !== undefined) {
+                    rect.seen = true;
+                }
+            }
         });
+
+        // All seen shadow boxes should have all of their contained tiles shown
+        for (let i = 0; i < globals.Game!.shadowBoxes.length; i++) {
+            const s = globals.Game!.shadowBoxes[i];
+            if (s.seen) {
+                const positions = s.tiles();
+
+                for (let z = 0; z < globals.Game!.map.length; z++) {
+                    for (let i = 0; i < positions.length; i++) {
+                        const p = positions[i];
+                        const tile = globals.Game!.map[z][p.y][p.x];
+                        if (tile !== null) {
+                            tile.explored = true;
+                            tile.visible = true;
+                            tile.lightingColor = light.color;
+                        }
+                    }
+                }
+            }
+        }
     }
 
     computePlayerIndoorLighting(pos: PositionComponent, light: LightingComponent) {
@@ -140,7 +167,7 @@ export class LightingSystem extends System {
         }
 
         if (globals.Game.isLightingEnabled) {
-            resetVisibility(globals.Game.map);
+            resetVisibility(globals.Game.map, globals.Game.shadowBoxes);
             const entities = this.mainQuery.execute();
             for (const entity of entities) {
                 const positionData = entity.getOne(PositionComponent)!;
