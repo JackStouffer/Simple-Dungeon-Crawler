@@ -65,6 +65,13 @@ const TileData: { [key: number]: TileDataDetails } = {
         blocksSight: false,
         reflectivity: 0.18
     },
+    186: {
+        name: "stone",
+        textureKey: "stone_2",
+        blocks: false,
+        blocksSight: false,
+        reflectivity: 0.18
+    },
     194: {
         name: "bed",
         textureKey: "red_bed_1_front",
@@ -208,7 +215,7 @@ const TileData: { [key: number]: TileDataDetails } = {
     1438: {
         name: "An unlit fire",
         textureKey: "campfire_1_unlit",
-        blocks: true,
+        blocks: false,
         blocksSight: false,
         reflectivity: 0.18
     },
