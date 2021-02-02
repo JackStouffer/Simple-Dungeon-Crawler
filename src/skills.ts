@@ -362,6 +362,12 @@ export function castFireBall(
 ): boolean {
     if (item.value === null) { throw new Error("Item does not have a value for castDamageSpell"); }
 
+    const targetedEntity = mouseTarget(ecs, map, entityMap, target);
+    if (targetedEntity === null) {
+        displayMessage("Canceled casting");
+        return false;
+    }
+
     const tiles = getTargetingReticle(item, target, rotation);
     for (let i = 0; i < tiles.length; i++) {
         const { entity } = isBlocked(map, entityMap, tiles[i][0], tiles[i][1]);

@@ -15,7 +15,9 @@ _In Development_
   * Commands can now generate more commands to be executed so that turns can have secondary effects
 * Graphical
   * Use 16x16 sprites instead of console display
+  * Use inset-ed box shadow to represent selection
   * Allow maps to have arbitrary number of tile layers
+  * Multi-tile static objects represented by tiles can now be visible in their entirety but still cast shadows
 
 ## Version 10
 
