@@ -112,7 +112,7 @@ function getMousePosition(): Nullable<Point> {
     if (x < 0 || y < 0) {
         return null;
     }
-    const tilePos = globals.Game.gameCamera.screenToTilePosition(x, y);
+    const tilePos = globals.Game.gameCamera.mouseToTilePosition(x, y);
     if (tilePos.y >= globals.Game.map[0].length || tilePos.x >= globals.Game.map[0][0].length) {
         return null;
     }
