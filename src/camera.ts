@@ -20,7 +20,7 @@ export class Camera {
     constructor(viewport: PIXI.Rectangle) {
         this.x = 0;
         this.y = 0;
-        this.zoom = 2; // TODO, bind to key
+        this.zoom = 2; // TODO, bind to key?
         this.viewport = viewport;
         this.following = null;
     }

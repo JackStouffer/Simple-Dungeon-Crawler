@@ -289,7 +289,7 @@ export class GoToLocationCommand implements Command {
 
             // Triggers and spreading fire
             const actorFlammableData = this.entity.getOne(FlammableComponent);
-            const entities = globals.Game!.entityMap.get(`${pos.x},${pos.y}`) ?? [];
+            const entities = globals.Game!.entityMap.get(`${destination[0]},${destination[1]}`) ?? [];
             for (let i = 0; i < entities.length; i++) {
                 const e = entities[i];
                 const triggerData = e.getOne(TriggerTypeComponent);
@@ -445,7 +445,7 @@ export class PushBackCommand implements Command {
 
             // Triggers and spreading fire
             const actorFlammableData = this.entity.getOne(FlammableComponent);
-            const entities = globals.Game!.entityMap.get(`${pos.x},${pos.y}`) ?? [];
+            const entities = globals.Game!.entityMap.get(`${destinationX},${destinationY}`) ?? [];
             for (let i = 0; i < entities.length; i++) {
                 const e = entities[i];
                 const triggerData = e.getOne(TriggerTypeComponent);
