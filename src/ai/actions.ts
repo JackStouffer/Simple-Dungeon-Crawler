@@ -635,7 +635,7 @@ export const ActionData: { [key: string]: Action } = {
         weight: () => 1
     },
     "healAlly": {
-        preconditions: { allyLowHealth: true, hasOtherHealingSpell: true },
+        preconditions: { allyLowHealth: true, hasHealOtherSpell: true },
         postconditions: { allyLowHealth: false },
         updateFunction: healAllyAction,
         weight: () => 1

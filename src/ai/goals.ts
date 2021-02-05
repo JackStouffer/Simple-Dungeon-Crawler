@@ -93,14 +93,20 @@ function resolveHasSelfHealingSpell(ecs: World, entityMap: EntityMap, ai: Entity
     const spells = ai.getOne(SpellsComponent);
     if (spells === undefined) { return false; }
 
+    const silenceData = ai.getOne(SilenceableComponent);
+    if (silenceData?.silenced === true) { return false; }
+
     const healthSpells = getKnownSpells(spells)
         .filter(i => i.type === SpellType.HealSelf && i.count > 0);
     return healthSpells.length > 0;
 }
 
-function resolveHasOtherHealingSpell(ecs: World, entityMap: EntityMap, ai: Entity): boolean {
+function resolveHasHealOtherSpell(ecs: World, entityMap: EntityMap, ai: Entity): boolean {
     const spells = ai.getOne(SpellsComponent);
     if (spells === undefined) { return false; }
+
+    const silenceData = ai.getOne(SilenceableComponent);
+    if (silenceData?.silenced === true) { return false; }
 
     const healthSpells = getKnownSpells(spells)
         .filter(i => i.type === SpellType.HealOther && i.count > 0);
@@ -288,8 +294,8 @@ export const GoalData: { [key: string]: GoalDataDetails } = {
     "hasSelfHealingSpell": {
         resolver: resolveHasSelfHealingSpell
     },
-    "hasOtherHealingSpell": {
-        resolver: resolveHasOtherHealingSpell
+    "hasHealOtherSpell": {
+        resolver: resolveHasHealOtherSpell
     },
     "hasAliveAllies": {
         resolver: resolveAliveAllies

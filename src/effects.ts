@@ -155,6 +155,9 @@ export class SilenceSystem extends System {
             } else if (effect.silenced && effect.turnsLeft <= 0) {
                 effect.silenced = false;
                 effect.update();
+
+                const displayName = entity.getOne(DisplayNameComponent)!;
+                displayMessage(`${displayName.name} has recovered from being silenced`);
             }
         }
     }

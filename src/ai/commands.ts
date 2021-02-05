@@ -158,6 +158,10 @@ export function getPlan(
     if (displayName === undefined) { throw new Error(`Entity ${aiState.entity.id} is missing a DisplayNameComponent`); }
 
     const worldState = generateWorldState(ecs, entityMap, aiState);
+    if (globals.Game?.debugAI === true) {
+        // eslint-disable-next-line no-console
+        console.log(`${aiState.entity.id}, worldState ${JSON.stringify(worldState)}`);
+    }
 
     const loseTrackData = aiState.entity.getOne(LoseTargetAIComponent);
     // Lose knowledge of the target's position if the target
