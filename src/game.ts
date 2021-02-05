@@ -505,16 +505,24 @@ export class SimpleDungeonCrawler {
         if (globals.gameEventEmitter === null) { throw new Error("Global gameEventEmitter cannot be null"); }
 
         if (this.state === GameState.Gameplay) {
-            if (input.isDown("Escape")) {
-                const inputHandlerState = this.player.getOne(InputHandlingComponent);
-                if (inputHandlerState === undefined) {
-                    return;
-                }
+            const inputHandlerState = this.player.getOne(InputHandlingComponent);
+            if (inputHandlerState === undefined) {
+                return;
+            }
 
+            // TODO: Maybe move these ifs to the player input handling code
+            if (input.isDown("Escape") && inputHandlerState.state === PlayerState.Combat) {
                 pauseMusic();
                 playUIClick();
                 this.state = GameState.PauseMenu;
                 this.keyBindingMenu.open(inputHandlerState.keyCommands);
+                return;
+            } else if (input.isDown("Escape") && inputHandlerState.state === PlayerState.Target) {
+                inputHandlerState.state = PlayerState.Combat;
+                inputHandlerState.itemForTarget = null;
+                inputHandlerState.spellForTarget = null;
+                inputHandlerState.update();
+                displayMessage("Canceled casting");
                 return;
             }
 
