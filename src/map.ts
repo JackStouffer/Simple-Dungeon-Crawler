@@ -10,6 +10,7 @@ import { RNG } from "./rot/index";
 
 import * as forrest_001 from "./maps/forrest_001.json";
 import * as forrest_001_interior_001 from "./maps/forrest_001_interior_001.json";
+import * as forrest_001_interior_002 from "./maps/forrest_001_interior_002.json";
 
 import {
     createEntity,
@@ -31,6 +32,7 @@ const COLOR_AMBIENT_LIGHT = "rgb(50, 50, 50)";
 const LevelData: { [key: string]: TiledMapOrthogonal } = {
     forrest_001: (forrest_001 as any).default as TiledMapOrthogonal,
     forrest_001_interior_001: (forrest_001_interior_001 as any).default as TiledMapOrthogonal,
+    forrest_001_interior_002: (forrest_001_interior_002 as any).default as TiledMapOrthogonal,
 };
 
 type LevelName = keyof typeof LevelData;
@@ -54,6 +56,13 @@ const TileData: { [key: number]: TileDataDetails } = {
     25: {
         name: "grass",
         textureKey: "barrel_3",
+        blocks: false,
+        blocksSight: false,
+        reflectivity: 0.18
+    },
+    46: {
+        name: "Window",
+        textureKey: "sprite113",
         blocks: false,
         blocksSight: false,
         reflectivity: 0.18
@@ -90,6 +99,13 @@ const TileData: { [key: number]: TileDataDetails } = {
         name: "Window",
         textureKey: "brown_square_4x4_window",
         blocks: true,
+        blocksSight: false,
+        reflectivity: 0.18
+    },
+    364: {
+        name: "Tiled floor",
+        textureKey: "sprite372",
+        blocks: false,
         blocksSight: false,
         reflectivity: 0.18
     },
@@ -135,10 +151,31 @@ const TileData: { [key: number]: TileDataDetails } = {
         blocksSight: false,
         reflectivity: 0.18
     },
+    387: {
+        name: "Pot Rack",
+        textureKey: "sprite495",
+        blocks: true,
+        blocksSight: false,
+        reflectivity: 0.18
+    },
+    388: {
+        name: "Pot Rack",
+        textureKey: "sprite496",
+        blocks: true,
+        blocksSight: false,
+        reflectivity: 0.18
+    },
     399: {
         name: "A window",
         textureKey: "sprite467",
         blocks: true,
+        blocksSight: false,
+        reflectivity: 0.18
+    },
+    542: {
+        name: "Tiled floor",
+        textureKey: "sprite548",
+        blocks: false,
         blocksSight: false,
         reflectivity: 0.18
     },
@@ -159,6 +196,13 @@ const TileData: { [key: number]: TileDataDetails } = {
     565: {
         name: "Vanity",
         textureKey: "sprite668",
+        blocks: true,
+        blocksSight: false,
+        reflectivity: 0.18
+    },
+    566: {
+        name: "Pot Rack",
+        textureKey: "sprite655",
         blocks: true,
         blocksSight: false,
         reflectivity: 0.18
@@ -209,6 +253,34 @@ const TileData: { [key: number]: TileDataDetails } = {
         name: "Armoire",
         textureKey: "sprite1072",
         blocks: true,
+        blocksSight: false,
+        reflectivity: 0.18
+    },
+    1256: {
+        name: "Path",
+        textureKey: "sprite1248",
+        blocks: false,
+        blocksSight: false,
+        reflectivity: 0.18
+    },
+    1432: {
+        name: "Path",
+        textureKey: "sprite1420",
+        blocks: false,
+        blocksSight: false,
+        reflectivity: 0.18
+    },
+    1433: {
+        name: "Path",
+        textureKey: "sprite1421",
+        blocks: false,
+        blocksSight: false,
+        reflectivity: 0.18
+    },
+    1434: {
+        name: "Path",
+        textureKey: "sprite1480",
+        blocks: false,
         blocksSight: false,
         reflectivity: 0.18
     },
@@ -275,13 +347,6 @@ const TileData: { [key: number]: TileDataDetails } = {
         blocksSight: true,
         reflectivity: 0.18
     },
-    1788: {
-        name: "Dirt",
-        textureKey: "dirt_left_edge",
-        blocks: false,
-        blocksSight: false,
-        reflectivity: 0.18
-    },
     1715: {
         name: "Trees",
         textureKey: "turquoise_copse_left_edge",
@@ -303,6 +368,13 @@ const TileData: { [key: number]: TileDataDetails } = {
         blocksSight: false,
         reflectivity: 0.18
     },
+    1788: {
+        name: "Dirt",
+        textureKey: "dirt_left_edge",
+        blocks: false,
+        blocksSight: false,
+        reflectivity: 0.18
+    },
     1789: {
         name: "Dirt",
         textureKey: "dirt_middle",
@@ -314,6 +386,20 @@ const TileData: { [key: number]: TileDataDetails } = {
         name: "Dirt",
         textureKey: "dirt_right_edge",
         blocks: false,
+        blocksSight: false,
+        reflectivity: 0.18
+    },
+    1797: {
+        name: "Tree",
+        textureKey: "sprite1812",
+        blocks: true,
+        blocksSight: false,
+        reflectivity: 0.18
+    },
+    1799: {
+        name: "Tree",
+        textureKey: "sprite1814",
+        blocks: true,
         blocksSight: false,
         reflectivity: 0.18
     },
@@ -373,6 +459,20 @@ const TileData: { [key: number]: TileDataDetails } = {
         blocksSight: false,
         reflectivity: 0.18
     },
+    1975: {
+        name: "Tree",
+        textureKey: "sprite1886",
+        blocks: true,
+        blocksSight: false,
+        reflectivity: 0.18
+    },
+    1977: {
+        name: "Tree",
+        textureKey: "sprite1888",
+        blocks: true,
+        blocksSight: false,
+        reflectivity: 0.18
+    },
     2005: {
         name: "Tent",
         textureKey: "green_tent_bottom_left",
@@ -422,6 +522,27 @@ const TileData: { [key: number]: TileDataDetails } = {
         blocksSight: true,
         reflectivity: 0.18
     },
+    2165: {
+        name: "Building",
+        textureKey: "sprite2020",
+        blocks: true,
+        blocksSight: true,
+        reflectivity: 0.18
+    },
+    2167: {
+        name: "Building",
+        textureKey: "sprite2022",
+        blocks: true,
+        blocksSight: true,
+        reflectivity: 0.18
+    },
+    2168: {
+        name: "Building",
+        textureKey: "sprite2023",
+        blocks: true,
+        blocksSight: true,
+        reflectivity: 0.18
+    },
     2328: {
         name: "Building",
         textureKey: "sprite2153",
@@ -460,6 +581,27 @@ const TileData: { [key: number]: TileDataDetails } = {
     2334: {
         name: "Building",
         textureKey: "sprite2159",
+        blocks: true,
+        blocksSight: true,
+        reflectivity: 0.18
+    },
+    2344: {
+        name: "Building",
+        textureKey: "sprite2169",
+        blocks: true,
+        blocksSight: true,
+        reflectivity: 0.18
+    },
+    2345: {
+        name: "Building",
+        textureKey: "sprite2170",
+        blocks: true,
+        blocksSight: true,
+        reflectivity: 0.18
+    },
+    2346: {
+        name: "Building",
+        textureKey: "sprite2171",
         blocks: true,
         blocksSight: true,
         reflectivity: 0.18
@@ -520,9 +662,65 @@ const TileData: { [key: number]: TileDataDetails } = {
         blocksSight: true,
         reflectivity: 0.18
     },
+    2688: {
+        name: "Building",
+        textureKey: "sprite2466",
+        blocks: true,
+        blocksSight: true,
+        reflectivity: 0.18
+    },
     2689: {
         name: "Building",
         textureKey: "sprite2467",
+        blocks: true,
+        blocksSight: true,
+        reflectivity: 0.18
+    },
+    2690: {
+        name: "Building",
+        textureKey: "sprite2468",
+        blocks: true,
+        blocksSight: true,
+        reflectivity: 0.18
+    },
+    2698: {
+        name: "Building",
+        textureKey: "sprite2476",
+        blocks: true,
+        blocksSight: true,
+        reflectivity: 0.18
+    },
+    2699: {
+        name: "Building",
+        textureKey: "sprite2477",
+        blocks: true,
+        blocksSight: true,
+        reflectivity: 0.18
+    },
+    2701: {
+        name: "Building",
+        textureKey: "sprite2479",
+        blocks: true,
+        blocksSight: true,
+        reflectivity: 0.18
+    },
+    2702: {
+        name: "Building",
+        textureKey: "sprite2480",
+        blocks: true,
+        blocksSight: true,
+        reflectivity: 0.18
+    },
+    2703: {
+        name: "Building",
+        textureKey: "sprite2481",
+        blocks: true,
+        blocksSight: true,
+        reflectivity: 0.18
+    },
+    2704: {
+        name: "Building",
+        textureKey: "sprite2482",
         blocks: true,
         blocksSight: true,
         reflectivity: 0.18
@@ -555,6 +753,20 @@ const TileData: { [key: number]: TileDataDetails } = {
         blocksSight: false,
         reflectivity: 0.18
     },
+    3222: {
+        name: "Building",
+        textureKey: "sprite2928",
+        blocks: true,
+        blocksSight: false,
+        reflectivity: 0.18
+    },
+    3224: {
+        name: "Building",
+        textureKey: "sprite2930",
+        blocks: true,
+        blocksSight: false,
+        reflectivity: 0.18
+    },
     3299: {
         name: "Table",
         textureKey: "sprite2973",
@@ -576,9 +788,9 @@ const TileData: { [key: number]: TileDataDetails } = {
         blocksSight: false,
         reflectivity: 0.18
     },
-    3489: {
-        name: "Bed1",
-        textureKey: "sprite3148",
+    3304: {
+        name: "Table",
+        textureKey: "sprite2978",
         blocks: true,
         blocksSight: false,
         reflectivity: 0.18
@@ -590,6 +802,41 @@ const TileData: { [key: number]: TileDataDetails } = {
         blocksSight: false,
         reflectivity: 0.18
     },
+    3402: {
+        name: "Building",
+        textureKey: "sprite3082",
+        blocks: true,
+        blocksSight: false,
+        reflectivity: 0.18
+    },
+    3436: {
+        name: "Stump",
+        textureKey: "sprite3215",
+        blocks: true,
+        blocksSight: false,
+        reflectivity: 0.18
+    },
+    3482: {
+        name: "Table",
+        textureKey: "sprite3146",
+        blocks: true,
+        blocksSight: false,
+        reflectivity: 0.18
+    },
+    3489: {
+        name: "Bed",
+        textureKey: "sprite3148",
+        blocks: true,
+        blocksSight: false,
+        reflectivity: 0.18
+    },
+    3580: {
+        name: "Building",
+        textureKey: "sprite3242",
+        blocks: true,
+        blocksSight: false,
+        reflectivity: 0.18
+    },
     3599: {
         name: "Building",
         textureKey: "sprite3258",
@@ -597,8 +844,15 @@ const TileData: { [key: number]: TileDataDetails } = {
         blocksSight: false,
         reflectivity: 0.18
     },
+    3660: {
+        name: "Table",
+        textureKey: "sprite3293",
+        blocks: true,
+        blocksSight: false,
+        reflectivity: 0.18
+    },
     3668: {
-        name: "Bed3",
+        name: "Bed",
         textureKey: "sprite3361",
         blocks: true,
         blocksSight: false,
@@ -616,6 +870,13 @@ const TileData: { [key: number]: TileDataDetails } = {
         textureKey: "brown_roof_rear_right_slope",
         blocks: true,
         blocksSight: true,
+        reflectivity: 0.18
+    },
+    3792: {
+        name: "Stump",
+        textureKey: "sprite3421",
+        blocks: true,
+        blocksSight: false,
         reflectivity: 0.18
     },
     3846: {
@@ -681,6 +942,13 @@ const TileData: { [key: number]: TileDataDetails } = {
         blocksSight: true,
         reflectivity: 0.18
     },
+    3970: {
+        name: "Pile of Wood",
+        textureKey: "sprite3651",
+        blocks: true,
+        blocksSight: false,
+        reflectivity: 0.18
+    },
     4112: {
         name: "Building",
         textureKey: "tan_building_exterior_bottom_right_corner",
@@ -716,6 +984,55 @@ const TileData: { [key: number]: TileDataDetails } = {
         blocksSight: true,
         reflectivity: 0.18
     },
+    4142: {
+        name: "Fence",
+        textureKey: "sprite3751",
+        blocks: true,
+        blocksSight: false,
+        reflectivity: 0.18
+    },
+    4143: {
+        name: "Fence",
+        textureKey: "sprite3752",
+        blocks: true,
+        blocksSight: false,
+        reflectivity: 0.18
+    },
+    4144: {
+        name: "Fence",
+        textureKey: "sprite3753",
+        blocks: true,
+        blocksSight: false,
+        reflectivity: 0.18
+    },
+    4145: {
+        name: "Fence",
+        textureKey: "sprite3754",
+        blocks: true,
+        blocksSight: false,
+        reflectivity: 0.18
+    },
+    4146: {
+        name: "Fence",
+        textureKey: "sprite3755",
+        blocks: true,
+        blocksSight: false,
+        reflectivity: 0.18
+    },
+    4147: {
+        name: "Fence",
+        textureKey: "sprite3854",
+        blocks: true,
+        blocksSight: false,
+        reflectivity: 0.18
+    },
+    4148: {
+        name: "Fence",
+        textureKey: "sprite3756",
+        blocks: true,
+        blocksSight: false,
+        reflectivity: 0.18
+    },
     3764: {
         name: "Building",
         textureKey: "brown_building_exterior_top_edge",
@@ -730,6 +1047,41 @@ const TileData: { [key: number]: TileDataDetails } = {
         blocksSight: false,
         reflectivity: 0.18
     },
+    5806: {
+        name: "A stove",
+        textureKey: "stove_2",
+        blocks: true,
+        blocksSight: false,
+        reflectivity: 0.18
+    },
+    5977: {
+        name: "Counter",
+        textureKey: "sprite4890",
+        blocks: true,
+        blocksSight: false,
+        reflectivity: 0.18
+    },
+    5978: {
+        name: "Counter",
+        textureKey: "sprite4891",
+        blocks: true,
+        blocksSight: false,
+        reflectivity: 0.18
+    },
+    5979: {
+        name: "Counter",
+        textureKey: "sprite4892",
+        blocks: true,
+        blocksSight: false,
+        reflectivity: 0.18
+    },
+    5983: {
+        name: "stove",
+        textureKey: "stove_3",
+        blocks: true,
+        blocksSight: false,
+        reflectivity: 0.18
+    }
 };
 Object.freeze(TileData);
 
