@@ -88,7 +88,9 @@ import {
     explainWildSpells,
     explainInventory,
     explainSpellMenu,
-    explainPickUpItem
+    explainPickUpItem,
+    explainSpellCasts,
+    explainSpellShrine
 } from "./tutorials";
 import { getItems, InventoryItemDetails } from "./inventory";
 import { assertUnreachable, Nullable } from "./util";
@@ -259,7 +261,7 @@ export class SimpleDungeonCrawler {
         this.map = [];
         this.totalTurns = 1;
 
-        this.loadLevel("forrest_001");
+        this.loadLevel("tutorial_001");
         this.scheduler.add(this.player.id, true);
         this.gameCamera.following = this.player;
 
@@ -353,6 +355,8 @@ export class SimpleDungeonCrawler {
         globals.gameEventEmitter.on("tutorial.pickUpItem", explainPickUpItem);
         globals.gameEventEmitter.on("tutorial.spellTargeting", explainSpellTargeting);
         globals.gameEventEmitter.on("tutorial.wildSpells", explainWildSpells);
+        globals.gameEventEmitter.on("tutorial.spellCasts", explainSpellCasts);
+        globals.gameEventEmitter.on("tutorial.spellShrine", explainSpellShrine);
 
         input.init();
         this.loadingText.visible = false;
@@ -650,7 +654,7 @@ export class SimpleDungeonCrawler {
                 this.gameCamera.following = this.player;
 
                 this.openingText.visible = false;
-                this.loadLevel("forrest_001");
+                this.loadLevel("tutorial_001");
                 this.state = GameState.Gameplay;
                 globals.gameEventEmitter.emit("tutorial.start");
             }

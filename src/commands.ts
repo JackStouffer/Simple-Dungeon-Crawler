@@ -679,6 +679,7 @@ export class UseSpellCommand implements Command {
     }
 
     isFinished(): boolean {
+        globals.gameEventEmitter!.emit("tutorial.spellCasts");
         return true;
     }
 

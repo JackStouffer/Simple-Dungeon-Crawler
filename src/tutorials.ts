@@ -8,12 +8,14 @@ const hasMessageBeenShown = {
     pickUpItem: false,
     spellMenu: false,
     spellTargeting: false,
-    wildSpells: false
+    wildSpells: false,
+    spellCasts: false,
+    spellShrines: false
 };
 
 export function explainMovement() {
     if (!hasMessageBeenShown.movement) {
-        displayMessage("Move by clicking where you want to go.", MessageType.Tutorial);
+        displayMessage("Move by clicking where you want to go. You can only move seven tiles at a time.", MessageType.Tutorial);
         hasMessageBeenShown.movement = true;
     }
 }
@@ -54,13 +56,31 @@ export function explainSpellTargeting() {
     if (!hasMessageBeenShown.spellTargeting) {
         displayMessage("Left click on an enemy to target it, click elsewhere to cancel", MessageType.Tutorial);
         playPing();
+        hasMessageBeenShown.spellMenu = true;
         hasMessageBeenShown.spellTargeting = true;
     }
 }
 
 export function explainWildSpells() {
     if (!hasMessageBeenShown.wildSpells) {
-        displayMessage("Wild spells will randomly target an enemy within range. Use them carefully.", MessageType.Tutorial);
+        displayMessage("Wild spells will randomly target an enemy within range", MessageType.Tutorial);
+        playPing();
+        hasMessageBeenShown.wildSpells = true;
+    }
+}
+
+export function explainSpellCasts() {
+    if (!hasMessageBeenShown.spellCasts) {
+        displayMessage("Spells have a limited number of casts. Use them sparingly.", MessageType.Tutorial);
+        playPing();
+        hasMessageBeenShown.spellMenu = true;
+        hasMessageBeenShown.spellCasts = true;
+    }
+}
+
+export function explainSpellShrine() {
+    if (!hasMessageBeenShown.spellShrines) {
+        displayMessage("Learn new spells by finding magic shrines", MessageType.Tutorial);
         playPing();
         hasMessageBeenShown.wildSpells = true;
     }

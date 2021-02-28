@@ -80,6 +80,7 @@ export class Camera {
 
     // Like screenToTilePosition, but using rounding because it feels better for input code
     mouseToTilePosition(x: number, y: number): Point {
+        // TODO, BUG: This is wrong somehow when the camera is all the way to the left
         return {
             x: Math.round(x / (this.tileSize * this.zoom)) + Math.floor(this.x / this.tileSize),
             y: Math.round(y / (this.tileSize * this.zoom)) + Math.floor(this.y / this.tileSize)

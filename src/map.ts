@@ -8,6 +8,7 @@ import TiledMapOrthogonal, {
 
 import { RNG } from "./rot/index";
 
+import * as tutorial_001 from "./maps/tutorial_001.json";
 import * as forrest_001 from "./maps/forrest_001.json";
 import * as forrest_001_interior_001 from "./maps/forrest_001_interior_001.json";
 import * as forrest_001_interior_002 from "./maps/forrest_001_interior_002.json";
@@ -30,6 +31,7 @@ import { TILE_SIZE } from "./constants";
 const COLOR_AMBIENT_LIGHT = "rgb(50, 50, 50)";
 
 const LevelData: { [key: string]: TiledMapOrthogonal } = {
+    tutorial_001: (tutorial_001 as any).default as TiledMapOrthogonal,
     forrest_001: (forrest_001 as any).default as TiledMapOrthogonal,
     forrest_001_interior_001: (forrest_001_interior_001 as any).default as TiledMapOrthogonal,
     forrest_001_interior_002: (forrest_001_interior_002 as any).default as TiledMapOrthogonal,
@@ -417,6 +419,13 @@ const TileData: { [key: number]: TileDataDetails } = {
         blocksSight: false,
         reflectivity: 0.18
     },
+    1831: {
+        name: "Magika Shrine",
+        textureKey: "mage_statue_top",
+        blocks: true,
+        blocksSight: false,
+        reflectivity: 0.18
+    },
     1893: {
         name: "Trees",
         textureKey: "turquoise_copse_bottom_left_corner",
@@ -522,9 +531,23 @@ const TileData: { [key: number]: TileDataDetails } = {
         blocksSight: true,
         reflectivity: 0.18
     },
+    2164: {
+        name: "Building",
+        textureKey: "sprite2019",
+        blocks: true,
+        blocksSight: true,
+        reflectivity: 0.18
+    },
     2165: {
         name: "Building",
         textureKey: "sprite2020",
+        blocks: true,
+        blocksSight: true,
+        reflectivity: 0.18
+    },
+    2166: {
+        name: "Building",
+        textureKey: "sprite2021",
         blocks: true,
         blocksSight: true,
         reflectivity: 0.18
@@ -679,6 +702,13 @@ const TileData: { [key: number]: TileDataDetails } = {
     2690: {
         name: "Building",
         textureKey: "sprite2468",
+        blocks: true,
+        blocksSight: true,
+        reflectivity: 0.18
+    },
+    2691: {
+        name: "Building",
+        textureKey: "sprite2469",
         blocks: true,
         blocksSight: true,
         reflectivity: 0.18
@@ -1384,7 +1414,9 @@ export function loadTiledMap(
                     if (spellId !== null) {
                         entity.addComponent({
                             type: "SpellsComponent",
-                            knownSpells: new Set([spellId])
+                            knownSpells: new Map<string, number>([
+                                [spellId, 5]
+                            ])
                         });
                     }
 

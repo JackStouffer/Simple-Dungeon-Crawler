@@ -1031,7 +1031,6 @@ export const ObjectData: { [key: string]: ObjectDataDetails } = {
         addInput: true,
         spells: [
             ["lightning_bolt", 10],
-            ["fireball", 3],
             ["lesser_heal", 5]
         ],
         staticallyKnownComponents: {

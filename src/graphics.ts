@@ -44,6 +44,10 @@ export class DrawSystem extends System {
         if (globals.Game === null) { throw new Error("global Game object is null"); }
         const tilePos = pos.tilePosition();
 
+        if (tilePos.y > globals.Game.map[0].length || tilePos.x > globals.Game.map[0][0].length) {
+            throw new Error(`Object ${pos.entity.id} exists outside the game world`);
+        }
+
         // assuming all tiles on the same position have the same visibility
         if (globals.Game.map[0][tilePos.y][tilePos.x]!.isVisibleAndLit() &&
             graphics.sprite !== null) {
@@ -71,6 +75,10 @@ export class DrawSystem extends System {
     drawAfterSeen(pos: PositionComponent, graphics: GraphicsComponent): void {
         if (globals.Game === null) { throw new Error("global Game object is null"); }
         const tilePos = pos.tilePosition();
+
+        if (tilePos.y > globals.Game.map[0].length || tilePos.x > globals.Game.map[0][0].length) {
+            throw new Error(`Object ${pos.entity.id} exists outside the game world`);
+        }
 
         if (globals.Game.map[0][tilePos.y][tilePos.x]!.explored && graphics.sprite !== null) {
             graphics.sprite.visible = true;
