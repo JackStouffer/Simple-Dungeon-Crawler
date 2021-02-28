@@ -300,7 +300,8 @@ export class DrawPlayerSystem extends System {
 
                     // TODO, CLEANUP, this sucks. Find a way to not have
                     // tile indexes across frames
-                    if (globals.Game.map[0][step[1]] === undefined) {
+                    if (globals.Game.map[0][step[1]] === undefined ||
+                        globals.Game.map[0][step[1]][step[0]] === undefined) {
                         // Assume we've just loaded a level and clear the path
                         this.perviousPath = [];
                         break;
