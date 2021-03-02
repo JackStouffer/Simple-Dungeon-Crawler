@@ -32,7 +32,8 @@ import {
     PositionComponent,
     SpellsComponent,
     StatsComponent,
-    TriggerTypeComponent
+    TriggerTypeComponent,
+    TypeComponent
 } from "./entity";
 import { attack, getEffectiveSpeedData, getKnownSpells, takeDamage, useSpell } from "./fighter";
 import { getItems, hasItem, useItem } from "./inventory";
@@ -57,6 +58,30 @@ export function createPassableCallback(origin: Point): PassableCallback {
         const { blocks } = isBlocked(globals.Game.map, globals.Game.entityMap, x, y);
 
         return !blocks;
+    };
+}
+
+/**
+ * Passable callback for water based entities which cannot go on land
+ */
+export function createWaterBasedPassableCallback(origin: Point): PassableCallback {
+    return function(x: number, y: number) {
+        if (globals.Game === null) { throw new Error("Global game object is null"); }
+
+        // own space is passable
+        if (origin.x === x && origin.y === y) {
+            return true;
+        }
+        const { blocks, entity } = isBlocked(globals.Game.map, globals.Game.entityMap, x, y);
+
+        if (blocks) { return false; }
+
+        if (entity !== null) {
+            const t = entity.getOne(TypeComponent)?.entityType;
+            if (t === "shallow_water" || t === "water") { return true; }
+        }
+
+        return false;
     };
 }
 

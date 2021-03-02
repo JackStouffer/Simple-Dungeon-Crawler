@@ -1329,7 +1329,7 @@ export const ObjectData: { [key: string]: ObjectDataDetails } = {
             }
         }
     },
-    "water_sprite": {
+    "eel": {
         addPlannerAI: true,
         sightRange: 9,
         lowHealthThreshold: 0.5,
@@ -1341,16 +1341,16 @@ export const ObjectData: { [key: string]: ObjectDataDetails } = {
             "meleeAttack"
         ],
         staticallyKnownComponents: {
-            tags: ["blocks", "sentient", "moveable"],
+            tags: ["blocks", "sentient", "moveable", "aquatic"],
             c: {
                 TypeComponent: {
-                    entityType: "water_sprite"
+                    entityType: "eel"
                 },
                 DisplayNameComponent: {
-                    name: "Water Sprite"
+                    name: "Eel"
                 },
                 GraphicsComponent: {
-                    textureKey: "rat",
+                    textureKey: "eel_1",
                     sprite: null
                 },
                 LoseTargetAIComponent: {
@@ -1364,7 +1364,7 @@ export const ObjectData: { [key: string]: ObjectDataDetails } = {
                 },
                 SpeedComponent: {
                     speed: BASE_SPEED,
-                    maxTilesPerMove: 7
+                    maxTilesPerMove: 4
                 },
                 HitPointsComponent: {
                     hp: 10,

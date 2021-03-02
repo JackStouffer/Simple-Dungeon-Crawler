@@ -8,7 +8,8 @@ import {
     InteractCommand,
     NoOpCommand,
     createPassableCallback,
-    generateWeightCallback
+    generateWeightCallback,
+    createWaterBasedPassableCallback
 } from "../commands";
 import {
     DisplayNameComponent,
@@ -21,7 +22,8 @@ import {
     PlannerAIComponent,
     PositionComponent,
     SpeedComponent,
-    SpellsComponent
+    SpellsComponent,
+    TypeComponent
 } from "../entity";
 import {
     distanceBetweenPoints,
@@ -38,6 +40,7 @@ import { getItems } from "../inventory";
 import { getEffectiveStatData, getKnownSpells } from "../fighter";
 import { SpellData } from "../skills";
 import { isPositionPotentiallyDangerous } from "./goals";
+import { PassableCallback, WeightCallback } from "../rot/path/path";
 
 /**
  * Calculate a path from a game object to the give x and y
@@ -54,11 +57,21 @@ function getStepsTowardsTarget(
     steps: number,
     popBack: boolean = true
 ): Nullable<number[][]> {
+    let passableCB: PassableCallback, weightCB: WeightCallback;
+
+    if (actor.tags.has("aquatic")) {
+        passableCB = createWaterBasedPassableCallback(origin);
+        weightCB = () => 1;
+    } else {
+        passableCB = createPassableCallback(origin);
+        weightCB = generateWeightCallback(ecs, map, entityMap, origin);
+    }
+
     const aStar = new Path.AStar(
         target.x,
         target.y,
-        createPassableCallback(origin),
-        generateWeightCallback(ecs, map, entityMap, origin),
+        passableCB,
+        weightCB,
         { topology: 8 }
     );
 
@@ -98,12 +111,24 @@ function wanderAction(
     let dir: number = RNG.getItem([0, 1, 2, 3, 4, 5, 6, 7]) ?? 0;
     const pos = aiState.entity.getOne(PositionComponent)!.tilePosition();
 
-    do {
-        dir = RNG.getItem([0, 1, 2, 3, 4, 5, 6, 7]) ?? 0;
-        newX = pos.x + DIRS[8][dir][0];
-        newY = pos.y + DIRS[8][dir][1];
-        ({ blocks, entity } = isBlocked(map, entityMap, newX, newY));
-    } while (blocks === true || entity !== null);
+    if (aiState.entity.tags.has("aquatic")) {
+        let isPassable = false;
+        do {
+            dir = RNG.getItem([0, 1, 2, 3, 4, 5, 6, 7]) ?? 0;
+            newX = pos.x + DIRS[8][dir][0];
+            newY = pos.y + DIRS[8][dir][1];
+            ({ blocks, entity } = isBlocked(map, entityMap, newX, newY));
+            const t = entity?.getOne(TypeComponent)?.entityType;
+            isPassable = entity !== null || t === "shallow_water" || t === "water";
+        } while (blocks === true || !isPassable);
+    } else {
+        do {
+            dir = RNG.getItem([0, 1, 2, 3, 4, 5, 6, 7]) ?? 0;
+            newX = pos.x + DIRS[8][dir][0];
+            newY = pos.y + DIRS[8][dir][1];
+            ({ blocks, entity } = isBlocked(map, entityMap, newX, newY));
+        } while (blocks === true || entity !== null);
+    }
 
     return new GoToLocationCommand(aiState.entity, [[newX, newY]]);
 }

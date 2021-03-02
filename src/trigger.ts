@@ -82,15 +82,17 @@ export function deepWaterTrigger(actor: Entity): void {
         displayMessage("You are now wet from stepping in the water");
     }
 
-    // Slow the player down to simulate swimming
-    const speedData = actor.getOne(SpeedComponent);
-    if (speedData !== undefined) {
-        actor.addComponent({
-            type: "SpeedEffectComponent",
-            stat: "maxTilesPerMove",
-            modifierType: "multiply",
-            turnsLeft: 1,
-            value: 0.1
-        });
+    if (!actor.tags.has("aquatic")) {
+        // Slow the player down to simulate swimming
+        const speedData = actor.getOne(SpeedComponent);
+        if (speedData !== undefined) {
+            actor.addComponent({
+                type: "SpeedEffectComponent",
+                stat: "maxTilesPerMove",
+                modifierType: "multiply",
+                turnsLeft: 1,
+                value: 0.1
+            });
+        }
     }
 }

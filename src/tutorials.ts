@@ -10,7 +10,8 @@ const hasMessageBeenShown = {
     spellTargeting: false,
     wildSpells: false,
     spellCasts: false,
-    spellShrines: false
+    spellShrines: false,
+    environment: false
 };
 
 export function explainMovement() {
@@ -83,5 +84,13 @@ export function explainSpellShrine() {
         displayMessage("Learn new spells by finding magic shrines", MessageType.Tutorial);
         playPing();
         hasMessageBeenShown.wildSpells = true;
+    }
+}
+
+export function explainEnvironmentInteractivity() {
+    if (!hasMessageBeenShown.environment) {
+        displayMessage("Spells can interact with the environment in different ways", MessageType.Tutorial);
+        playPing();
+        hasMessageBeenShown.environment = true;
     }
 }

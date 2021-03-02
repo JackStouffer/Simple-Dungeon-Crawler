@@ -90,7 +90,8 @@ import {
     explainSpellMenu,
     explainPickUpItem,
     explainSpellCasts,
-    explainSpellShrine
+    explainSpellShrine,
+    explainEnvironmentInteractivity
 } from "./tutorials";
 import { getItems, InventoryItemDetails } from "./inventory";
 import { assertUnreachable, Nullable } from "./util";
@@ -290,7 +291,8 @@ export class SimpleDungeonCrawler {
             "drawAfterSeen",
             "input",
             "sentient",
-            "moveable"
+            "moveable",
+            "aquatic"
         );
         this.ecs.registerComponent(PositionComponent, 100);
         this.ecs.registerComponent(TypeComponent, 100);
@@ -357,6 +359,7 @@ export class SimpleDungeonCrawler {
         globals.gameEventEmitter.on("tutorial.wildSpells", explainWildSpells);
         globals.gameEventEmitter.on("tutorial.spellCasts", explainSpellCasts);
         globals.gameEventEmitter.on("tutorial.spellShrine", explainSpellShrine);
+        globals.gameEventEmitter.on("tutorial.environmentInteractivity", explainEnvironmentInteractivity);
 
         input.init();
         this.loadingText.visible = false;
