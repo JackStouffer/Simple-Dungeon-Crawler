@@ -83,7 +83,7 @@ export function explainSpellShrine() {
     if (!hasMessageBeenShown.spellShrines) {
         displayMessage("Learn new spells by finding magic shrines", MessageType.Tutorial);
         playPing();
-        hasMessageBeenShown.wildSpells = true;
+        hasMessageBeenShown.spellShrines = true;
     }
 }
 

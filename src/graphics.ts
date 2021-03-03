@@ -1,4 +1,5 @@
 import { Entity, Query, System } from "ape-ecs";
+import * as PIXI from "pixi.js";
 import { GlowFilter } from "pixi-filters";
 
 import {
@@ -11,7 +12,7 @@ import {
     WetableComponent
 } from "./entity";
 import input from "./input";
-import { distanceBetweenPoints, getHighestZIndexWithTile, Point } from "./map";
+import { distanceBetweenPoints, getEntitiesAtLocation, getHighestZIndexWithTile, Point } from "./map";
 import { PlayerState } from "./input-handler";
 import { getPlayerMovementPath } from "./commands";
 import { getItems } from "./inventory";
@@ -235,7 +236,7 @@ export class DrawPlayerSystem extends System {
     private query: Query;
     private pathFilter: GlowFilter;
     private targetFilter: GlowFilter;
-    private perviousPath: [number, number][];
+    private perviousPath: PIXI.Sprite[];
 
     init() {
         this.query = this
@@ -298,20 +299,11 @@ export class DrawPlayerSystem extends System {
                 for (let i = 0; i < this.perviousPath.length; i++) {
                     const step = this.perviousPath[i];
 
-                    // TODO, CLEANUP, this sucks. Find a way to not have
-                    // tile indexes across frames
-                    if (globals.Game.map[0][step[1]] === undefined ||
-                        globals.Game.map[0][step[1]][step[0]] === undefined) {
-                        // Assume we've just loaded a level and clear the path
-                        this.perviousPath = [];
-                        break;
+                    if (step.texture === null) {
+                        continue;
                     }
 
-                    const z = getHighestZIndexWithTile(globals.Game.map, step[0], step[1]);
-                    globals.Game
-                        .map[z][step[1]][step[0]]!
-                        .sprite
-                        .filters = [];
+                    step.filters = [];
                 }
 
                 if (inputStateData.state === PlayerState.Combat &&
@@ -336,15 +328,34 @@ export class DrawPlayerSystem extends System {
                         );
                         if (path === null) { return; }
 
-                        for (let j = 0; j < path.length; j++) {
+                        outer: for (let j = 0; j < path.length; j++) {
                             const step = path[j];
+
+                            // If there's an entity tile like water or mud, we want
+                            // to put the reticle on that instead of the tile beneath it
+                            const entities = getEntitiesAtLocation(
+                                globals.Game.entityMap,
+                                step[0],
+                                step[1]
+                            );
+                            for (let i = 0; i < entities.length; i++) {
+                                if (entities[i].tags.has("environmentTile")) {
+                                    const graphics = entities[i].getOne(GraphicsComponent);
+                                    if (graphics !== undefined && graphics.sprite !== null) {
+                                        graphics.sprite.filters = [this.pathFilter];
+                                        this.perviousPath.push(graphics.sprite);
+                                        continue outer;
+                                    }
+                                }
+                            }
+
                             const z = getHighestZIndexWithTile(globals.Game.map, step[0], step[1]);
-                            globals.Game
+                            const sprite = globals.Game
                                 .map[z][step[1]][step[0]]!
-                                .sprite
-                                .filters = [this.pathFilter];
+                                .sprite;
+                            this.perviousPath.push(sprite);
+                            sprite.filters = [this.pathFilter];
                         }
-                        this.perviousPath = path;
                     }
                 } else if (inputStateData.state === PlayerState.Target &&
                     globals.Game.currentActor === entity &&
@@ -356,7 +367,25 @@ export class DrawPlayerSystem extends System {
                         inputStateData.reticleRotation
                     );
 
-                    for (let i = 0; i < targetArea.length; i++) {
+                    outer: for (let i = 0; i < targetArea.length; i++) {
+                        // If there's an entity tile like water or mud, we want
+                        // to put the reticle on that instead of the tile beneath it
+                        const entities = getEntitiesAtLocation(
+                            globals.Game.entityMap,
+                            targetArea[i][0],
+                            targetArea[i][1]
+                        );
+                        for (let i = 0; i < entities.length; i++) {
+                            if (entities[i].tags.has("environmentTile")) {
+                                const graphics = entities[i].getOne(GraphicsComponent);
+                                if (graphics !== undefined && graphics.sprite !== null) {
+                                    graphics.sprite.filters = [this.targetFilter];
+                                    this.perviousPath.push(graphics.sprite);
+                                    continue outer;
+                                }
+                            }
+                        }
+
                         const z = getHighestZIndexWithTile(
                             globals.Game.map,
                             targetArea[i][0],
@@ -369,13 +398,12 @@ export class DrawPlayerSystem extends System {
                             .map[z][targetArea[i][1]][targetArea[i][0]]!.visible === false) {
                             return;
                         }
-
-                        globals.Game
+                        const sprite = globals.Game
                             .map[z][targetArea[i][1]][targetArea[i][0]]!
-                            .sprite
-                            .filters = [this.targetFilter];
+                            .sprite;
+                        this.perviousPath.push(sprite);
+                        sprite.filters = [this.targetFilter];
                     }
-                    this.perviousPath = targetArea;
                 }
             } else {
                 graphics.sprite.visible = false;

@@ -9,6 +9,7 @@ import TiledMapOrthogonal, {
 import { RNG } from "./rot/index";
 
 import * as tutorial_001 from "./maps/tutorial_001.json";
+import * as tutorial_002 from "./maps/tutorial_002.json";
 import * as forrest_001 from "./maps/forrest_001.json";
 import * as forrest_001_interior_001 from "./maps/forrest_001_interior_001.json";
 import * as forrest_001_interior_002 from "./maps/forrest_001_interior_002.json";
@@ -32,6 +33,7 @@ const COLOR_AMBIENT_LIGHT = "rgb(50, 50, 50)";
 
 const LevelData: { [key: string]: TiledMapOrthogonal } = {
     tutorial_001: (tutorial_001 as any).default as TiledMapOrthogonal,
+    tutorial_002: (tutorial_002 as any).default as TiledMapOrthogonal,
     forrest_001: (forrest_001 as any).default as TiledMapOrthogonal,
     forrest_001_interior_001: (forrest_001_interior_001 as any).default as TiledMapOrthogonal,
     forrest_001_interior_002: (forrest_001_interior_002 as any).default as TiledMapOrthogonal,
