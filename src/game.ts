@@ -579,6 +579,7 @@ export class SimpleDungeonCrawler {
                     case ItemType.HasteSelf:
                     case ItemType.WildDamageScroll:
                         this.state = GameState.Gameplay;
+                        this.inventoryMenu.close();
 
                         this.currentCommand = new UseItemCommand(
                             this.player, item.id
