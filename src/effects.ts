@@ -23,6 +23,8 @@ import {
 } from "./entity";
 import { takeDamage } from "./fighter";
 import { setOnFire } from "./skills";
+import { DIRS } from "./rot";
+import { getEntitiesAtLocation } from "./map";
 
 /**
  * Gives damage to those entities with a flammable comp that is
@@ -64,30 +66,23 @@ export class OnFireSystem extends System {
                     // Check neighboring tiles for flammable entities
                     // If there is one, roll to see if the entity will
                     // be set to on fire
-                    // SPEED: use Quad Tree, O(m*n)
                     const pos = entity.getOne(PositionComponent);
                     if (pos !== undefined) {
                         const firePos = pos.tilePosition();
-                        // TODO just use DIRSs
-                        const neighborPositions = new Set([
-                            `${firePos.x-1},${firePos.y}`,
-                            `${firePos.x},${firePos.y-1}`,
-                            `${firePos.x-1},${firePos.y-1}`,
-                            `${firePos.x+1},${firePos.y}`,
-                            `${firePos.x},${firePos.y+1}`,
-                            `${firePos.x+1},${firePos.y+1}`,
-                            `${firePos.x+1},${firePos.y-1}`,
-                            `${firePos.x-1},${firePos.y+1}`
-                        ]);
-                        const entities = this.world.entities.values();
-                        for (const e of entities) {
-                            const pos = e.getOne(PositionComponent);
-                            if (pos === undefined) { continue; }
-                            if (neighborPositions.has(`${pos.x},${pos.y}`) &&
-                                Math.random() >= .80) {
-                                // TODO Find some way to defer the setting on fire until
-                                // the next turn
-                                setOnFire(e);
+                        for (let i = 0; i < DIRS[8].length; i++) {
+                            const dir = DIRS[8][i];
+                            const entities = getEntitiesAtLocation(
+                                globals.Game!.entityMap,
+                                firePos.x + dir[0],
+                                firePos.y + dir[1]
+                            );
+                            for (let j = 0; j < entities.length; j++) {
+                                const e = entities[j];
+                                if (Math.random() >= .80) {
+                                    // TODO Find some way to defer the setting on fire until
+                                    // the next turn
+                                    setOnFire(e);
+                                }
                             }
                         }
                     }
