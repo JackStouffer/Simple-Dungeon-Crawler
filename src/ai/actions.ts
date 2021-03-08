@@ -127,7 +127,7 @@ function wanderAction(
             newX = pos.x + DIRS[8][dir][0];
             newY = pos.y + DIRS[8][dir][1];
             ({ blocks, entity } = isBlocked(map, entityMap, newX, newY));
-        } while (blocks === true || entity !== null);
+        } while (blocks === true || entity?.tags.has("environmentTile") === true);
     }
 
     return new GoToLocationCommand(aiState.entity, [[newX, newY]]);

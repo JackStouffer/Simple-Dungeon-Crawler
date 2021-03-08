@@ -127,7 +127,7 @@ export default class ReverseAStar {
 
     getNeighbors(cx: number, cy: number) {
         const result = [];
-        for (let i=0;i<this._dirs.length;i++) {
+        for (let i = 0; i < this._dirs.length; i++) {
             const dir = this._dirs[i];
             const x = cx + dir[0];
             const y = cy + dir[1];

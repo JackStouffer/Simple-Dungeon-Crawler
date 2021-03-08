@@ -293,7 +293,8 @@ export class SimpleDungeonCrawler {
             "sentient",
             "moveable",
             "aquatic",
-            "environmentTile"
+            "environmentTile",
+            "waterTile"
         );
         this.ecs.registerComponent(PositionComponent, 100);
         this.ecs.registerComponent(TypeComponent, 100);

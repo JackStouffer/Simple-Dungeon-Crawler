@@ -9,7 +9,8 @@ import {
     isBlocked,
     Point,
     setAllToExplored,
-    getRandomOpenSpace
+    getRandomOpenSpace,
+    getEntitiesAtLocation
 } from "./map";
 import { displayMessage } from "./ui";
 import { DamageType, ItemType, SpellType, StatusEffectType, TriggerType } from "./constants";
@@ -327,6 +328,49 @@ export function castDamageSpell(
     entityMap: EntityMap,
     target: Point
 ): boolean {
+    function findEntitiesInBodyOfWater(start: Point): Entity[] {
+        const entitiesInWater: Entity[] = [];
+        // TODO: JS doesn't have a hash set so you can't do a set of objects
+        // write one so we don't have to use string keys
+        const todo: Map<string, Point> = new Map();
+        todo.set(`${start.x},${start.y}`, start);
+        const done: Set<string> = new Set();
+
+        while (todo.size > 0) {
+            const tile = todo.values().next().value;
+            done.add(`${tile.x},${tile.y}`);
+            todo.delete(`${tile.x},${tile.y}`);
+
+            const entities = getEntitiesAtLocation(entityMap, tile.x, tile.y);
+            // TODO, SPEED: iterating twice here
+            const waterTiles = entities.filter(e => e.tags.has("waterTile"));
+            const hpEntities = entities.filter(e => {
+                return e.getOne(HitPointsComponent) !== undefined;
+            });
+            if (waterTiles.length > 0) {
+                entitiesInWater.push(...hpEntities);
+            }
+
+            // get neighbors, using only cardinal directions electricity
+            // jumping diagonally with no cardinal tiles looks wrong
+            for (let i = 0; i < DIRS[4].length; i++) {
+                const dir = DIRS[4][i];
+                const x = tile.x + dir[0];
+                const y = tile.y + dir[1];
+
+                if (done.has(`${x},${y}`)) { continue; }
+
+                const entities = getEntitiesAtLocation(entityMap, x, y);
+                const hasWater = entities.filter(e => e.tags.has("waterTile")).length > 0;
+                if (hasWater) {
+                    todo.set(`${x},${y}`, { x, y });
+                }
+            }
+        }
+
+        return entitiesInWater;
+    }
+
     if (item.value === null) { throw new Error("Item does not have a value for castDamageSpell"); }
 
     const targetedEntity = mouseTarget(ecs, map, entityMap, target);
@@ -342,7 +386,29 @@ export function castDamageSpell(
         return false;
     }
 
-    takeDamage(targetedEntity, item.value, false, item.damageType ?? DamageType.Physical);
+    // If the target is standing in water, we're going to
+    // have the electricity spread throughout the water body
+    // and damage everything standing in it
+    if (item.damageType === DamageType.Electric) {
+        const entities = getEntitiesAtLocation(entityMap, target.x, target.y);
+        const isOnWater = entities.filter(e => e.tags.has("waterTile")).length > 0;
+        if (isOnWater) {
+            const entitiesToDamage = findEntitiesInBodyOfWater({ x: target.x, y: target.y });
+            for (let i = 0; i < entitiesToDamage.length; i++) {
+                // TODO: Add special sound effect here
+                takeDamage(
+                    entitiesToDamage[i],
+                    item.value,
+                    false,
+                    item.damageType ?? DamageType.Physical
+                );
+            }
+        } else {
+            takeDamage(targetedEntity, item.value, false, item.damageType ?? DamageType.Physical);
+        }
+    } else {
+        takeDamage(targetedEntity, item.value, false, item.damageType ?? DamageType.Physical);
+    }
 
     const stats = getEffectiveStatData(targetedEntity);
     const hp = getEffectiveHitPointData(targetedEntity);

@@ -872,7 +872,7 @@ export const ObjectData: { [key: string]: ObjectDataDetails } = {
     },
     "shallow_water": {
         staticallyKnownComponents: {
-            tags: ["environmentTile"],
+            tags: ["environmentTile", "waterTile"],
             c: {
                 TypeComponent: {
                     entityType: "shallow_water"
@@ -896,7 +896,7 @@ export const ObjectData: { [key: string]: ObjectDataDetails } = {
     },
     "puddle": {
         staticallyKnownComponents: {
-            tags: ["environmentTile"],
+            tags: ["environmentTile", "waterTile"],
             c: {
                 TypeComponent: {
                     entityType: "puddle"
@@ -923,7 +923,7 @@ export const ObjectData: { [key: string]: ObjectDataDetails } = {
     },
     "water": {
         staticallyKnownComponents: {
-            tags: ["environmentTile"],
+            tags: ["environmentTile", "waterTile"],
             c: {
                 TypeComponent: {
                     entityType: "water"
