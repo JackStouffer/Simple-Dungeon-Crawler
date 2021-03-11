@@ -371,7 +371,7 @@
                         {
                          "name":"spellId",
                          "type":"string",
-                         "value":"fireball"
+                         "value":"lesser_heal"
                         }],
                  "rotation":0,
                  "type":"object",

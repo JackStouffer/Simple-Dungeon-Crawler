@@ -43,16 +43,13 @@ export function mouseTarget(
     entityMap: EntityMap,
     mousePosition: Point
 ): Nullable<Entity> {
-    const entities = getEntitiesAtLocation(entityMap, mousePosition.x, mousePosition.y);
-
     if (mousePosition.x >= map[0][0].length ||
         mousePosition.y >= map[0].length ||
         map[0][mousePosition.y][mousePosition.x]!.visible === false) {
         return null;
     }
 
-    // SPEED
-    const res = entities
+    const res = getEntitiesAtLocation(entityMap, mousePosition.x, mousePosition.y)
         .filter(e => {
             const hpData = e.getOne(HitPointsComponent);
             const interactableData = e.getOne(InteractableTypeComponent);

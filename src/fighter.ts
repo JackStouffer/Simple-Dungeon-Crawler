@@ -99,6 +99,7 @@ export class DeathSystem extends System {
 
         target.removeTag("blocks");
         target.removeTag("blocksSight");
+        target.removeTag("sentient");
 
         const graphicData = target.getOne(GraphicsComponent);
         if (graphicData !== undefined && graphicData.sprite !== null) {

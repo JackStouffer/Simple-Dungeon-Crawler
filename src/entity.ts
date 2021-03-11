@@ -102,11 +102,15 @@ export class DisplayNameComponent extends Component {
 export class GraphicsComponent extends Component {
     textureKey: string;
     sprite: Nullable<PIXI.Sprite>;
+    opacity: number;
+    zIndex: number;
 
     static typeName = "GraphicsComponent";
     static properties = {
         textureKey: "",
-        sprite: null
+        sprite: null,
+        opacity: 1,
+        zIndex: 1
     }
 }
 
@@ -542,6 +546,7 @@ export const ObjectData: { [key: string]: ObjectDataDetails } = {
                 GraphicsComponent: {
                     textureKey: "door_1_closed",
                     sprite: null,
+                    zIndex: 5
                 },
                 InteractableTypeComponent: {
                     interactableType: InteractableType.Door
@@ -562,6 +567,7 @@ export const ObjectData: { [key: string]: ObjectDataDetails } = {
                 GraphicsComponent: {
                     textureKey: "door_1_closed",
                     sprite: null,
+                    zIndex: 5
                 },
                 InteractableTypeComponent: {
                     interactableType: InteractableType.LoadLevel
@@ -582,6 +588,7 @@ export const ObjectData: { [key: string]: ObjectDataDetails } = {
                 GraphicsComponent: {
                     textureKey: "stone_stairs_right",
                     sprite: null,
+                    zIndex: 5
                 },
                 InteractableTypeComponent: {
                     interactableType: InteractableType.LoadLevel
@@ -603,7 +610,8 @@ export const ObjectData: { [key: string]: ObjectDataDetails } = {
                 ChestGraphicsComponent: {
                     textureKey: "chest_1_closed",
                     openTextureKey: "chest_1_open",
-                    sprite: null
+                    sprite: null,
+                    zIndex: 5
                 },
                 InteractableTypeComponent: {
                     interactableType: InteractableType.GiveItems
@@ -629,7 +637,8 @@ export const ObjectData: { [key: string]: ObjectDataDetails } = {
                 },
                 GraphicsComponent: {
                     textureKey: "wood_steel_crate",
-                    sprite: null
+                    sprite: null,
+                    zIndex: 5
                 },
                 HitPointsComponent: {
                     hp: 5,
@@ -665,7 +674,8 @@ export const ObjectData: { [key: string]: ObjectDataDetails } = {
                 },
                 GraphicsComponent: {
                     textureKey: "barrel_3",
-                    sprite: null
+                    sprite: null,
+                    zIndex: 5
                 },
                 HitPointsComponent: {
                     hp: 5,
@@ -699,7 +709,8 @@ export const ObjectData: { [key: string]: ObjectDataDetails } = {
                 },
                 GraphicsComponent: {
                     textureKey: "skull_bone",
-                    sprite: null
+                    sprite: null,
+                    zIndex: 5
                 }
             }
         }
@@ -716,7 +727,8 @@ export const ObjectData: { [key: string]: ObjectDataDetails } = {
                 },
                 GraphicsComponent: {
                     textureKey: "iron_lantern_lit",
-                    sprite: null
+                    sprite: null,
+                    zIndex: 5
                 },
                 LightingComponent: {
                     color: "yellow",
@@ -737,7 +749,8 @@ export const ObjectData: { [key: string]: ObjectDataDetails } = {
                 },
                 GraphicsComponent: {
                     textureKey: "campfire_1_lit_1",
-                    sprite: null
+                    sprite: null,
+                    zIndex: 5
                 },
                 LightingComponent: {
                     color: "orange",
@@ -766,7 +779,8 @@ export const ObjectData: { [key: string]: ObjectDataDetails } = {
                 },
                 GraphicsComponent: {
                     textureKey: "campfire_1_lit_1",
-                    sprite: null
+                    sprite: null,
+                    zIndex: 8
                 },
                 LightingComponent: {
                     color: "orange",
@@ -799,7 +813,8 @@ export const ObjectData: { [key: string]: ObjectDataDetails } = {
                 },
                 GraphicsComponent: {
                     textureKey: "ice_wall",
-                    sprite: null
+                    sprite: null,
+                    zIndex: 8
                 },
                 HitPointsComponent: {
                     hp: 100,
@@ -830,7 +845,8 @@ export const ObjectData: { [key: string]: ObjectDataDetails } = {
                 },
                 GraphicsComponent: {
                     textureKey: "yellow_and_green_bottle",
-                    sprite: null
+                    sprite: null,
+                    zIndex: 8
                 },
                 InteractableTypeComponent: {
                     interactableType: InteractableType.GiveItems
@@ -850,7 +866,8 @@ export const ObjectData: { [key: string]: ObjectDataDetails } = {
                 },
                 GraphicsComponent: {
                     textureKey: "mage_statue_bottom",
-                    sprite: null
+                    sprite: null,
+                    zIndex: 5
                 },
                 InteractableTypeComponent: {
                     interactableType: InteractableType.GiveSpells
@@ -882,7 +899,8 @@ export const ObjectData: { [key: string]: ObjectDataDetails } = {
                 },
                 GraphicsComponent: {
                     textureKey: "water_1",
-                    sprite: null
+                    sprite: null,
+                    zIndex: 5
                 },
                 TriggerTypeComponent: {
                     triggerType: TriggerType.ShallowWater
@@ -906,7 +924,8 @@ export const ObjectData: { [key: string]: ObjectDataDetails } = {
                 },
                 GraphicsComponent: {
                     textureKey: "water_1",
-                    sprite: null
+                    sprite: null,
+                    zIndex: 5
                 },
                 TriggerTypeComponent: {
                     triggerType: TriggerType.ShallowWater
@@ -933,7 +952,8 @@ export const ObjectData: { [key: string]: ObjectDataDetails } = {
                 },
                 GraphicsComponent: {
                     textureKey: "deep_water",
-                    sprite: null
+                    sprite: null,
+                    zIndex: 5
                 },
                 TriggerTypeComponent: {
                     triggerType: TriggerType.DeepWater
@@ -941,6 +961,30 @@ export const ObjectData: { [key: string]: ObjectDataDetails } = {
                 FreezableComponent: {
                     frozen: false,
                     turnsLeft: 0
+                }
+            }
+        }
+    },
+    "steam": {
+        staticallyKnownComponents: {
+            c: {
+                TypeComponent: {
+                    entityType: "steam"
+                },
+                DisplayNameComponent: {
+                    name: "Steam"
+                },
+                GraphicsComponent: {
+                    textureKey: "sprite4691",
+                    sprite: null,
+                    zIndex: 10,
+                    opacity: 0.6
+                },
+                TriggerTypeComponent: {
+                    triggerType: TriggerType.Steam
+                },
+                RemoveAfterNTurnsComponent: {
+                    turnsLeft: 5
                 }
             }
         }
@@ -957,7 +1001,8 @@ export const ObjectData: { [key: string]: ObjectDataDetails } = {
                 },
                 GraphicsComponent: {
                     textureKey: "mud_1",
-                    sprite: null
+                    sprite: null,
+                    zIndex: 5
                 },
                 TriggerTypeComponent: {
                     triggerType: TriggerType.Mud
@@ -980,7 +1025,8 @@ export const ObjectData: { [key: string]: ObjectDataDetails } = {
                 },
                 GraphicsComponent: {
                     textureKey: "tall_grass_2",
-                    sprite: null
+                    sprite: null,
+                    zIndex: 5
                 },
                 FlammableComponent: {
                     onFire: false,
@@ -1011,7 +1057,8 @@ export const ObjectData: { [key: string]: ObjectDataDetails } = {
                 },
                 GraphicsComponent: {
                     textureKey: "shrub_1",
-                    sprite: null
+                    sprite: null,
+                    zIndex: 8
                 },
                 FlammableComponent: {
                     onFire: false,
@@ -1035,7 +1082,6 @@ export const ObjectData: { [key: string]: ObjectDataDetails } = {
         addInput: true,
         spells: [
             ["lightning_bolt", 10],
-            ["lesser_heal", 5]
         ],
         staticallyKnownComponents: {
             id: "player",
@@ -1049,7 +1095,8 @@ export const ObjectData: { [key: string]: ObjectDataDetails } = {
                 },
                 GraphicsComponent: {
                     textureKey: "player",
-                    sprite: null
+                    sprite: null,
+                    zIndex: 5
                 },
                 LightingComponent: {
                     color: "white",
@@ -1127,7 +1174,8 @@ export const ObjectData: { [key: string]: ObjectDataDetails } = {
                 },
                 GraphicsComponent: {
                     textureKey: "orc_body_1",
-                    sprite: null
+                    sprite: null,
+                    zIndex: 5
                 },
                 LoseTargetAIComponent: {
                     turnsWithTargetOutOfSight: 0,
@@ -1209,7 +1257,8 @@ export const ObjectData: { [key: string]: ObjectDataDetails } = {
                 },
                 GraphicsComponent: {
                     textureKey: "orc_body_1",
-                    sprite: null
+                    sprite: null,
+                    zIndex: 5
                 },
                 LoseTargetAIComponent: {
                     turnsWithTargetOutOfSight: 0,
@@ -1280,7 +1329,8 @@ export const ObjectData: { [key: string]: ObjectDataDetails } = {
                 },
                 GraphicsComponent: {
                     textureKey: "rat",
-                    sprite: null
+                    sprite: null,
+                    zIndex: 5
                 },
                 LoseTargetAIComponent: {
                     turnsWithTargetOutOfSight: 0,
@@ -1355,7 +1405,8 @@ export const ObjectData: { [key: string]: ObjectDataDetails } = {
                 },
                 GraphicsComponent: {
                     textureKey: "eel_1",
-                    sprite: null
+                    sprite: null,
+                    zIndex: 5
                 },
                 LoseTargetAIComponent: {
                     turnsWithTargetOutOfSight: 0,
@@ -1431,7 +1482,8 @@ export const ObjectData: { [key: string]: ObjectDataDetails } = {
                 },
                 GraphicsComponent: {
                     textureKey: "bandit_1",
-                    sprite: null
+                    sprite: null,
+                    zIndex: 5
                 },
                 LoseTargetAIComponent: {
                     turnsWithTargetOutOfSight: 0,
@@ -1523,7 +1575,8 @@ export const ObjectData: { [key: string]: ObjectDataDetails } = {
                 },
                 GraphicsComponent: {
                     textureKey: "blue_mage_1",
-                    sprite: null
+                    sprite: null,
+                    zIndex: 5
                 },
                 LoseTargetAIComponent: {
                     turnsWithTargetOutOfSight: 0,
@@ -1613,7 +1666,8 @@ export const ObjectData: { [key: string]: ObjectDataDetails } = {
                 },
                 GraphicsComponent: {
                     textureKey: "red_mage_1",
-                    sprite: null
+                    sprite: null,
+                    zIndex: 5
                 },
                 LoseTargetAIComponent: {
                     turnsWithTargetOutOfSight: 0,
@@ -1717,13 +1771,6 @@ export function createEntity(
     const graphics = entity.getOne(GraphicsComponent) ?? entity.getOne(ChestGraphicsComponent);
     if (graphics !== undefined) {
         graphics.sprite = new PIXI.Sprite(textures[graphics.textureKey]);
-
-        if ((data.staticallyKnownComponents.tags?.indexOf("sentient") ?? -1) > -1) {
-            graphics.sprite.zIndex = 8;
-        } else {
-            graphics.sprite.zIndex = 5;
-        }
-
         globals.Game.pixiApp.stage.addChild(graphics.sprite);
     }
 

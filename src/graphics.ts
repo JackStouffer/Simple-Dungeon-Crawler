@@ -68,6 +68,9 @@ export class DrawSystem extends System {
             } else {
                 graphics.sprite.tint = 0xFFFFFF;
             }
+
+            graphics.sprite.alpha = graphics.opacity;
+            graphics.sprite.zIndex = graphics.zIndex;
         } else if (graphics.sprite !== null) {
             graphics.sprite.visible = false;
         }
@@ -87,6 +90,9 @@ export class DrawSystem extends System {
             const { x, y } = globals.Game!.gameCamera.tilePositionToScreen(tilePos.x, tilePos.y);
             graphics.sprite.position.set(x, y);
             graphics.sprite.scale.set(globals.Game!.gameCamera.zoom, globals.Game!.gameCamera.zoom);
+
+            graphics.sprite.alpha = graphics.opacity;
+            graphics.sprite.zIndex = graphics.zIndex;
         } else if (graphics.sprite !== null) {
             graphics.sprite.visible = false;
         }
@@ -154,6 +160,8 @@ export class DrawChestsSystem extends System {
                     globals.Game!.gameCamera.zoom,
                     globals.Game!.gameCamera.zoom
                 );
+                graphics.sprite.alpha = graphics.opacity;
+                graphics.sprite.zIndex = graphics.zIndex;
             } else {
                 graphics.sprite.visible = false;
             }
@@ -294,6 +302,9 @@ export class DrawPlayerSystem extends System {
                 } else {
                     graphics.sprite.tint = 0xFFFFFF;
                 }
+
+                graphics.sprite.alpha = graphics.opacity;
+                graphics.sprite.zIndex = graphics.zIndex;
 
                 // Remove effects from last path draw
                 for (let i = 0; i < this.perviousPath.length; i++) {

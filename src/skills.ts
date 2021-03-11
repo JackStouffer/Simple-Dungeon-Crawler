@@ -25,10 +25,12 @@ import {
     ParalyzableComponent,
     PlannerAIComponent,
     PositionComponent,
+    removeEntity,
     SilenceableComponent,
     SpeedComponent,
     SpeedEffectComponent,
     SpellsComponent,
+    TypeComponent,
     WetableComponent
 } from "./entity";
 import { randomIntFromInterval, Nullable, assertUnreachable } from "./util";
@@ -145,7 +147,15 @@ export function setOnFire(target: Entity, damage?: number, turns?: number): bool
     const flammableData = target.getOne(FlammableComponent);
     const wetData = target.getOne(WetableComponent);
     const blocks = target.tags.has("blocks");
-    if (flammableData === undefined) { return false; }
+    if (flammableData === undefined) {
+        if (target === globals.Game?.player) {
+            displayMessage("You were not set on fire because you're immune");
+        } else {
+            const displayName = target.getOne(DisplayNameComponent)!;
+            displayMessage(`${displayName.name} was not set on fire because it is immune`);
+        }
+        return false;
+    }
 
     // You can't be set on fire if you're wet
     if (wetData !== undefined && wetData.wet) {
@@ -707,13 +717,49 @@ export function castCombust(
     entityMap: EntityMap,
     target: Point
 ): boolean {
-    const targetedEntity = mouseTarget(ecs, map, entityMap, target);
-    if (targetedEntity === null) {
+    if (target.x >= map[0][0].length ||
+        target.y >= map[0].length ||
+        map[0][target.y][target.x]!.visible === false) {
         displayMessage("Canceled casting");
         return false;
     }
 
-    setOnFire(targetedEntity);
+    const targetedEntity = getEntitiesAtLocation(entityMap, target.x, target.y)
+        .sort((a, b) => {
+            const plannerA = a.getOne(PlannerAIComponent);
+            const plannerB = b.getOne(PlannerAIComponent);
+
+            if (plannerA !== undefined && plannerB === undefined) { return -1; }
+            if (plannerA === undefined && plannerB === undefined) { return 0; }
+            if (plannerA === undefined && plannerB !== undefined) { return 1; }
+            if (plannerA !== undefined && plannerB !== undefined) { return 1; }
+            return -1;
+        })[0];
+
+    if (targetedEntity === undefined) {
+        displayMessage("Canceled casting");
+        return false;
+    }
+
+    const t = targetedEntity.getOne(TypeComponent)?.entityType;
+    if (t === "shallow_water" || t === "water" || t === "puddle") {
+        for (let dx = -5; dx < 5; dx++) {
+            const height = Math.round(Math.sqrt(
+                5 * 5 - dx * dx
+            ));
+
+            for (let dy = -height; dy < height; dy++) {
+                createEntity(ecs, globals.Game!.textureAtlas, "steam", target.x + dx, target.y + dy);
+            }
+        }
+
+        if (t === "puddle") {
+            removeEntity(ecs, targetedEntity);
+        }
+    } else {
+        setOnFire(targetedEntity);
+    }
+
     return true;
 }
 

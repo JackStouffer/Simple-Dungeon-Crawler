@@ -99,5 +99,6 @@ export enum TriggerType {
     Fire,
     ShallowWater,
     DeepWater,
-    Mud
+    Mud,
+    Steam
 }

@@ -37,7 +37,7 @@ import {
 } from "./entity";
 import { attack, getEffectiveSpeedData, getKnownSpells, takeDamage, useSpell } from "./fighter";
 import { getItems, hasItem, useItem } from "./inventory";
-import { deepWaterTrigger, eventTrigger, fireTrigger, mudTrigger, shallowWaterTrigger } from "./trigger";
+import { deepWaterTrigger, eventTrigger, fireTrigger, mudTrigger, shallowWaterTrigger, steamTrigger } from "./trigger";
 import { giveItemsInteract, giveSpellsInteract, doorInteract, levelLoadInteract } from "./interactable";
 import { ItemData, SpellData, setOnFire, setParalyzed } from "./skills";
 import { DIRS } from "./rot";
@@ -124,6 +124,9 @@ export function generateWeightCallback(
                             break;
                         case TriggerType.Mud:
                             weight += 7;
+                            break;
+                        case TriggerType.Steam:
+                            weight += 20;
                             break;
                         case TriggerType.Event:
                             break;
@@ -354,6 +357,9 @@ export class GoToLocationCommand implements Command {
                         case TriggerType.Mud:
                             mudTrigger(this.entity);
                             break;
+                        case TriggerType.Steam:
+                            steamTrigger(this.entity);
+                            break;
                         default:
                             assertUnreachable(triggerData.triggerType);
                     }
@@ -509,6 +515,9 @@ export class PushBackCommand implements Command {
                             break;
                         case TriggerType.Mud:
                             mudTrigger(this.entity);
+                            break;
+                        case TriggerType.Steam:
+                            steamTrigger(this.entity);
                             break;
                         default:
                             assertUnreachable(triggerData.triggerType);

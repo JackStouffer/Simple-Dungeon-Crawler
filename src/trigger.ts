@@ -3,6 +3,7 @@ import { Entity } from "ape-ecs";
 import globals from "./globals";
 import { DamageType } from "./constants";
 import {
+    DisplayNameComponent,
     EventTriggerComponent,
     FireTriggerComponent,
     FlammableComponent,
@@ -95,4 +96,17 @@ export function deepWaterTrigger(actor: Entity): void {
             });
         }
     }
+}
+
+export function steamTrigger(actor: Entity): void {
+    if (actor === globals.Game?.player) {
+        displayMessage("You take damage from the steam");
+    } else {
+        const d = actor.getOne(DisplayNameComponent);
+        if (d !== undefined) {
+            displayMessage(`${d.name} is hurt by the steam`);
+        }
+    }
+
+    takeDamage(actor, 10, false, DamageType.Water);
 }
