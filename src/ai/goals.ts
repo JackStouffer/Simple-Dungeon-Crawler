@@ -1,5 +1,5 @@
 import { Entity, World } from "ape-ecs";
-import { ItemType, SpellType } from "../constants";
+import { Affinity, DamageType, ItemType, SpellType, TriggerType } from "../constants";
 import {
     EntityMap,
     FallbackAIComponent,
@@ -11,9 +11,10 @@ import {
     PlannerAIComponent,
     PositionComponent,
     SilenceableComponent,
-    SpellsComponent
+    SpellsComponent,
+    TriggerTypeComponent
 } from "../entity";
-import { getEffectiveHitPointData, getKnownSpells } from "../fighter";
+import { getEffectiveDamageAffinity, getEffectiveHitPointData, getKnownSpells } from "../fighter";
 import { getItems } from "../inventory";
 import { distanceBetweenPoints, getEntitiesAtLocation, Point } from "../map";
 import { DIRS } from "../rot";
@@ -148,42 +149,63 @@ function resolveAllyLowHealth(ecs: World, entityMap: EntityMap, ai: Entity): boo
 /**
  * We want to know if the entity should avoid this tile
  * when running away from a dangerous area. even if it
- * isn't dangerous itself E.g. a tile may be fine but
+ * isn't dangerous itself
+ *
+ * E.g. a tile may be fine but it could catch on fire, or
  * it's in the radius of a bomb which is about to explode
+ *
+ * This is in contrast to the resolveInDangerousArea which
+ * only looks at the current tile and does not take into
+ * account things like potential fire spread. This gives
+ * more interesting enemy behavior.
  */
 export function isPositionPotentiallyDangerous(
     ecs: World,
+    entityMap: EntityMap,
     self: Entity,
     x: number,
     y: number
 ): boolean {
-    const positions: Set<string> = new Set();
+    const positions: Point[] = [];
 
-    positions.add(`${x},${y}`);
+    const selfDamageTypes = getEffectiveDamageAffinity(self);
+
+    positions.push({ x, y });
     for (let i = 0; i < DIRS[8].length; i++) {
         const dir = DIRS[8][i];
         const cx = x + dir[0];
         const cy = y + dir[1];
-        positions.add(`${cx},${cy}`);
+        positions.push({ x: cx, y: cy });
     }
 
-    // SPEED use quad tree
-    const entities = ecs.entities.values();
-    for (const e of entities) {
-        if (e === self) { continue; }
+    for (const p of positions) {
+        const entities = getEntitiesAtLocation(entityMap, p.x, p.y);
+        for (const e of entities) {
+            if (e === self) { continue; }
 
-        const entityPos = e.getOne(PositionComponent);
-        if (entityPos !== undefined &&
-            positions.has(`${entityPos.x},${entityPos.y}`)) {
-
-            // Right now all we're doing is avoiding potentially flammable
-            // tiles as a short cut. We're not taking into account if the
-            // flammable data actually matters
             const flameData = e.getOne(FlammableComponent);
             const triggerData = e.getOne(FireTriggerComponent);
+            const steamData = e.getOne(TriggerTypeComponent);
 
-            if (triggerData !== undefined || flameData !== undefined) {
-                return true;
+            // If the entity has damage affinity then we can be a bit more intelligent
+            if (selfDamageTypes !== null) {
+                if (selfDamageTypes[DamageType.Fire] !== Affinity.nullified &&
+                    (triggerData !== undefined || flameData !== undefined)) {
+                    return true;
+                }
+
+                if (selfDamageTypes[DamageType.Water] !== Affinity.nullified &&
+                    steamData !== undefined && steamData.triggerType === TriggerType.Steam) {
+                    return true;
+                }
+            } else {
+                if (triggerData !== undefined || flameData !== undefined) {
+                    return true;
+                }
+
+                if (steamData !== undefined && steamData.triggerType === TriggerType.Steam) {
+                    return true;
+                }
             }
         }
     }
@@ -192,7 +214,7 @@ export function isPositionPotentiallyDangerous(
 }
 
 function resolveInDangerousArea(ecs: World, entityMap: EntityMap, ai: Entity): boolean {
-    const pos = ai.getOne(PositionComponent)!;
+    const pos = ai.getOne(PositionComponent)!.tilePosition();
 
     const positions: [number, number][] = [[pos.x, pos.y]];
     for (let i=0; i < DIRS[8].length; i++) {
@@ -211,7 +233,13 @@ function resolveInDangerousArea(ecs: World, entityMap: EntityMap, ai: Entity): b
             const e = entities[j];
             const flameData = e.getOne(FlammableComponent);
             const triggerData = e.getOne(FireTriggerComponent);
+            const steamData = e.getOne(TriggerTypeComponent);
+
             if (triggerData !== undefined || (flameData !== undefined && flameData.onFire && !e.tags.has("sentient"))) {
+                return true;
+            }
+
+            if (steamData !== undefined && steamData.triggerType === TriggerType.Steam) {
                 return true;
             }
         }

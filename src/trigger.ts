@@ -108,5 +108,5 @@ export function steamTrigger(actor: Entity): void {
         }
     }
 
-    takeDamage(actor, 10, false, DamageType.Water);
+    takeDamage(actor, 7, false, DamageType.Water);
 }

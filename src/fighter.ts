@@ -448,6 +448,7 @@ export function takeDamage(
     critical: boolean,
     damageType: DamageType
 ): boolean {
+    let calculatedDamage = damage;
     const name = target.getOne(DisplayNameComponent);
     const hpData = target.getOne(HitPointsComponent);
     if (hpData === undefined) { return false; }
@@ -456,16 +457,16 @@ export function takeDamage(
     const damageAffinity = getEffectiveDamageAffinity(target);
 
     if (targetStats !== null && damageAffinity !== null) {
-        damage = damage * damageAffinity[damageType];
-        damage = Math.max(1, damage - targetStats.defense);
+        calculatedDamage = calculatedDamage * damageAffinity[damageType];
+        calculatedDamage = Math.max(1, calculatedDamage - targetStats.defense);
     } else if (targetStats === null && damageAffinity !== null) {
-        damage = damage * damageAffinity[damageType];
-        damage = Math.max(1, damage);
+        calculatedDamage = calculatedDamage * damageAffinity[damageType];
+        calculatedDamage = Math.max(1, calculatedDamage);
     } else if (targetStats !== null) {
-        damage = Math.max(1, damage - targetStats.defense);
+        calculatedDamage = Math.max(1, calculatedDamage - targetStats.defense);
     }
 
-    if (damage > 0) {
+    if (calculatedDamage > 0) {
         const aiState = target.getOne(PlannerAIComponent);
         // Update the AI state to know where the target is
         // This is of course assuming that all damage is done by
@@ -475,19 +476,19 @@ export function takeDamage(
             aiState.knowsTargetPosition = true;
             aiState.update();
             // Bonus damage for sneak attack
-            damage = Math.ceil(damage * 1.5);
+            calculatedDamage = Math.ceil(calculatedDamage * 1.5);
             critical = true;
         }
 
-        hpData.hp -= damage;
+        hpData.hp -= calculatedDamage;
         hpData.update();
     }
 
-    // TODO fix messages to say who did the attacking
+    // TODO: fix messages to say who did the attacking
     if (critical && name !== undefined) {
-        displayMessage(`CRITICAL! ${name.name} takes ${damage} of ${DamageType[damageType]} damage.`, MessageType.Critical);
+        displayMessage(`CRITICAL! ${name.name} takes ${calculatedDamage} of ${DamageType[damageType]} damage.`, MessageType.Critical);
     } else if (name !== undefined) {
-        displayMessage(`${name.name} takes ${damage} ${DamageType[damageType]} damage.`);
+        displayMessage(`${name.name} takes ${calculatedDamage} ${DamageType[damageType]} damage.`);
     }
 
     if (hpData.hp <= 0) {

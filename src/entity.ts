@@ -1392,6 +1392,7 @@ export const ObjectData: { [key: string]: ObjectDataDetails } = {
             "wander",
             "chase",
             "goToEnemy",
+            "goToSafePosition",
             "meleeAttack"
         ],
         staticallyKnownComponents: {

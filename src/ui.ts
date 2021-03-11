@@ -1,4 +1,3 @@
-import { get } from "lodash";
 import { Entity, World } from "ape-ecs";
 
 import globals from "./globals";
@@ -15,9 +14,11 @@ import {
     EntityMap,
     FlammableComponent,
     FreezableComponent,
+    HitPointsComponent,
     InputHandlingComponent,
     LevelComponent,
     PlannerAIComponent,
+    TriggerTypeComponent,
     WetableComponent
 } from "./entity";
 import { InventoryItemDetails } from "./inventory";
@@ -188,10 +189,32 @@ export class StatusBar {
         if (x >= 0 && y >= 0 && x < map[0][0].length && y < map[0].length) {
             const tile = map[getHighestZIndexWithTile(map, x, y)][y][x];
             if (tile !== null && tile.isVisibleAndLit() === true) {
-                const target: Nullable<Entity> = get(getEntitiesAtLocation(entityMap, x, y), "[0]", null);
-                if (target === null) {
+                const entities = getEntitiesAtLocation(entityMap, x, y);
+                if (entities.length === 0) {
                     this.targetText.text = `${tile.name}`;
                 } else {
+                    let target: Entity;
+                    if (entities.length === 1) {
+                        target = entities[0];
+                    } else {
+                        // TODO, SPEED: To get rid of this sorting, we should probably just
+                        // have a UI thing which shows all of the entities on a tile
+                        const sorted = entities.sort((a, b) => {
+                            let aValue: number = 0;
+                            let bValue: number = 0;
+
+                            if (a.getOne(PlannerAIComponent) !== undefined) { aValue += 10; }
+                            if (a.getOne(HitPointsComponent) !== undefined) { aValue += 5; }
+                            if (a.getOne(TriggerTypeComponent) !== undefined) { aValue += 3; }
+                            if (b.getOne(PlannerAIComponent) !== undefined) { bValue += 10; }
+                            if (b.getOne(HitPointsComponent) !== undefined) { bValue += 5; }
+                            if (b.getOne(TriggerTypeComponent) !== undefined) { bValue += 3; }
+
+                            return aValue - bValue;
+                        });
+                        target = sorted[sorted.length - 1];
+                    }
+
                     const targetNameData = target.getOne(DisplayNameComponent);
                     const targetHPData = getEffectiveHitPointData(target);
                     const targetAIData = target.getOne(PlannerAIComponent);

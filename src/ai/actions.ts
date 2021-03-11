@@ -493,7 +493,7 @@ function goToSafePositionAction(
     const tilePos = pos.tilePosition();
 
     const bfs = new Path.ReverseAStar(
-        (x, y) => !isPositionPotentiallyDangerous(ecs, aiState.entity, x, y),
+        (x, y) => !isPositionPotentiallyDangerous(ecs, entityMap, aiState.entity, x, y),
         createPassableCallback(tilePos)
     );
 
