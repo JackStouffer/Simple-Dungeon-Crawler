@@ -93,6 +93,12 @@ export class DrawSystem extends System {
 
             graphics.sprite.alpha = graphics.opacity;
             graphics.sprite.zIndex = graphics.zIndex;
+
+            if (globals.Game.map[0][tilePos.y][tilePos.x]!.isVisibleAndLit()) {
+                graphics.sprite.tint = 0xFFFFFF;
+            } else {
+                graphics.sprite.tint = 0x999999;
+            }
         } else if (graphics.sprite !== null) {
             graphics.sprite.visible = false;
         }

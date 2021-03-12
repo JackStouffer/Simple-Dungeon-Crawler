@@ -856,7 +856,7 @@ export const ObjectData: { [key: string]: ObjectDataDetails } = {
     },
     "magic_shrine": {
         staticallyKnownComponents: {
-            tags: ["blocks", "blocksSight"],
+            tags: ["blocks", "blocksSight", "drawAfterSeen"],
             c: {
                 TypeComponent: {
                     entityType: "magic_shrine"
@@ -1014,6 +1014,31 @@ export const ObjectData: { [key: string]: ObjectDataDetails } = {
             }
         }
     },
+    "ice_tile": {
+        staticallyKnownComponents: {
+            tags: ["environmentTile"],
+            c: {
+                TypeComponent: {
+                    entityType: "ice_tile"
+                },
+                DisplayNameComponent: {
+                    name: "Ice"
+                },
+                GraphicsComponent: {
+                    textureKey: "frozen_water",
+                    sprite: null,
+                    zIndex: 5
+                },
+                TriggerTypeComponent: {
+                    triggerType: TriggerType.Ice
+                },
+                FreezableComponent: {
+                    frozen: true,
+                    turnsLeft: 0
+                }
+            }
+        }
+    },
     "tall_grass": {
         staticallyKnownComponents: {
             c: {
@@ -1058,7 +1083,7 @@ export const ObjectData: { [key: string]: ObjectDataDetails } = {
                 GraphicsComponent: {
                     textureKey: "shrub_1",
                     sprite: null,
-                    zIndex: 8
+                    zIndex: 10
                 },
                 FlammableComponent: {
                     onFire: false,
@@ -1096,7 +1121,7 @@ export const ObjectData: { [key: string]: ObjectDataDetails } = {
                 GraphicsComponent: {
                     textureKey: "player",
                     sprite: null,
-                    zIndex: 5
+                    zIndex: 8
                 },
                 LightingComponent: {
                     color: "white",

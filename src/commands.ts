@@ -130,6 +130,9 @@ export function generateWeightCallback(
                             break;
                         case TriggerType.Event:
                             break;
+                        case TriggerType.Ice:
+                            weight += 7;
+                            break;
                         default:
                             assertUnreachable(trigger.triggerType);
                     }
@@ -302,6 +305,8 @@ export class GoToLocationCommand implements Command {
             pos
         );
 
+        // we're done animating one tile movement, update the position and
+        // do the movement logic
         if (distance >= startDistance) {
             const end = globals.Game!.gameCamera.tilePositionToWorld(
                 destination[0], destination[1]
@@ -360,6 +365,18 @@ export class GoToLocationCommand implements Command {
                         case TriggerType.Steam:
                             steamTrigger(this.entity);
                             break;
+                        case TriggerType.Ice: {
+                            const vecX = destination[0] - tilePos.x;
+                            const vecY = destination[1] - tilePos.y;
+                            globals.Game!.commandQueue.push(
+                                new GoToLocationCommand(
+                                    this.entity,
+                                    [[destination[0] + vecX, destination[1] + vecY]]
+                                )
+                            );
+                            this.done = true;
+                            return;
+                        }
                         default:
                             assertUnreachable(triggerData.triggerType);
                     }
@@ -518,6 +535,9 @@ export class PushBackCommand implements Command {
                             break;
                         case TriggerType.Steam:
                             steamTrigger(this.entity);
+                            break;
+                        case TriggerType.Ice:
+                            this.numTiles++;
                             break;
                         default:
                             assertUnreachable(triggerData.triggerType);

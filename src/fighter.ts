@@ -487,6 +487,14 @@ export function takeDamage(
     // TODO: fix messages to say who did the attacking
     if (critical && name !== undefined) {
         displayMessage(`CRITICAL! ${name.name} takes ${calculatedDamage} of ${DamageType[damageType]} damage.`, MessageType.Critical);
+    } else if (name !== undefined &&
+        damageAffinity !== null &&
+        damageAffinity[damageType] === Affinity.nullified) {
+        displayMessage(`${name.name} is immune to ${DamageType[damageType]} attacks!`);
+    } else if (name !== undefined &&
+        damageAffinity !== null &&
+        damageAffinity[damageType] === Affinity.strong) {
+        displayMessage(`${name.name} resists the ${DamageType[damageType]} damage and takes ${calculatedDamage} damage.`);
     } else if (name !== undefined) {
         displayMessage(`${name.name} takes ${calculatedDamage} ${DamageType[damageType]} damage.`);
     }
