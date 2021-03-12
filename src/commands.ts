@@ -32,8 +32,7 @@ import {
     PositionComponent,
     SpellsComponent,
     StatsComponent,
-    TriggerTypeComponent,
-    TypeComponent
+    TriggerTypeComponent
 } from "./entity";
 import { attack, getEffectiveSpeedData, getKnownSpells, takeDamage, useSpell } from "./fighter";
 import { getItems, hasItem, useItem } from "./inventory";
@@ -76,9 +75,8 @@ export function createWaterBasedPassableCallback(origin: Point): PassableCallbac
 
         if (blocks) { return false; }
 
-        if (entity !== null) {
-            const t = entity.getOne(TypeComponent)?.entityType;
-            if (t === "shallow_water" || t === "water") { return true; }
+        if (entity !== null && entity.tags.has("waterTile")) {
+            return true;
         }
 
         return false;

@@ -22,8 +22,7 @@ import {
     PlannerAIComponent,
     PositionComponent,
     SpeedComponent,
-    SpellsComponent,
-    TypeComponent
+    SpellsComponent
 } from "../entity";
 import {
     distanceBetweenPoints,
@@ -118,8 +117,7 @@ function wanderAction(
             newX = pos.x + DIRS[8][dir][0];
             newY = pos.y + DIRS[8][dir][1];
             ({ blocks, entity } = isBlocked(map, entityMap, newX, newY));
-            const t = entity?.getOne(TypeComponent)?.entityType;
-            isPassable = entity !== null || t === "shallow_water" || t === "water";
+            isPassable = entity !== null && entity.tags.has("waterTile");
         } while (blocks === true || !isPassable);
     } else {
         do {

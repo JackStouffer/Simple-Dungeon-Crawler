@@ -741,8 +741,7 @@ export function castCombust(
         return false;
     }
 
-    const t = targetedEntity.getOne(TypeComponent)?.entityType;
-    if (t === "shallow_water" || t === "water" || t === "puddle") {
+    if (targetedEntity.tags.has("waterTile")) {
         for (let dx = -5; dx < 5; dx++) {
             const height = Math.round(Math.sqrt(
                 5 * 5 - dx * dx
