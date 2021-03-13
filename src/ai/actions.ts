@@ -103,32 +103,30 @@ function wanderAction(
     entityMap: EntityMap,
     aiState: PlannerAIComponent
 ): Command {
-    let blocks: boolean = true;
-    let entity: Nullable<Entity> = null;
-    let newX: number = 0;
-    let newY: number = 0;
-    let dir: number = RNG.getItem([0, 1, 2, 3, 4, 5, 6, 7]) ?? 0;
     const pos = aiState.entity.getOne(PositionComponent)!.tilePosition();
+    const validPositions: [number, number][] = [];
 
-    if (aiState.entity.tags.has("aquatic")) {
-        let isPassable = false;
-        do {
-            dir = RNG.getItem([0, 1, 2, 3, 4, 5, 6, 7]) ?? 0;
-            newX = pos.x + DIRS[8][dir][0];
-            newY = pos.y + DIRS[8][dir][1];
-            ({ blocks, entity } = isBlocked(map, entityMap, newX, newY));
-            isPassable = entity !== null && entity.tags.has("waterTile");
-        } while (blocks === true || !isPassable);
-    } else {
-        do {
-            dir = RNG.getItem([0, 1, 2, 3, 4, 5, 6, 7]) ?? 0;
-            newX = pos.x + DIRS[8][dir][0];
-            newY = pos.y + DIRS[8][dir][1];
-            ({ blocks, entity } = isBlocked(map, entityMap, newX, newY));
-        } while (blocks === true || entity?.tags.has("environmentTile") === true);
+    if (Math.random() > 0.8) {
+        return new NoOpCommand(true);
     }
 
-    return new GoToLocationCommand(aiState.entity, [[newX, newY]]);
+    for (const dir of DIRS[8]) {
+        const newX = pos.x + dir[0];
+        const newY = pos.y + dir[1];
+        const { blocks, entity } = isBlocked(map, entityMap, newX, newY);
+        if (aiState.entity.tags.has("aquatic") && blocks === false && entity !== null && entity.tags.has("waterTile")) {
+            validPositions.push([newX, newY]);
+        } else if (!aiState.entity.tags.has("aquatic") && blocks === false && entity === null) {
+            validPositions.push([newX, newY]);
+        }
+    }
+
+    const newPos = RNG.getItem(validPositions);
+    if (newPos === null) {
+        return new NoOpCommand(true);
+    } else {
+        return new GoToLocationCommand(aiState.entity, [newPos]);
+    }
 }
 
 /**
