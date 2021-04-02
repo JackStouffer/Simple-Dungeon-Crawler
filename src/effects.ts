@@ -4,7 +4,6 @@ import globals from "./globals";
 import { DamageType } from "./constants";
 import { displayMessage } from "./ui";
 import {
-    ObjectData,
     DisplayNameComponent,
     FireTriggerComponent,
     FlammableComponent,
@@ -12,6 +11,7 @@ import {
     GraphicsComponent,
     HitPointsComponent,
     HitPointsEffectComponent,
+    ObjectData,
     ParalyzableComponent,
     PositionComponent,
     SilenceableComponent,

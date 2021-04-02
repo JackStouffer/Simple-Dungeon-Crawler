@@ -54,7 +54,7 @@ export class DrawSystem extends System {
             graphics.sprite !== null) {
             graphics.sprite.visible = true;
 
-            const { x, y } = globals.Game!.gameCamera.worldPositionToScreen(pos.x, pos.y);
+            const { x, y } = globals.Game.gameCamera.worldPositionToScreen(pos.x, pos.y);
             graphics.sprite.position.set(x, y);
             graphics.sprite.scale.set(globals.Game!.gameCamera.zoom, globals.Game!.gameCamera.zoom);
 

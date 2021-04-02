@@ -36,12 +36,19 @@ export enum PlayerState {
 /**
  * Given a mouse position return the object at that location which
  * has an interactable or fighter. If there is no object, return null
+ *
+ * @param {World} ecs - The ecs world to use
+ * @param {GameMap} map - The ecs world to use
+ * @param {EntityMap} entityMap - The ecs world to use
+ * @param {Point} mousePosition - the targeted point in map
+ * @param {boolean} excludeUninteractable - should ignore entities that don't have hp or an interactable
  */
 export function mouseTarget(
     ecs: World,
     map: GameMap,
     entityMap: EntityMap,
-    mousePosition: Point
+    mousePosition: Point,
+    excludeUninteractable = true
 ): Nullable<Entity> {
     if (mousePosition.x >= map[0][0].length ||
         mousePosition.y >= map[0].length ||
@@ -49,24 +56,35 @@ export function mouseTarget(
         return null;
     }
 
-    const res = getEntitiesAtLocation(entityMap, mousePosition.x, mousePosition.y)
-        .filter(e => {
+    const entities = getEntitiesAtLocation(entityMap, mousePosition.x, mousePosition.y);
+
+    let res;
+    if (excludeUninteractable) {
+        res = entities.filter(e => {
             const hpData = e.getOne(HitPointsComponent);
             const interactableData = e.getOne(InteractableTypeComponent);
             return hpData !== undefined || interactableData !== undefined;
-        })
-        .sort((a, b) => {
-            const plannerA = a.getOne(PlannerAIComponent);
-            const plannerB = b.getOne(PlannerAIComponent);
+        });
+    } else {
+        res = entities;
+    }
 
-            if (plannerA !== undefined && plannerB === undefined) { return -1; }
-            if (plannerA === undefined && plannerB === undefined) { return 0; }
-            if (plannerA === undefined && plannerB !== undefined) { return 1; }
-            if (plannerA !== undefined && plannerB !== undefined) { return 1; }
-            return -1;
-        })[0];
+    // Prioritize things the player can interact with to the front of the array
+    res = res.sort((a, b) => {
+        let aValue: number = 0;
+        let bValue: number = 0;
 
-    return res ?? null;
+        if (a.getOne(PlannerAIComponent) !== undefined) { aValue += 10; }
+        if (a.getOne(HitPointsComponent) !== undefined) { aValue += 5; }
+        if (a.getOne(InteractableTypeComponent) !== undefined) { aValue += 3; }
+        if (b.getOne(PlannerAIComponent) !== undefined) { bValue += 10; }
+        if (b.getOne(HitPointsComponent) !== undefined) { bValue += 5; }
+        if (b.getOne(InteractableTypeComponent) !== undefined) { bValue += 3; }
+
+        return bValue - aValue;
+    });
+
+    return res[0] ?? null;
 }
 
 export function playerInput(

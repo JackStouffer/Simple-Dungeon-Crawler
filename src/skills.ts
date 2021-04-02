@@ -10,7 +10,8 @@ import {
     Point,
     setAllToExplored,
     getRandomOpenSpace,
-    getEntitiesAtLocation
+    getEntitiesAtLocation,
+    getHighestZIndexWithTile
 } from "./map";
 import { displayMessage } from "./ui";
 import { DamageType, ItemType, SpellType, StatusEffectType, TriggerType } from "./constants";
@@ -30,6 +31,7 @@ import {
     SpeedComponent,
     SpeedEffectComponent,
     SpellsComponent,
+    TriggerTypeComponent,
     TypeComponent,
     WetableComponent
 } from "./entity";
@@ -264,8 +266,9 @@ export function setParalyzed(target: Entity, turns?: number): boolean {
 
 export function setFrozen(target: Entity, turns: number): boolean {
     const name = target.getOne(DisplayNameComponent);
+    const triggerData = target.getOne(TriggerTypeComponent);
 
-    // Put the fire out if the actor is on fire
+    // Put the fire out if on fire
     const flammableData = target.getOne(FlammableComponent);
     if (flammableData !== undefined && flammableData.onFire) {
         flammableData.onFire = false;
@@ -278,6 +281,12 @@ export function setFrozen(target: Entity, turns: number): boolean {
         } else if (name !== undefined) {
             displayMessage(`Instead of ${name.name} being frozen, it is no longer on fire`);
         }
+
+        if (triggerData !== undefined && triggerData.triggerType === TriggerType.Fire) {
+            target.removeComponent("TriggerTypeComponent");
+            target.removeComponent("FireTriggerComponent");
+        }
+
         return false;
     }
 
@@ -287,17 +296,27 @@ export function setFrozen(target: Entity, turns: number): boolean {
         frozenData.turnsLeft = turns;
         frozenData.update();
 
-        const graphics = target.getOne(GraphicsComponent);
-        if (graphics !== undefined &&
-            graphics.sprite !== null &&
-            target.tags.has("sentient")) {
-            graphics.sprite.texture = globals.Game!.textureAtlas["ice_wall"];
-        }
-
         if (target === globals.Game?.player) {
             displayMessage("You are frozen");
-        } else if (name !== undefined) {
+        } else if (name !== undefined && target.tags.has("sentient")) {
             displayMessage(`${name.name} is now frozen`);
+        }
+
+        if (triggerData !== undefined &&
+            (triggerData.triggerType === TriggerType.DeepWater ||
+                triggerData.triggerType === TriggerType.ShallowWater ||
+                triggerData.triggerType === TriggerType.Mud)) {
+            triggerData.triggerType = TriggerType.Ice;
+            triggerData.update();
+        }
+
+        const graphics = target.getOne(GraphicsComponent);
+        if (graphics !== undefined && graphics.sprite !== null && frozenData.textureKey !== null) {
+            graphics.sprite.texture = globals.Game!.textureAtlas[frozenData.textureKey];
+        } else if (graphics !== undefined &&
+            graphics.sprite !== null &&
+            frozenData.textureKey === null) {
+            graphics.sprite.texture = globals.Game!.textureAtlas[graphics.textureKey];
         }
 
         return true;
@@ -707,7 +726,8 @@ export function castFireWall(
 }
 
 /**
- * Set a target on fire
+ * Set a target on fire. Creates steam clouds when used on water tiles
+ * and removes puddles.
  */
 export function castCombust(
     item: ItemDataDetails | SpellDataDetails,
@@ -752,7 +772,8 @@ export function castCombust(
             }
         }
 
-        if (t === "puddle") {
+        const t = targetedEntity.getOne(TypeComponent);
+        if (t !== undefined && t.type === "puddle") {
             removeEntity(ecs, targetedEntity);
         }
     } else {
@@ -864,7 +885,7 @@ export function castFreeze(
 ): boolean {
     if (item.value === null) { throw new Error("Item does not have a value for castFreeze"); }
 
-    const targetedEntity = mouseTarget(ecs, map, entityMap, target);
+    const targetedEntity = mouseTarget(ecs, map, entityMap, target, false);
     if (targetedEntity === null) {
         displayMessage("Canceled casting");
         return false;
@@ -877,7 +898,39 @@ export function castFreeze(
         return false;
     }
 
-    return setFrozen(targetedEntity, item.value);
+    const targetPos = targetedEntity.getOne(PositionComponent)!.tilePosition();
+
+    const positions: Point[] = [targetPos];
+    for (const dir of DIRS[8]) {
+        positions.push({ x: targetPos.x + dir[0], y: targetPos.y + dir[1] });
+        // Create a cool looking creeping ice effect
+        if (Math.random() > 0.5) {
+            positions.push({ x: targetPos.x + (dir[0] * 2), y: targetPos.y + (dir[1] * 2) });
+            if (Math.random() > 0.4) {
+                positions.push({ x: targetPos.x + (dir[0] * 3), y: targetPos.y + (dir[1] * 3) });
+            }
+        }
+    }
+
+    for (const pos of positions) {
+        if (pos.x < map[0][0].length &&
+            pos.y < map[0].length) {
+            const z = getHighestZIndexWithTile(map, pos.x, pos.y);
+            if (map[z][pos.y][pos.x]!.blocks === false) {
+                const entities = getEntitiesAtLocation(entityMap, pos.x, pos.y);
+                if (entities.length === 0) {
+                    const puddle = createEntity(ecs, globals.Game!.textureAtlas, "puddle", pos.x, pos.y);
+                    setFrozen(puddle, item.value * 3);
+                } else {
+                    for (const e of entities) {
+                        setFrozen(e, e.tags.has("sentient") ? item.value : item.value * 3);
+                    }
+                }
+            }
+        }
+    }
+
+    return true;
 }
 
 /**

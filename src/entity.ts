@@ -400,11 +400,13 @@ export class InputHandlingComponent extends Component {
 export class FreezableComponent extends Component {
     frozen: boolean;
     turnsLeft: number;
+    textureKey: Nullable<string>;
 
     static typeName = "FreezableComponent";
     static properties = {
         frozen: false,
-        turnsLeft: 0
+        turnsLeft: 0,
+        textureKey: null
     }
 }
 
@@ -907,7 +909,8 @@ export const ObjectData: { [key: string]: ObjectDataDetails } = {
                 },
                 FreezableComponent: {
                     frozen: false,
-                    turnsLeft: 0
+                    turnsLeft: 0,
+                    textureKey: "frozen_water"
                 }
             }
         }
@@ -932,10 +935,11 @@ export const ObjectData: { [key: string]: ObjectDataDetails } = {
                 },
                 FreezableComponent: {
                     frozen: false,
-                    turnsLeft: 0
+                    turnsLeft: 0,
+                    textureKey: "frozen_water"
                 },
                 RemoveAfterNTurnsComponent: {
-                    turnsLeft: 25
+                    turnsLeft: 30
                 }
             }
         }
@@ -960,7 +964,8 @@ export const ObjectData: { [key: string]: ObjectDataDetails } = {
                 },
                 FreezableComponent: {
                     frozen: false,
-                    turnsLeft: 0
+                    turnsLeft: 0,
+                    textureKey: "frozen_water"
                 }
             }
         }
@@ -1009,32 +1014,8 @@ export const ObjectData: { [key: string]: ObjectDataDetails } = {
                 },
                 FreezableComponent: {
                     frozen: false,
-                    turnsLeft: 0
-                }
-            }
-        }
-    },
-    "ice_tile": {
-        staticallyKnownComponents: {
-            tags: ["environmentTile"],
-            c: {
-                TypeComponent: {
-                    entityType: "ice_tile"
-                },
-                DisplayNameComponent: {
-                    name: "Ice"
-                },
-                GraphicsComponent: {
-                    textureKey: "frozen_water",
-                    sprite: null,
-                    zIndex: 5
-                },
-                TriggerTypeComponent: {
-                    triggerType: TriggerType.Ice
-                },
-                FreezableComponent: {
-                    frozen: true,
-                    turnsLeft: 0
+                    turnsLeft: 0,
+                    textureKey: "frozen_water"
                 }
             }
         }
@@ -1157,7 +1138,8 @@ export const ObjectData: { [key: string]: ObjectDataDetails } = {
                 },
                 FreezableComponent: {
                     frozen: false,
-                    turnsLeft: 0
+                    turnsLeft: 0,
+                    textureKey: "ice_wall"
                 },
                 WetableComponent: {
                     wet: false,
@@ -1235,7 +1217,8 @@ export const ObjectData: { [key: string]: ObjectDataDetails } = {
                 },
                 FreezableComponent: {
                     frozen: false,
-                    turnsLeft: 0
+                    turnsLeft: 0,
+                    textureKey: "ice_wall"
                 },
                 WetableComponent: {
                     wet: false,
@@ -1318,7 +1301,8 @@ export const ObjectData: { [key: string]: ObjectDataDetails } = {
                 },
                 FreezableComponent: {
                     frozen: false,
-                    turnsLeft: 0
+                    turnsLeft: 0,
+                    textureKey: "ice_wall"
                 },
                 WetableComponent: {
                     wet: false,
@@ -1395,7 +1379,8 @@ export const ObjectData: { [key: string]: ObjectDataDetails } = {
                 },
                 FreezableComponent: {
                     frozen: false,
-                    turnsLeft: 0
+                    turnsLeft: 0,
+                    textureKey: "ice_wall"
                 },
                 WetableComponent: {
                     wet: false,
@@ -1467,7 +1452,8 @@ export const ObjectData: { [key: string]: ObjectDataDetails } = {
                 DamageAffinityComponent: waterTypeDamageValues,
                 FreezableComponent: {
                     frozen: false,
-                    turnsLeft: 0
+                    turnsLeft: 0,
+                    textureKey: "ice_wall"
                 },
                 ParalyzableComponent: {
                     paralyzed: false,
@@ -1549,7 +1535,8 @@ export const ObjectData: { [key: string]: ObjectDataDetails } = {
                 },
                 FreezableComponent: {
                     frozen: false,
-                    turnsLeft: 0
+                    turnsLeft: 0,
+                    textureKey: "ice_wall"
                 },
                 WetableComponent: {
                     wet: false,
@@ -1642,7 +1629,8 @@ export const ObjectData: { [key: string]: ObjectDataDetails } = {
                 },
                 FreezableComponent: {
                     frozen: false,
-                    turnsLeft: 0
+                    turnsLeft: 0,
+                    textureKey: "ice_wall"
                 },
                 WetableComponent: {
                     wet: false,
@@ -1732,7 +1720,9 @@ export const ObjectData: { [key: string]: ObjectDataDetails } = {
                     turnsLeft: 0
                 },
                 FreezableComponent: {
-                    frozen: false
+                    frozen: false,
+                    turnsLeft: 0,
+                    textureKey: "ice_wall"
                 },
                 WetableComponent: {
                     wet: false,

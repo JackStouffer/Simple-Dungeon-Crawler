@@ -1124,8 +1124,7 @@ const TileToObject: Map<number, string> = new Map([
     [211, "door"],
     [1981, "tall_grass"],
     [1440, "campfire"],
-    [1805, "thick_underbrush"],
-    [4929, "ice_tile"]
+    [1805, "thick_underbrush"]
 ]);
 
 export class Tile {
