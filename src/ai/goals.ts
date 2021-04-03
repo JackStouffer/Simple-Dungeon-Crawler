@@ -293,6 +293,35 @@ function resolveAliveAllies(ecs: World, entityMap: EntityMap, ai: Entity): boole
     return false;
 }
 
+function resolveOnFire(ecs: World, entityMap: EntityMap, ai: Entity): boolean {
+    const flammableData = ai.getOne(FlammableComponent);
+
+    if (flammableData !== undefined && flammableData.onFire) {
+        return true;
+    }
+
+    return false;
+}
+
+function resolveNearWater(ecs: World, entityMap: EntityMap, ai: Entity): boolean {
+    const pos = ai.getOne(PositionComponent)!.tilePosition();
+    const entities = ecs
+        .createQuery()
+        .fromAll(PositionComponent, "waterTile")
+        .execute();
+
+    for (const e of entities) {
+        if (e.id === ai.id) { continue; }
+
+        const ePos = e.getOne(PositionComponent)!;
+        if (distanceBetweenPoints(ePos.tilePosition(), pos) < 15) {
+            return true;
+        }
+    }
+
+    return false;
+}
+
 type GoalResolver = (ecs: World, entityMap: EntityMap, ai: Entity) => boolean;
 
 interface GoalDataDetails {
@@ -348,6 +377,12 @@ export const GoalData: { [key: string]: GoalDataDetails } = {
     },
     "atFallbackPosition": {
         resolver: resolveAtFallbackPosition
+    },
+    "onFire": {
+        resolver: resolveOnFire
+    },
+    "nearWater": {
+        resolver: resolveNearWater
     }
 };
 

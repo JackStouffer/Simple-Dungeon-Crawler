@@ -1162,7 +1162,9 @@ export const ObjectData: { [key: string]: ObjectDataDetails } = {
             "wander",
             "chase",
             "goToEnemy",
-            "meleeAttack"
+            "meleeAttack",
+            "goToSafePosition",
+            "douseFireOnSelf"
         ],
         inventoryPool: [
             {
@@ -1242,7 +1244,8 @@ export const ObjectData: { [key: string]: ObjectDataDetails } = {
             "useHealingItem",
             "goToEnemy",
             "goToSafePosition",
-            "meleeAttack"
+            "meleeAttack",
+            "douseFireOnSelf"
         ],
         inventoryPool: [
             {
@@ -1325,7 +1328,9 @@ export const ObjectData: { [key: string]: ObjectDataDetails } = {
             "chase",
             "goToEnemy",
             "meleeAttack",
-            "runAway"
+            "goToSafePosition",
+            "runAway",
+            "douseFireOnSelf"
         ],
         staticallyKnownComponents: {
             tags: ["blocks", "sentient", "moveable"],
@@ -1475,7 +1480,8 @@ export const ObjectData: { [key: string]: ObjectDataDetails } = {
             "goToEnemy",
             "goToSafePosition",
             "runAway",
-            "meleeAttack"
+            "meleeAttack",
+            "douseFireOnSelf"
         ],
         inventoryPool: [
             {
@@ -1569,7 +1575,8 @@ export const ObjectData: { [key: string]: ObjectDataDetails } = {
             "goToEnemy",
             "goToSafePosition",
             "runAway",
-            "meleeAttack"
+            "meleeAttack",
+            "douseFireOnSelf"
         ],
         inventoryPool: [
             {
@@ -1667,7 +1674,8 @@ export const ObjectData: { [key: string]: ObjectDataDetails } = {
             "goToEnemy",
             "goToSafePosition",
             "runAway",
-            "meleeAttack"
+            "meleeAttack",
+            "douseFireOnSelf"
         ],
         staticallyKnownComponents: {
             tags: ["blocks", "sentient", "moveable"],

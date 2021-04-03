@@ -30,6 +30,7 @@ import {
     GameMap,
     isBlocked,
     Point,
+    getEntitiesAtLocation,
 } from "../map";
 import { displayMessage } from "../ui";
 import { ItemType, SpellType } from "../constants";
@@ -574,6 +575,48 @@ function standbyWeight(ecs: World, aiState: PlannerAIComponent): number {
     return 1;
 }
 
+function douseFireOnSelfAction(
+    ecs: World,
+    map: GameMap,
+    entityMap: EntityMap,
+    aiState: PlannerAIComponent
+): Command {
+    const pos = aiState.entity.getOne(PositionComponent);
+    const speedData = aiState.entity.getOne(SpeedComponent);
+    if (pos === undefined || speedData === undefined) {
+        throw new Error("Missing data when trying to run away");
+    }
+    const tilePos = pos.tilePosition();
+
+    const bfs = new Path.ReverseAStar(
+        (x, y) => {
+            const entities = getEntitiesAtLocation(entityMap, x, y);
+            for (const e of entities) {
+                if (e.tags.has("waterTile")) {
+                    return true;
+                }
+            }
+            return false;
+        },
+        createPassableCallback(tilePos)
+    );
+
+    let path: number[][] = [];
+    function pathCallback(x: number, y: number) {
+        path.splice(0, 0, [x, y]);
+    }
+    bfs.compute(tilePos.x, tilePos.y, pathCallback);
+
+    if (path.length === 0) {
+        return new NoOpCommand(true);
+    }
+
+    // remove our own position
+    path.shift();
+    path = path.slice(0, speedData.maxTilesPerMove);
+    return new GoToLocationCommand(aiState.entity, path);
+}
+
 type ActionUpdateFunction = (
     ecs: World,
     map: GameMap,
@@ -689,6 +732,12 @@ export const ActionData: { [key: string]: Action } = {
         preconditions: { atFallbackPosition: false },
         postconditions: { atFallbackPosition: true },
         updateFunction: () => { return new NoOpCommand(true); },
+        weight: () => 1
+    },
+    "douseFireOnSelf": {
+        preconditions: { onFire: true, nearWater: true },
+        postconditions: { onFire: false },
+        updateFunction: douseFireOnSelfAction,
         weight: () => 1
     }
 };

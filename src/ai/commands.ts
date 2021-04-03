@@ -226,6 +226,9 @@ export function getPlan(
     if (aiState.goals.has("afraid") && worldState.afraid === true) {
         stateStack.push({ cowering: true });
     }
+    if (aiState.goals.has("onFire") && worldState.onFire === true) {
+        stateStack.push({ onFire: false });
+    }
 
     let goal;
     do {
