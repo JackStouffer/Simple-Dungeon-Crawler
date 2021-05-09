@@ -1,12 +1,5 @@
 import { DIRS } from "../constants";
-
-export type ComputeCallback = (x: number, y: number) => any;
-export type PassableCallback = (x: number, y: number) => boolean;
-export type WeightCallback = (x: number, y: number) => number;
-
-export interface Options {
-    topology: 4 | 6 | 8;
-}
+import { ComputeCallback, PassableCallback, WeightCallback } from "./path";
 
 interface Item {
     x: number;
@@ -23,9 +16,10 @@ interface Item {
  * backwards towards the origin
  */
 export default class ReverseAStar {
-    _goalCallback: PassableCallback;
-    _passableCallback: PassableCallback;
     _dirs: number[][];
+    private readonly _goalCallback: PassableCallback;
+    private readonly _passableCallback: PassableCallback;
+    private readonly _weightCallback: WeightCallback;
     private todo: Item[];
     private done: { [key: string]: Item };
     private fromX!: number;
@@ -33,10 +27,12 @@ export default class ReverseAStar {
 
     constructor(
         goalCallback: PassableCallback,
-        passableCallback: PassableCallback
+        passableCallback: PassableCallback,
+        weightCallback: WeightCallback
     ) {
         this._goalCallback = goalCallback;
         this._passableCallback = passableCallback;
+        this._weightCallback = weightCallback;
 
         this._dirs = DIRS[8];
         this._dirs = [
@@ -100,7 +96,7 @@ export default class ReverseAStar {
     }
 
     add(x: number, y: number, prev: Item | null): void {
-        const h = this.distance(x, y);
+        const h = this._weightCallback(x, y);
 
         const obj = {
             x: x,

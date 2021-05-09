@@ -1256,15 +1256,15 @@ export function loadTiledMap(
         ),
         "[0]",
         null
-    ) as TiledLayerObjectGroup<"orthogonal">;
+    ) as TiledLayerObjectGroup;
 
     const nodeLayer = get(sourceData.layers.filter(
         (l) => l.name === "Node Layer"
-    ), "[0]", null) as TiledLayerObjectGroup<"orthogonal">;
+    ), "[0]", null) as TiledLayerObjectGroup;
 
     const shadowBoxLayer = get(sourceData.layers.filter(
         (l) => l.name === "Shadow Boxes"
-    ), "[0]", null) as TiledLayerObjectGroup<"orthogonal">;
+    ), "[0]", null) as TiledLayerObjectGroup;
 
     if (tileLayers.length === 0) {
         throw new Error(`No tile layer in map ${level}`);

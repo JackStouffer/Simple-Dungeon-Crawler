@@ -154,13 +154,16 @@ export function getPlan(
     entityMap: EntityMap,
     aiState: PlannerAIComponent
 ): Nullable<string> {
+    const debug = globals.Game?.debugAI === true;
     const displayName = aiState.entity.getOne(DisplayNameComponent);
     if (displayName === undefined) { throw new Error(`Entity ${aiState.entity.id} is missing a DisplayNameComponent`); }
 
     const worldState = generateWorldState(ecs, entityMap, aiState);
-    if (globals.Game?.debugAI === true) {
+    if (debug) {
         // eslint-disable-next-line no-console
-        console.log(`${aiState.entity.id}, worldState ${JSON.stringify(worldState)}`);
+        console.groupCollapsed(aiState.entity.id);
+        // eslint-disable-next-line no-console
+        console.log("worldState", worldState);
     }
 
     const loseTrackData = aiState.entity.getOne(LoseTargetAIComponent);
@@ -183,6 +186,10 @@ export function getPlan(
     }
 
     if (isEqual(aiState.previousWorldState, worldState)) {
+        if (debug) {
+            // eslint-disable-next-line no-console
+            console.groupEnd();
+        }
         return aiState.currentAction;
     }
 
@@ -192,17 +199,23 @@ export function getPlan(
     }
 
     const actions = Object.keys(aiState.planner.actionList!.reactions);
+    const actionDebugTable = [];
     for (let i = 0; i < actions.length; i++) {
         const action = actions[i];
         const actionData = ActionData[action];
         if (actionData !== undefined) {
             const weight = actionData.weight(ecs, aiState);
             aiState.planner.actionList!.setWeight(action, weight);
-            if (globals.Game?.debugAI === true) {
-                // eslint-disable-next-line no-console
-                console.log(`${aiState.entity.id}, action ${action} weight ${weight}`);
+
+            if (debug) {
+                actionDebugTable.push({ action, weight });
             }
         }
+    }
+
+    if (debug) {
+        // eslint-disable-next-line no-console
+        console.table(actionDebugTable);
     }
 
     aiState.planner.setStartState(worldState);
@@ -238,9 +251,13 @@ export function getPlan(
         aiState.currentAction = get(plan, "['0'].name", null);
     } while (stateStack.length > 0 && aiState.currentAction === null);
 
-    if (globals.Game?.debugAI === true) {
+    if (debug) {
         // eslint-disable-next-line no-console
-        console.log(`${aiState.entity.id}, goal ${JSON.stringify(goal)} currentAction ${aiState.currentAction}`);
+        console.log(`goal: ${JSON.stringify(goal)}`);
+        // eslint-disable-next-line no-console
+        console.log(`currentAction: ${aiState.currentAction}`);
+        // eslint-disable-next-line no-console
+        console.groupEnd();
     }
 
     aiState.previousWorldState = worldState;

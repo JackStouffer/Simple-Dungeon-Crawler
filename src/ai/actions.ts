@@ -491,7 +491,8 @@ function goToSafePositionAction(
 
     const bfs = new Path.ReverseAStar(
         (x, y) => !isPositionPotentiallyDangerous(ecs, entityMap, aiState.entity, x, y),
-        createPassableCallback(tilePos)
+        createPassableCallback(tilePos),
+        generateWeightCallback(ecs, map, entityMap, tilePos)
     );
 
     let path: number[][] = [];
@@ -531,7 +532,8 @@ function repositionAction(
             const d = distanceBetweenPoints({ x, y }, targetPosData.tilePosition());
             return Math.floor(d) === aiState.desiredDistanceToTarget;
         },
-        createPassableCallback(tilePos)
+        createPassableCallback(tilePos),
+        generateWeightCallback(ecs, map, entityMap, tilePos)
     );
 
     let path: number[][] = [];
@@ -598,7 +600,8 @@ function douseFireOnSelfAction(
             }
             return false;
         },
-        createPassableCallback(tilePos)
+        createPassableCallback(tilePos),
+        generateWeightCallback(ecs, map, entityMap, tilePos)
     );
 
     let path: number[][] = [];
