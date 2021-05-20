@@ -94,6 +94,7 @@ function castHeal(
     user: Entity
 ): boolean {
     if (item.value === null) { throw new Error("Item does not have a healing value"); }
+    const displayName = user.getOne(DisplayNameComponent)!;
 
     const hpData = getEffectiveHitPointData(user);
     if (hpData === null) { throw new Error(`Trying to heal entity ${user.id} without any hp data`); }
@@ -102,7 +103,6 @@ function castHeal(
         if (user.id === "player") {
             displayMessage("You are already at full health.");
         } else {
-            const displayName = user.getOne(DisplayNameComponent)!;
             displayMessage(`${displayName.name} tries and fails to take a health potion`);
         }
 
@@ -110,6 +110,11 @@ function castHeal(
     }
 
     heal(user.getOne(HitPointsComponent)!, item.value);
+    if (user.id === "player") {
+        displayMessage(`You are healed for ${item.value} hp.`);
+    } else {
+        displayMessage(`${displayName.name} is healed for ${item.value} hp.`);
+    }
     return true;
 }
 
