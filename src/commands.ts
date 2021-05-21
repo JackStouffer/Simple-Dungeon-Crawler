@@ -778,33 +778,38 @@ export class UseSpellCommand implements Command {
 
                 if (this.details.particleConfig !== undefined &&
                     this.details.particleImages !== undefined &&
-                    this.target !== undefined &&
                     this.shouldCast) {
-                    // We need to put the emitter at the location. For some reason
-                    // the API requires a container at the location rather than the
-                    // location. So get either the entity there or the highest tile.
-                    const entity = getEntitiesAtLocation(
-                        globals.Game!.entityMap,
-                        this.target.x,
-                        this.target.y
-                    )[0];
-
                     let sprite: PIXI.Sprite | undefined;
-                    if (entity !== undefined) {
-                        const g = entity.getOne(GraphicsComponent);
-                        if (g !== undefined && g.sprite !== null) { sprite = g.sprite; }
-                    }
 
-                    let z = getHighestZIndexWithTile(
-                        globals.Game!.map, this.target.x, this.target.y
-                    );
-                    while (sprite === undefined) {
-                        const tile = globals.Game!.map[z][this.target.y][this.target.x];
-                        if (tile === null || tile.sprite === null) {
-                            --z;
-                            continue;
+                    if (this.details.particleLocation === "target" && this.target !== undefined) {
+                        // We need to put the emitter at the location. For some reason
+                        // the API requires a container at the location rather than the
+                        // location. So get either the entity sprite there or the highest
+                        // tile sprite.
+                        const entity = getEntitiesAtLocation(
+                            globals.Game!.entityMap,
+                            this.target.x,
+                            this.target.y
+                        )[0];
+
+                        if (entity !== undefined) {
+                            sprite = entity.getOne(GraphicsComponent)?.sprite ?? undefined;
                         }
-                        sprite = tile.sprite;
+
+                        // Fallback
+                        let z = getHighestZIndexWithTile(
+                            globals.Game!.map, this.target.x, this.target.y
+                        );
+                        while (sprite === undefined) {
+                            const tile = globals.Game!.map[z][this.target.y][this.target.x];
+                            if (tile === null || tile.sprite === null) {
+                                --z;
+                                continue;
+                            }
+                            sprite = tile.sprite;
+                        }
+                    } else if (this.details.particleLocation === "self") {
+                        sprite = this.entity.getOne(GraphicsComponent)?.sprite ?? undefined;
                     }
 
                     this.particleEmitter = new particles.Emitter(

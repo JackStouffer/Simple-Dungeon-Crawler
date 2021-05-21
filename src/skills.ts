@@ -71,6 +71,7 @@ export interface SpellDataDetails {
     damageType?: DamageType;
     statusEffect?: StatusEffectType;
     areaOfEffect?: Area;
+    particleLocation?: "self" | "target";
     particleImages?: string[];
     particleConfig?: particles.OldEmitterConfig;
 
@@ -1253,6 +1254,7 @@ export const SpellData: { [key: string]: SpellDataDetails } = {
         value: 5,
         type: SpellType.DamageOther,
         useFunc: castCombust,
+        particleLocation: "target",
         particleImages: ["particle_cloud", "particle_fire"],
         particleConfig: {
             acceleration: { x: 0, y: 0 },
@@ -1281,7 +1283,29 @@ export const SpellData: { [key: string]: SpellDataDetails } = {
         description: "Calls a storm which makes everything wet",
         value: 15,
         type: SpellType.Passive,
-        useFunc: castRain
+        useFunc: castRain,
+        particleLocation: "self",
+        particleImages: ["particle_cloud"],
+        particleConfig: {
+            acceleration: { x: 0, y: 0 },
+            addAtBack: false,
+            alpha: { start: 0.4, end: 0.5 },
+            blendMode: "normal",
+            color: {start: "#7e82fc", end: "#321fff"},
+            emitterLifetime: 2,
+            frequency: 0.002,
+            lifetime: { min: 0.81, max: 0.81 },
+            maxParticles: 1000,
+            maxSpeed: 0,
+            noRotation: false,
+            pos: { x: 0, y: 0 },
+            rotationSpeed: { min: 0, max: 0 },
+            scale: { start: .3, end: .3, minimumScaleMultiplier: 1 },
+            spawnRect: { x: -600, y: -460, w: 900, h: 20 },
+            spawnType: "rect",
+            speed: { start: 800, end: 800, minimumSpeedMultiplier: 1 },
+            startRotation: { min: 65, max: 65 }
+        }
     },
     "silence": {
         id: "silence",
