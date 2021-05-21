@@ -17,6 +17,7 @@ import * as forrest_001_interior_002 from "./maps/forrest_001_interior_002.json"
 import {
     createEntity,
     EntityMap,
+    GraphicsComponent,
     HitPointsComponent,
     InventoryComponent,
     PatrolPathComponent,
@@ -1498,7 +1499,11 @@ export function getEntitiesAtLocation(
     x: number,
     y: number
 ): Entity[] {
-    return entityMap.get(`${x},${y}`) ?? [];
+    return entityMap.get(`${x},${y}`)?.sort((a, b) => {
+        const g1 = a.getOne(GraphicsComponent)?.sprite?.zIndex ?? 0;
+        const g2 = b.getOne(GraphicsComponent)?.sprite?.zIndex ?? 0;
+        return g2 - g1;
+    }) ?? [];
 }
 
 interface BlocksResult {

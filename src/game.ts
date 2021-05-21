@@ -241,7 +241,7 @@ export class SimpleDungeonCrawler {
                 parent.gameCamera = new Camera(parent.pixiApp.screen);
                 parent.ecs = new World({
                     trackChanges: true,
-                    entityPool: 100,
+                    entityPool: 200,
                     cleanupPools: true
                 });
 

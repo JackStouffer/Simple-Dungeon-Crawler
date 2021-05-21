@@ -1,4 +1,6 @@
 import { Entity, World } from "ape-ecs";
+import * as PIXI from "pixi.js";
+import * as particles from "pixi-particles";
 
 import Path from "./rot/path/index";
 import { WeightCallback, PassableCallback } from "./rot/path/path";
@@ -15,7 +17,8 @@ import {
     isBlocked,
     distanceBetweenPoints,
     Point,
-    getEntitiesAtLocation
+    getEntitiesAtLocation,
+    getHighestZIndexWithTile
 } from "./map";
 import { assertUnreachable, Nullable, randomIntFromInterval } from "./util";
 import { displayMessage } from "./ui";
@@ -38,7 +41,7 @@ import { attack, getEffectiveSpeedData, getKnownSpells, takeDamage, useSpell } f
 import { getItems, hasItem, useItem } from "./inventory";
 import { deepWaterTrigger, eventTrigger, fireTrigger, mudTrigger, shallowWaterTrigger, steamTrigger } from "./trigger";
 import { giveItemsInteract, giveSpellsInteract, doorInteract, levelLoadInteract } from "./interactable";
-import { ItemData, SpellData, setOnFire, setParalyzed } from "./skills";
+import { ItemData, SpellData, setOnFire, setParalyzed, SpellDataDetails } from "./skills";
 import { DIRS } from "./rot";
 import { playOpenInventory, playOpenSpells } from "./audio";
 
@@ -714,16 +717,38 @@ export class UseItemCommand implements Command {
  */
 export class UseSpellCommand implements Command {
     private didUseTurn: boolean = false;
+    private shouldCast: boolean = true;
     private readonly entity: Entity;
     private readonly spellID: string;
     private readonly target: Point | undefined;
     private readonly rotation: number | undefined;
+    private readonly details: SpellDataDetails;
+    private particleEmitter: Nullable<particles.Emitter> = null;
 
     constructor(entity: Entity, spellID: string, target?: Point, rotation?: number) {
         this.entity = entity;
         this.spellID = spellID;
         this.target = target;
         this.rotation = rotation;
+        this.details = SpellData[this.spellID];
+
+        const spellData = this.entity.getOne(SpellsComponent);
+        if (spellData === undefined ||
+            spellData.knownSpells.has(this.spellID) === false) {
+            this.shouldCast = false;
+            return;
+        }
+
+        // FIX ME
+        if ((spellData.knownSpells.get(this.spellID) ?? -1) < 1) {
+            this.shouldCast = false;
+
+            if (this.entity === globals.Game?.player) {
+                displayMessage(`You don't have enough casts to use ${this.details.displayName}`);
+            }
+
+            return;
+        }
     }
 
     usedTurn(): boolean {
@@ -732,42 +757,75 @@ export class UseSpellCommand implements Command {
 
     isFinished(): boolean {
         globals.gameEventEmitter!.emit("tutorial.spellCasts");
-        return true;
+        return this.particleEmitter !== null ? !this.particleEmitter.emit : true;
     }
 
-    execute(): void {
-        const spellData = this.entity.getOne(SpellsComponent);
-        if (spellData === undefined ||
-            spellData.knownSpells.has(this.spellID) === false) {
-            return;
-        }
+    execute(deltaTime: DOMHighResTimeStamp): void {
+        if (this.shouldCast) {
+            this.didUseTurn = this.details.useFunc(
+                this.details,
+                this.entity,
+                globals.Game!.ecs,
+                globals.Game!.map,
+                globals.Game!.entityMap,
+                this.target,
+                this.rotation
+            );
 
-        const details = SpellData[this.spellID];
+            if (this.didUseTurn) {
+                const statData = this.entity.getOne(SpellsComponent)!;
+                useSpell(statData, this.details.id);
 
-        // FIX ME
-        if ((spellData.knownSpells.get(this.spellID) ?? -1) < 1) {
-            this.didUseTurn = false;
+                if (this.details.particleConfig !== undefined &&
+                    this.details.particleImages !== undefined &&
+                    this.target !== undefined &&
+                    this.shouldCast) {
+                    // We need to put the emitter at the location. For some reason
+                    // the API requires a container at the location rather than the
+                    // location. So get either the entity there or the highest tile.
+                    const entity = getEntitiesAtLocation(
+                        globals.Game!.entityMap,
+                        this.target.x,
+                        this.target.y
+                    )[0];
 
-            if (this.entity === globals.Game?.player) {
-                displayMessage(`You don't have enough casts to use ${details.displayName}`);
+                    let sprite: PIXI.Sprite | undefined;
+                    if (entity !== undefined) {
+                        const g = entity.getOne(GraphicsComponent);
+                        if (g !== undefined && g.sprite !== null) { sprite = g.sprite; }
+                    }
+
+                    let z = getHighestZIndexWithTile(
+                        globals.Game!.map, this.target.x, this.target.y
+                    );
+                    while (sprite === undefined) {
+                        const tile = globals.Game!.map[z][this.target.y][this.target.x];
+                        if (tile === null || tile.sprite === null) {
+                            --z;
+                            continue;
+                        }
+                        sprite = tile.sprite;
+                    }
+
+                    this.particleEmitter = new particles.Emitter(
+                        sprite!,
+                        this.details.particleImages.map(e => globals.Game!.textureAtlas[e]),
+                        this.details.particleConfig
+                    );
+                    this.particleEmitter.emit = true;
+                }
             }
 
-            return;
+            this.shouldCast = false;
         }
 
-        this.didUseTurn = details.useFunc(
-            details,
-            this.entity,
-            globals.Game!.ecs,
-            globals.Game!.map,
-            globals.Game!.entityMap,
-            this.target,
-            this.rotation
-        );
-
-        if (this.didUseTurn) {
-            const statData = this.entity.getOne(SpellsComponent)!;
-            useSpell(statData, details.id);
+        if (this.didUseTurn && this.particleEmitter !== null && this.particleEmitter.emit) {
+            this.particleEmitter.update(deltaTime * .001);
+            if (!this.particleEmitter.emit) {
+                this.particleEmitter.destroy();
+            } else {
+                return;
+            }
         }
     }
 }

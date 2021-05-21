@@ -1,6 +1,7 @@
 import { Entity, World } from "ape-ecs";
 
 import { DIRS, RNG } from "./rot/index";
+import * as particles from "pixi-particles";
 
 import globals from "./globals";
 import {
@@ -70,6 +71,8 @@ export interface SpellDataDetails {
     damageType?: DamageType;
     statusEffect?: StatusEffectType;
     areaOfEffect?: Area;
+    particleImages?: string[];
+    particleConfig?: particles.OldEmitterConfig;
 
     useFunc: SkillFunction;
 }
@@ -1150,7 +1153,7 @@ export const SpellData: { [key: string]: SpellDataDetails } = {
             type: "circle",
             radius: 3
         },
-        statusEffect: StatusEffectType.OnFire
+        statusEffect: StatusEffectType.OnFire,
     },
     "confuse": {
         id: "confuse",
@@ -1249,7 +1252,28 @@ export const SpellData: { [key: string]: SpellDataDetails } = {
         description: "Doesn't do much damage, but is guaranteed to light something on fire",
         value: 5,
         type: SpellType.DamageOther,
-        useFunc: castCombust
+        useFunc: castCombust,
+        particleImages: ["particle_cloud", "particle_fire"],
+        particleConfig: {
+            acceleration: { x: 0, y: 0 },
+            addAtBack: false,
+            alpha: { start: 0.62, end: 0 },
+            blendMode: "normal",
+            color: { start: "#fff191", end: "#ff622c" },
+            emitterLifetime: 0.5,
+            frequency: 0.001,
+            lifetime: { min: 0.05, max: 0.1 },
+            maxParticles: 1000,
+            maxSpeed: 0,
+            noRotation: false,
+            pos: { x: 8, y: 8 },
+            rotationSpeed: { min: 50, max: 50 },
+            scale: { start: .2, end: 1, minimumScaleMultiplier: 1 },
+            spawnCircle: { x: 0, y: 0, r: 10 },
+            spawnType: "circle",
+            speed: { start: 500, end: 500, minimumSpeedMultiplier: 1 },
+            startRotation: { min: 265, max: 275 }
+        }
     },
     "rain": {
         id: "rain",
