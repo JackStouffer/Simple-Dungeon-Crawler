@@ -18,7 +18,8 @@ import {
     distanceBetweenPoints,
     Point,
     getEntitiesAtLocation,
-    getHighestZIndexWithTile
+    getHighestZIndexWithTile,
+    worldDistanceBetweenPoints
 } from "./map";
 import { assertUnreachable, Nullable, randomIntFromInterval } from "./util";
 import { displayMessage } from "./ui";
@@ -44,6 +45,8 @@ import { giveItemsInteract, giveSpellsInteract, doorInteract, levelLoadInteract 
 import { ItemData, SpellData, setOnFire, setParalyzed, SpellDataDetails } from "./skills";
 import { DIRS } from "./rot";
 import { playOpenInventory, playOpenSpells } from "./audio";
+import { createLightningTexture } from "./graphics";
+import { Transition, Tween } from "./tween";
 
 /**
  * Creates a function which returns if an x and y coordinate
@@ -724,6 +727,8 @@ export class UseSpellCommand implements Command {
     private readonly rotation: number | undefined;
     private readonly details: SpellDataDetails;
     private particleEmitter: Nullable<particles.Emitter> = null;
+    private effectGraphics: Nullable<PIXI.Graphics> = null;
+    private effectTween: Nullable<Tween> = null;
 
     constructor(entity: Entity, spellID: string, target?: Point, rotation?: number) {
         this.entity = entity;
@@ -757,7 +762,16 @@ export class UseSpellCommand implements Command {
 
     isFinished(): boolean {
         globals.gameEventEmitter!.emit("tutorial.spellCasts");
-        return this.particleEmitter !== null ? !this.particleEmitter.emit : true;
+
+        if (this.particleEmitter !== null) {
+            return !this.particleEmitter.emit;
+        }
+
+        if (this.effectTween !== null) {
+            return this.effectTween.finished;
+        }
+
+        return true;
     }
 
     execute(deltaTime: DOMHighResTimeStamp): void {
@@ -776,12 +790,12 @@ export class UseSpellCommand implements Command {
                 const statData = this.entity.getOne(SpellsComponent)!;
                 useSpell(statData, this.details.id);
 
-                if (this.details.particleConfig !== undefined &&
-                    this.details.particleImages !== undefined &&
+                if (this.details.effect === "particles" &&
+                    this.details.particles !== undefined &&
                     this.shouldCast) {
                     let sprite: PIXI.Sprite | undefined;
 
-                    if (this.details.particleLocation === "target" && this.target !== undefined) {
+                    if (this.details.particles.particleLocation === "target" && this.target !== undefined) {
                         // We need to put the emitter at the location. For some reason
                         // the API requires a container at the location rather than the
                         // location. So get either the entity sprite there or the highest
@@ -808,16 +822,53 @@ export class UseSpellCommand implements Command {
                             }
                             sprite = tile.sprite;
                         }
-                    } else if (this.details.particleLocation === "self") {
+                    } else if (this.details.particles.particleLocation === "self") {
                         sprite = this.entity.getOne(GraphicsComponent)?.sprite ?? undefined;
                     }
 
                     this.particleEmitter = new particles.Emitter(
                         sprite!,
-                        this.details.particleImages.map(e => globals.Game!.textureAtlas[e]),
-                        this.details.particleConfig
+                        this.details.particles.particleImages.map(
+                            e => globals.Game!.textureAtlas[e]
+                        ),
+                        this.details.particles.particleConfig
                     );
                     this.particleEmitter.emit = true;
+                }
+
+                if (this.details.effect === "lightning" &&
+                    this.details.lightning !== undefined &&
+                    this.target !== undefined) {
+                    const tilePos = this.entity.getOne(PositionComponent)!.tilePosition();
+                    const screenPos = globals.Game!.gameCamera.tilePositionToScreen(
+                        tilePos.x,
+                        tilePos.y
+                    );
+                    this.effectGraphics = createLightningTexture(
+                        screenPos.x,
+                        screenPos.y,
+                        20,
+                        2,
+                        false,
+                        worldDistanceBetweenPoints(
+                            tilePos, this.target, globals.Game!.gameCamera.zoom
+                        )
+                    );
+                    this.effectGraphics.rotation = Math.atan2(
+                        -(this.target.x - tilePos.x),
+                        this.target.y - tilePos.y
+                    );
+                    globals.Game?.pixiApp.stage.addChild(this.effectGraphics);
+
+                    this.effectTween = new Tween({
+                        object: this.effectGraphics,
+                        key: "alpha",
+                        duration: this.details.lightning.fadeOut,
+                        delay: this.details.lightning.duration,
+                        start: 1,
+                        end: 0,
+                        transition: Transition.Linear
+                    });
                 }
             }
 
@@ -830,6 +881,14 @@ export class UseSpellCommand implements Command {
                 this.particleEmitter.destroy();
             } else {
                 return;
+            }
+        }
+
+        if (this.didUseTurn && this.effectTween !== null) {
+            this.effectTween.update(deltaTime);
+
+            if (this.effectTween.finished && this.effectGraphics !== null) {
+                this.effectGraphics.destroy();
             }
         }
     }
@@ -875,3 +934,4 @@ export class RotateReticleCommand implements Command {
         return;
     }
 }
+

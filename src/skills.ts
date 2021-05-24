@@ -58,6 +58,9 @@ export interface ItemDataDetails {
     damageType?: DamageType;
     statusEffect?: StatusEffectType;
     areaOfEffect?: Area;
+    particleLocation?: "self" | "target";
+    particleImages?: string[];
+    particleConfig?: particles.OldEmitterConfig;
 
     useFunc: SkillFunction;
 }
@@ -71,9 +74,18 @@ export interface SpellDataDetails {
     damageType?: DamageType;
     statusEffect?: StatusEffectType;
     areaOfEffect?: Area;
-    particleLocation?: "self" | "target";
-    particleImages?: string[];
-    particleConfig?: particles.OldEmitterConfig;
+    effect?: "lightning" | "particles";
+    lightning?: {
+        duration: number;
+        segments: number;
+        strikes: number;
+        fadeOut: number;
+    };
+    particles?: {
+        particleLocation: "self" | "target";
+        particleImages: string[];
+        particleConfig: particles.OldEmitterConfig;
+    };
 
     useFunc: SkillFunction;
 }
@@ -1131,7 +1143,14 @@ export const SpellData: { [key: string]: SpellDataDetails } = {
         value: 20,
         type: SpellType.DamageOther,
         damageType: DamageType.Electric,
-        useFunc: castDamageSpell
+        useFunc: castDamageSpell,
+        effect: "lightning",
+        lightning: {
+            duration: 500,
+            segments: 20,
+            strikes: 1,
+            fadeOut: 300
+        }
     },
     "wild_lightning_bolt": {
         id: "wild_lightning_bolt",
@@ -1140,7 +1159,14 @@ export const SpellData: { [key: string]: SpellDataDetails } = {
         value: 30,
         type: SpellType.WildDamage,
         damageType: DamageType.Electric,
-        useFunc: castWildDamageSpell
+        useFunc: castWildDamageSpell,
+        effect: "lightning",
+        lightning: {
+            duration: 300,
+            segments: 20,
+            strikes: 2,
+            fadeOut: 400
+        }
     },
     "fireball": {
         id: "fireball",
@@ -1254,27 +1280,30 @@ export const SpellData: { [key: string]: SpellDataDetails } = {
         value: 5,
         type: SpellType.DamageOther,
         useFunc: castCombust,
-        particleLocation: "target",
-        particleImages: ["particle_cloud", "particle_fire"],
-        particleConfig: {
-            acceleration: { x: 0, y: 0 },
-            addAtBack: false,
-            alpha: { start: 0.62, end: 0 },
-            blendMode: "normal",
-            color: { start: "#fff191", end: "#ff622c" },
-            emitterLifetime: 0.5,
-            frequency: 0.001,
-            lifetime: { min: 0.05, max: 0.1 },
-            maxParticles: 1000,
-            maxSpeed: 0,
-            noRotation: false,
-            pos: { x: 8, y: 8 },
-            rotationSpeed: { min: 50, max: 50 },
-            scale: { start: .2, end: 1, minimumScaleMultiplier: 1 },
-            spawnCircle: { x: 0, y: 0, r: 10 },
-            spawnType: "circle",
-            speed: { start: 500, end: 500, minimumSpeedMultiplier: 1 },
-            startRotation: { min: 265, max: 275 }
+        effect: "particles",
+        particles: {
+            particleLocation: "target",
+            particleImages: ["particle_cloud", "particle_fire"],
+            particleConfig: {
+                acceleration: { x: 0, y: 0 },
+                addAtBack: false,
+                alpha: { start: 0.62, end: 0 },
+                blendMode: "normal",
+                color: { start: "#fff191", end: "#ff622c" },
+                emitterLifetime: 0.5,
+                frequency: 0.001,
+                lifetime: { min: 0.05, max: 0.1 },
+                maxParticles: 1000,
+                maxSpeed: 0,
+                noRotation: false,
+                pos: { x: 8, y: 8 },
+                rotationSpeed: { min: 50, max: 50 },
+                scale: { start: .2, end: 1, minimumScaleMultiplier: 1 },
+                spawnCircle: { x: 0, y: 0, r: 10 },
+                spawnType: "circle",
+                speed: { start: 500, end: 500, minimumSpeedMultiplier: 1 },
+                startRotation: { min: 265, max: 275 }
+            }
         }
     },
     "rain": {
@@ -1284,27 +1313,30 @@ export const SpellData: { [key: string]: SpellDataDetails } = {
         value: 15,
         type: SpellType.Passive,
         useFunc: castRain,
-        particleLocation: "self",
-        particleImages: ["particle_cloud"],
-        particleConfig: {
-            acceleration: { x: 0, y: 0 },
-            addAtBack: false,
-            alpha: { start: 0.4, end: 0.5 },
-            blendMode: "normal",
-            color: {start: "#7e82fc", end: "#321fff"},
-            emitterLifetime: 2,
-            frequency: 0.002,
-            lifetime: { min: 0.81, max: 0.81 },
-            maxParticles: 1000,
-            maxSpeed: 0,
-            noRotation: false,
-            pos: { x: 0, y: 0 },
-            rotationSpeed: { min: 0, max: 0 },
-            scale: { start: .3, end: .3, minimumScaleMultiplier: 1 },
-            spawnRect: { x: -600, y: -460, w: 900, h: 20 },
-            spawnType: "rect",
-            speed: { start: 800, end: 800, minimumSpeedMultiplier: 1 },
-            startRotation: { min: 65, max: 65 }
+        effect: "particles",
+        particles: {
+            particleLocation: "self",
+            particleImages: ["particle_cloud"],
+            particleConfig: {
+                acceleration: { x: 0, y: 0 },
+                addAtBack: false,
+                alpha: { start: 0.4, end: 0.5 },
+                blendMode: "normal",
+                color: {start: "#7e82fc", end: "#321fff"},
+                emitterLifetime: 2,
+                frequency: 0.002,
+                lifetime: { min: 0.81, max: 0.81 },
+                maxParticles: 1000,
+                maxSpeed: 0,
+                noRotation: false,
+                pos: { x: 0, y: 0 },
+                rotationSpeed: { min: 0, max: 0 },
+                scale: { start: .3, end: .3, minimumScaleMultiplier: 1 },
+                spawnRect: { x: -600, y: -460, w: 900, h: 20 },
+                spawnType: "rect",
+                speed: { start: 800, end: 800, minimumSpeedMultiplier: 1 },
+                startRotation: { min: 65, max: 65 }
+            }
         }
     },
     "silence": {

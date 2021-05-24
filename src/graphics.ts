@@ -19,7 +19,8 @@ import { getItems } from "./inventory";
 import globals from "./globals";
 import { getEffectiveSpeedData } from "./fighter";
 import { ItemDataDetails, SpellDataDetails } from "./skills";
-import { Nullable } from "./util";
+import { Nullable, randomIntFromInterval } from "./util";
+import { TILE_SIZE } from "./constants";
 
 /**
  * Draw all entities with a GraphicsComponent and a PositionComponent,
@@ -427,4 +428,106 @@ export class DrawPlayerSystem extends System {
             }
         }
     }
+}
+
+/**
+ * Lightning will be made up of several line segments starting at the
+ * center of the top edge of the bitmap and ending at the target.
+ *
+ * The original code was licensed under the terms of the MIT License by
+ * John Watson.
+ *
+ * @param {number} x place at this x coord
+ * @param {number} y place at this y coord
+ * @param {number} segments number of segments to the main branch
+ * @param {number} boltWidth width of the bolt
+ * @param {boolean} branch is this the main bolt
+ * @param {number} distance distance to the target
+ * @returns {PIXI.Graphics} the graphics object of the lightning
+ */
+export function createLightningTexture(
+    x: number,
+    y: number,
+    segments: number,
+    boltWidth: number,
+    branch: boolean,
+    distance: number
+): PIXI.Graphics {
+    let originX = 0;
+    let originY = 0;
+    const width = 200;
+    const zoomedBoltWidth = boltWidth * (globals.Game?.gameCamera.zoom ?? 1);
+
+    const lightningBitmap = new PIXI.Graphics();
+    lightningBitmap.zIndex = 100;
+    lightningBitmap.x = x + ((TILE_SIZE * globals.Game!.gameCamera.zoom) / 2);
+    lightningBitmap.y = y + ((TILE_SIZE * globals.Game!.gameCamera.zoom) / 2);
+
+    if (!branch) {
+        lightningBitmap.clear();
+    }
+
+    for (let i = 0; i < segments; i++) {
+        lightningBitmap.lineStyle(zoomedBoltWidth, 0xFFFFFF, 1);
+        lightningBitmap.moveTo(originX, originY);
+
+        originX += randomIntFromInterval(-30, 30);
+        if (originX <= 10) {
+            originX = 10;
+        }
+
+        if (originX >= width - 10) {
+            originX = width - 10;
+        }
+
+        // Calculate a y offset from the end of the last line segment.
+        // When we've reached the target or there are no more segments left,
+        // set the y position to the distance to the target. For branches, we
+        // don't care if they reach the target so don't set the last coordinate
+        // to the target if it's hanging in the air.
+        if (branch) {
+            originY += randomIntFromInterval(10, 20);
+        } else {
+            originY += randomIntFromInterval(20, distance / segments);
+        }
+
+        if ((!branch && i === segments - 1) || originY > distance) {
+            // terminate at target
+            if (!branch) {
+                originY = distance;
+                originX = 0;
+            }
+        }
+
+        lightningBitmap.lineTo(originX, originY);
+
+        if (originY >= distance) {
+            break;
+        }
+
+        if (!branch && Math.random() <= .3) {
+            // Draws another, thinner, bolt starting from this position
+            const child = createLightningTexture(
+                originX,
+                originY,
+                randomIntFromInterval(3, 10),
+                1,
+                true,
+                randomIntFromInterval(Math.floor(distance / 2), Math.floor(distance))
+            );
+            child.x = originX;
+            child.y = originY;
+            lightningBitmap.addChild(child);
+        }
+    }
+
+    if (!branch) {
+        lightningBitmap.filters = [new GlowFilter({
+            color: 0xFFFFFF,
+            innerStrength: 0,
+            outerStrength: 2
+        })];
+    }
+
+    return lightningBitmap;
 }

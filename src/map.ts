@@ -1645,6 +1645,12 @@ export function distanceBetweenPoints(a: Point, b: Point): number {
     return Math.sqrt(dx ** 2 + dy ** 2);
 }
 
+export function worldDistanceBetweenPoints(a: Point, b: Point, zoom: number): number {
+    const dx = (b.x * 16 * zoom) - (a.x * 16 * zoom);
+    const dy = (b.y * 16 * zoom) - (a.y * 16 * zoom);
+    return Math.sqrt(dx ** 2 + dy ** 2);
+}
+
 /**
  * Find a random actor which has a fighter and an ai and is on a
  * visible tile and is within the given max distance
