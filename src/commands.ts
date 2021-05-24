@@ -744,7 +744,6 @@ export class UseSpellCommand implements Command {
             return;
         }
 
-        // FIX ME
         if ((spellData.knownSpells.get(this.spellID) ?? -1) < 1) {
             this.shouldCast = false;
 
@@ -836,6 +835,9 @@ export class UseSpellCommand implements Command {
                     this.particleEmitter.emit = true;
                 }
 
+                // TODO: This does not work with wild spells since they have no
+                // target. Need to rethink the way targets are chosen for the use
+                // function; maybe move it to the command.
                 if (this.details.effect === "lightning" &&
                     this.details.lightning !== undefined &&
                     this.target !== undefined) {

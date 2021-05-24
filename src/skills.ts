@@ -1181,6 +1181,33 @@ export const SpellData: { [key: string]: SpellDataDetails } = {
             radius: 3
         },
         statusEffect: StatusEffectType.OnFire,
+        effect: "particles",
+        particles: {
+            particleImages: ["particle_cloud"],
+            particleLocation: "target",
+            particleConfig: {
+                acceleration: { x: 0, y: 0 },
+                addAtBack: false,
+                alpha: { start: 0.84, end: 0.4 },
+                angleStart: 0,
+                blendMode: "normal",
+                color: { start: "#f7a134", end: "#fa0303" },
+                emitterLifetime: 0.1,
+                frequency: 0.04,
+                lifetime: { min: 0.3, max: 0.4 },
+                maxParticles: 1000,
+                maxSpeed: 0,
+                noRotation: false,
+                particleSpacing: 0,
+                particlesPerWave: 40,
+                pos: { x: 0, y: 0 },
+                rotationSpeed: { min: 0, max: 0 },
+                scale: { start: 1, end: 0.3, minimumScaleMultiplier: 1 },
+                spawnType: "burst",
+                speed: { start: 400, end: 400, minimumSpeedMultiplier: 1 },
+                startRotation: { min: 0, max: 0 },
+            }
+        }
     },
     "confuse": {
         id: "confuse",
@@ -1204,7 +1231,32 @@ export const SpellData: { [key: string]: SpellDataDetails } = {
         description: "Heals a small amount of hit points",
         value: 25,
         type: SpellType.HealSelf,
-        useFunc: castHeal
+        useFunc: castHeal,
+        effect: "particles",
+        particles: {
+            particleLocation: "self",
+            particleImages: ["particle_health_cross"],
+            particleConfig: {
+                acceleration: { x: 0, y: 0 },
+                addAtBack: false,
+                alpha: { start: 1, end: 0.8 },
+                blendMode: "normal",
+                color: { start: "#C66527", end: "#C66527" },
+                emitterLifetime: 1.2,
+                frequency: 0.077,
+                lifetime: { min: .2, max: .3 },
+                maxParticles: 500,
+                maxSpeed: 0,
+                noRotation: true,
+                pos: {x: 0, y: 0},
+                rotationSpeed: { min: 0, max: 20 },
+                scale: { start: .7, end: 0.3, minimumScaleMultiplier: 0.5 },
+                spawnRect: {x: -3, y: 16, w: 20, h: 0},
+                spawnType: "rect",
+                speed: { start: 100, end: 100, minimumSpeedMultiplier: 1 },
+                startRotation: { min: 270, max: 270 }
+            }
+        }
     },
     "heal": {
         id: "heal",
