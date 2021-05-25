@@ -459,7 +459,7 @@ export function createLightningTexture(
     const zoomedBoltWidth = boltWidth * (globals.Game?.gameCamera.zoom ?? 1);
 
     const lightningBitmap = new PIXI.Graphics();
-    lightningBitmap.zIndex = 100;
+    lightningBitmap.zIndex = 10;
     lightningBitmap.x = x + ((TILE_SIZE * globals.Game!.gameCamera.zoom) / 2);
     lightningBitmap.y = y + ((TILE_SIZE * globals.Game!.gameCamera.zoom) / 2);
 

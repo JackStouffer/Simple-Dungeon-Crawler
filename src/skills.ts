@@ -1215,7 +1215,32 @@ export const SpellData: { [key: string]: SpellDataDetails } = {
         description: "Your target loses control of their actions for the given number of turns",
         value: 8,
         type: SpellType.DamageOther,
-        useFunc: castConfuse
+        useFunc: castConfuse,
+        effect: "particles",
+        particles: {
+            particleLocation: "target",
+            particleImages: ["particle_star"],
+            particleConfig: {
+                acceleration: { x: 0, y: 0 },
+                addAtBack: false,
+                alpha: { start: 1, end: .8 },
+                blendMode: "normal",
+                color: { start: "#eaff00", end: "#eaff00" },
+                emitterLifetime: 1,
+                frequency: 0.057,
+                lifetime: { min: 0.3, max: 0.4 },
+                maxParticles: 500,
+                maxSpeed: 0,
+                noRotation: false,
+                pos: { x: 0, y: 0 },
+                rotationSpeed: { min: 0, max: 0 },
+                scale: { start: .8, end: .6, minimumScaleMultiplier: 0.5 },
+                spawnCircle: { x: 8, y: 8, r: 30 },
+                spawnType: "circle",
+                speed: { start: 0, end: 0, minimumSpeedMultiplier: 1 },
+                startRotation: { min: 0, max: 360 }
+            }
+        }
     },
     "clairvoyance": {
         id: "clairvoyance",
@@ -1242,7 +1267,7 @@ export const SpellData: { [key: string]: SpellDataDetails } = {
                 alpha: { start: 1, end: 0.8 },
                 blendMode: "normal",
                 color: { start: "#C66527", end: "#C66527" },
-                emitterLifetime: 1.2,
+                emitterLifetime: 1,
                 frequency: 0.077,
                 lifetime: { min: .2, max: .3 },
                 maxParticles: 500,
@@ -1264,7 +1289,32 @@ export const SpellData: { [key: string]: SpellDataDetails } = {
         description: "Heals a good amount of health",
         value: 50,
         type: SpellType.HealSelf,
-        useFunc: castHeal
+        useFunc: castHeal,
+        effect: "particles",
+        particles: {
+            particleLocation: "self",
+            particleImages: ["particle_health_cross"],
+            particleConfig: {
+                acceleration: { x: 0, y: 0 },
+                addAtBack: false,
+                alpha: { start: 1, end: 0.8 },
+                blendMode: "normal",
+                color: { start: "#C66527", end: "#C66527" },
+                emitterLifetime: 1.5,
+                frequency: 0.077,
+                lifetime: { min: .2, max: .3 },
+                maxParticles: 500,
+                maxSpeed: 0,
+                noRotation: true,
+                pos: {x: 0, y: 0},
+                rotationSpeed: { min: 0, max: 20 },
+                scale: { start: .7, end: 0.3, minimumScaleMultiplier: 0.5 },
+                spawnRect: {x: -3, y: 16, w: 20, h: 0},
+                spawnType: "rect",
+                speed: { start: 100, end: 100, minimumSpeedMultiplier: 1 },
+                startRotation: { min: 270, max: 270 }
+            }
+        }
     },
     "greater_heal": {
         id: "greater_heal",
@@ -1272,7 +1322,32 @@ export const SpellData: { [key: string]: SpellDataDetails } = {
         description: "Gives a large amount of health",
         value: 100,
         type: SpellType.HealSelf,
-        useFunc: castHeal
+        useFunc: castHeal,
+        effect: "particles",
+        particles: {
+            particleLocation: "self",
+            particleImages: ["particle_health_cross"],
+            particleConfig: {
+                acceleration: { x: 0, y: 0 },
+                addAtBack: false,
+                alpha: { start: 1, end: 0.8 },
+                blendMode: "normal",
+                color: { start: "#C66527", end: "#C66527" },
+                emitterLifetime: 1.8,
+                frequency: 0.077,
+                lifetime: { min: .2, max: .3 },
+                maxParticles: 500,
+                maxSpeed: 0,
+                noRotation: true,
+                pos: {x: 0, y: 0},
+                rotationSpeed: { min: 0, max: 20 },
+                scale: { start: .7, end: 0.3, minimumScaleMultiplier: 0.5 },
+                spawnRect: { x: -3, y: 16, w: 20, h: 0 },
+                spawnType: "rect",
+                speed: { start: 100, end: 100, minimumSpeedMultiplier: 1 },
+                startRotation: { min: 270, max: 270 }
+            }
+        }
     },
     "heal_other": {
         id: "heal_other",
@@ -1280,7 +1355,32 @@ export const SpellData: { [key: string]: SpellDataDetails } = {
         description: "Heals someone else for a small amount of hit points",
         value: 25,
         type: SpellType.HealOther,
-        useFunc: castHealOther
+        useFunc: castHealOther,
+        effect: "particles",
+        particles: {
+            particleLocation: "target",
+            particleImages: ["particle_health_cross"],
+            particleConfig: {
+                acceleration: { x: 0, y: 0 },
+                addAtBack: false,
+                alpha: { start: 1, end: 0.8 },
+                blendMode: "normal",
+                color: { start: "#C66527", end: "#C66527" },
+                emitterLifetime: 1,
+                frequency: 0.077,
+                lifetime: { min: .2, max: .3 },
+                maxParticles: 500,
+                maxSpeed: 0,
+                noRotation: true,
+                pos: { x: 0, y: 0 },
+                rotationSpeed: { min: 0, max: 20 },
+                scale: { start: .7, end: 0.3, minimumScaleMultiplier: 0.5 },
+                spawnRect: {x: -3, y: 16, w: 20, h: 0},
+                spawnType: "rect",
+                speed: { start: 100, end: 100, minimumSpeedMultiplier: 1 },
+                startRotation: { min: 270, max: 270 }
+            }
+        }
     },
     "lesser_haste": {
         id: "lesser_haste",
@@ -1288,7 +1388,32 @@ export const SpellData: { [key: string]: SpellDataDetails } = {
         description: "You can make two actions for every one turn for the given number of turns.",
         value: 10,
         type: SpellType.Effect,
-        useFunc: castHaste
+        useFunc: castHaste,
+        effect: "particles",
+        particles: {
+            particleLocation: "self",
+            particleImages: ["particle_arrow_up"],
+            particleConfig: {
+                acceleration: { x: 0, y: 0 },
+                addAtBack: false,
+                alpha: { start: 1, end: 1 },
+                blendMode: "normal",
+                color: { start: "#4BA86D", end: "#4BA86D" },
+                emitterLifetime: 1,
+                frequency: 0.077,
+                lifetime: { min: .2, max: .3 },
+                maxParticles: 500,
+                maxSpeed: 0,
+                noRotation: true,
+                pos: { x: 0, y: 0 },
+                rotationSpeed: { min: 0, max: 20 },
+                scale: { start: 0.5, end: 0.7, minimumScaleMultiplier: 0.5 },
+                spawnRect: { x: -3, y: 16, w: 20, h: 0 },
+                spawnType: "rect",
+                speed: { start: 50, end: 200, minimumSpeedMultiplier: 1 },
+                startRotation: { min: 270, max: 270 }
+            }
+        }
     },
     "lesser_slow": {
         id: "lesser_slow",
@@ -1296,7 +1421,32 @@ export const SpellData: { [key: string]: SpellDataDetails } = {
         description: "Only allow your target to take one action per two turns",
         value: 10,
         type: SpellType.DamageOther,
-        useFunc: castSlow
+        useFunc: castSlow,
+        effect: "particles",
+        particles: {
+            particleLocation: "target",
+            particleImages: ["particle_arrow_up"],
+            particleConfig: {
+                acceleration: { x: 0, y: 0 },
+                addAtBack: false,
+                alpha: { start: 1, end: 1 },
+                blendMode: "normal",
+                color: { start: "#B760A6", end: "#B760A6" },
+                emitterLifetime: 1,
+                frequency: 0.077,
+                lifetime: { min: .2, max: 1 },
+                maxParticles: 500,
+                maxSpeed: 0,
+                noRotation: true,
+                pos: { x: 0, y: 0 },
+                rotationSpeed: { min: 0, max: 20 },
+                scale: { start: 0.5, end: 0.7, minimumScaleMultiplier: 0.5 },
+                spawnRect: { x: -3, y: -16, w: 20, h: 0 },
+                spawnType: "rect",
+                speed: { start: 100, end: 10, minimumSpeedMultiplier: 1 },
+                startRotation: { min: 90, max: 90 }
+            }
+        }
     },
     "fire_wall": {
         id: "fire_wall",
@@ -1397,7 +1547,32 @@ export const SpellData: { [key: string]: SpellDataDetails } = {
         description: "Removes the target's ability to cast spells for a number of turns",
         value: 3,
         type: SpellType.DamageOther,
-        useFunc: castSilence
+        useFunc: castSilence,
+        effect: "particles",
+        particles: {
+            particleLocation: "target",
+            particleImages: ["particle_cloud"],
+            particleConfig: {
+                acceleration: { x: 0, y: 0 },
+                addAtBack: true,
+                alpha: { start: 0.74, end: 0.2 },
+                blendMode: "normal",
+                color: { start: "#00bd19", end: "#171414" },
+                emitterLifetime: 1,
+                frequency: 0.017,
+                lifetime: { min: 0.2, max: 0.2 },
+                maxParticles: 100,
+                maxSpeed: 0,
+                noRotation: false,
+                pos: { x: 0, y: 0 },
+                rotationSpeed: { min: 0, max: 0 },
+                scale: { start: 0.8, end: 0.2, minimumScaleMultiplier: 1 },
+                spawnCircle: { x: 8, y: 8, r: 20, minR: 20 },
+                spawnType: "ring",
+                speed: { start: -100, end: -100, minimumSpeedMultiplier: 1 },
+                startRotation: { min: 0, max: 0 }
+            }
+        }
     },
     "exhale": {
         id: "exhale",
@@ -1405,7 +1580,31 @@ export const SpellData: { [key: string]: SpellDataDetails } = {
         description: "Send out a burst of air from your body in all directions, pushing away anything that's too close. Enemies which slam into objects take physical damage and have a chance to be stunned.",
         value: 4,
         type: SpellType.Push,
-        useFunc: castExhale
+        useFunc: castExhale,
+        effect: "particles",
+        particles: {
+            particleLocation: "self",
+            particleImages: ["particle_cloud"],
+            particleConfig: {
+                acceleration: { x: 0, y: 0 },
+                addAtBack: true,
+                alpha: { start: 0.74, end: 0 },
+                blendMode: "normal",
+                color: { start: "#ffffff", end: "#eb8b58" },
+                emitterLifetime: 0.2,
+                frequency: 0.001,
+                lifetime: { min: 0.4, max: 0.7 },
+                maxParticles: 100,
+                maxSpeed: 0,
+                noRotation: false,
+                pos: { x: 8, y: 8 },
+                rotationSpeed: { min: 0, max: 200 },
+                scale: { start: 1, end: 1.2, minimumScaleMultiplier: 1 },
+                spawnType: "point",
+                speed: { start: 200, end: 50, minimumSpeedMultiplier: 1 },
+                startRotation: { min: 0, max: 360 }
+            }
+        }
     },
     "freeze": {
         id: "freeze",

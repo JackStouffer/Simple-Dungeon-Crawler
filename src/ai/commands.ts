@@ -313,12 +313,13 @@ export function confusedAIGenerateCommand(
     const pos = entity.getOne(PositionComponent);
     const displayName = entity.getOne(DisplayNameComponent);
     if (pos === undefined || displayName === undefined) {
-        throw new Error(`Entity ${entity.id} is missing a data`);
+        throw new Error(`Entity ${entity.id} is missing data`);
     }
 
     confusedState.turnsLeft--;
 
     if (confusedState.turnsLeft > 0) {
+        const tilePos = pos.tilePosition();
         let blocks: boolean = true;
         let newX: number = 0;
         let newY: number = 0;
@@ -326,8 +327,8 @@ export function confusedAIGenerateCommand(
 
         do {
             dir = RNG.getItem([0, 1, 2, 3, 4, 5, 6, 7]) ?? 0;
-            newX = pos.x + DIRS[8][dir][0];
-            newY = pos.y + DIRS[8][dir][1];
+            newX = tilePos.x + DIRS[8][dir][0];
+            newY = tilePos.y + DIRS[8][dir][1];
             ({ blocks } = isBlocked(map, entityMap, newX, newY));
         } while (blocks === true);
 
