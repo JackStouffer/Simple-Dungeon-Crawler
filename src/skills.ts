@@ -523,7 +523,7 @@ export function castWildDamageSpell(
 
     let targetedEntity;
     do {
-        targetedEntity = getRandomFighterWithinRange(ecs, map, pos, 16);
+        targetedEntity = getRandomFighterWithinRange(ecs, map, pos.tilePosition(), 16);
     } while (targetedEntity === user);
 
     if (targetedEntity === null) {
@@ -1192,10 +1192,10 @@ export const SpellData: { [key: string]: SpellDataDetails } = {
                 angleStart: 0,
                 blendMode: "normal",
                 color: { start: "#f7a134", end: "#fa0303" },
-                emitterLifetime: 0.1,
+                emitterLifetime: 0.35,
                 frequency: 0.04,
                 lifetime: { min: 0.3, max: 0.4 },
-                maxParticles: 1000,
+                maxParticles: 50,
                 maxSpeed: 0,
                 noRotation: false,
                 particleSpacing: 0,
@@ -1204,7 +1204,7 @@ export const SpellData: { [key: string]: SpellDataDetails } = {
                 rotationSpeed: { min: 0, max: 0 },
                 scale: { start: 1, end: 0.3, minimumScaleMultiplier: 1 },
                 spawnType: "burst",
-                speed: { start: 400, end: 400, minimumSpeedMultiplier: 1 },
+                speed: { start: 100, end: 100, minimumSpeedMultiplier: 1 },
                 startRotation: { min: 0, max: 0 },
             }
         }

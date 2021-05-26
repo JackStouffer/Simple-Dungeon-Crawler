@@ -1658,7 +1658,7 @@ export function worldDistanceBetweenPoints(a: Point, b: Point, zoom: number): nu
 export function getRandomFighterWithinRange(
     ecs: World,
     map: GameMap,
-    origin: PositionComponent,
+    origin: Point,
     maxDistance: number
 ): Nullable<Entity> {
     const entities = ecs
@@ -1669,7 +1669,7 @@ export function getRandomFighterWithinRange(
     const possible = [];
     for (const e of entities) {
         const pos = e.getOne(PositionComponent)!;
-        const d = distanceBetweenPoints(origin.tilePosition(), pos.tilePosition());
+        const d = distanceBetweenPoints(origin, pos.tilePosition());
         if (pos !== origin && d <= maxDistance) {
             possible.push(e);
         }
