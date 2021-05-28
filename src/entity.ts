@@ -110,7 +110,7 @@ export class GraphicsComponent extends Component {
         textureKey: "",
         sprite: null,
         opacity: 1,
-        zIndex: 1
+        zIndex: 10
     }
 }
 
@@ -118,12 +118,16 @@ export class ChestGraphicsComponent extends Component {
     textureKey: string;
     openTextureKey: string;
     sprite: Nullable<PIXI.Sprite>;
+    opacity: number;
+    zIndex: number;
 
     static typeName = "ChestGraphicsComponent";
     static properties = {
         textureKey: "",
         openTextureKey: "",
-        sprite: null
+        sprite: null,
+        opacity: 1,
+        zIndex: 10
     }
 }
 
