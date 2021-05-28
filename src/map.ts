@@ -1679,18 +1679,24 @@ export function getRandomFighterWithinRange(
 }
 
 export function getRandomOpenSpace(map: GameMap, entityMap: EntityMap): Point {
-    const width = map[0].length;
-    const height = map.length;
+    const width = map[0][0].length;
+    const height = map[0].length;
     let blocks = false;
     let entity;
     let x = 0;
     let y = 0;
+    let failsafe = 0;
 
     do {
         x = randomIntFromInterval(0, width);
         y = randomIntFromInterval(0, height);
         ({ entity, blocks } = isBlocked(map, entityMap, x, y));
-    } while (entity !== null || blocks === true);
+        ++failsafe;
+    } while ((entity !== null || blocks === true) && failsafe < 2000);
+
+    if (failsafe >= 2000) {
+        throw new Error("Infinite loop");
+    }
 
     return { x, y };
 }
