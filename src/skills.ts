@@ -6,7 +6,6 @@ import * as particles from "pixi-particles";
 import globals from "./globals";
 import {
     GameMap,
-    getRandomFighterWithinRange,
     isBlocked,
     Point,
     setAllToExplored,
@@ -380,8 +379,8 @@ export function castDamageSpell(
 ): boolean {
     function findEntitiesInBodyOfWater(start: Point): Entity[] {
         const entitiesInWater: Entity[] = [];
-        // TODO: JS doesn't have a hash set so you can't do a set of objects
-        // write one so we don't have to use string keys
+        // TODO, Speed: JS doesn't have a hash set so you can't do a set of objects.
+        // Write one so we don't have to use string keys
         const todo: Map<string, Point> = new Map();
         todo.set(`${start.x},${start.y}`, start);
         const done: Set<string> = new Set();
@@ -507,38 +506,6 @@ export function castFireBall(
         }
     }
 
-    return true;
-}
-
-export function castWildDamageSpell(
-    item: ItemDataDetails | SpellDataDetails,
-    user: Entity,
-    ecs: World,
-    map: GameMap
-): boolean {
-    if (item.value === null || item.damageType === undefined) { throw new Error("Item has missing data"); }
-
-    const pos = user.getOne(PositionComponent);
-    if (pos === undefined) { throw new Error("can't call castWildDamageSpell with a user without a position"); }
-
-    let targetedEntity;
-    do {
-        targetedEntity = getRandomFighterWithinRange(ecs, map, pos.tilePosition(), 16);
-    } while (targetedEntity === user);
-
-    if (targetedEntity === null) {
-        if (user.id === "player") {
-            displayMessage("No target is close enough to use the scroll");
-        }
-        return false;
-    }
-
-    takeDamage(targetedEntity, item.value, false, item.damageType);
-
-    const stats = getEffectiveStatData(targetedEntity);
-    const hp = getEffectiveHitPointData(targetedEntity);
-    if (stats === null || hp === null) { return true; }
-    rollForStatusEffect(item, targetedEntity, stats, hp);
     return true;
 }
 
@@ -1047,7 +1014,7 @@ export const ItemData: { [key: string]: ItemDataDetails } = {
         value: 50,
         type: ItemType.WildDamageScroll,
         damageType: DamageType.Electric,
-        useFunc: castWildDamageSpell
+        useFunc: castDamageSpell
     },
     "lightning_scroll_wild": {
         id: "lightning_scroll_wild",
@@ -1056,7 +1023,7 @@ export const ItemData: { [key: string]: ItemDataDetails } = {
         value: 100,
         type: ItemType.WildDamageScroll,
         damageType: DamageType.Electric,
-        useFunc: castWildDamageSpell,
+        useFunc: castDamageSpell,
     },
     "lightning_scroll_strong_wild": {
         id: "lightning_scroll_strong_wild",
@@ -1065,7 +1032,7 @@ export const ItemData: { [key: string]: ItemDataDetails } = {
         value: 150,
         type: ItemType.WildDamageScroll,
         damageType: DamageType.Electric,
-        useFunc: castWildDamageSpell
+        useFunc: castDamageSpell
     },
     "fireball_scroll_weak_wild": {
         id: "fireball_scroll_weak_wild",
@@ -1074,7 +1041,7 @@ export const ItemData: { [key: string]: ItemDataDetails } = {
         value: 50,
         type: ItemType.WildDamageScroll,
         damageType: DamageType.Fire,
-        useFunc: castWildDamageSpell,
+        useFunc: castDamageSpell,
         statusEffect: StatusEffectType.OnFire
     },
     "fireball_scroll_wild": {
@@ -1084,7 +1051,7 @@ export const ItemData: { [key: string]: ItemDataDetails } = {
         value: 100,
         type: ItemType.WildDamageScroll,
         damageType: DamageType.Fire,
-        useFunc: castWildDamageSpell,
+        useFunc: castDamageSpell,
         statusEffect: StatusEffectType.OnFire
     },
     "fireball_scroll_strong_wild": {
@@ -1094,7 +1061,7 @@ export const ItemData: { [key: string]: ItemDataDetails } = {
         value: 150,
         type: ItemType.WildDamageScroll,
         damageType: DamageType.Fire,
-        useFunc: castWildDamageSpell,
+        useFunc: castDamageSpell,
         statusEffect: StatusEffectType.OnFire
     },
     "confuse_scroll": {
@@ -1159,7 +1126,7 @@ export const SpellData: { [key: string]: SpellDataDetails } = {
         value: 30,
         type: SpellType.WildDamage,
         damageType: DamageType.Electric,
-        useFunc: castWildDamageSpell,
+        useFunc: castDamageSpell,
         effect: "lightning",
         lightning: {
             duration: 300,
@@ -1194,8 +1161,8 @@ export const SpellData: { [key: string]: SpellDataDetails } = {
                 color: { start: "#f7a134", end: "#fa0303" },
                 emitterLifetime: 0.35,
                 frequency: 0.04,
-                lifetime: { min: 0.3, max: 0.4 },
-                maxParticles: 50,
+                lifetime: { min: 0.3, max: 0.35 },
+                maxParticles: 80,
                 maxSpeed: 0,
                 noRotation: false,
                 particleSpacing: 0,
@@ -1204,7 +1171,7 @@ export const SpellData: { [key: string]: SpellDataDetails } = {
                 rotationSpeed: { min: 0, max: 0 },
                 scale: { start: 1, end: 0.3, minimumScaleMultiplier: 1 },
                 spawnType: "burst",
-                speed: { start: 100, end: 100, minimumSpeedMultiplier: 1 },
+                speed: { start: 200, end: 100, minimumSpeedMultiplier: 1 },
                 startRotation: { min: 0, max: 0 },
             }
         }

@@ -10,6 +10,7 @@ import {
     DamageType,
     GameState,
     InteractableType,
+    SpellType,
     TriggerType
 } from "./constants";
 import {
@@ -19,7 +20,8 @@ import {
     Point,
     getEntitiesAtLocation,
     getHighestZIndexWithTile,
-    worldDistanceBetweenPoints
+    worldDistanceBetweenPoints,
+    getRandomFighterWithinRange
 } from "./map";
 import { assertUnreachable, Nullable, randomIntFromInterval } from "./util";
 import { displayMessage } from "./ui";
@@ -723,9 +725,9 @@ export class UseSpellCommand implements Command {
     private shouldCast: boolean = true;
     private readonly entity: Entity;
     private readonly spellID: string;
-    private readonly target: Point | undefined;
     private readonly rotation: number | undefined;
     private readonly details: SpellDataDetails;
+    private target: Point | undefined;
     private particleEmitter: Nullable<particles.Emitter> = null;
     private effectGraphics: Nullable<PIXI.Graphics> = null;
     private effectTween: Nullable<Tween> = null;
@@ -737,14 +739,14 @@ export class UseSpellCommand implements Command {
         this.rotation = rotation;
         this.details = SpellData[this.spellID];
 
-        const spellData = this.entity.getOne(SpellsComponent);
-        if (spellData === undefined ||
-            spellData.knownSpells.has(this.spellID) === false) {
+        const entitySpellData = this.entity.getOne(SpellsComponent);
+        if (entitySpellData === undefined ||
+            entitySpellData.knownSpells.has(this.spellID) === false) {
             this.shouldCast = false;
             return;
         }
 
-        if ((spellData.knownSpells.get(this.spellID) ?? -1) < 1) {
+        if ((entitySpellData.knownSpells.get(this.spellID) ?? -1) < 1) {
             this.shouldCast = false;
 
             if (this.entity === globals.Game?.player) {
@@ -775,6 +777,29 @@ export class UseSpellCommand implements Command {
 
     execute(deltaTime: DOMHighResTimeStamp): void {
         if (this.shouldCast) {
+
+            // Wild spell target selection
+            const spellData = SpellData[this.spellID];
+            if (spellData.type === SpellType.WildDamage) {
+                const targetedEntity = getRandomFighterWithinRange(
+                    globals.Game!.ecs,
+                    globals.Game!.map,
+                    this.entity.getOne(PositionComponent)!.tilePosition(),
+                    16
+                );
+
+                if (targetedEntity === null) {
+                    if (this.entity.id === "player") {
+                        displayMessage("No target is close enough to use the scroll");
+                    }
+
+                    this.didUseTurn = false;
+                    return;
+                }
+
+                this.target = targetedEntity.getOne(PositionComponent)!.tilePosition();
+            }
+
             this.didUseTurn = this.details.useFunc(
                 this.details,
                 this.entity,
