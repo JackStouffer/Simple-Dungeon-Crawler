@@ -6,8 +6,7 @@ import {
     Command,
     getPlayerMovementPath,
     GoToLocationCommand,
-    UseItemCommand,
-    UseSpellCommand,
+    UseSkillCommand,
     InteractCommand
 } from "./commands";
 import { distanceBetweenPoints, getEntitiesAtLocation, GameMap, Point } from "./map";
@@ -21,6 +20,9 @@ import {
     PositionComponent,
     SpeedComponent
 } from "./entity";
+import { ItemData, SpellData } from "./skills";
+import { useItem } from "./inventory";
+import { useSpell } from "./fighter";
 
 export interface KeyCommand {
     key: string;
@@ -168,18 +170,20 @@ export function playerInput(
 
         let command: Nullable<Command> = null;
         if (inputState.itemForTarget !== null) {
-            command = new UseItemCommand(
+            command = new UseSkillCommand(
                 player,
-                inputState.itemForTarget.id,
+                ItemData[inputState.itemForTarget.id],
                 position,
-                inputState.reticleRotation
+                inputState.reticleRotation,
+                useItem
             );
         } else if (inputState.spellForTarget !== null) {
-            command = new UseSpellCommand(
+            command = new UseSkillCommand(
                 player,
-                inputState.spellForTarget.id,
+                SpellData[inputState.spellForTarget.id],
                 position,
-                inputState.reticleRotation
+                inputState.reticleRotation,
+                useSpell
             );
         }
 

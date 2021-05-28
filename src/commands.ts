@@ -10,6 +10,7 @@ import {
     DamageType,
     GameState,
     InteractableType,
+    ItemType,
     SpellType,
     TriggerType
 } from "./constants";
@@ -40,11 +41,11 @@ import {
     StatsComponent,
     TriggerTypeComponent
 } from "./entity";
-import { attack, getEffectiveSpeedData, getKnownSpells, takeDamage, useSpell } from "./fighter";
-import { getItems, hasItem, useItem } from "./inventory";
+import { attack, getEffectiveSpeedData, getKnownSpells, takeDamage } from "./fighter";
+import { getItems } from "./inventory";
 import { deepWaterTrigger, eventTrigger, fireTrigger, mudTrigger, shallowWaterTrigger, steamTrigger } from "./trigger";
 import { giveItemsInteract, giveSpellsInteract, doorInteract, levelLoadInteract } from "./interactable";
-import { ItemData, SpellData, setOnFire, setParalyzed, SpellDataDetails } from "./skills";
+import { setOnFire, setParalyzed, SpellDataDetails, ItemDataDetails } from "./skills";
 import { DIRS } from "./rot";
 import { playOpenInventory, playOpenSpells } from "./audio";
 import { createLightningTexture } from "./graphics";
@@ -663,98 +664,36 @@ export class OpenSpellsCommand implements Command {
     }
 }
 
-/**
- * Create a command function to use an item in the object's inventory
- * and call its use function.
- */
-export class UseItemCommand implements Command {
-    private readonly entity: Entity;
-    private didUseItem: boolean = true;
-    private readonly itemID: string;
-    private readonly target: Point | undefined;
-    private readonly rotation: number | undefined;
-
-    constructor(entity: Entity, itemID: string, target?: Point, rotation?: number) {
-        this.entity = entity;
-        this.itemID = itemID;
-        this.target = target;
-        this.rotation = rotation;
-    }
-
-    usedTurn(): boolean {
-        return this.didUseItem;
-    }
-
-    isFinished(): boolean {
-        return true;
-    }
-
-    execute(): void {
-        const actorInventory = this.entity.getOne(InventoryComponent);
-        if (actorInventory === undefined) { throw new Error("Cannot use an item without an inventory"); }
-        if (!hasItem(actorInventory, this.itemID)) { throw new Error(`Cannot use ${this.itemID}, not in inventory`); }
-
-        const itemDetails = ItemData[this.itemID];
-        const used = itemDetails.useFunc(
-            itemDetails,
-            this.entity,
-            globals.Game!.ecs,
-            globals.Game!.map,
-            globals.Game!.entityMap,
-            this.target,
-            this.rotation
-        );
-
-        if (used) {
-            useItem(actorInventory, this.itemID);
-            this.didUseItem = true;
-            return;
-        }
-
-        this.didUseItem = false;
-        return;
-    }
-}
+type SkillCallback = (e: Entity, id: string) => void;
 
 /**
- * Create a command function to cast a spell in the known spells
- * and call its use function.
+ * Create a command function to call a skill function at the specified
+ * point. Calls the callback if the skill was cast.
  */
-export class UseSpellCommand implements Command {
+export class UseSkillCommand implements Command {
     private didUseTurn: boolean = false;
     private shouldCast: boolean = true;
     private readonly entity: Entity;
-    private readonly spellID: string;
     private readonly rotation: number | undefined;
-    private readonly details: SpellDataDetails;
+    private readonly details: SpellDataDetails | ItemDataDetails;
     private target: Point | undefined;
     private particleEmitter: Nullable<particles.Emitter> = null;
     private effectGraphics: Nullable<PIXI.Graphics> = null;
     private effectTween: Nullable<Tween> = null;
+    private readonly skillCallback: SkillCallback | undefined;
 
-    constructor(entity: Entity, spellID: string, target?: Point, rotation?: number) {
+    constructor(
+        entity: Entity,
+        details: SpellDataDetails | ItemDataDetails,
+        target?: Point,
+        rotation?: number,
+        cb?: SkillCallback
+    ) {
         this.entity = entity;
-        this.spellID = spellID;
         this.target = target;
         this.rotation = rotation;
-        this.details = SpellData[this.spellID];
-
-        const entitySpellData = this.entity.getOne(SpellsComponent);
-        if (entitySpellData === undefined ||
-            entitySpellData.knownSpells.has(this.spellID) === false) {
-            this.shouldCast = false;
-            return;
-        }
-
-        if ((entitySpellData.knownSpells.get(this.spellID) ?? -1) < 1) {
-            this.shouldCast = false;
-
-            if (this.entity === globals.Game?.player) {
-                displayMessage(`You don't have enough casts to use ${this.details.displayName}`);
-            }
-
-            return;
-        }
+        this.details = details;
+        this.skillCallback = cb;
     }
 
     usedTurn(): boolean {
@@ -777,10 +716,9 @@ export class UseSpellCommand implements Command {
 
     execute(deltaTime: DOMHighResTimeStamp): void {
         if (this.shouldCast) {
-
             // Wild spell target selection
-            const spellData = SpellData[this.spellID];
-            if (spellData.type === SpellType.WildDamage) {
+            if (this.details.type === SpellType.WildDamage ||
+                this.details.type === ItemType.WildDamageScroll) {
                 const targetedEntity = getRandomFighterWithinRange(
                     globals.Game!.ecs,
                     globals.Game!.map,
@@ -811,8 +749,9 @@ export class UseSpellCommand implements Command {
             );
 
             if (this.didUseTurn) {
-                const statData = this.entity.getOne(SpellsComponent)!;
-                useSpell(statData, this.details.id);
+                if (this.skillCallback !== undefined) {
+                    this.skillCallback(this.entity, this.details.id);
+                }
 
                 if (this.details.effect === "particles" &&
                     this.details.particles !== undefined &&
@@ -860,9 +799,6 @@ export class UseSpellCommand implements Command {
                     this.particleEmitter.emit = true;
                 }
 
-                // TODO: This does not work with wild spells since they have no
-                // target. Need to rethink the way targets are chosen for the use
-                // function; maybe move it to the command.
                 if (this.details.effect === "lightning" &&
                     this.details.lightning !== undefined &&
                     this.target !== undefined) {

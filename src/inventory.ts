@@ -2,6 +2,7 @@ import globals from "./globals";
 import { ItemType } from "./constants";
 import { InventoryComponent } from "./entity";
 import { ItemData, ItemDataDetails } from "./skills";
+import { Entity } from "ape-ecs";
 
 export interface InventoryItemDetails extends ItemDataDetails {
     count: number;
@@ -73,7 +74,8 @@ export function addItem(inventory: InventoryComponent, id: string, count: number
  * inventory or removing it from the list of items if the
  * count results in zero
  */
-export function useItem(inventory: InventoryComponent, id: string): void {
+export function useItem(entity: Entity, id: string): void {
+    const inventory = entity.getOne(InventoryComponent)!;
     if (!hasItem(inventory, id)) {
         throw new Error(`Item ${id} not in inventory`);
     }

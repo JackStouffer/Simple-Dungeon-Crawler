@@ -30,7 +30,7 @@ export function giveItemsInteract(actor: Entity, interactable: Entity) {
                 const item = items[i];
                 displayMessage(`Found a ${ItemData[item.id].displayName}`);
                 addItem(actorInventory, item.id, item.count);
-                useItem(interactableInventory, item.id);
+                useItem(interactable, item.id);
             }
 
             const interactableEntityType = interactable.getOne(TypeComponent);

@@ -554,9 +554,17 @@ export function heal(hpData: HitPointsComponent, amount: number): void {
     }
 }
 
-export function useSpell(spellData: SpellsComponent, id: string) {
+/**
+ * Reduce the number of casts left for a spell in the given spell
+ * component by one. Does not do anything
+ *
+ * @param entity The entity
+ * @param id the spell id
+ */
+export function useSpell(entity: Entity, id: string) {
+    const spellData = entity.getOne(SpellsComponent)!;
     if (!spellData.knownSpells.has(id)) {
-        throw new Error(`Item ${id} not in inventory`);
+        throw new Error(`Spell ${id} is not known`);
     }
 
     const count = spellData.knownSpells.get(id)! - 1;

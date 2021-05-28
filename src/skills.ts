@@ -57,9 +57,18 @@ export interface ItemDataDetails {
     damageType?: DamageType;
     statusEffect?: StatusEffectType;
     areaOfEffect?: Area;
-    particleLocation?: "self" | "target";
-    particleImages?: string[];
-    particleConfig?: particles.OldEmitterConfig;
+    effect?: "lightning" | "particles";
+    lightning?: {
+        duration: number;
+        segments: number;
+        strikes: number;
+        fadeOut: number;
+    };
+    particles?: {
+        particleLocation: "self" | "target";
+        particleImages: string[];
+        particleConfig: particles.OldEmitterConfig;
+    };
 
     useFunc: SkillFunction;
 }
@@ -932,7 +941,32 @@ export const ItemData: { [key: string]: ItemDataDetails } = {
         description: "Potion that restores a small amount of health",
         value: 25,
         type: ItemType.HealSelf,
-        useFunc: castHeal
+        useFunc: castHeal,
+        effect: "particles",
+        particles: {
+            particleLocation: "self",
+            particleImages: ["particle_health_cross"],
+            particleConfig: {
+                acceleration: { x: 0, y: 0 },
+                addAtBack: false,
+                alpha: { start: 1, end: 0.8 },
+                blendMode: "normal",
+                color: { start: "#C66527", end: "#C66527" },
+                emitterLifetime: 1,
+                frequency: 0.077,
+                lifetime: { min: .2, max: .3 },
+                maxParticles: 500,
+                maxSpeed: 0,
+                noRotation: true,
+                pos: {x: 0, y: 0},
+                rotationSpeed: { min: 0, max: 20 },
+                scale: { start: .7, end: 0.3, minimumScaleMultiplier: 0.5 },
+                spawnRect: {x: -3, y: 16, w: 20, h: 0},
+                spawnType: "rect",
+                speed: { start: 100, end: 100, minimumSpeedMultiplier: 1 },
+                startRotation: { min: 270, max: 270 }
+            }
+        }
     },
     "health_potion": {
         id: "health_potion",
@@ -940,7 +974,32 @@ export const ItemData: { [key: string]: ItemDataDetails } = {
         description: "Potion that restores a some health",
         value: 50,
         type: ItemType.HealSelf,
-        useFunc: castHeal
+        useFunc: castHeal,
+        effect: "particles",
+        particles: {
+            particleLocation: "self",
+            particleImages: ["particle_health_cross"],
+            particleConfig: {
+                acceleration: { x: 0, y: 0 },
+                addAtBack: false,
+                alpha: { start: 1, end: 0.8 },
+                blendMode: "normal",
+                color: { start: "#C66527", end: "#C66527" },
+                emitterLifetime: 1,
+                frequency: 0.077,
+                lifetime: { min: .2, max: .3 },
+                maxParticles: 500,
+                maxSpeed: 0,
+                noRotation: true,
+                pos: {x: 0, y: 0},
+                rotationSpeed: { min: 0, max: 20 },
+                scale: { start: .7, end: 0.3, minimumScaleMultiplier: 0.5 },
+                spawnRect: {x: -3, y: 16, w: 20, h: 0},
+                spawnType: "rect",
+                speed: { start: 100, end: 100, minimumSpeedMultiplier: 1 },
+                startRotation: { min: 270, max: 270 }
+            }
+        }
     },
     "health_potion_strong": {
         id: "health_potion_strong",
@@ -948,7 +1007,32 @@ export const ItemData: { [key: string]: ItemDataDetails } = {
         description: "Potion that restores a large amount of health",
         value: 100,
         type: ItemType.HealSelf,
-        useFunc: castHeal
+        useFunc: castHeal,
+        effect: "particles",
+        particles: {
+            particleLocation: "self",
+            particleImages: ["particle_health_cross"],
+            particleConfig: {
+                acceleration: { x: 0, y: 0 },
+                addAtBack: false,
+                alpha: { start: 1, end: 0.8 },
+                blendMode: "normal",
+                color: { start: "#C66527", end: "#C66527" },
+                emitterLifetime: 1,
+                frequency: 0.077,
+                lifetime: { min: .2, max: .3 },
+                maxParticles: 500,
+                maxSpeed: 0,
+                noRotation: true,
+                pos: { x: 0, y: 0 },
+                rotationSpeed: { min: 0, max: 20 },
+                scale: { start: .7, end: 0.3, minimumScaleMultiplier: 0.5 },
+                spawnRect: { x: -3, y: 16, w: 20, h: 0 },
+                spawnType: "rect",
+                speed: { start: 100, end: 100, minimumSpeedMultiplier: 1 },
+                startRotation: { min: 270, max: 270 }
+            }
+        }
     },
     "lightning_scroll_weak": {
         id: "lightning_scroll_weak",
@@ -957,7 +1041,14 @@ export const ItemData: { [key: string]: ItemDataDetails } = {
         value: 20,
         type: ItemType.DamageScroll,
         damageType: DamageType.Electric,
-        useFunc: castDamageSpell
+        useFunc: castDamageSpell,
+        effect: "lightning",
+        lightning: {
+            duration: 500,
+            segments: 20,
+            strikes: 1,
+            fadeOut: 300
+        }
     },
     "lightning_scroll": {
         id: "lightning_scroll",
@@ -966,7 +1057,14 @@ export const ItemData: { [key: string]: ItemDataDetails } = {
         value: 50,
         type: ItemType.DamageScroll,
         damageType: DamageType.Electric,
-        useFunc: castDamageSpell
+        useFunc: castDamageSpell,
+        effect: "lightning",
+        lightning: {
+            duration: 500,
+            segments: 20,
+            strikes: 1,
+            fadeOut: 300
+        }
     },
     "lightning_scroll_strong": {
         id: "lightning_scroll_strong",
@@ -975,7 +1073,14 @@ export const ItemData: { [key: string]: ItemDataDetails } = {
         value: 100,
         type: ItemType.DamageScroll,
         damageType: DamageType.Electric,
-        useFunc: castDamageSpell
+        useFunc: castDamageSpell,
+        effect: "lightning",
+        lightning: {
+            duration: 500,
+            segments: 20,
+            strikes: 1,
+            fadeOut: 300
+        }
     },
     "fireball_scroll_weak": {
         id: "fireball_scroll_weak",
@@ -985,7 +1090,34 @@ export const ItemData: { [key: string]: ItemDataDetails } = {
         type: ItemType.DamageScroll,
         damageType: DamageType.Fire,
         useFunc: castDamageSpell,
-        statusEffect: StatusEffectType.OnFire
+        statusEffect: StatusEffectType.OnFire,
+        effect: "particles",
+        particles: {
+            particleImages: ["particle_cloud"],
+            particleLocation: "target",
+            particleConfig: {
+                acceleration: { x: 0, y: 0 },
+                addAtBack: false,
+                alpha: { start: 0.84, end: 0.4 },
+                angleStart: 0,
+                blendMode: "normal",
+                color: { start: "#f7a134", end: "#fa0303" },
+                emitterLifetime: 0.35,
+                frequency: 0.04,
+                lifetime: { min: 0.3, max: 0.35 },
+                maxParticles: 80,
+                maxSpeed: 0,
+                noRotation: false,
+                particleSpacing: 0,
+                particlesPerWave: 40,
+                pos: { x: 0, y: 0 },
+                rotationSpeed: { min: 0, max: 0 },
+                scale: { start: 1, end: 0.3, minimumScaleMultiplier: 1 },
+                spawnType: "burst",
+                speed: { start: 200, end: 100, minimumSpeedMultiplier: 1 },
+                startRotation: { min: 0, max: 0 },
+            }
+        }
     },
     "fireball_scroll": {
         id: "fireball_scroll",
@@ -995,7 +1127,34 @@ export const ItemData: { [key: string]: ItemDataDetails } = {
         type: ItemType.DamageScroll,
         damageType: DamageType.Fire,
         useFunc: castDamageSpell,
-        statusEffect: StatusEffectType.OnFire
+        statusEffect: StatusEffectType.OnFire,
+        effect: "particles",
+        particles: {
+            particleImages: ["particle_cloud"],
+            particleLocation: "target",
+            particleConfig: {
+                acceleration: { x: 0, y: 0 },
+                addAtBack: false,
+                alpha: { start: 0.84, end: 0.4 },
+                angleStart: 0,
+                blendMode: "normal",
+                color: { start: "#f7a134", end: "#fa0303" },
+                emitterLifetime: 0.35,
+                frequency: 0.04,
+                lifetime: { min: 0.3, max: 0.35 },
+                maxParticles: 80,
+                maxSpeed: 0,
+                noRotation: false,
+                particleSpacing: 0,
+                particlesPerWave: 40,
+                pos: { x: 0, y: 0 },
+                rotationSpeed: { min: 0, max: 0 },
+                scale: { start: 1, end: 0.3, minimumScaleMultiplier: 1 },
+                spawnType: "burst",
+                speed: { start: 200, end: 100, minimumSpeedMultiplier: 1 },
+                startRotation: { min: 0, max: 0 },
+            }
+        }
     },
     "fireball_scroll_strong": {
         id: "fireball_scroll_strong",
@@ -1005,7 +1164,34 @@ export const ItemData: { [key: string]: ItemDataDetails } = {
         type: ItemType.DamageScroll,
         damageType: DamageType.Fire,
         useFunc: castDamageSpell,
-        statusEffect: StatusEffectType.OnFire
+        statusEffect: StatusEffectType.OnFire,
+        effect: "particles",
+        particles: {
+            particleImages: ["particle_cloud"],
+            particleLocation: "target",
+            particleConfig: {
+                acceleration: { x: 0, y: 0 },
+                addAtBack: false,
+                alpha: { start: 0.84, end: 0.4 },
+                angleStart: 0,
+                blendMode: "normal",
+                color: { start: "#f7a134", end: "#fa0303" },
+                emitterLifetime: 0.35,
+                frequency: 0.04,
+                lifetime: { min: 0.3, max: 0.35 },
+                maxParticles: 80,
+                maxSpeed: 0,
+                noRotation: false,
+                particleSpacing: 0,
+                particlesPerWave: 40,
+                pos: { x: 0, y: 0 },
+                rotationSpeed: { min: 0, max: 0 },
+                scale: { start: 1, end: 0.3, minimumScaleMultiplier: 1 },
+                spawnType: "burst",
+                speed: { start: 200, end: 100, minimumSpeedMultiplier: 1 },
+                startRotation: { min: 0, max: 0 },
+            }
+        }
     },
     "lightning_scroll_weak_wild": {
         id: "lightning_scroll_weak_wild",
@@ -1014,7 +1200,14 @@ export const ItemData: { [key: string]: ItemDataDetails } = {
         value: 50,
         type: ItemType.WildDamageScroll,
         damageType: DamageType.Electric,
-        useFunc: castDamageSpell
+        useFunc: castDamageSpell,
+        effect: "lightning",
+        lightning: {
+            duration: 500,
+            segments: 20,
+            strikes: 1,
+            fadeOut: 300
+        }
     },
     "lightning_scroll_wild": {
         id: "lightning_scroll_wild",
@@ -1024,6 +1217,13 @@ export const ItemData: { [key: string]: ItemDataDetails } = {
         type: ItemType.WildDamageScroll,
         damageType: DamageType.Electric,
         useFunc: castDamageSpell,
+        effect: "lightning",
+        lightning: {
+            duration: 500,
+            segments: 20,
+            strikes: 1,
+            fadeOut: 300
+        }
     },
     "lightning_scroll_strong_wild": {
         id: "lightning_scroll_strong_wild",
@@ -1032,7 +1232,14 @@ export const ItemData: { [key: string]: ItemDataDetails } = {
         value: 150,
         type: ItemType.WildDamageScroll,
         damageType: DamageType.Electric,
-        useFunc: castDamageSpell
+        useFunc: castDamageSpell,
+        effect: "lightning",
+        lightning: {
+            duration: 500,
+            segments: 20,
+            strikes: 1,
+            fadeOut: 300
+        }
     },
     "fireball_scroll_weak_wild": {
         id: "fireball_scroll_weak_wild",
@@ -1042,7 +1249,34 @@ export const ItemData: { [key: string]: ItemDataDetails } = {
         type: ItemType.WildDamageScroll,
         damageType: DamageType.Fire,
         useFunc: castDamageSpell,
-        statusEffect: StatusEffectType.OnFire
+        statusEffect: StatusEffectType.OnFire,
+        effect: "particles",
+        particles: {
+            particleImages: ["particle_cloud"],
+            particleLocation: "target",
+            particleConfig: {
+                acceleration: { x: 0, y: 0 },
+                addAtBack: false,
+                alpha: { start: 0.84, end: 0.4 },
+                angleStart: 0,
+                blendMode: "normal",
+                color: { start: "#f7a134", end: "#fa0303" },
+                emitterLifetime: 0.35,
+                frequency: 0.04,
+                lifetime: { min: 0.3, max: 0.35 },
+                maxParticles: 80,
+                maxSpeed: 0,
+                noRotation: false,
+                particleSpacing: 0,
+                particlesPerWave: 40,
+                pos: { x: 0, y: 0 },
+                rotationSpeed: { min: 0, max: 0 },
+                scale: { start: 1, end: 0.3, minimumScaleMultiplier: 1 },
+                spawnType: "burst",
+                speed: { start: 200, end: 100, minimumSpeedMultiplier: 1 },
+                startRotation: { min: 0, max: 0 },
+            }
+        }
     },
     "fireball_scroll_wild": {
         id: "fireball_scroll_wild",
@@ -1052,7 +1286,34 @@ export const ItemData: { [key: string]: ItemDataDetails } = {
         type: ItemType.WildDamageScroll,
         damageType: DamageType.Fire,
         useFunc: castDamageSpell,
-        statusEffect: StatusEffectType.OnFire
+        statusEffect: StatusEffectType.OnFire,
+        effect: "particles",
+        particles: {
+            particleImages: ["particle_cloud"],
+            particleLocation: "target",
+            particleConfig: {
+                acceleration: { x: 0, y: 0 },
+                addAtBack: false,
+                alpha: { start: 0.84, end: 0.4 },
+                angleStart: 0,
+                blendMode: "normal",
+                color: { start: "#f7a134", end: "#fa0303" },
+                emitterLifetime: 0.35,
+                frequency: 0.04,
+                lifetime: { min: 0.3, max: 0.35 },
+                maxParticles: 80,
+                maxSpeed: 0,
+                noRotation: false,
+                particleSpacing: 0,
+                particlesPerWave: 40,
+                pos: { x: 0, y: 0 },
+                rotationSpeed: { min: 0, max: 0 },
+                scale: { start: 1, end: 0.3, minimumScaleMultiplier: 1 },
+                spawnType: "burst",
+                speed: { start: 200, end: 100, minimumSpeedMultiplier: 1 },
+                startRotation: { min: 0, max: 0 },
+            }
+        }
     },
     "fireball_scroll_strong_wild": {
         id: "fireball_scroll_strong_wild",
@@ -1062,7 +1323,34 @@ export const ItemData: { [key: string]: ItemDataDetails } = {
         type: ItemType.WildDamageScroll,
         damageType: DamageType.Fire,
         useFunc: castDamageSpell,
-        statusEffect: StatusEffectType.OnFire
+        statusEffect: StatusEffectType.OnFire,
+        effect: "particles",
+        particles: {
+            particleImages: ["particle_cloud"],
+            particleLocation: "target",
+            particleConfig: {
+                acceleration: { x: 0, y: 0 },
+                addAtBack: false,
+                alpha: { start: 0.84, end: 0.4 },
+                angleStart: 0,
+                blendMode: "normal",
+                color: { start: "#f7a134", end: "#fa0303" },
+                emitterLifetime: 0.35,
+                frequency: 0.04,
+                lifetime: { min: 0.3, max: 0.35 },
+                maxParticles: 80,
+                maxSpeed: 0,
+                noRotation: false,
+                particleSpacing: 0,
+                particlesPerWave: 40,
+                pos: { x: 0, y: 0 },
+                rotationSpeed: { min: 0, max: 0 },
+                scale: { start: 1, end: 0.3, minimumScaleMultiplier: 1 },
+                spawnType: "burst",
+                speed: { start: 200, end: 100, minimumSpeedMultiplier: 1 },
+                startRotation: { min: 0, max: 0 },
+            }
+        }
     },
     "confuse_scroll": {
         id: "confuse_scroll",
@@ -1071,6 +1359,31 @@ export const ItemData: { [key: string]: ItemDataDetails } = {
         value: 8,
         type: ItemType.ConfuseScroll,
         useFunc: castConfuse,
+        effect: "particles",
+        particles: {
+            particleLocation: "target",
+            particleImages: ["particle_star"],
+            particleConfig: {
+                acceleration: { x: 0, y: 0 },
+                addAtBack: false,
+                alpha: { start: 1, end: .8 },
+                blendMode: "normal",
+                color: { start: "#eaff00", end: "#eaff00" },
+                emitterLifetime: 1,
+                frequency: 0.057,
+                lifetime: { min: 0.3, max: 0.4 },
+                maxParticles: 500,
+                maxSpeed: 0,
+                noRotation: false,
+                pos: { x: 0, y: 0 },
+                rotationSpeed: { min: 0, max: 0 },
+                scale: { start: .8, end: .6, minimumScaleMultiplier: 0.5 },
+                spawnCircle: { x: 8, y: 8, r: 30 },
+                spawnType: "circle",
+                speed: { start: 0, end: 0, minimumSpeedMultiplier: 1 },
+                startRotation: { min: 0, max: 360 }
+            }
+        }
     },
     "clairvoyance_scroll": {
         id: "clairvoyance_scroll",
@@ -1087,6 +1400,31 @@ export const ItemData: { [key: string]: ItemDataDetails } = {
         value: 5,
         type: ItemType.HasteSelf,
         useFunc: castHaste,
+        effect: "particles",
+        particles: {
+            particleLocation: "self",
+            particleImages: ["particle_arrow_up"],
+            particleConfig: {
+                acceleration: { x: 0, y: 0 },
+                addAtBack: false,
+                alpha: { start: 1, end: 1 },
+                blendMode: "normal",
+                color: { start: "#4BA86D", end: "#4BA86D" },
+                emitterLifetime: 1,
+                frequency: 0.077,
+                lifetime: { min: .2, max: .3 },
+                maxParticles: 500,
+                maxSpeed: 0,
+                noRotation: true,
+                pos: { x: 0, y: 0 },
+                rotationSpeed: { min: 0, max: 20 },
+                scale: { start: 0.5, end: 0.7, minimumScaleMultiplier: 0.5 },
+                spawnRect: { x: -3, y: 16, w: 20, h: 0 },
+                spawnType: "rect",
+                speed: { start: 50, end: 200, minimumSpeedMultiplier: 1 },
+                startRotation: { min: 270, max: 270 }
+            }
+        }
     },
     "slow_poison_weak": {
         id: "slow_poison_weak",
@@ -1094,7 +1432,32 @@ export const ItemData: { [key: string]: ItemDataDetails } = {
         description: "Only allow your target to take one action per two turns",
         value: 5,
         type: ItemType.SlowOther,
-        useFunc: castSlow
+        useFunc: castSlow,
+        effect: "particles",
+        particles: {
+            particleLocation: "target",
+            particleImages: ["particle_arrow_up"],
+            particleConfig: {
+                acceleration: { x: 0, y: 0 },
+                addAtBack: false,
+                alpha: { start: 1, end: 1 },
+                blendMode: "normal",
+                color: { start: "#B760A6", end: "#B760A6" },
+                emitterLifetime: 1,
+                frequency: 0.077,
+                lifetime: { min: .2, max: 1 },
+                maxParticles: 500,
+                maxSpeed: 0,
+                noRotation: true,
+                pos: { x: 0, y: 0 },
+                rotationSpeed: { min: 0, max: 20 },
+                scale: { start: 0.5, end: 0.7, minimumScaleMultiplier: 0.5 },
+                spawnRect: { x: -3, y: -16, w: 20, h: 0 },
+                spawnType: "rect",
+                speed: { start: 100, end: 10, minimumSpeedMultiplier: 1 },
+                startRotation: { min: 90, max: 90 }
+            }
+        }
     }
 };
 

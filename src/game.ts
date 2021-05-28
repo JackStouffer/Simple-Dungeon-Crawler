@@ -61,8 +61,7 @@ import {
 import {
     Command,
     NoOpCommand,
-    UseItemCommand,
-    UseSpellCommand
+    UseSkillCommand
 } from "./commands";
 import { GameState, ItemType, SpellType } from "./constants";
 import input from "./input";
@@ -93,9 +92,9 @@ import {
     explainSpellShrine,
     explainEnvironmentInteractivity
 } from "./tutorials";
-import { getItems, InventoryItemDetails } from "./inventory";
+import { getItems, hasItem, InventoryItemDetails, useItem } from "./inventory";
 import { assertUnreachable, Nullable } from "./util";
-import { DeathSystem, getEffectiveHitPointData, getKnownSpells, LevelUpSystem, UpdateSchedulerSystem } from "./fighter";
+import { DeathSystem, getEffectiveHitPointData, getKnownSpells, LevelUpSystem, UpdateSchedulerSystem, useSpell } from "./fighter";
 import { DrawChestsSystem, DrawPlayerSystem, DrawSystem } from "./graphics";
 import { LightingSystem } from "./lighting";
 import {
@@ -109,6 +108,7 @@ import {
     FrozenSystem
 } from "./effects";
 import { generateAICommand } from "./ai/commands";
+import { ItemData, SpellData } from "./skills";
 
 globals.gameEventEmitter = new EventEmitter();
 
@@ -574,6 +574,12 @@ export class SimpleDungeonCrawler {
             );
 
             if (item !== null) {
+                // This really should never happen. Just for sanity checking
+                if (!hasItem(playerInventory, item.id)) {
+                    displayMessage(`You don't have ${item.displayName} in your inventory`);
+                    return;
+                }
+
                 switch (item.type) {
                     case ItemType.HealSelf:
                     case ItemType.ClairvoyanceScroll:
@@ -582,8 +588,12 @@ export class SimpleDungeonCrawler {
                         this.state = GameState.Gameplay;
                         this.inventoryMenu.close();
 
-                        this.currentCommand = new UseItemCommand(
-                            this.player, item.id
+                        this.currentCommand = new UseSkillCommand(
+                            this.player,
+                            ItemData[item.id],
+                            undefined,
+                            undefined,
+                            useItem
                         );
                         break;
                     // Items that need to be targeted
@@ -626,6 +636,16 @@ export class SimpleDungeonCrawler {
                     return;
                 }
 
+                if (playerSpells.knownSpells.has(spell.id) === false) {
+                    displayMessage(`You don't know ${spell.displayName}`);
+                    return;
+                }
+
+                if ((playerSpells.knownSpells.get(spell.id) ?? -1) < 1) {
+                    displayMessage(`You don't have enough casts to use ${spell.displayName}`);
+                    return;
+                }
+
                 switch (spell.type) {
                     case SpellType.Effect:
                     case SpellType.HealSelf:
@@ -635,9 +655,12 @@ export class SimpleDungeonCrawler {
                         this.state = GameState.Gameplay;
                         this.spellSelectionMenu.close();
 
-                        this.currentCommand = new UseSpellCommand(
+                        this.currentCommand = new UseSkillCommand(
                             this.player,
-                            spell.id
+                            SpellData[spell.id],
+                            undefined,
+                            undefined,
+                            useSpell
                         );
                         break;
                     case SpellType.DamageOther:

@@ -2,8 +2,7 @@ import { RNG, DIRS, Path } from "../rot/index";
 
 import {
     Command,
-    UseItemCommand,
-    UseSpellCommand,
+    UseSkillCommand,
     GoToLocationCommand,
     InteractCommand,
     NoOpCommand,
@@ -36,9 +35,9 @@ import { displayMessage } from "../ui";
 import { ItemType, SpellType } from "../constants";
 import { Nullable } from "../util";
 import { Entity, World } from "ape-ecs";
-import { getItems } from "../inventory";
-import { getEffectiveStatData, getKnownSpells } from "../fighter";
-import { SpellData } from "../skills";
+import { getItems, useItem } from "../inventory";
+import { getEffectiveStatData, getKnownSpells, useSpell } from "../fighter";
+import { ItemData, SpellData } from "../skills";
 import { isPositionPotentiallyDangerous } from "./goals";
 import { PassableCallback, WeightCallback } from "../rot/path/path";
 
@@ -290,7 +289,7 @@ function useHealingItemAction(
 
     displayMessage(`${displayName.name} used a ${item.displayName}`);
 
-    return new UseItemCommand(aiState.entity, item.id);
+    return new UseSkillCommand(aiState.entity, ItemData[item.id], undefined, undefined, useItem);
 }
 
 function useHealingSpellAction(
@@ -310,7 +309,7 @@ function useHealingSpellAction(
 
     displayMessage(`${displayName.name} casted ${spell.displayName}`);
 
-    return new UseSpellCommand(aiState.entity, spell.id);
+    return new UseSkillCommand(aiState.entity, SpellData[spell.id], undefined, undefined, useSpell);
 }
 
 function healAllyAction(
@@ -357,7 +356,7 @@ function healAllyAction(
 
     displayMessage(`${displayName.name} casted ${spell.displayName}`);
 
-    return new UseSpellCommand(aiState.entity, spell.id, target);
+    return new UseSkillCommand(aiState.entity, SpellData[spell.id], target, undefined, useSpell);
 }
 
 /**
@@ -385,7 +384,13 @@ function castSpellAction(spellID: string): ActionUpdateFunction {
         const targetPos = aiState.target.getOne(PositionComponent);
         if (targetPos === undefined) { throw new Error(`Target entity ${aiState.target.id} is missing PositionComponent`); }
 
-        return new UseSpellCommand(aiState.entity, spellID, targetPos.tilePosition());
+        return new UseSkillCommand(
+            aiState.entity,
+            SpellData[spellID],
+            targetPos.tilePosition(),
+            undefined,
+            useSpell
+        );
     };
 }
 
