@@ -5,10 +5,16 @@
 _In Development_
 
 * Gameplay
+  * Added the beginnings of a tutorial
   * Damage done to enemies that aren't alerted do bonus damage
   * Fireball spell now does fire damage in a circle
   * Added "exhale" spell which pushes back everything around the player in a circle
   * Added Paralyzed status which removes an entities ability to act for a certain number of turns
+  * Enemies try to run to water when on fire
+  * Lightning attacks in water now spread throughout the entire body of water
+  * Freezing water now creates ice, which entities will slide across with no control
+  * Combusting water with the combustion spell now creates harmful steam
+  * Created eel enemy which can only move in water
 * Technical
   * Use Tiled's JSON format instead of the JS format
   * Use Pixi.js for rendering sprites in WebGL
@@ -18,6 +24,8 @@ _In Development_
   * Use inset-ed box shadow to represent selection
   * Allow maps to have arbitrary number of tile layers
   * Multi-tile static objects represented by tiles can now be visible in their entirety but still cast shadows
+  * Spells can now have particle effects
+  * Lightning spells have a specific lightning effect 
 
 ## Version 10
 
