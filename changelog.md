@@ -2,7 +2,7 @@
 
 ## Version 11
 
-_In Development_
+_May 29, 2021_
 
 * Gameplay
   * Added the beginnings of a tutorial
