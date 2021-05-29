@@ -531,3 +531,48 @@ export function createLightningTexture(
 
     return lightningBitmap;
 }
+
+/**
+ * Create a speech bubble graphics object with given speech.
+ *
+ * @param x screen X coord
+ * @param y screen Y coord
+ * @param text Text in the speech bubble
+ * @returns {PIXI.Graphics} the speech bubble graphic
+ */
+export function createSpeechBubbleTexture(x: number, y: number, text: string) {
+    const graphics = new PIXI.Graphics();
+    const padding = 20;
+    graphics.zIndex = 10;
+    graphics.zIndex = 10;
+
+    const speech = new PIXI.Text(text, { fontFamily : "monospace", fontSize: 12, fill : 0x000000 });
+    const rectWidth = speech.width + padding;
+    const rectHeight = speech.height + padding;
+    const halfTileSize = ((TILE_SIZE * globals.Game!.gameCamera.zoom) / 2);
+
+    graphics.x = x - (rectWidth / 2) + halfTileSize;
+    graphics.y = y - rectHeight - halfTileSize;
+    speech.x += padding / 2;
+    speech.y += padding / 2;
+
+    graphics.clear();
+    graphics.beginFill(0xffffff, 1);
+    graphics.drawRoundedRect(
+        0,
+        0,
+        rectWidth,
+        rectHeight,
+        5
+    );
+
+    graphics.drawPolygon([
+        new PIXI.Point((rectWidth / 2) - halfTileSize, rectHeight),
+        new PIXI.Point((rectWidth / 2) + halfTileSize, rectHeight),
+        new PIXI.Point((rectWidth / 2), rectHeight + halfTileSize)
+    ]);
+
+    graphics.addChild(speech);
+
+    return graphics;
+}

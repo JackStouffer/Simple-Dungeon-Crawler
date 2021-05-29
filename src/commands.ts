@@ -48,7 +48,7 @@ import { giveItemsInteract, giveSpellsInteract, doorInteract, levelLoadInteract 
 import { setOnFire, setParalyzed, SpellDataDetails, ItemDataDetails } from "./skills";
 import { DIRS } from "./rot";
 import { playOpenInventory, playOpenSpells } from "./audio";
-import { createLightningTexture } from "./graphics";
+import { createLightningTexture, createSpeechBubbleTexture } from "./graphics";
 import { Transition, Tween } from "./tween";
 
 /**
@@ -898,3 +898,48 @@ export class RotateReticleCommand implements Command {
     }
 }
 
+export class AlertAlliesCommand implements Command {
+    private readonly entity: Entity;
+    private readonly effectGraphics: PIXI.Graphics;
+    private readonly effectTween: Tween;
+
+    constructor(entity: Entity) {
+        this.entity = entity;
+
+        const tilePos = this.entity.getOne(PositionComponent)!.tilePosition();
+        const screenPos = globals.Game!.gameCamera.tilePositionToScreen(
+            tilePos.x,
+            tilePos.y
+        );
+        this.effectGraphics = createSpeechBubbleTexture(
+            screenPos.x, screenPos.y, "Never should have come here!"
+        );
+        globals.Game?.pixiApp.stage.addChild(this.effectGraphics);
+
+        this.effectTween = new Tween({
+            object: this.effectGraphics,
+            key: "alpha",
+            delay: 1800,
+            duration: 200,
+            start: 1,
+            end: 0,
+            transition: Transition.Linear
+        });
+    }
+
+    usedTurn(): boolean {
+        return true;
+    }
+
+    isFinished(): boolean {
+        return this.effectTween.finished;
+    }
+
+    execute(deltaTime: DOMHighResTimeStamp): void {
+        this.effectTween.update(deltaTime);
+
+        if (this.effectTween.finished && this.effectGraphics !== null) {
+            this.effectGraphics.destroy();
+        }
+    }
+}

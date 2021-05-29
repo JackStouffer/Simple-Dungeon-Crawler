@@ -1518,7 +1518,7 @@ export const ObjectData: { [key: string]: ObjectDataDetails } = {
                 },
                 SpeedComponent: {
                     speed: BASE_SPEED,
-                    maxTilesPerMove: 5
+                    maxTilesPerMove: 3
                 },
                 HitPointsComponent: {
                     hp: 30,
@@ -1824,10 +1824,10 @@ export function createEntity(
 
     if (data?.addInput === true && entity.has(InputHandlingComponent) === false) {
         const keyCommands: KeyCommand[] = [
-            { key: "i", description: "Inventory", command: new OpenInventoryCommand() },
-            { key: "m", description: "Spell Menu", command: new OpenSpellsCommand() },
-            { key: "r", description: "Rotate Target Reticle", command: new RotateReticleCommand(entity) },
-            { key: "x", description: "Pass Turn", command: new NoOpCommand(true) }
+            { key: "i", description: "Inventory", command: () => new OpenInventoryCommand() },
+            { key: "m", description: "Spell Menu", command: () => new OpenSpellsCommand() },
+            { key: "r", description: "Rotate Target Reticle", command: () => new RotateReticleCommand(entity) },
+            { key: "x", description: "Pass Turn", command: () => new NoOpCommand(true) }
         ];
 
         entity.addComponent({

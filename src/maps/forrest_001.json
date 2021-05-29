@@ -134,6 +134,11 @@
                  "point":true,
                  "properties":[
                         {
+                         "name":"fallbackPosition",
+                         "type":"object",
+                         "value":14
+                        }, 
+                        {
                          "name":"inventory",
                          "type":"string",
                          "value":""
@@ -147,8 +152,8 @@
                  "type":"object",
                  "visible":true,
                  "width":0,
-                 "x":646.338448835154,
-                 "y":1158.10162906207
+                 "x":654.856789888234,
+                 "y":1188.98061537948
                 }, 
                 {
                  "height":0,
@@ -274,6 +279,34 @@
                  "width":0,
                  "x":775.437580171308,
                  "y":1672.52865477718
+                }, 
+                {
+                 "height":0,
+                 "id":43,
+                 "name":"Bandit",
+                 "point":true,
+                 "properties":[
+                        {
+                         "name":"fallbackPosition",
+                         "type":"object",
+                         "value":14
+                        }, 
+                        {
+                         "name":"inventory",
+                         "type":"string",
+                         "value":""
+                        }, 
+                        {
+                         "name":"objectType",
+                         "type":"string",
+                         "value":"bandit"
+                        }],
+                 "rotation":0,
+                 "type":"object",
+                 "visible":true,
+                 "width":0,
+                 "x":696.9067774051,
+                 "y":1215.99318532716
                 }],
          "opacity":1,
          "type":"objectgroup",
@@ -441,7 +474,7 @@
          "y":0
         }],
  "nextlayerid":10,
- "nextobjectid":43,
+ "nextobjectid":44,
  "orientation":"orthogonal",
  "renderorder":"right-down",
  "tiledversion":"1.4.3",

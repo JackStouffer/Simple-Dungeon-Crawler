@@ -770,7 +770,7 @@ export function castCombust(
         }
 
         const t = targetedEntity.getOne(TypeComponent);
-        if (t !== undefined && t.type === "puddle") {
+        if (t !== undefined && t.entityType === "puddle") {
             removeEntity(ecs, targetedEntity);
         }
     } else {

@@ -27,7 +27,7 @@ import { useSpell } from "./fighter";
 export interface KeyCommand {
     key: string;
     description: string;
-    command: Command;
+    command: () => Command;
 }
 
 export enum PlayerState {
@@ -112,7 +112,7 @@ export function playerInput(
         for (let i = 0; i < inputState.keyCommands.length; i++) {
             const keyCommand = inputState.keyCommands[i];
             if (input.isDown(keyCommand.key)) {
-                return keyCommand.command;
+                return keyCommand.command();
             }
         }
 
@@ -159,7 +159,7 @@ export function playerInput(
         for (let i = 0; i < inputState.keyCommands.length; i++) {
             const keyCommand = inputState.keyCommands[i];
             if (input.isDown(keyCommand.key)) {
-                return keyCommand.command;
+                return keyCommand.command();
             }
         }
 
