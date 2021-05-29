@@ -1,5 +1,5 @@
 import { World, Component, Entity, EntityRef, System, Query, IEntityConfig } from "ape-ecs";
-import { assignIn } from "lodash";
+import { assignIn, map } from "lodash";
 import * as PIXI from "pixi.js";
 
 import { RNG } from "./rot/index";
@@ -14,7 +14,7 @@ import {
     InteractableType,
     TriggerType
 } from "./constants";
-import { Nullable, randomIntFromInterval } from "./util";
+import { Nullable } from "./util";
 import { KeyCommand, PlayerState } from "./input-handler";
 import { Planner, PlannerWorldState } from "./ai/planner";
 import {
@@ -1778,7 +1778,8 @@ export function createEntity(
     if (globals.Game === null) { throw new Error("Global game is null"); }
     if (!(type in ObjectData)) { throw new Error(`${type} is not valid object id`); }
 
-    let hash = randomIntFromInterval(1, 2147483647);
+    let hash = (x ?? 0) + (y ?? 0) + map(type, (char) => char.charCodeAt(0))
+        .reduce((a, b) => a + b);
     hash = hash & hash; // Convert to 32bit integer
     const entityId = id ?? `${type}-${hash.toString(16)}`;
 
