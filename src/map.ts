@@ -17,6 +17,7 @@ import * as forrest_001_interior_002 from "./maps/forrest_001_interior_002.json"
 import {
     createEntity,
     EntityMap,
+    EntityTeam,
     GraphicsComponent,
     HitPointsComponent,
     InventoryComponent,
@@ -39,8 +40,6 @@ const LevelData: { [key: string]: TiledMapOrthogonal } = {
     forrest_001_interior_001: (forrest_001_interior_001 as any).default as TiledMapOrthogonal,
     forrest_001_interior_002: (forrest_001_interior_002 as any).default as TiledMapOrthogonal,
 };
-
-type LevelName = keyof typeof LevelData;
 
 interface TileDataDetails {
     name: string;
@@ -1186,8 +1185,21 @@ function findProperty(o: any, name: string): any {
     }
 }
 
-// TODO change to class with precaled width height and depth
-export type GameMap = Nullable<Tile>[][][];
+export class GameMap {
+    readonly name: string;
+    readonly width: number;
+    readonly height: number;
+    readonly depth: number;
+    readonly data: Nullable<Tile>[][][];
+
+    constructor(name: string, data: Nullable<Tile>[][][]) {
+        this.name = name;
+        this.data = data;
+        this.depth = data.length;
+        this.height = data[0].length;
+        this.width = data[0][0].length;
+    }
+}
 
 export class ShadowBox {
     x: number;
@@ -1234,13 +1246,13 @@ export function loadTiledMap(
     ecs: World,
     stage: PIXI.Container,
     textures: PIXI.ITextureDictionary,
-    level: LevelName
+    level: string
 ) {
     if (!(level in LevelData)) { throw new Error(`${level} is not a valid level`); }
 
     const sourceData = LevelData[level];
     const tileSize: number = sourceData.tileheight;
-    const map: GameMap = [];
+    const mapData = [];
     let playerLocation: [number, number] = [0, 0];
 
     const tileLayers = sourceData.layers.filter(
@@ -1310,7 +1322,7 @@ export function loadTiledMap(
         for (let i = 0; i < translated.length; i += sourceData.width) {
             layerResult.push(translated.slice(i, i + sourceData.width));
         }
-        map.push(layerResult);
+        mapData.push(layerResult);
     }
 
     // First create all of the nodes
@@ -1360,16 +1372,22 @@ export function loadTiledMap(
         );
     });
 
+    const teams: Map<number, EntityTeam> = new Map();
+
     objectLayer.objects.forEach(o => {
         if (o.point !== undefined) {
             if (o.type === "object") {
+                // TODO, Speed: Doing a lot of iteration here. Would be better
+                // to just make a hash map.
                 const type = findProperty(o, "objectType") as string,
                     inventory = findProperty(o, "inventory") as string,
                     levelName = findProperty(o, "levelName") as string,
                     spellId = findProperty(o, "spellId") as string,
                     patrolTarget = findProperty(o, "patrolTarget") as number,
                     fallbackPosition = findProperty(o, "fallbackPosition") as number,
-                    event = findProperty(o, "event") as string;
+                    event = findProperty(o, "event") as string,
+                    teamId = findProperty(o, "teamId") as number,
+                    isTeamCommander = findProperty(o, "commander") as boolean;
 
                 if (type === null) {
                     throw new Error(`No type for ${o.name}`);
@@ -1472,6 +1490,23 @@ export function loadTiledMap(
                             event
                         });
                     }
+
+                    if (teamId !== null) {
+                        if (!teams.has(teamId)) {
+                            teams.set(teamId, new EntityTeam());
+                        }
+
+                        const team = teams.get(teamId)!;
+                        team.memberIds.push(entity.id);
+                        if (isTeamCommander) {
+                            team.commanderId = entity.id;
+                        }
+
+                        const ai = entity.getOne(PlannerAIComponent);
+                        if (ai !== undefined) {
+                            ai.teamId = teamId;
+                        }
+                    }
                 }
             } else {
                 throw new Error(`Unrecognized object type ${o.type}`);
@@ -1488,7 +1523,7 @@ export function loadTiledMap(
         );
     });
 
-    return { map, playerLocation, shadowBoxes };
+    return { map: new GameMap(level, mapData), playerLocation, shadowBoxes, teams };
 }
 
 /**
@@ -1523,15 +1558,13 @@ export function isBlocked(
     x: number,
     y: number
 ): BlocksResult {
-    if (map.length === 0) { throw new Error("Bad map data"); }
-
     // Assumes all layers are same size
-    if (x < 0 || y < 0 || x >= map[0][0].length || y >= map[0].length) {
+    if (x < 0 || y < 0 || x >= map.width || y >= map.height) {
         return { entity: null, blocks: true };
     }
 
-    for (let z = 0; z < map.length; z++) {
-        if (map[z][y][x]?.blocks === true) {
+    for (let z = 0; z < map.depth; z++) {
+        if (map.data[z][y][x]?.blocks === true) {
             return { entity: null, blocks: true };
         }
     }
@@ -1559,15 +1592,13 @@ export function isBlocked(
  * Returns true if space blocks sight, false otherwise
  */
 export function isSightBlocked(map: GameMap, entityMap: EntityMap, x: number, y: number): boolean {
-    if (map.length === 0) { throw new Error("Bad map data"); }
-
     // Assumes all layers are same size
-    if (x < 0 || y < 0 || x >= map[0][0].length || y >= map[0].length) {
+    if (x < 0 || y < 0 || x >= map.width || y >= map.height) {
         return true;
     }
 
-    for (let z = 0; z < map.length; z++) {
-        if (map[z][y][x] !== null && map[z][y][x]!.blocksSight === true) {
+    for (let z = 0; z < map.depth; z++) {
+        if (map.data[z][y][x] !== null && map.data[z][y][x]!.blocksSight === true) {
             return true;
         }
     }
@@ -1679,8 +1710,6 @@ export function getRandomFighterWithinRange(
 }
 
 export function getRandomOpenSpace(map: GameMap, entityMap: EntityMap): Point {
-    const width = map[0][0].length;
-    const height = map[0].length;
     let blocks = false;
     let entity;
     let x = 0;
@@ -1688,8 +1717,8 @@ export function getRandomOpenSpace(map: GameMap, entityMap: EntityMap): Point {
     let failsafe = 0;
 
     do {
-        x = randomIntFromInterval(0, width);
-        y = randomIntFromInterval(0, height);
+        x = randomIntFromInterval(0, map.width);
+        y = randomIntFromInterval(0, map.height);
         ({ entity, blocks } = isBlocked(map, entityMap, x, y));
         ++failsafe;
     } while ((entity !== null || blocks === true) && failsafe < 2000);
@@ -1707,12 +1736,12 @@ export function getRandomOpenSpace(map: GameMap, entityMap: EntityMap): Point {
  * @return {void}
  */
 export function resetVisibility(map: GameMap, shadowBoxes: ShadowBox[]): void {
-    for (let z = 0; z < map.length; z++) {
-        for (let y = 0; y < map[z].length; y++) {
-            for (let x = 0; x < map[z][y].length; x++) {
-                if (map[z][y][x] !== null) {
-                    map[z][y][x]!.visible = false;
-                    map[z][y][x]!.lightingColor = COLOR_AMBIENT_LIGHT;
+    for (let z = 0; z < map.depth; z++) {
+        for (let y = 0; y < map.height; y++) {
+            for (let x = 0; x < map.width; x++) {
+                if (map.data[z][y][x] !== null) {
+                    map.data[z][y][x]!.visible = false;
+                    map.data[z][y][x]!.lightingColor = COLOR_AMBIENT_LIGHT;
                 }
             }
         }
@@ -1724,11 +1753,11 @@ export function resetVisibility(map: GameMap, shadowBoxes: ShadowBox[]): void {
 }
 
 export function resetTilePathCosts(map: GameMap): void {
-    for (let z = 0; z < map.length; z++) {
-        for (let y = 0; y < map[z].length; y++) {
-            for (let x = 0; x < map[z][y].length; x++) {
-                if (map[z][y][x] !== null) {
-                    map[z][y][x]!.pathfindingCost = "0";
+    for (let z = 0; z < map.depth; z++) {
+        for (let y = 0; y < map.height; y++) {
+            for (let x = 0; x < map.width; x++) {
+                if (map.data[z][y][x] !== null) {
+                    map.data[z][y][x]!.pathfindingCost = "0";
                 }
             }
         }
@@ -1743,17 +1772,17 @@ export function setAllToExplored(
     visible: boolean = false,
     lit: boolean = false
 ): void {
-    for (let z = 0; z < map.length; z++) {
-        for (let y = 0; y < map[z].length; y++) {
-            for (let x = 0; x < map[z][y].length; x++) {
-                if (map[z][y][x] === null) { continue; }
+    for (let z = 0; z < map.depth; z++) {
+        for (let y = 0; y < map.height; y++) {
+            for (let x = 0; x < map.width; x++) {
+                if (map.data[z][y][x] === null) { continue; }
 
-                map[z][y][x]!.explored = true;
+                map.data[z][y][x]!.explored = true;
                 if (visible) {
-                    map[z][y][x]!.visible = true;
+                    map.data[z][y][x]!.visible = true;
                 }
                 if (lit) {
-                    map[z][y][x]!.lightingColor = "white";
+                    map.data[z][y][x]!.lightingColor = "white";
                 }
             }
         }
@@ -1768,12 +1797,12 @@ export function setAllToExplored(
  * @return {void}
  */
 export function drawMap(camera: Camera, map: GameMap): void {
-    for (let z = 0; z < map.length; z++) {
-        for (let y = 0; y < map[z].length; y++) {
-            for (let x = 0; x < map[z][y].length; x++) {
-                if (map[z][y][x] !== null) {
+    for (let z = 0; z < map.depth; z++) {
+        for (let y = 0; y < map.height; y++) {
+            for (let x = 0; x < map.width; x++) {
+                if (map.data[z][y][x] !== null) {
                     const { x: screenX, y: screenY } = camera.tilePositionToScreen(x, y);
-                    drawTile(camera.viewport, map[z][y][x]!, screenX, screenY, camera.zoom);
+                    drawTile(camera.viewport, map.data[z][y][x]!, screenX, screenY, camera.zoom);
                 }
             }
         }
@@ -1786,8 +1815,8 @@ export function drawMap(camera: Camera, map: GameMap): void {
  */
 export function getHighestZIndexWithTile(map: GameMap, x: number, y: number): number {
     let ret = 0;
-    for (let z = 0; z < map.length; z++) {
-        const tile = map[z][y][x];
+    for (let z = 0; z < map.depth; z++) {
+        const tile = map.data[z][y][x];
         if (tile !== null) { ret = z; }
     }
 

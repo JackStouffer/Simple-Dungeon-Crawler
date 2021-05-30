@@ -85,7 +85,7 @@ function getLeftMouseDown(): Nullable<Point> {
     }
 
     const tilePos = globals.Game.gameCamera.mouseToTilePosition(x, y);
-    if (tilePos.y >= globals.Game.map[0].length || tilePos.x >= globals.Game.map[0][0].length) {
+    if (tilePos.y >= globals.Game.map.height || tilePos.x >= globals.Game.map.width) {
         return null;
     }
 
@@ -113,7 +113,7 @@ function getMousePosition(): Nullable<Point> {
         return null;
     }
     const tilePos = globals.Game.gameCamera.mouseToTilePosition(x, y);
-    if (tilePos.y >= globals.Game.map[0].length || tilePos.x >= globals.Game.map[0][0].length) {
+    if (tilePos.y >= globals.Game.map.height || tilePos.x >= globals.Game.map.width) {
         return null;
     }
 

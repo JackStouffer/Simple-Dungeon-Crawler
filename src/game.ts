@@ -56,7 +56,8 @@ import {
     UpdateEntityMapSystem,
     EntityMap,
     ParalyzableComponent,
-    removeEntity
+    removeEntity,
+    EntityTeam
 } from "./entity";
 import {
     Command,
@@ -141,6 +142,7 @@ export class SimpleDungeonCrawler {
     entityMap: EntityMap;
     // Shadow boxes are a way of forcing multi-tiled entities and static tile objects to be lit properly
     shadowBoxes: ShadowBox[];
+    entityTeams: Map<number, EntityTeam>;
 
     keyBindingMenu: KeyBindingMenu;
     inventoryMenu: InventoryMenu;
@@ -162,7 +164,7 @@ export class SimpleDungeonCrawler {
         this.currentCommand = null;
         this.commandQueue = [];
         this.scheduler = new EntityScheduler();
-        this.map = [];
+        this.map = new GameMap("", [[[]]]);
         this.entityMap = new Map();
         this.shadowBoxes = [];
         this.totalTurns = 1;
@@ -259,7 +261,6 @@ export class SimpleDungeonCrawler {
 
         this.currentActor = null;
         this.player = createEntity(this.ecs, this.textureAtlas, "player", 1, 1);
-        this.map = [];
         this.totalTurns = 1;
 
         this.loadLevel("tutorial_001");
@@ -381,10 +382,10 @@ export class SimpleDungeonCrawler {
             }
         }
 
-        for (let z = 0; z < this.map.length; z++) {
-            for (let y = 0; y < this.map[0].length; y++) {
-                for (let x = 0; x < this.map[0][0].length; x++) {
-                    const tile = this.map[z][y][x];
+        for (let z = 0; z < this.map.depth; z++) {
+            for (let y = 0; y < this.map.height; y++) {
+                for (let x = 0; x < this.map.width; x++) {
+                    const tile = this.map.data[z][y][x];
                     if (tile !== null) {
                         tile.sprite.visible = false;
                         this.pixiApp.stage.removeChild(tile.sprite);
@@ -397,7 +398,7 @@ export class SimpleDungeonCrawler {
         this.scheduler.clear();
         this.scheduler.add(this.player.id, true);
 
-        const { map, playerLocation, shadowBoxes } = loadTiledMap(
+        const { map, playerLocation, shadowBoxes, teams } = loadTiledMap(
             this.ecs,
             this.pixiApp.stage,
             this.textureAtlas,
@@ -405,6 +406,7 @@ export class SimpleDungeonCrawler {
         );
         this.map = map;
         this.shadowBoxes = shadowBoxes;
+        this.entityTeams = teams;
 
         const playerPos = this.player.getOne(PositionComponent);
         if (playerPos === undefined) { throw new Error("Player doesn't have a PositionComponent"); }

@@ -36,6 +36,7 @@ import {
     InputHandlingComponent,
     InteractableTypeComponent,
     InventoryComponent,
+    PlannerAIComponent,
     PositionComponent,
     SpellsComponent,
     StatsComponent,
@@ -160,7 +161,7 @@ export function generateWeightCallback(
         }
 
         if (globals.Game?.debugPathfinding === true) {
-            globals.Game.map[0][y][x]!.pathfindingCost = weight.toString(10);
+            globals.Game.map.data[0][y][x]!.pathfindingCost = weight.toString(10);
         }
 
         return weight;
@@ -206,7 +207,7 @@ export function getPlayerMovementPath(
             { topology: 8 }
         );
 
-        if (destination.y >= map[0].length || destination.x >= map[0][0].length) {
+        if (destination.y >= map.height || destination.x >= map.width) {
             return null;
         }
 
@@ -778,7 +779,7 @@ export class UseSkillCommand implements Command {
                             globals.Game!.map, this.target.x, this.target.y
                         );
                         while (sprite === undefined) {
-                            const tile = globals.Game!.map[z][this.target.y][this.target.x];
+                            const tile = globals.Game!.map.data[z][this.target.y][this.target.x];
                             if (tile === null || tile.sprite === null) {
                                 --z;
                                 continue;
@@ -928,7 +929,7 @@ export class AlertAlliesCommand implements Command {
     }
 
     usedTurn(): boolean {
-        return true;
+        return false;
     }
 
     isFinished(): boolean {
@@ -940,6 +941,14 @@ export class AlertAlliesCommand implements Command {
 
         if (this.effectTween.finished && this.effectGraphics !== null) {
             this.effectGraphics.destroy();
+
+            const ai = this.entity.getOne(PlannerAIComponent);
+            if (ai !== undefined && ai.teamId !== null) {
+                const team = globals.Game!.entityTeams.get(ai.teamId);
+                if (team !== undefined) {
+                    team.alert();
+                }
+            }
         }
     }
 }

@@ -46,12 +46,12 @@ export class DrawSystem extends System {
         if (globals.Game === null) { throw new Error("global Game object is null"); }
         const tilePos = pos.tilePosition();
 
-        if (tilePos.y > globals.Game.map[0].length || tilePos.x > globals.Game.map[0][0].length) {
+        if (tilePos.y > globals.Game.map.height || tilePos.x > globals.Game.map.width) {
             throw new Error(`Object ${pos.entity.id} exists outside the game world`);
         }
 
         // assuming all tiles on the same position have the same visibility
-        if (globals.Game.map[0][tilePos.y][tilePos.x]!.isVisibleAndLit() &&
+        if (globals.Game.map.data[0][tilePos.y][tilePos.x]!.isVisibleAndLit() &&
             graphics.sprite !== null) {
             graphics.sprite.visible = true;
 
@@ -81,11 +81,11 @@ export class DrawSystem extends System {
         if (globals.Game === null) { throw new Error("global Game object is null"); }
         const tilePos = pos.tilePosition();
 
-        if (tilePos.y > globals.Game.map[0].length || tilePos.x > globals.Game.map[0][0].length) {
+        if (tilePos.y > globals.Game.map.height || tilePos.x > globals.Game.map.width) {
             throw new Error(`Object ${pos.entity.id} exists outside the game world`);
         }
 
-        if (globals.Game.map[0][tilePos.y][tilePos.x]!.explored && graphics.sprite !== null) {
+        if (globals.Game.map.data[0][tilePos.y][tilePos.x]!.explored && graphics.sprite !== null) {
             graphics.sprite.visible = true;
 
             const { x, y } = globals.Game!.gameCamera.tilePositionToScreen(tilePos.x, tilePos.y);
@@ -95,7 +95,7 @@ export class DrawSystem extends System {
             graphics.sprite.alpha = graphics.opacity;
             graphics.sprite.zIndex = graphics.zIndex;
 
-            if (globals.Game.map[0][tilePos.y][tilePos.x]!.isVisibleAndLit()) {
+            if (globals.Game.map.data[0][tilePos.y][tilePos.x]!.isVisibleAndLit()) {
                 graphics.sprite.tint = 0xFFFFFF;
             } else {
                 graphics.sprite.tint = 0x999999;
@@ -152,7 +152,7 @@ export class DrawChestsSystem extends System {
 
             if (graphics === undefined || graphics.sprite === null) { throw new Error("Missing graphics data on chest"); }
 
-            if (globals.Game.map[0][tilePos.y][tilePos.x]!.explored) {
+            if (globals.Game.map.data[0][tilePos.y][tilePos.x]!.explored) {
                 const inventory = entity.getOne(InventoryComponent)!;
 
                 graphics.sprite.visible = true;
@@ -289,7 +289,7 @@ export class DrawPlayerSystem extends System {
                 throw new Error("Player missing speed or input data");
             }
 
-            if (globals.Game.map[0][tilePosition.y][tilePosition.x]!.isVisibleAndLit()) {
+            if (globals.Game.map.data[0][tilePosition.y][tilePosition.x]!.isVisibleAndLit()) {
                 graphics.sprite.visible = true;
 
                 const { x, y } = globals.Game!.gameCamera.worldPositionToScreen(pos.x, pos.y);
@@ -329,7 +329,7 @@ export class DrawPlayerSystem extends System {
                     globals.Game.currentCommand === null) {
                     const mousePosition = input.getMousePosition();
                     if (mousePosition === null) { return; }
-                    const tile = globals.Game.map[0][mousePosition.y][mousePosition.x];
+                    const tile = globals.Game.map.data[0][mousePosition.y][mousePosition.x];
                     if (tile !== null && !tile.explored) {
                         return;
                     }
@@ -369,7 +369,8 @@ export class DrawPlayerSystem extends System {
 
                             const z = getHighestZIndexWithTile(globals.Game.map, step[0], step[1]);
                             const sprite = globals.Game
-                                .map[z][step[1]][step[0]]!
+                                .map
+                                .data[z][step[1]][step[0]]!
                                 .sprite;
                             this.perviousPath.push(sprite);
                             sprite.filters = [this.pathFilter];
@@ -410,14 +411,16 @@ export class DrawPlayerSystem extends System {
                             targetArea[i][1]
                         );
 
-                        if (targetArea[i][0] >= globals.Game.map[z][0].length ||
-                        targetArea[i][1] >= globals.Game!.map[z].length ||
+                        if (targetArea[i][0] >= globals.Game.map.width ||
+                        targetArea[i][1] >= globals.Game!.map.height ||
                         globals.Game
-                            .map[z][targetArea[i][1]][targetArea[i][0]]!.visible === false) {
+                            .map
+                            .data[z][targetArea[i][1]][targetArea[i][0]]!.visible === false) {
                             return;
                         }
                         const sprite = globals.Game
-                            .map[z][targetArea[i][1]][targetArea[i][0]]!
+                            .map
+                            .data[z][targetArea[i][1]][targetArea[i][0]]!
                             .sprite;
                         this.perviousPath.push(sprite);
                         sprite.filters = [this.targetFilter];

@@ -52,9 +52,9 @@ export function mouseTarget(
     mousePosition: Point,
     excludeUninteractable = true
 ): Nullable<Entity> {
-    if (mousePosition.x >= map[0][0].length ||
-        mousePosition.y >= map[0].length ||
-        map[0][mousePosition.y][mousePosition.x]!.visible === false) {
+    if (mousePosition.x >= map.width ||
+        mousePosition.y >= map.height ||
+        map.data[0][mousePosition.y][mousePosition.x]!.visible === false) {
         return null;
     }
 
@@ -132,7 +132,7 @@ export function playerInput(
                 }
             }
 
-            const tile = globals.Game!.map[0][mouseDownPosition.y][mouseDownPosition.x];
+            const tile = globals.Game!.map.data[0][mouseDownPosition.y][mouseDownPosition.x];
             if (tile === null || tile.explored === false) { return null; }
 
             // Movement

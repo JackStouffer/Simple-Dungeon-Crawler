@@ -39,14 +39,14 @@ export class Camera {
             0,
             Math.min(
                 this.x,
-                (map[0][0].length * this.tileSize)
+                (map.width * this.tileSize)
             )
         );
         this.y = Math.max(
             0,
             Math.min(
                 this.y,
-                (map[0].length * this.tileSize)
+                (map.height * this.tileSize)
             )
         );
     }

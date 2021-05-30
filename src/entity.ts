@@ -290,7 +290,9 @@ export class SpellsComponent extends Component {
 }
 
 export class PlannerAIComponent extends Component {
+    // TODO: This should be the target's id, no entity refs across frames
     target: Nullable<Entity>;
+    teamId: Nullable<number>;
     sightRange: number;
     planner: Planner;
     previousWorldState: PlannerWorldState;
@@ -306,6 +308,7 @@ export class PlannerAIComponent extends Component {
     static typeName = "PlannerAIComponent";
     static properties = {
         target: EntityRef,
+        teamId: null,
         sightRange: 7,
         planner: null,
         previousWorldState: {},
@@ -1851,6 +1854,7 @@ export function createEntity(
             desiredDistanceToTarget: data?.desiredDistanceToTarget ?? 1,
             planner,
             target: ecs.getEntity("player"), // TODO: generic target selection
+            teamId: null,
             previousWorldState: {},
             currentAction: null,
             currentOrder: "attack",
@@ -1878,6 +1882,38 @@ export function removeEntity(ecs: World, entity: Entity) {
     ecs.removeEntity(entity);
 }
 
+/**
+ * Facilitates the communication and giving orders of set teams
+ * of entities.
+ */
+export class EntityTeam {
+    state: "passive" | "attacking" | "retreating" = "passive";
+    memberIds: string[] = [];
+    commanderId: Nullable<string> = null;
+
+    /**
+     * Update all members to know where the target is
+     */
+    alert() {
+        for (let i = 0; i < this.memberIds.length; i++) {
+            const entity = globals.Game?.ecs.getEntity(this.memberIds[i]) ?? null;
+            if (entity === null) {
+                this.memberIds.splice(i, 1);
+                continue;
+            }
+
+            const ai = entity.getOne(PlannerAIComponent);
+            if (ai !== undefined) {
+                ai.knowsTargetPosition = true;
+                ai.update();
+            }
+        }
+    }
+}
+
+/**
+ * Update the hash map of entities and their tile positions
+ */
 export class UpdateEntityMapSystem extends System {
     private mainQuery: Query;
 
@@ -1893,6 +1929,8 @@ export class UpdateEntityMapSystem extends System {
         globals.Game.entityMap.clear();
 
         for (const e of entities) {
+            // TODO, Speed: JS doesn't have a hash set so you can't do a set of objects.
+            // Write one so we don't have to use string keys
             const pos = e.getOne(PositionComponent)!.tilePosition();
             const key = `${pos.x},${pos.y}`;
             const val = globals.Game.entityMap.get(key) ?? [];
@@ -1901,7 +1939,6 @@ export class UpdateEntityMapSystem extends System {
         }
     }
 }
-
 
 /**
  * Remove entities with the RemoveAfterNTurnsComponent after they've

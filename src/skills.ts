@@ -734,9 +734,9 @@ export function castCombust(
     entityMap: EntityMap,
     target: Point
 ): boolean {
-    if (target.x >= map[0][0].length ||
-        target.y >= map[0].length ||
-        map[0][target.y][target.x]!.visible === false) {
+    if (target.x >= map.width ||
+        target.y >= map.height ||
+        map.data[0][target.y][target.x]!.visible === false) {
         displayMessage("Canceled casting");
         return false;
     }
@@ -910,10 +910,10 @@ export function castFreeze(
     }
 
     for (const pos of positions) {
-        if (pos.x < map[0][0].length &&
-            pos.y < map[0].length) {
+        if (pos.x < map.width &&
+            pos.y < map.height) {
             const z = getHighestZIndexWithTile(map, pos.x, pos.y);
-            if (map[z][pos.y][pos.x]!.blocks === false) {
+            if (map.data[z][pos.y][pos.x]!.blocks === false) {
                 const entities = getEntitiesAtLocation(entityMap, pos.x, pos.y);
                 if (entities.length === 0) {
                     const puddle = createEntity(ecs, globals.Game!.textureAtlas, "puddle", pos.x, pos.y);

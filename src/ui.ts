@@ -186,8 +186,8 @@ export class StatusBar {
         if (mousePosition === null) { return; }
         const { x, y } = mousePosition;
 
-        if (x >= 0 && y >= 0 && x < map[0][0].length && y < map[0].length) {
-            const tile = map[getHighestZIndexWithTile(map, x, y)][y][x];
+        if (x >= 0 && y >= 0 && x < map.width && y < map.height) {
+            const tile = map.data[getHighestZIndexWithTile(map, x, y)][y][x];
             if (tile !== null && tile.isVisibleAndLit() === true) {
                 const entities = getEntitiesAtLocation(entityMap, x, y);
                 if (entities.length === 0) {
