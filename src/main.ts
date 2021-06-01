@@ -8,6 +8,7 @@ import {
     toggleCommandExecution,
     togglePathfindingDebug,
     toggleAIDebug,
+    toggleAIDialogDebug,
     startGameLoop,
     stopGameLoop,
     getEntity,
@@ -27,6 +28,7 @@ globals.window.togglePlayerFOV = togglePlayerFOV;
 globals.window.toggleCommandExecution = toggleCommandExecution;
 globals.window.togglePathfindingDebug = togglePathfindingDebug;
 globals.window.toggleAIDebug = toggleAIDebug;
+globals.window.toggleAIDialogDebug = toggleAIDialogDebug;
 globals.window.startGameLoop = startGameLoop;
 globals.window.stopGameLoop = stopGameLoop;
 globals.window.getEntity = getEntity;

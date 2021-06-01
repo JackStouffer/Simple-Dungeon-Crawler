@@ -134,6 +134,11 @@
                  "point":true,
                  "properties":[
                         {
+                         "name":"commander",
+                         "type":"bool",
+                         "value":false
+                        }, 
+                        {
                          "name":"fallbackPosition",
                          "type":"object",
                          "value":14
@@ -147,6 +152,11 @@
                          "name":"objectType",
                          "type":"string",
                          "value":"bandit_white_mage"
+                        }, 
+                        {
+                         "name":"teamId",
+                         "type":"int",
+                         "value":1
                         }],
                  "rotation":0,
                  "type":"object",
@@ -208,6 +218,11 @@
                  "point":true,
                  "properties":[
                         {
+                         "name":"commander",
+                         "type":"bool",
+                         "value":false
+                        }, 
+                        {
                          "name":"fallbackPosition",
                          "type":"object",
                          "value":14
@@ -226,6 +241,11 @@
                          "name":"patrolTarget",
                          "type":"object",
                          "value":18
+                        }, 
+                        {
+                         "name":"teamId",
+                         "type":"int",
+                         "value":1
                         }],
                  "rotation":0,
                  "type":"object",
@@ -287,6 +307,11 @@
                  "point":true,
                  "properties":[
                         {
+                         "name":"commander",
+                         "type":"bool",
+                         "value":false
+                        }, 
+                        {
                          "name":"fallbackPosition",
                          "type":"object",
                          "value":14
@@ -300,6 +325,11 @@
                          "name":"objectType",
                          "type":"string",
                          "value":"bandit"
+                        }, 
+                        {
+                         "name":"teamId",
+                         "type":"int",
+                         "value":1
                         }],
                  "rotation":0,
                  "type":"object",

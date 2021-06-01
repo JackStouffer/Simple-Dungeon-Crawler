@@ -12,6 +12,7 @@ interface MyWindow extends Window {
     toggleCommandExecution?: () => void;
     togglePathfindingDebug?: () => void;
     toggleAIDebug?: () => void;
+    toggleAIDialogDebug?: () => void;
     startGameLoop?: () => void;
     stopGameLoop?: () => void;
     getEntity?: (id: string) => Entity | undefined;

@@ -15,6 +15,7 @@ import {
     TriggerTypeComponent
 } from "../entity";
 import { getEffectiveDamageAffinity, getEffectiveHitPointData, getKnownSpells } from "../fighter";
+import globals from "../globals";
 import { getItems } from "../inventory";
 import { distanceBetweenPoints, getEntitiesAtLocation, Point } from "../map";
 import { DIRS } from "../rot";
@@ -81,7 +82,7 @@ function resolveLowHealth(ecs: World, entityMap: EntityMap, ai: Entity): boolean
     return (hpData.hp / hpData.maxHp) <= aiState.lowHealthThreshold;
 }
 
-function resolveHasHealingItem(ecs: World, entityMap: EntityMap, ai: Entity): boolean {
+export function resolveHasHealingItem(ecs: World, entityMap: EntityMap, ai: Entity): boolean {
     const inventoryData = ai.getOne(InventoryComponent);
     if (inventoryData === undefined) { return false; }
 
@@ -102,7 +103,42 @@ function resolveHasSelfHealingSpell(ecs: World, entityMap: EntityMap, ai: Entity
     return healthSpells.length > 0;
 }
 
-function resolveHasHealOtherSpell(ecs: World, entityMap: EntityMap, ai: Entity): boolean {
+/**
+ * Does the entity know a spell to heal another entity?
+ *
+ * @param ecs {World} The ECS instance
+ * @param entityMap {EntityMap} A map of tile positions to entity
+ * @param ai {Entity} The entity to resolve for
+ * @returns {boolean}
+ */
+export function resolveKnowsHealOtherSpell(
+    ecs: World,
+    entityMap:
+    EntityMap,
+    ai: Entity
+): boolean {
+    const spells = ai.getOne(SpellsComponent);
+    if (spells === undefined) { return false; }
+
+    const healthSpells = getKnownSpells(spells)
+        .filter(i => i.type === SpellType.HealOther);
+    return healthSpells.length > 0;
+}
+
+/**
+ * Does the entity have any casts for a heal other spell?
+ *
+ * @param ecs {World} The ECS instance
+ * @param entityMap {EntityMap} A map of tile positions to entity
+ * @param ai {Entity} The entity to resolve for
+ * @returns {boolean}
+ */
+export function resolveHasHealOtherSpellCasts(
+    ecs: World,
+    entityMap:
+    EntityMap,
+    ai: Entity
+): boolean {
     const spells = ai.getOne(SpellsComponent);
     if (spells === undefined) { return false; }
 
@@ -273,15 +309,25 @@ function resolveAtFallbackPosition(ecs: World, entityMap: EntityMap, ai: Entity)
     return aiState.isAtFallbackPosition === true ? true : false;
 }
 
-function resolveAliveAllies(ecs: World, entityMap: EntityMap, ai: Entity): boolean {
-    const pos = ai.getOne(PositionComponent)!;
-    const entities = ecs
-        .createQuery()
-        .fromAll(PositionComponent, PlannerAIComponent, HitPointsComponent)
-        .execute();
+/**
+ * Does the entity have members of its team which are alive and in a 12
+ * tile radius?
+ *
+ * @param ecs {World} The ECS instance to use
+ * @param entityMap {EntityMap} The current map of postions to entities
+ * @param ai {Entity} THe entity to resolve the goal for
+ * @returns {boolean}
+ */
+export function resolveAliveAllies(ecs: World, entityMap: EntityMap, ai: Entity): boolean {
+    const aiState = ai.getOne(PlannerAIComponent);
+    if (aiState === undefined || aiState.teamId === null) { return false; }
+    const team = globals.Game?.entityTeams.get(aiState.teamId);
+    if (team === undefined) { return false; }
 
-    for (const e of entities) {
-        if (e.id === ai.id) { continue; }
+    const pos = ai.getOne(PositionComponent)!;
+    for (const id of team.memberIds) {
+        const e = ecs.getEntity(id);
+        if (e === undefined) { continue; }
 
         const ePos = e.getOne(PositionComponent)!;
         const hpData = e.getOne(HitPointsComponent)!;
@@ -293,6 +339,14 @@ function resolveAliveAllies(ecs: World, entityMap: EntityMap, ai: Entity): boole
     return false;
 }
 
+/**
+ * Is the entity flammable and currently on fire?
+ *
+ * @param ecs {World} The ECS instance to use
+ * @param entityMap {EntityMap} The current map of postions to entities
+ * @param ai {Entity} THe entity to resolve the goal for
+ * @returns {boolean}
+ */
 function resolveOnFire(ecs: World, entityMap: EntityMap, ai: Entity): boolean {
     const flammableData = ai.getOne(FlammableComponent);
 
@@ -303,6 +357,14 @@ function resolveOnFire(ecs: World, entityMap: EntityMap, ai: Entity): boolean {
     return false;
 }
 
+/**
+ * Is the entity within 15 blocks of a water tile?
+ *
+ * @param ecs {World} The ECS instance to use
+ * @param entityMap {EntityMap} The current map of postions to entities
+ * @param ai {Entity} THe entity to resolve the goal for
+ * @returns {boolean}
+ */
 function resolveNearWater(ecs: World, entityMap: EntityMap, ai: Entity): boolean {
     const pos = ai.getOne(PositionComponent)!.tilePosition();
     const entities = ecs
@@ -352,7 +414,7 @@ export const GoalData: { [key: string]: GoalDataDetails } = {
         resolver: resolveHasSelfHealingSpell
     },
     "hasHealOtherSpell": {
-        resolver: resolveHasHealOtherSpell
+        resolver: resolveHasHealOtherSpellCasts
     },
     "hasAliveAllies": {
         resolver: resolveAliveAllies
@@ -387,7 +449,7 @@ export const GoalData: { [key: string]: GoalDataDetails } = {
 };
 
 
-// Dynamically add spells to goals and actions
+// Dynamically add spells to goals
 for (const key in SpellData) {
     const goal = `hasCastsFor_${key}`;
     GoalData[goal] = {

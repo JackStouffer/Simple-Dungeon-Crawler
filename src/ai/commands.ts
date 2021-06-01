@@ -7,22 +7,32 @@ import { PassableCallback } from "../rot/path/path";
 
 import globals from "../globals";
 import { Planner, ActionList, PlannerWorldState } from "./planner";
-import { Command, GoToLocationCommand, NoOpCommand } from "../commands";
-import { GoalData } from "./goals";
+import { Command, GoToLocationCommand, NoOpCommand, ShowSpeechBubbleCommand } from "../commands";
+import {
+    GoalData,
+    resolveHasHealingItem,
+    resolveKnowsHealOtherSpell,
+    resolveHasHealOtherSpellCasts,
+    resolveAliveAllies
+} from "./goals";
 import { ActionData } from "./actions";
 import { GameMap, isBlocked, isSightBlocked, Point } from "../map";
 import {
     ConfusedAIComponent,
     DisplayNameComponent,
     EntityMap,
+    EntityTeamMap,
     FearAIComponent,
     FreezableComponent,
+    HitPointsComponent,
     LevelComponent,
     LoseTargetAIComponent,
     ParalyzableComponent,
     PlannerAIComponent,
-    PositionComponent
+    PositionComponent,
+    TypeComponent
 } from "../entity";
+import * as DialogJSON from "../dialog.json";
 import { displayMessage } from "../ui";
 import { Nullable } from "../util";
 
@@ -267,7 +277,7 @@ export function getPlan(
 /**
  * Make a plan and return a command to fulfil the first step
  */
-export function plannerAIGenerateCommand(
+function plannerAIGenerateCommand(
     ecs: World,
     ai: Entity,
     map: GameMap,
@@ -290,11 +300,6 @@ export function plannerAIGenerateCommand(
 
     const plan = getPlan(ecs, entityMap, aiState);
 
-    // Assume we've lost sight of the target after every turn,
-    // so that when the visibility callback sets the flag to true,
-    // iff the target is seen, we get the right behavior
-    aiState.hasTargetInSight = false;
-
     if (plan !== null) {
         return ActionData[plan].updateFunction(ecs, map, entityMap, aiState);
     } else {
@@ -302,7 +307,7 @@ export function plannerAIGenerateCommand(
     }
 }
 
-export function confusedAIGenerateCommand(
+function confusedAIGenerateCommand(
     ecs: World,
     entity: Entity,
     map: GameMap,
@@ -352,10 +357,11 @@ export function confusedAIGenerateCommand(
 
 export function generateAICommand(
     ecs: World,
-    ai: Entity,
     map: GameMap,
-    entityMap: EntityMap
-): Command {
+    entityMap: EntityMap,
+    entityTeams: EntityTeamMap,
+    ai: Entity
+): Command[] {
     const aiState = ai.getOne(PlannerAIComponent);
     const confusedState = ai.getOne(ConfusedAIComponent);
     const paralyzableData = ai.getOne(ParalyzableComponent);
@@ -363,20 +369,156 @@ export function generateAICommand(
 
     if (paralyzableData !== undefined &&
         paralyzableData.paralyzed) {
-        return new NoOpCommand(true);
+        return [new NoOpCommand(true)];
     }
 
     if (freezableData !== undefined && freezableData.frozen) {
-        return new NoOpCommand(true);
+        return [new NoOpCommand(true)];
     }
 
     if (confusedState !== undefined) {
-        return confusedAIGenerateCommand(ecs, ai, map, entityMap);
+        return [confusedAIGenerateCommand(ecs, ai, map, entityMap)];
     }
 
     if (aiState !== undefined) {
-        return plannerAIGenerateCommand(ecs, ai, map, entityMap);
+        const commands: Command[] = [];
+        // Conceptually this make sense because you generally decide what you're
+        // going to do, then say something. We just have to reverse the order in
+        // the command list for gameplay
+        commands.push(plannerAIGenerateCommand(ecs, ai, map, entityMap));
+
+        const query = buildDialogQuery(ecs, entityMap, entityTeams, map, ai, aiState);
+        const debug = globals.Game?.debugAIDialog === true;
+
+        if (debug) {
+            // eslint-disable-next-line no-console
+            console.groupCollapsed(aiState.entity.id + " dialog");
+            // eslint-disable-next-line no-console
+            console.log("query", query);
+        }
+
+        const line = queryDialogTable(query);
+
+        if (debug) {
+            // eslint-disable-next-line no-console
+            console.groupEnd();
+        }
+
+        if (line !== null) {
+            commands.unshift(new ShowSpeechBubbleCommand(ai, line));
+        }
+
+        // Assume we've lost sight of the target after every turn,
+        // so that when the visibility callback sets the flag to true,
+        // iff the target is seen, we get the right behavior
+        aiState.hasTargetInSight = false;
+
+        return commands;
     }
 
     throw new Error(`Missing AI state on entity ${ai.id}`);
+}
+
+type DialogQuery = {
+    [key: string]: number | string | boolean;
+};
+
+function buildDialogQuery(
+    ecs: World,
+    entityMap: EntityMap,
+    entityTeams: EntityTeamMap,
+    map: GameMap,
+    ai: Entity,
+    aiState: PlannerAIComponent
+): DialogQuery {
+    const query: DialogQuery = {};
+
+    const typeInfo = ai.getOne(TypeComponent);
+    query["race"] = typeInfo?.race ?? "generic";
+    query["classification"] = typeInfo?.classification ?? "generic";
+
+    const team = entityTeams.get(aiState.teamId ?? Infinity);
+    if (team !== undefined) {
+        query["team_commander_alive"] = team.commanderId !== null;
+        query["has_alive_allies"] = resolveAliveAllies(ecs, entityMap, ai);
+    }
+
+    const hpData = ai.getOne(HitPointsComponent);
+    if (hpData !== undefined) {
+        query["health_percentage"] = Math.floor((hpData.hp / hpData.maxHp) * 100);
+    }
+
+    query["map_name"] = map.name;
+    query["knows_target_position"] = aiState.knowsTargetPosition;
+    query["has_target_in_sight"] = aiState.hasTargetInSight;
+    query["has_healing_items"] = resolveHasHealingItem(ecs, entityMap, ai);
+    query["knows_heal_other_spell"] = resolveKnowsHealOtherSpell(ecs, entityMap, ai);
+    query["has_heal_other_spell_casts"] = resolveHasHealOtherSpellCasts(ecs, entityMap, ai);
+
+    return query;
+}
+
+type DialogRule = [string, "=" | ">" | "<" | "<=" | ">=", string | number | boolean];
+
+type DialogData = {
+    [key: string]: {
+        "respondingTo": Nullable<string>,
+        "rules": DialogRule[],
+        "dialog": string[],
+        "changed_state": {
+            [key: string]: string | number | boolean | null
+        }
+    }
+};
+
+function queryDialogTable(query: DialogQuery): Nullable<string> {
+    const dialogData = (DialogJSON as any).default as DialogData;
+    const matches: string[] = [];
+
+    definitions: for (const key in dialogData) {
+        const dialogDefinition = dialogData[key];
+        for (const rule of dialogDefinition.rules) {
+            if (rule[1] === "=" && query[rule[0]] !== rule[2]) {
+                continue definitions;
+            } else if (rule[1] === "<" && query[rule[0]] >= rule[2]) {
+                continue definitions;
+            } else if (rule[1] === ">" && query[rule[0]] <= rule[2]) {
+                continue definitions;
+            } else if (rule[1] === "<=" && query[rule[0]] > rule[2]) {
+                continue definitions;
+            } else if (rule[1] === ">=" && query[rule[0]] < rule[2]) {
+                continue definitions;
+            }
+        }
+        matches.push(key);
+    }
+
+    if (matches.length === 0) {
+        return null;
+    }
+
+    // heuristic for best dialog definition match is the one with
+    // the most rules
+    matches.sort((a, b) => {
+        const aRules = dialogData[b].rules.length;
+        const bRules = dialogData[a].rules.length;
+
+        // Coin flip
+        if (aRules === bRules) {
+            return Math.random() <= .5 ? -1 : 1;
+        }
+
+        return aRules - bRules;
+    });
+    const match = dialogData[matches[0]];
+    const line = RNG.getItem(match.dialog);
+
+    if (globals.Game?.debugAIDialog === true) {
+        // eslint-disable-next-line no-console
+        console.log("matched definitions", matches);
+        // eslint-disable-next-line no-console
+        console.log("randomly chosen line", line);
+    }
+
+    return line;
 }

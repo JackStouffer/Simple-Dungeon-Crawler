@@ -57,7 +57,7 @@ import {
     EntityMap,
     ParalyzableComponent,
     removeEntity,
-    EntityTeam
+    EntityTeamMap
 } from "./entity";
 import {
     Command,
@@ -129,6 +129,7 @@ export class SimpleDungeonCrawler {
     isLightingEnabled: boolean;
     debugPathfinding: boolean;
     debugAI: boolean;
+    debugAIDialog: boolean;
 
     lastTimestamp: DOMHighResTimeStamp;
     deltaTime: DOMHighResTimeStamp;
@@ -142,7 +143,7 @@ export class SimpleDungeonCrawler {
     entityMap: EntityMap;
     // Shadow boxes are a way of forcing multi-tiled entities and static tile objects to be lit properly
     shadowBoxes: ShadowBox[];
-    entityTeams: Map<number, EntityTeam>;
+    entityTeams: EntityTeamMap;
 
     keyBindingMenu: KeyBindingMenu;
     inventoryMenu: InventoryMenu;
@@ -174,6 +175,9 @@ export class SimpleDungeonCrawler {
         this.processCommands = true;
         this.isLightingEnabled = true;
         this.debugPathfinding = false;
+        this.debugAI = false;
+        this.debugAIDialog = false;
+
         this.pixiApp = new PIXI.Application({ width: 928, height: 608 });
 
         const canvasContainer: Nullable<HTMLElement> = globals.document.getElementById("canvas");
@@ -426,6 +430,11 @@ export class SimpleDungeonCrawler {
     update(): void {
         switch (this.state) {
             case GameState.Gameplay: {
+                // TODO, cleanup: Iterator "each" function
+                for (const team of this.entityTeams.values()) {
+                    team.update();
+                }
+
                 if (this.currentActor === null) {
                     this.currentActor = this.ecs.getEntity(
                         this.scheduler.next()!
@@ -438,12 +447,13 @@ export class SimpleDungeonCrawler {
                         this.currentCommand = this.commandQueue.shift()!;
                     } else if (this.currentActor !== this.player) {
                         if (this.processAI) {
-                            this.currentCommand = generateAICommand(
+                            this.commandQueue.push(...generateAICommand(
                                 this.ecs,
-                                this.currentActor,
                                 this.map,
-                                this.entityMap
-                            );
+                                this.entityMap,
+                                this.entityTeams,
+                                this.currentActor
+                            ));
                         } else {
                             this.currentCommand = new NoOpCommand(true);
                         }

@@ -18,6 +18,7 @@ import {
     createEntity,
     EntityMap,
     EntityTeam,
+    EntityTeamMap,
     GraphicsComponent,
     HitPointsComponent,
     InventoryComponent,
@@ -1372,7 +1373,7 @@ export function loadTiledMap(
         );
     });
 
-    const teams: Map<number, EntityTeam> = new Map();
+    const teams: EntityTeamMap = new Map();
 
     objectLayer.objects.forEach(o => {
         if (o.point !== undefined) {

@@ -89,6 +89,11 @@ export function toggleAIDebug(): void {
     globals.Game.debugAI = !(globals.Game.debugAI as boolean);
 }
 
+export function toggleAIDialogDebug(): void {
+    if (globals.Game === null) { throw new Error("Global game object is null"); }
+    globals.Game.debugAIDialog = !(globals.Game.debugAIDialog as boolean);
+}
+
 export function getEntity(id: string): Entity | undefined {
     if (globals.Game === null) { throw new Error("Global game object is null"); }
 

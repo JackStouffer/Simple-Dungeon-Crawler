@@ -12,7 +12,7 @@ import {
     InteractableType,
     ItemType,
     SpellType,
-    TriggerType
+    TriggerType,
 } from "./constants";
 import {
     GameMap,
@@ -376,6 +376,7 @@ export class GoToLocationCommand implements Command {
                         case TriggerType.Ice: {
                             const vecX = destination[0] - tilePos.x;
                             const vecY = destination[1] - tilePos.y;
+                            // TODO: pushing directly onto the command queue sort of sucks
                             globals.Game!.commandQueue.push(
                                 new GoToLocationCommand(
                                     this.entity,
@@ -457,6 +458,7 @@ export class PushBackCommand implements Command {
 
             if (blocker !== null && blocker.tags.has("moveable")) {
                 takeDamage(blocker, damage, false, DamageType.Physical);
+                // TODO: pushing directly onto the command queue sort of sucks
                 globals.Game?.commandQueue.push(new PushBackCommand(blocker, this.dir, tilesLeft));
 
                 if (Math.random() > 0.3) {
@@ -899,12 +901,15 @@ export class RotateReticleCommand implements Command {
     }
 }
 
-export class AlertAlliesCommand implements Command {
+/**
+ * Have a speech bubble appear over an entity with some text
+ */
+export class ShowSpeechBubbleCommand implements Command {
     private readonly entity: Entity;
-    private readonly effectGraphics: PIXI.Graphics;
-    private readonly effectTween: Tween;
+    private readonly effectGraphics: Nullable<PIXI.Graphics> = null;
+    private readonly effectTween: Nullable<Tween> = null;
 
-    constructor(entity: Entity) {
+    constructor(entity: Entity, dialog: string, duration: number = 1000) {
         this.entity = entity;
 
         const tilePos = this.entity.getOne(PositionComponent)!.tilePosition();
@@ -912,20 +917,27 @@ export class AlertAlliesCommand implements Command {
             tilePos.x,
             tilePos.y
         );
-        this.effectGraphics = createSpeechBubbleTexture(
-            screenPos.x, screenPos.y, "Never should have come here!"
-        );
-        globals.Game?.pixiApp.stage.addChild(this.effectGraphics);
 
-        this.effectTween = new Tween({
-            object: this.effectGraphics,
-            key: "alpha",
-            delay: 1800,
-            duration: 200,
-            start: 1,
-            end: 0,
-            transition: Transition.Linear
-        });
+        // Only show if we're on screen
+        if (screenPos.x < globals.Game!.gameCamera.viewport.width &&
+            screenPos.x >= 0 &&
+            screenPos.y < globals.Game!.gameCamera.viewport.height &&
+            screenPos.y >= 0) {
+            this.effectGraphics = createSpeechBubbleTexture(
+                screenPos.x, screenPos.y, dialog
+            );
+            globals.Game?.pixiApp.stage.addChild(this.effectGraphics);
+
+            this.effectTween = new Tween({
+                object: this.effectGraphics,
+                key: "alpha",
+                delay: duration,
+                duration: 200,
+                start: 1,
+                end: 0,
+                transition: Transition.Linear
+            });
+        }
     }
 
     usedTurn(): boolean {
@@ -933,21 +945,44 @@ export class AlertAlliesCommand implements Command {
     }
 
     isFinished(): boolean {
-        return this.effectTween.finished;
+        return this.effectTween !== null ? this.effectTween.finished : true;
     }
 
     execute(deltaTime: DOMHighResTimeStamp): void {
-        this.effectTween.update(deltaTime);
+        if (this.effectTween !== null) {
+            this.effectTween.update(deltaTime);
 
-        if (this.effectTween.finished && this.effectGraphics !== null) {
-            this.effectGraphics.destroy();
+            if (this.effectTween.finished && this.effectGraphics !== null) {
+                this.effectGraphics.destroy();
+            }
+        }
+    }
+}
 
-            const ai = this.entity.getOne(PlannerAIComponent);
-            if (ai !== undefined && ai.teamId !== null) {
-                const team = globals.Game!.entityTeams.get(ai.teamId);
-                if (team !== undefined) {
-                    team.alert();
-                }
+/**
+ * Let all allies in the entity team know where the player is
+ */
+export class AlertAlliesCommand implements Command {
+    private readonly entity: Entity;
+
+    constructor(entity: Entity) {
+        this.entity = entity;
+    }
+
+    usedTurn(): boolean {
+        return true;
+    }
+
+    isFinished(): boolean {
+        return true;
+    }
+
+    execute(): void {
+        const ai = this.entity.getOne(PlannerAIComponent);
+        if (ai !== undefined && ai.teamId !== null) {
+            const team = globals.Game!.entityTeams.get(ai.teamId);
+            if (team !== undefined) {
+                team.alert();
             }
         }
     }

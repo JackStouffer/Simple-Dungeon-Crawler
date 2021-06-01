@@ -83,10 +83,14 @@ export class PositionComponent extends Component {
 
 export class TypeComponent extends Component {
     entityType: string;
+    race: Nullable<string>;
+    classification: string;
 
     static typeName = "TypeComponent";
     static properties = {
-        entityType: "player"
+        entityType: "player",
+        race: "human",
+        classification: "player"
     }
 }
 
@@ -550,7 +554,9 @@ export const ObjectData: { [key: string]: ObjectDataDetails } = {
                     name: "Door"
                 },
                 TypeComponent: {
-                    entityType: "door"
+                    entityType: "door",
+                    race: null,
+                    classification: "object"
                 },
                 GraphicsComponent: {
                     textureKey: "door_1_closed",
@@ -571,7 +577,9 @@ export const ObjectData: { [key: string]: ObjectDataDetails } = {
                     name: "Door to new area"
                 },
                 TypeComponent: {
-                    entityType: "load_door"
+                    entityType: "load_door",
+                    race: null,
+                    classification: "object"
                 },
                 GraphicsComponent: {
                     textureKey: "door_1_closed",
@@ -592,7 +600,9 @@ export const ObjectData: { [key: string]: ObjectDataDetails } = {
                     name: "Stairs"
                 },
                 TypeComponent: {
-                    entityType: "stairs"
+                    entityType: "stairs",
+                    race: null,
+                    classification: "object"
                 },
                 GraphicsComponent: {
                     textureKey: "stone_stairs_right",
@@ -614,7 +624,9 @@ export const ObjectData: { [key: string]: ObjectDataDetails } = {
                     name: "Chest"
                 },
                 TypeComponent: {
-                    entityType: "chest"
+                    entityType: "chest",
+                    race: null,
+                    classification: "object"
                 },
                 ChestGraphicsComponent: {
                     textureKey: "chest_1_closed",
@@ -639,7 +651,9 @@ export const ObjectData: { [key: string]: ObjectDataDetails } = {
             tags: ["blocks", "moveable"],
             c: {
                 TypeComponent: {
-                    entityType: "crate"
+                    entityType: "crate",
+                    race: null,
+                    classification: "object"
                 },
                 DisplayNameComponent: {
                     name: "Wooden Crate"
@@ -676,7 +690,9 @@ export const ObjectData: { [key: string]: ObjectDataDetails } = {
             tags: ["blocks", "moveable"],
             c: {
                 TypeComponent: {
-                    entityType: "barrel"
+                    entityType: "barrel",
+                    race: null,
+                    classification: "object"
                 },
                 DisplayNameComponent: {
                     name: "Wooden Barrel"
@@ -711,7 +727,9 @@ export const ObjectData: { [key: string]: ObjectDataDetails } = {
         staticallyKnownComponents: {
             c: {
                 TypeComponent: {
-                    entityType: "dead_body"
+                    entityType: "dead_body",
+                    race: null,
+                    classification: "object"
                 },
                 DisplayNameComponent: {
                     name: "Dead Body"
@@ -729,7 +747,9 @@ export const ObjectData: { [key: string]: ObjectDataDetails } = {
             tags: ["blocks"],
             c: {
                 TypeComponent: {
-                    entityType: "lantern"
+                    entityType: "lantern",
+                    race: null,
+                    classification: "object"
                 },
                 DisplayNameComponent: {
                     name: "Small Lantern"
@@ -751,7 +771,9 @@ export const ObjectData: { [key: string]: ObjectDataDetails } = {
         staticallyKnownComponents: {
             c: {
                 TypeComponent: {
-                    entityType: "campfire"
+                    entityType: "campfire",
+                    race: null,
+                    classification: "object"
                 },
                 DisplayNameComponent: {
                     name: "Small Campfire"
@@ -781,7 +803,9 @@ export const ObjectData: { [key: string]: ObjectDataDetails } = {
         staticallyKnownComponents: {
             c: {
                 TypeComponent: {
-                    entityType: "fire_effect"
+                    entityType: "fire_effect",
+                    race: null,
+                    classification: "object"
                 },
                 DisplayNameComponent: {
                     name: "Fire"
@@ -815,7 +839,9 @@ export const ObjectData: { [key: string]: ObjectDataDetails } = {
             tags: ["blocks", "blocksSight"],
             c: {
                 TypeComponent: {
-                    entityType: "ice_wall"
+                    entityType: "ice_wall",
+                    race: null,
+                    classification: "object"
                 },
                 DisplayNameComponent: {
                     name: "Ice Wall"
@@ -847,7 +873,9 @@ export const ObjectData: { [key: string]: ObjectDataDetails } = {
             tags: ["moveable"],
             c: {
                 TypeComponent: {
-                    entityType: "dropped_item"
+                    entityType: "dropped_item",
+                    race: null,
+                    classification: "object"
                 },
                 DisplayNameComponent: {
                     name: "Dropped Item"
@@ -868,7 +896,9 @@ export const ObjectData: { [key: string]: ObjectDataDetails } = {
             tags: ["blocks", "blocksSight", "drawAfterSeen"],
             c: {
                 TypeComponent: {
-                    entityType: "magic_shrine"
+                    entityType: "magic_shrine",
+                    race: null,
+                    classification: "object"
                 },
                 DisplayNameComponent: {
                     name: "Magicka Shrine"
@@ -888,7 +918,9 @@ export const ObjectData: { [key: string]: ObjectDataDetails } = {
         staticallyKnownComponents: {
             c: {
                 TypeComponent: {
-                    entityType: "event_trigger"
+                    entityType: "event_trigger",
+                    race: null,
+                    classification: "trigger"
                 },
                 TriggerTypeComponent: {
                     triggerType: TriggerType.Event
@@ -901,7 +933,9 @@ export const ObjectData: { [key: string]: ObjectDataDetails } = {
             tags: ["environmentTile", "waterTile"],
             c: {
                 TypeComponent: {
-                    entityType: "shallow_water"
+                    entityType: "shallow_water",
+                    race: null,
+                    classification: "object"
                 },
                 DisplayNameComponent: {
                     name: "Water"
@@ -927,7 +961,9 @@ export const ObjectData: { [key: string]: ObjectDataDetails } = {
             tags: ["environmentTile", "waterTile"],
             c: {
                 TypeComponent: {
-                    entityType: "puddle"
+                    entityType: "puddle",
+                    race: null,
+                    classification: "object"
                 },
                 DisplayNameComponent: {
                     name: "Puddle"
@@ -956,7 +992,9 @@ export const ObjectData: { [key: string]: ObjectDataDetails } = {
             tags: ["environmentTile", "waterTile"],
             c: {
                 TypeComponent: {
-                    entityType: "water"
+                    entityType: "water",
+                    race: null,
+                    classification: "object"
                 },
                 DisplayNameComponent: {
                     name: "Deep Water"
@@ -981,7 +1019,9 @@ export const ObjectData: { [key: string]: ObjectDataDetails } = {
         staticallyKnownComponents: {
             c: {
                 TypeComponent: {
-                    entityType: "steam"
+                    entityType: "steam",
+                    race: null,
+                    classification: "object"
                 },
                 DisplayNameComponent: {
                     name: "Steam"
@@ -1006,7 +1046,9 @@ export const ObjectData: { [key: string]: ObjectDataDetails } = {
             tags: ["environmentTile"],
             c: {
                 TypeComponent: {
-                    entityType: "mud"
+                    entityType: "mud",
+                    race: null,
+                    classification: "object"
                 },
                 DisplayNameComponent: {
                     name: "Mud"
@@ -1031,7 +1073,9 @@ export const ObjectData: { [key: string]: ObjectDataDetails } = {
         staticallyKnownComponents: {
             c: {
                 TypeComponent: {
-                    entityType: "tall_grass"
+                    entityType: "tall_grass",
+                    race: null,
+                    classification: "object"
                 },
                 DisplayNameComponent: {
                     name: "Tall Grass"
@@ -1063,7 +1107,9 @@ export const ObjectData: { [key: string]: ObjectDataDetails } = {
             tags: ["blocksSight"],
             c: {
                 TypeComponent: {
-                    entityType: "thick_underbrush"
+                    entityType: "thick_underbrush",
+                    race: null,
+                    classification: "object"
                 },
                 DisplayNameComponent: {
                     name: "Underbrush"
@@ -1101,7 +1147,9 @@ export const ObjectData: { [key: string]: ObjectDataDetails } = {
             tags: ["blocks", "input", "sentient", "moveable"],
             c: {
                 TypeComponent: {
-                    entityType: "player"
+                    entityType: "player",
+                    race: "human",
+                    classification: "player"
                 },
                 DisplayNameComponent: {
                     name: "The Player"
@@ -1183,7 +1231,9 @@ export const ObjectData: { [key: string]: ObjectDataDetails } = {
             tags: ["blocks", "sentient", "moveable"],
             c: {
                 TypeComponent: {
-                    entityType: "goblin"
+                    entityType: "goblin",
+                    race: "goblin",
+                    classification: "goblin"
                 },
                 DisplayNameComponent: {
                     name: "Goblin"
@@ -1268,7 +1318,9 @@ export const ObjectData: { [key: string]: ObjectDataDetails } = {
             tags: ["blocks", "sentient", "moveable"],
             c: {
                 TypeComponent: {
-                    entityType: "goblin_brute"
+                    entityType: "goblin_brute",
+                    race: "goblin",
+                    classification: "goblin"
                 },
                 DisplayNameComponent: {
                     name: "Goblin Brute"
@@ -1343,7 +1395,9 @@ export const ObjectData: { [key: string]: ObjectDataDetails } = {
             tags: ["blocks", "sentient", "moveable"],
             c: {
                 TypeComponent: {
-                    entityType: "rat"
+                    entityType: "rat",
+                    race: "rat",
+                    classification: "rat"
                 },
                 DisplayNameComponent: {
                     name: "Rat"
@@ -1421,7 +1475,9 @@ export const ObjectData: { [key: string]: ObjectDataDetails } = {
             tags: ["blocks", "sentient", "moveable", "aquatic"],
             c: {
                 TypeComponent: {
-                    entityType: "eel"
+                    entityType: "eel",
+                    race: "eel",
+                    classification: "eel"
                 },
                 DisplayNameComponent: {
                     name: "Eel"
@@ -1500,7 +1556,9 @@ export const ObjectData: { [key: string]: ObjectDataDetails } = {
             tags: ["blocks", "sentient", "moveable"],
             c: {
                 TypeComponent: {
-                    entityType: "bandit"
+                    entityType: "bandit",
+                    race: "human",
+                    classification: "bandit"
                 },
                 DisplayNameComponent: {
                     name: "Bandit"
@@ -1595,7 +1653,9 @@ export const ObjectData: { [key: string]: ObjectDataDetails } = {
             tags: ["blocks", "sentient", "moveable"],
             c: {
                 TypeComponent: {
-                    entityType: "bandit_mage"
+                    entityType: "bandit_mage",
+                    race: "human",
+                    classification: "bandit"
                 },
                 DisplayNameComponent: {
                     name: "Bandit Mage"
@@ -1688,7 +1748,9 @@ export const ObjectData: { [key: string]: ObjectDataDetails } = {
             tags: ["blocks", "sentient", "moveable"],
             c: {
                 TypeComponent: {
-                    entityType: "bandit_white_mage"
+                    entityType: "bandit_white_mage",
+                    race: "human",
+                    classification: "bandit"
                 },
                 DisplayNameComponent: {
                     name: "Bandit White Mage"
@@ -1882,6 +1944,8 @@ export function removeEntity(ecs: World, entity: Entity) {
     ecs.removeEntity(entity);
 }
 
+export type EntityTeamMap = Map<number, EntityTeam>;
+
 /**
  * Facilitates the communication and giving orders of set teams
  * of entities.
@@ -1892,9 +1956,9 @@ export class EntityTeam {
     commanderId: Nullable<string> = null;
 
     /**
-     * Update all members to know where the target is
+     * Remove dead team members
      */
-    alert() {
+    update() {
         for (let i = 0; i < this.memberIds.length; i++) {
             const entity = globals.Game?.ecs.getEntity(this.memberIds[i]) ?? null;
             if (entity === null) {
@@ -1903,9 +1967,25 @@ export class EntityTeam {
             }
 
             const ai = entity.getOne(PlannerAIComponent);
-            if (ai !== undefined) {
-                ai.knowsTargetPosition = true;
-                ai.update();
+            if (ai === undefined) {
+                this.memberIds.splice(i, 1);
+                continue;
+            }
+        }
+    }
+
+    /**
+     * Update all members to know where the target is
+     */
+    alert() {
+        for (let i = 0; i < this.memberIds.length; i++) {
+            const entity = globals.Game?.ecs.getEntity(this.memberIds[i]);
+            if (entity !== undefined) {
+                const ai = entity.getOne(PlannerAIComponent);
+                if (ai !== undefined) {
+                    ai.knowsTargetPosition = true;
+                    ai.update();
+                }
             }
         }
     }

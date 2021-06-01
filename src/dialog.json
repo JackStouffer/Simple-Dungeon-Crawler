@@ -1,0 +1,95 @@
+{
+    "globlin_glork": {
+        "respondingTo": null,
+        "rules": [
+            ["race", "=", "goblin"],
+            ["knows_target_position", "=", false],
+            ["has_target_in_sight", "=", false]
+        ],
+        "dialog": [
+            "Glork!"
+        ],
+        "changed_state": {}
+    },
+    "globlin_goomp": {
+        "respondingTo": null,
+        "rules": [
+            ["race", "=", "goblin"],
+            ["has_target_in_sight", "=", true],
+            ["health_percentage", "<", 50]
+        ],
+        "dialog": [
+            "Goomp!"
+        ],
+        "changed_state": {}
+    },
+    "bandit_sees_player": {
+        "respondingTo": null,
+        "rules": [
+            ["race", "=", "human"],
+            ["classification", "=", "bandit"],
+            ["said_bandit_sees_player", "=", false],
+            ["has_seen_player_before", "=", false],
+            ["has_target_in_sight", "=", true]
+        ],
+        "dialog": [
+            "Never should have come here!",
+            "Enemy spotted!"
+        ],
+        "changed_state": {
+            "said_bandit_sees_player": true,
+            "current_order": "alert_allies"
+        }
+    },
+    "bandit_commander_killed": {
+        "respondingTo": null,
+        "rules": [
+            ["race", "=", "human"],
+            ["classification", "=", "bandit"],
+            ["said_bandit_commander_killed", "=", false],
+            ["team_commander_alive", "=", false],
+            ["has_target_in_sight", "=", false]
+        ],
+        "dialog": [
+            "They killed the chieftain!"
+        ],
+        "changed_state": {
+            "said_bandit_commander_killed": true
+        }
+    },
+    "bandit_needs_healing": {
+        "respondingTo": null,
+        "rules": [
+            ["race", "=", "human"],
+            ["classification", "=", "bandit"],
+            ["health_percentage", "<", 25],
+            ["has_healing_items", "=", false],
+            ["said_bandit_needs_healing", "=", false]
+        ],
+        "dialog": [
+            "I need healing!",
+            "Badly injured ... Need help."
+        ],
+        "changed_state": {
+            "said_bandit_needs_healing": true
+        }
+    },
+    "bandit_has_no_heals": {
+        "respondingTo": "bandit_needs_healing",
+        "rules": [
+            ["race", "=", "human"],
+            ["classification", "=", "bandit"],
+            ["knows_heal_other_spell", "=", true],
+            ["has_heal_other_spell_casts", "=", false],
+            ["health_percentage", "<", 25],
+            ["bandit_has_no_heals", "=", false]
+        ],
+        "dialog": [
+            "Out of heals",
+            "I'm out of healing spells"
+        ],
+        "changed_state": {
+            "bandit_has_no_heals": true
+        }
+    }
+}
