@@ -8,7 +8,8 @@ import {
     NoOpCommand,
     createPassableCallback,
     generateWeightCallback,
-    createWaterBasedPassableCallback
+    createWaterBasedPassableCallback,
+    AlertAlliesCommand
 } from "../commands";
 import {
     DisplayNameComponent,
@@ -625,6 +626,17 @@ function douseFireOnSelfAction(
     return new GoToLocationCommand(aiState.entity, path);
 }
 
+function alertAlliesAction(
+    ecs: World,
+    map: GameMap,
+    entityMap: EntityMap,
+    aiState: PlannerAIComponent
+): Command {
+    aiState.currentOrder = "attack";
+    aiState.update();
+    return new AlertAlliesCommand(aiState.entity);
+}
+
 type ActionUpdateFunction = (
     ecs: World,
     map: GameMap,
@@ -670,7 +682,7 @@ export const ActionData: { [key: string]: Action } = {
         updateFunction: chaseAction,
         weight: () => 1
     },
-    // FIX ME: White mage currently will stand by even when they can't see the target
+    // TODO, BUG: White mage currently will stand by even when they can't see the target
     // They should case if they lose sight
     "standby": {
         preconditions: {
@@ -746,6 +758,12 @@ export const ActionData: { [key: string]: Action } = {
         preconditions: { onFire: true, nearWater: true },
         postconditions: { onFire: false },
         updateFunction: douseFireOnSelfAction,
+        weight: () => 1
+    },
+    "alertAllies": {
+        preconditions: { hasAliveAllies: true, alliesAlerted: false },
+        postconditions: { alliesAlerted: true },
+        updateFunction: alertAlliesAction,
         weight: () => 1
     }
 };

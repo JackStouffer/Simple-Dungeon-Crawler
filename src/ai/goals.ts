@@ -91,7 +91,24 @@ export function resolveHasHealingItem(ecs: World, entityMap: EntityMap, ai: Enti
     return healthItems.length > 0;
 }
 
-function resolveHasSelfHealingSpell(ecs: World, entityMap: EntityMap, ai: Entity): boolean {
+export function resolveKnowsHealSelfSpell(
+    ecs: World,
+    entityMap: EntityMap,
+    ai: Entity
+): boolean {
+    const spells = ai.getOne(SpellsComponent);
+    if (spells === undefined) { return false; }
+
+    const healthSpells = getKnownSpells(spells)
+        .filter(i => i.type === SpellType.HealSelf);
+    return healthSpells.length > 0;
+}
+
+export function resolveHasHealSelfSpellCasts(
+    ecs: World,
+    entityMap: EntityMap,
+    ai: Entity
+): boolean {
     const spells = ai.getOne(SpellsComponent);
     if (spells === undefined) { return false; }
 
@@ -384,6 +401,15 @@ function resolveNearWater(ecs: World, entityMap: EntityMap, ai: Entity): boolean
     return false;
 }
 
+function resolveAlliesAlerted(ecs: World, entityMap: EntityMap, ai: Entity): boolean {
+    const aiState = ai.getOne(PlannerAIComponent);
+    if (aiState === undefined || aiState.teamId === null) { return false; }
+    const team = globals.Game?.entityTeams.get(aiState.teamId);
+    if (team === undefined) { return false; }
+
+    return team.state === "attacking";
+}
+
 type GoalResolver = (ecs: World, entityMap: EntityMap, ai: Entity) => boolean;
 
 interface GoalDataDetails {
@@ -411,7 +437,7 @@ export const GoalData: { [key: string]: GoalDataDetails } = {
         resolver: resolveHasHealingItem
     },
     "hasSelfHealingSpell": {
-        resolver: resolveHasSelfHealingSpell
+        resolver: resolveHasHealSelfSpellCasts
     },
     "hasHealOtherSpell": {
         resolver: resolveHasHealOtherSpellCasts
@@ -445,6 +471,9 @@ export const GoalData: { [key: string]: GoalDataDetails } = {
     },
     "nearWater": {
         resolver: resolveNearWater
+    },
+    "alliesAlerted": {
+        resolver: resolveAlliesAlerted
     }
 };
 

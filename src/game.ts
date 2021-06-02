@@ -57,7 +57,9 @@ import {
     EntityMap,
     ParalyzableComponent,
     removeEntity,
-    EntityTeamMap
+    EntityTeamMap,
+    DialogMemoryComponent,
+    UpdateEntityTeamsSystem
 } from "./entity";
 import {
     Command,
@@ -318,6 +320,7 @@ export class SimpleDungeonCrawler {
         this.ecs.registerComponent(DamageAffinityComponent, 50);
         this.ecs.registerComponent(SpellsComponent, 20);
         this.ecs.registerComponent(PlannerAIComponent, 20);
+        this.ecs.registerComponent(DialogMemoryComponent, 20);
         this.ecs.registerComponent(LoseTargetAIComponent, 20);
         this.ecs.registerComponent(FearAIComponent, 20);
         this.ecs.registerComponent(FallbackAIComponent, 50);
@@ -345,6 +348,7 @@ export class SimpleDungeonCrawler {
         this.ecs.registerSystem("postTurn", DeathSystem);
         this.ecs.registerSystem("postTurn", UpdateSchedulerSystem);
         this.ecs.registerSystem("postTurn", UpdateEntityMapSystem);
+        this.ecs.registerSystem("postTurn", UpdateEntityTeamsSystem);
 
         this.ecs.registerSystem("postOneTurnCycle", RemoveAfterNTurnsSystem);
         this.ecs.registerSystem("postOneTurnCycle", UpdateHitPointsEffectsSystem);
@@ -430,11 +434,6 @@ export class SimpleDungeonCrawler {
     update(): void {
         switch (this.state) {
             case GameState.Gameplay: {
-                // TODO, cleanup: Iterator "each" function
-                for (const team of this.entityTeams.values()) {
-                    team.update();
-                }
-
                 if (this.currentActor === null) {
                     this.currentActor = this.ecs.getEntity(
                         this.scheduler.next()!

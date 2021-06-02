@@ -13,12 +13,15 @@ import {
     resolveHasHealingItem,
     resolveKnowsHealOtherSpell,
     resolveHasHealOtherSpellCasts,
-    resolveAliveAllies
+    resolveAliveAllies,
+    resolveKnowsHealSelfSpell,
+    resolveHasHealSelfSpellCasts
 } from "./goals";
 import { ActionData } from "./actions";
 import { GameMap, isBlocked, isSightBlocked, Point } from "../map";
 import {
     ConfusedAIComponent,
+    DialogMemoryComponent,
     DisplayNameComponent,
     EntityMap,
     EntityTeamMap,
@@ -32,9 +35,37 @@ import {
     PositionComponent,
     TypeComponent
 } from "../entity";
-import * as DialogJSON from "../dialog.json";
+import * as BanditDialogJSON from "../dialog/bandit.json";
 import { displayMessage } from "../ui";
 import { Nullable } from "../util";
+
+type DialogRule = [string, "=" | ">" | "<" | "<=" | ">=", string | number | boolean];
+
+type DialogDefinition = {
+    "respondingTo": Nullable<string>,
+    "rules": DialogRule[],
+    "dialog": string[],
+    "aiStateChange": {
+        [key: string]: string | number | boolean
+    }
+    "dialogMemoryChange": {
+        [key: string]: string | number | boolean
+    }
+};
+type DialogData = {
+    [key: string]: DialogDefinition
+};
+
+type DialogQuery = {
+    classification: string;
+    [key: string]: number | string | boolean;
+};
+
+export const dialogByClassification: {
+    [key: string]: DialogData
+} = {
+    "bandit": (BanditDialogJSON as any).default as DialogData
+};
 
 /**
  * Add fear to an entity when it sees an enemy
@@ -230,10 +261,20 @@ export function getPlan(
 
     aiState.planner.setStartState(worldState);
 
+    // The state stack is the list of things the AI wants
+    // to do in ascending order of importance. If the AI
+    // doesn't have plan to do the most important thing, it
+    // moves onto the next item
     const stateStack: { [key: string]: boolean }[] = [];
+
     if (aiState.currentOrder === "attack") {
         stateStack.push({ targetKilled: true });
+    } else if (aiState.currentOrder === "alert_allies") {
+        stateStack.push({ alliesAlerted: true });
+    } else if (aiState.currentOrder === "fallback") {
+        stateStack.push({ atFallbackPosition: true });
     }
+
     if (aiState.goals.has("lowHealth") && worldState.lowHealth === true) {
         stateStack.push({ lowHealth: false });
     }
@@ -253,9 +294,15 @@ export function getPlan(
         stateStack.push({ onFire: false });
     }
 
-    let goal;
+    let goal: { [key: string]: boolean } | undefined;
     do {
         goal = stateStack.pop();
+
+        if (goal === undefined) {
+            aiState.currentAction = null;
+            break;
+        }
+
         aiState.planner.setGoalState(goal);
         const plan = aiState.planner.calculate();
         aiState.currentAction = get(plan, "['0'].name", null);
@@ -279,25 +326,10 @@ export function getPlan(
  */
 function plannerAIGenerateCommand(
     ecs: World,
-    ai: Entity,
+    aiState: PlannerAIComponent,
     map: GameMap,
     entityMap: EntityMap
 ): Command {
-    const aiState = ai.getOne(PlannerAIComponent);
-    const pos = ai.getOne(PositionComponent)?.tilePosition();
-    if (pos === undefined || aiState === undefined) {
-        throw new Error(`Entity ${ai.id} is missing a position component`);
-    }
-
-    // compute the FOV to see if the player is sighted
-    const fov = new FOV.PreciseShadowcasting(createPassableSightCallback(pos));
-    fov.compute(
-        pos.x,
-        pos.y,
-        aiState.sightRange,
-        createVisibilityCallback(ai)
-    );
-
     const plan = getPlan(ecs, entityMap, aiState);
 
     if (plan !== null) {
@@ -366,6 +398,11 @@ export function generateAICommand(
     const confusedState = ai.getOne(ConfusedAIComponent);
     const paralyzableData = ai.getOne(ParalyzableComponent);
     const freezableData = ai.getOne(FreezableComponent);
+    const pos = ai.getOne(PositionComponent)?.tilePosition();
+
+    if (pos === undefined) {
+        throw new Error(`Entity ${ai.id} is missing a position component`);
+    }
 
     if (paralyzableData !== undefined &&
         paralyzableData.paralyzed) {
@@ -382,31 +419,57 @@ export function generateAICommand(
 
     if (aiState !== undefined) {
         const commands: Command[] = [];
-        // Conceptually this make sense because you generally decide what you're
-        // going to do, then say something. We just have to reverse the order in
-        // the command list for gameplay
-        commands.push(plannerAIGenerateCommand(ecs, ai, map, entityMap));
+
+        // compute the FOV to see if the player is sighted
+        const fov = new FOV.PreciseShadowcasting(createPassableSightCallback(pos));
+        fov.compute(
+            pos.x,
+            pos.y,
+            aiState.sightRange,
+            createVisibilityCallback(ai)
+        );
 
         const query = buildDialogQuery(ecs, entityMap, entityTeams, map, ai, aiState);
-        const debug = globals.Game?.debugAIDialog === true;
+        const debugDialog = globals.Game?.debugAIDialog === true;
 
-        if (debug) {
+        if (debugDialog) {
             // eslint-disable-next-line no-console
             console.groupCollapsed(aiState.entity.id + " dialog");
             // eslint-disable-next-line no-console
             console.log("query", query);
         }
 
-        const line = queryDialogTable(query);
+        const dialogDefinition = queryDialogTable(query);
 
-        if (debug) {
+        if (dialogDefinition !== null) {
+            const line = RNG.getItem(dialogDefinition.dialog)!;
+
+            if (debugDialog) {
+                // eslint-disable-next-line no-console
+                console.log("randomly chosen line", line);
+            }
+
+            commands.push(new ShowSpeechBubbleCommand(ai, line));
+
+            // Update the dialog memory
+            const dialogMemoryData = ai.getOne(DialogMemoryComponent);
+            if (dialogMemoryData !== undefined) {
+                for (const key in dialogDefinition.dialogMemoryChange) {
+                    dialogMemoryData.memory.set(key, dialogDefinition.dialogMemoryChange[key]);
+                }
+            }
+
+            for (const key in dialogDefinition.aiStateChange) {
+                aiState[key] = dialogDefinition.aiStateChange[key];
+            }
+        }
+
+        if (debugDialog) {
             // eslint-disable-next-line no-console
             console.groupEnd();
         }
 
-        if (line !== null) {
-            commands.unshift(new ShowSpeechBubbleCommand(ai, line));
-        }
+        commands.push(plannerAIGenerateCommand(ecs, aiState, map, entityMap));
 
         // Assume we've lost sight of the target after every turn,
         // so that when the visibility callback sets the flag to true,
@@ -419,9 +482,6 @@ export function generateAICommand(
     throw new Error(`Missing AI state on entity ${ai.id}`);
 }
 
-type DialogQuery = {
-    [key: string]: number | string | boolean;
-};
 
 function buildDialogQuery(
     ecs: World,
@@ -431,21 +491,42 @@ function buildDialogQuery(
     ai: Entity,
     aiState: PlannerAIComponent
 ): DialogQuery {
-    const query: DialogQuery = {};
-
     const typeInfo = ai.getOne(TypeComponent);
-    query["race"] = typeInfo?.race ?? "generic";
-    query["classification"] = typeInfo?.classification ?? "generic";
+    const query: DialogQuery = {
+        "race": typeInfo?.race ?? "generic",
+        "classification": typeInfo?.classification ?? "generic"
+    };
 
     const team = entityTeams.get(aiState.teamId ?? Infinity);
     if (team !== undefined) {
         query["team_commander_alive"] = team.commanderId !== null;
+        query["team_state"] = team.state;
         query["has_alive_allies"] = resolveAliveAllies(ecs, entityMap, ai);
+
+        // Ally capabilities
+        for (const entityId of team.memberIds) {
+            if (entityId === ai.id) { continue; }
+            const entity = ecs.getEntity(entityId);
+            if (entity !== undefined) {
+                // TODO, Speed: O(n^2).
+                if (resolveKnowsHealOtherSpell(ecs, entityMap, entity) === true) {
+                    query["ally_knows_heal_other_spell"] = true;
+                    break;
+                }
+            }
+        }
     }
 
     const hpData = ai.getOne(HitPointsComponent);
     if (hpData !== undefined) {
         query["health_percentage"] = Math.floor((hpData.hp / hpData.maxHp) * 100);
+    }
+
+    const dialogMemoryData = ai.getOne(DialogMemoryComponent);
+    if (dialogMemoryData !== undefined) {
+        for (const iterator of dialogMemoryData.memory.entries()) {
+            query[iterator[0]] = iterator[1];
+        }
     }
 
     query["map_name"] = map.name;
@@ -454,29 +535,27 @@ function buildDialogQuery(
     query["has_healing_items"] = resolveHasHealingItem(ecs, entityMap, ai);
     query["knows_heal_other_spell"] = resolveKnowsHealOtherSpell(ecs, entityMap, ai);
     query["has_heal_other_spell_casts"] = resolveHasHealOtherSpellCasts(ecs, entityMap, ai);
+    query["knows_heal_self_spell"] = resolveKnowsHealSelfSpell(ecs, entityMap, ai);
+    query["has_heal_self_spell_casts"] = resolveHasHealSelfSpellCasts(ecs, entityMap, ai);
 
     return query;
 }
 
-type DialogRule = [string, "=" | ">" | "<" | "<=" | ">=", string | number | boolean];
-
-type DialogData = {
-    [key: string]: {
-        "respondingTo": Nullable<string>,
-        "rules": DialogRule[],
-        "dialog": string[],
-        "changed_state": {
-            [key: string]: string | number | boolean | null
-        }
-    }
-};
-
-function queryDialogTable(query: DialogQuery): Nullable<string> {
-    const dialogData = (DialogJSON as any).default as DialogData;
+function queryDialogTable(query: DialogQuery): Nullable<DialogDefinition> {
     const matches: string[] = [];
+
+    const dialogData = dialogByClassification[query["classification"]];
+    if (dialogData === undefined) {
+        return null;
+    }
 
     definitions: for (const key in dialogData) {
         const dialogDefinition = dialogData[key];
+
+        if (dialogDefinition.respondingTo !== null) {
+            continue;
+        }
+
         for (const rule of dialogDefinition.rules) {
             if (rule[1] === "=" && query[rule[0]] !== rule[2]) {
                 continue definitions;
@@ -490,6 +569,7 @@ function queryDialogTable(query: DialogQuery): Nullable<string> {
                 continue definitions;
             }
         }
+
         matches.push(key);
     }
 
@@ -511,14 +591,11 @@ function queryDialogTable(query: DialogQuery): Nullable<string> {
         return aRules - bRules;
     });
     const match = dialogData[matches[0]];
-    const line = RNG.getItem(match.dialog);
 
     if (globals.Game?.debugAIDialog === true) {
         // eslint-disable-next-line no-console
         console.log("matched definitions", matches);
-        // eslint-disable-next-line no-console
-        console.log("randomly chosen line", line);
     }
 
-    return line;
+    return match;
 }

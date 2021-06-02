@@ -17,13 +17,13 @@ import {
 import { Nullable } from "./util";
 import { KeyCommand, PlayerState } from "./input-handler";
 import { Planner, PlannerWorldState } from "./ai/planner";
+import { createPlanner, dialogByClassification } from "./ai/commands";
 import {
     NoOpCommand,
     OpenInventoryCommand,
     OpenSpellsCommand,
     RotateReticleCommand
 } from "./commands";
-import { createPlanner } from "./ai/commands";
 import { ItemDataDetails, SpellDataDetails } from "./skills";
 import { Point } from "./map";
 
@@ -301,7 +301,7 @@ export class PlannerAIComponent extends Component {
     planner: Planner;
     previousWorldState: PlannerWorldState;
     currentAction: Nullable<string>;
-    currentOrder: string;
+    currentOrder: "attack" | "alert_allies" | "fallback";
     goals: Set<string>;
     actions: Set<string>;
     lowHealthThreshold: number;
@@ -525,6 +525,15 @@ export class RemoveAfterNTurnsComponent extends Component {
     };
 }
 
+export class DialogMemoryComponent extends Component {
+    memory: Map<string, string | number | boolean>;
+
+    static typeName = "DialogMemoryComponent";
+    static properties = {
+        memory: new Map()
+    }
+}
+
 export interface InventoryPoolProbabilities {
     itemID: string;
     probability: number;
@@ -536,6 +545,7 @@ interface ObjectDataDetails {
     addInventory?: boolean;
     addInput?: boolean;
     addPlannerAI?: boolean;
+    addDialogMemory?: boolean;
     desiredDistanceToTarget?: number;
     sightRange?: number;
     spells?: [string, number][];
@@ -1210,6 +1220,7 @@ export const ObjectData: { [key: string]: ObjectDataDetails } = {
     "goblin": {
         addInventory: true,
         addPlannerAI: true,
+        addDialogMemory: true,
         sightRange: 7,
         lowHealthThreshold: 0.5,
         desiredDistanceToTarget: 1,
@@ -1219,7 +1230,8 @@ export const ObjectData: { [key: string]: ObjectDataDetails } = {
             "goToEnemy",
             "meleeAttack",
             "goToSafePosition",
-            "douseFireOnSelf"
+            "douseFireOnSelf",
+            "alertAllies"
         ],
         inventoryPool: [
             {
@@ -1293,6 +1305,7 @@ export const ObjectData: { [key: string]: ObjectDataDetails } = {
     "goblin_brute": {
         addInventory: true,
         addPlannerAI: true,
+        addDialogMemory: true,
         sightRange: 10,
         desiredDistanceToTarget: 1,
         actions: [
@@ -1302,7 +1315,8 @@ export const ObjectData: { [key: string]: ObjectDataDetails } = {
             "goToEnemy",
             "goToSafePosition",
             "meleeAttack",
-            "douseFireOnSelf"
+            "douseFireOnSelf",
+            "alertAllies"
         ],
         inventoryPool: [
             {
@@ -1533,6 +1547,7 @@ export const ObjectData: { [key: string]: ObjectDataDetails } = {
     "bandit": {
         addInventory: true,
         addPlannerAI: true,
+        addDialogMemory: true,
         sightRange: 10,
         lowHealthThreshold: 0.5,
         desiredDistanceToTarget: 1,
@@ -1544,7 +1559,8 @@ export const ObjectData: { [key: string]: ObjectDataDetails } = {
             "goToSafePosition",
             "runAway",
             "meleeAttack",
-            "douseFireOnSelf"
+            "douseFireOnSelf",
+            "alertAllies"
         ],
         inventoryPool: [
             {
@@ -1623,6 +1639,7 @@ export const ObjectData: { [key: string]: ObjectDataDetails } = {
     "bandit_mage": {
         addInventory: true,
         addPlannerAI: true,
+        addDialogMemory: true,
         sightRange: 8,
         lowHealthThreshold: 0.5,
         desiredDistanceToTarget: 5,
@@ -1641,7 +1658,8 @@ export const ObjectData: { [key: string]: ObjectDataDetails } = {
             "goToSafePosition",
             "runAway",
             "meleeAttack",
-            "douseFireOnSelf"
+            "douseFireOnSelf",
+            "alertAllies"
         ],
         inventoryPool: [
             {
@@ -1724,6 +1742,7 @@ export const ObjectData: { [key: string]: ObjectDataDetails } = {
     "bandit_white_mage": {
         addInventory: true,
         addPlannerAI: true,
+        addDialogMemory: true,
         sightRange: 8,
         lowHealthThreshold: 0.4,
         desiredDistanceToTarget: 5,
@@ -1742,7 +1761,8 @@ export const ObjectData: { [key: string]: ObjectDataDetails } = {
             "goToSafePosition",
             "runAway",
             "meleeAttack",
-            "douseFireOnSelf"
+            "douseFireOnSelf",
+            "alertAllies"
         ],
         staticallyKnownComponents: {
             tags: ["blocks", "sentient", "moveable"],
@@ -1829,121 +1849,6 @@ for (const objectID in ObjectData) {
     }
 }
 
-/**
- * Use an entity type to grab component data and create a new Entity
- */
-export function createEntity(
-    ecs: World,
-    textures: PIXI.ITextureDictionary,
-    type: string,
-    x: Nullable<number>,
-    y: Nullable<number>,
-    id?: string
-): Entity {
-    if (globals.Game === null) { throw new Error("Global game is null"); }
-    if (!(type in ObjectData)) { throw new Error(`${type} is not valid object id`); }
-
-    let hash = (x ?? 0) + (y ?? 0) + map(type, (char) => char.charCodeAt(0))
-        .reduce((a, b) => a + b);
-    hash = hash & hash; // Convert to 32bit integer
-    const entityId = id ?? `${type}-${hash.toString(16)}`;
-
-    const data = ObjectData[type];
-    const entity = ecs.createEntity(assignIn({}, { id: entityId }, data.staticallyKnownComponents));
-
-    if (x !== null && y !== null && entity.has(PositionComponent) === false) {
-        const { x: wx, y: wy } = globals.Game.gameCamera.tilePositionToWorld(x, y);
-        entity.addComponent({
-            type: "PositionComponent",
-            x: wx,
-            y: wy,
-            tileX: x,
-            tileY: y
-        });
-    }
-
-    const graphics = entity.getOne(GraphicsComponent) ?? entity.getOne(ChestGraphicsComponent);
-    if (graphics !== undefined) {
-        graphics.sprite = new PIXI.Sprite(textures[graphics.textureKey]);
-        globals.Game.pixiApp.stage.addChild(graphics.sprite);
-    }
-
-    if (data.spells !== undefined && entity.has(SpellsComponent) === false) {
-        const spells = new Map();
-        data.spells.forEach(s => spells.set(s[0], s[1]));
-        entity.addComponent({ type: "SpellsComponent", knownSpells: spells });
-    }
-
-    if (data?.addInventory === true && entity.has(InventoryComponent) === false) {
-        const inventory: Map<string, number> = new Map();
-
-        if (data.inventoryPool !== undefined) {
-            for (let i = 0; i < data.inventoryPool.length; i++) {
-                if (RNG.getUniform() <= data.inventoryPool[i].probability) {
-                    inventory.set(data.inventoryPool[i].itemID, 1);
-                }
-            }
-        }
-
-        entity.addComponent({ type: "InventoryComponent", inventory });
-    }
-
-    if (data?.addInput === true && entity.has(InputHandlingComponent) === false) {
-        const keyCommands: KeyCommand[] = [
-            { key: "i", description: "Inventory", command: () => new OpenInventoryCommand() },
-            { key: "m", description: "Spell Menu", command: () => new OpenSpellsCommand() },
-            { key: "r", description: "Rotate Target Reticle", command: () => new RotateReticleCommand(entity) },
-            { key: "x", description: "Pass Turn", command: () => new NoOpCommand(true) }
-        ];
-
-        entity.addComponent({
-            type: "InputHandlingComponent",
-            state: PlayerState.Combat,
-            reticleRotation: 0,
-            keyCommands,
-            itemForTarget: null,
-            spellForTarget: null
-        });
-    }
-
-    if (data?.addPlannerAI === true && data.actions !== undefined) {
-        const actions: Set<string> = new Set(data.actions);
-        const { goals, planner } = createPlanner(actions);
-
-        entity.addComponent({
-            type: "PlannerAIComponent",
-            sightRange: data?.sightRange ?? 5,
-            desiredDistanceToTarget: data?.desiredDistanceToTarget ?? 1,
-            planner,
-            target: ecs.getEntity("player"), // TODO: generic target selection
-            teamId: null,
-            previousWorldState: {},
-            currentAction: null,
-            currentOrder: "attack",
-            goals,
-            actions,
-            lowHealthThreshold: data.lowHealthThreshold ?? 0.25,
-            knowsTargetPosition: false,
-            hasTargetInSight: false
-        });
-    }
-
-    return entity;
-}
-
-export function removeEntity(ecs: World, entity: Entity) {
-    if (globals.Game === null) { throw new Error("Global game is null"); }
-
-    const graphicData = entity.getOne(GraphicsComponent) ?? entity.getOne(ChestGraphicsComponent);
-    if (graphicData !== undefined && graphicData.sprite !== null) {
-        globals.Game.pixiApp.stage.removeChild(graphicData.sprite);
-        graphicData.sprite.visible = false;
-        graphicData.sprite.destroy();
-        graphicData.sprite = null;
-    }
-    ecs.removeEntity(entity);
-}
-
 export type EntityTeamMap = Map<number, EntityTeam>;
 
 /**
@@ -1959,6 +1864,13 @@ export class EntityTeam {
      * Remove dead team members
      */
     update() {
+        if (this.commanderId !== null) {
+            const commander = globals.Game?.ecs.getEntity(this.commanderId);
+            if (commander === undefined) {
+                this.commanderId = null;
+            }
+        }
+
         for (let i = 0; i < this.memberIds.length; i++) {
             const entity = globals.Game?.ecs.getEntity(this.memberIds[i]) ?? null;
             if (entity === null) {
@@ -1988,6 +1900,8 @@ export class EntityTeam {
                 }
             }
         }
+
+        this.state = "attacking";
     }
 }
 
@@ -2047,4 +1961,144 @@ export class RemoveAfterNTurnsSystem extends System {
             }
         }
     }
+}
+
+export class UpdateEntityTeamsSystem extends System {
+    update() {
+        // TODO, cleanup: Iterator "each" function
+        for (const team of globals.Game!.entityTeams.values()) {
+            team.update();
+        }
+    }
+}
+
+/**
+ * Use an entity type to grab component data and create a new Entity
+ */
+export function createEntity(
+    ecs: World,
+    textures: PIXI.ITextureDictionary,
+    type: string,
+    x: Nullable<number>,
+    y: Nullable<number>,
+    id?: string
+): Entity {
+    if (globals.Game === null) { throw new Error("Global game is null"); }
+    if (!(type in ObjectData)) { throw new Error(`${type} is not valid object id`); }
+
+    let hash = (x ?? 0) + (y ?? 0) + map(type, (char) => char.charCodeAt(0))
+        .reduce((a, b) => a + b);
+    hash = hash & hash; // Convert to 32bit integer
+    const entityId = id ?? `${type}-${hash.toString(16)}`;
+
+    const data = ObjectData[type];
+    const entity = ecs.createEntity(assignIn({}, { id: entityId }, data.staticallyKnownComponents));
+
+    if (x !== null && y !== null && entity.has(PositionComponent) === false) {
+        const { x: wx, y: wy } = globals.Game.gameCamera.tilePositionToWorld(x, y);
+        entity.addComponent({
+            type: "PositionComponent",
+            x: wx,
+            y: wy,
+            tileX: x,
+            tileY: y
+        });
+    }
+
+    const graphics = entity.getOne(GraphicsComponent) ?? entity.getOne(ChestGraphicsComponent);
+    if (graphics !== undefined) {
+        graphics.sprite = new PIXI.Sprite(textures[graphics.textureKey]);
+        globals.Game.pixiApp.stage.addChild(graphics.sprite);
+    }
+
+    if (data.spells !== undefined && entity.has(SpellsComponent) === false) {
+        const spells = new Map();
+        data.spells.forEach(s => spells.set(s[0], s[1]));
+        entity.addComponent({ type: "SpellsComponent", knownSpells: spells });
+    }
+
+    if (data?.addInventory === true && entity.has(InventoryComponent) === false) {
+        const inventory: Map<string, number> = new Map();
+
+        if (data.inventoryPool !== undefined) {
+            for (let i = 0; i < data.inventoryPool.length; i++) {
+                if (RNG.getUniform() <= data.inventoryPool[i].probability) {
+                    inventory.set(data.inventoryPool[i].itemID, 1);
+                }
+            }
+        }
+
+        entity.addComponent({ type: "InventoryComponent", inventory });
+    }
+
+    if (data?.addDialogMemory === true && entity.has(DialogMemoryComponent) === false) {
+        const memory: Map<string, boolean> = new Map();
+
+        const typeData = entity.getOne(TypeComponent);
+        if (typeData !== undefined) {
+            const dialogDefinitions = dialogByClassification[typeData.classification];
+            if (dialogDefinitions !== undefined) {
+                for (const key in dialogDefinitions) {
+                    memory.set(`said_${key}`, false);
+                }
+            }
+        }
+
+        entity.addComponent({ type: "DialogMemoryComponent", memory });
+    }
+
+    if (data?.addInput === true && entity.has(InputHandlingComponent) === false) {
+        const keyCommands: KeyCommand[] = [
+            { key: "i", description: "Inventory", command: () => new OpenInventoryCommand() },
+            { key: "m", description: "Spell Menu", command: () => new OpenSpellsCommand() },
+            { key: "r", description: "Rotate Target Reticle", command: () => new RotateReticleCommand(entity) },
+            { key: "x", description: "Pass Turn", command: () => new NoOpCommand(true) }
+        ];
+
+        entity.addComponent({
+            type: "InputHandlingComponent",
+            state: PlayerState.Combat,
+            reticleRotation: 0,
+            keyCommands,
+            itemForTarget: null,
+            spellForTarget: null
+        });
+    }
+
+    if (data?.addPlannerAI === true && data.actions !== undefined) {
+        const actions: Set<string> = new Set(data.actions);
+        const { goals, planner } = createPlanner(actions);
+
+        entity.addComponent({
+            type: "PlannerAIComponent",
+            sightRange: data?.sightRange ?? 5,
+            desiredDistanceToTarget: data?.desiredDistanceToTarget ?? 1,
+            planner,
+            target: ecs.getEntity("player"), // TODO: generic target selection
+            teamId: null,
+            previousWorldState: {},
+            currentAction: null,
+            currentOrder: "attack",
+            goals,
+            actions,
+            lowHealthThreshold: data.lowHealthThreshold ?? 0.25,
+            knowsTargetPosition: false,
+            hasTargetInSight: false
+        });
+    }
+
+    return entity;
+}
+
+export function removeEntity(ecs: World, entity: Entity) {
+    if (globals.Game === null) { throw new Error("Global game is null"); }
+
+    const graphicData = entity.getOne(GraphicsComponent) ?? entity.getOne(ChestGraphicsComponent);
+    if (graphicData !== undefined && graphicData.sprite !== null) {
+        globals.Game.pixiApp.stage.removeChild(graphicData.sprite);
+        graphicData.sprite.visible = false;
+        graphicData.sprite.destroy();
+        graphicData.sprite = null;
+    }
+    ecs.removeEntity(entity);
 }
