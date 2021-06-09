@@ -210,12 +210,12 @@ function resolveAllyLowHealth(ecs: World, entityMap: EntityMap, ai: Entity): boo
         .fromAll(PositionComponent, PlannerAIComponent, HitPointsComponent)
         .execute();
 
-    // SPEED this information is being calculated twice, once here
+    // TODO, SPEED: this information is being calculated twice, once here
     // and once in the action
     let target: Nullable<Point> = null;
     let targetHPData: Nullable<HitPointsComponent> = null;
     for (const e of entities) {
-        // TODO remove when we have target selection/factions
+        // TODO: remove when we have target selection/factions
         if (e === aiData.target || e === ai) { continue; }
 
         const hpData = e.getOne(HitPointsComponent)!;
@@ -366,7 +366,7 @@ function resolveAtFallbackPosition(ecs: World, entityMap: EntityMap, ai: Entity)
  * tile radius?
  *
  * @param ecs {World} The ECS instance to use
- * @param entityMap {EntityMap} The current map of postions to entities
+ * @param entityMap {EntityMap} The current map of positions to entities
  * @param ai {Entity} THe entity to resolve the goal for
  * @returns {boolean}
  */
@@ -395,7 +395,7 @@ export function resolveAliveAllies(ecs: World, entityMap: EntityMap, ai: Entity)
  * Is the entity flammable and currently on fire?
  *
  * @param ecs {World} The ECS instance to use
- * @param entityMap {EntityMap} The current map of postions to entities
+ * @param entityMap {EntityMap} The current map of positions to entities
  * @param ai {Entity} THe entity to resolve the goal for
  * @returns {boolean}
  */
@@ -413,7 +413,7 @@ export function resolveOnFire(ecs: World, entityMap: EntityMap, ai: Entity): boo
  * Is the entity within 15 blocks of a water tile?
  *
  * @param ecs {World} The ECS instance to use
- * @param entityMap {EntityMap} The current map of postions to entities
+ * @param entityMap {EntityMap} The current map of positions to entities
  * @param ai {Entity} THe entity to resolve the goal for
  * @returns {boolean}
  */
@@ -446,10 +446,10 @@ function resolveAlliesAlerted(ecs: World, entityMap: EntityMap, ai: Entity): boo
 }
 
 /**
- * Is the entity flammable and currently on fire?
+ * Is the entity silenceable and currently silenced?
  *
  * @param ecs {World} The ECS instance to use
- * @param entityMap {EntityMap} The current map of postions to entities
+ * @param entityMap {EntityMap} The current map of positions to entities
  * @param ai {Entity} THe entity to resolve the goal for
  * @returns {boolean}
  */

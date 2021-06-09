@@ -45,7 +45,7 @@ import { Nullable } from "../util";
 
 type DialogRule = [string, "=" | ">" | "<" | "<=" | ">=", string | number | boolean];
 
-type DialogDefinition = {
+interface DialogDefinition {
     "name": string,
     "respondingTo": Nullable<string>,
     "rules": DialogRule[],
@@ -56,15 +56,14 @@ type DialogDefinition = {
     "dialogMemoryChange": {
         [key: string]: string | number | boolean
     }
-};
-type DialogData = {
+}
+interface DialogData {
     rules: DialogDefinition[];
-};
-
-type DialogQuery = {
+}
+interface DialogQuery {
     classification: string;
     [key: string]: number | string | boolean;
-};
+}
 
 export const dialogByClassification: {
     [key: string]: DialogData
@@ -392,6 +391,20 @@ function confusedAIGenerateCommand(
     }
 }
 
+/**
+ * Given an AI and the state of the game world, generate a list of commands
+ * for AIs to perform.
+ *
+ * It is possible for commands to be generated for entities other than the
+ * given one.
+ *
+ * @param ecs The current ECS world instance
+ * @param map The current game map
+ * @param entityMap A map of tile positions to entity ids
+ * @param entityTeams A map of entity team ids to entity teams
+ * @param ai the entity to generate a command for
+ * @returns An array of commands
+ */
 export function generateAICommand(
     ecs: World,
     map: GameMap,
@@ -434,7 +447,7 @@ export function generateAICommand(
             createVisibilityCallback(ai)
         );
 
-        const query = buildDialogQuery(ecs, entityMap, entityTeams, map, ai, aiState);
+        const query = buildDialogQuery(ecs, map, entityMap, entityTeams, ai, aiState);
         const debugDialog = globals.Game?.debugAIDialog === true;
 
         if (debugDialog) {
@@ -475,11 +488,24 @@ export function generateAICommand(
     throw new Error(`Missing AI state on entity ${ai.id}`);
 }
 
+/**
+ * Given a AI and the current state of the game world, generate a list of facts
+ * to give to the dialog system to find a suitable dialog definition for the AI
+ * to say.
+ *
+ * @param ecs The current ECS world
+ * @param entityMap A map of tile positions to entity ids
+ * @param entityTeams A map of entity team ids to entity teams
+ * @param map the current game map
+ * @param ai the entity to build the query for
+ * @param aiState the entity's ai state
+ * @returns A query of facts about the AI
+ */
 function buildDialogQuery(
     ecs: World,
+    map: GameMap,
     entityMap: EntityMap,
     entityTeams: EntityTeamMap,
-    map: GameMap,
     ai: Entity,
     aiState: PlannerAIComponent
 ): DialogQuery {
@@ -538,6 +564,13 @@ function buildDialogQuery(
     return query;
 }
 
+/**
+ * Given a query, find the dialog definition that best matches.
+ *
+ * @param query The dialog query object of facts
+ * @param respondingTo the name of the dialog definition to respond to
+ * @returns a dialog definition which matches all of the facts
+ */
 function queryDialogTable(
     query: DialogQuery,
     respondingTo: Nullable<string> = null
@@ -685,6 +718,18 @@ type QueryAlliesReturn = {
     response: DialogDefinition
 };
 
+/**
+ * Given a dialog definition that was said by an AI, look for dialog definitions
+ * that could be said in response to it by the AI's allies.
+ *
+ * @param {World} ecs The ECS instance to use
+ * @param {GameMap} map the current map instance
+ * @param {EntityMap} entityMap a map of tile positions to entity ids
+ * @param {EntityTeamMap} entityTeams a map of entity team ids to entity teams
+ * @param {PlannerAIComponent} aiState the AI state that's saying the current line
+ * @param {DialogDefinition} dialog  the dialog definition that was said
+ * @returns {Nullable<QueryAlliesReturn>} the teammate who is going to say the response and the response
+ */
 function queryAlliesForResponses(
     ecs: World,
     map: GameMap,
@@ -707,7 +752,7 @@ function queryAlliesForResponses(
                 }
 
                 const response = queryDialogTable(
-                    buildDialogQuery(ecs, entityMap, entityTeams, map, teamMate, teamMateAIState),
+                    buildDialogQuery(ecs, map, entityMap, entityTeams, teamMate, teamMateAIState),
                     dialog.name
                 );
                 if (response !== null) {
