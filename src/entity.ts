@@ -2038,8 +2038,8 @@ export function createEntity(
         if (typeData !== undefined) {
             const dialogDefinitions = dialogByClassification[typeData.classification];
             if (dialogDefinitions !== undefined) {
-                for (const key in dialogDefinitions) {
-                    memory.set(`said_${key}`, false);
+                for (const def of dialogDefinitions.rules) {
+                    memory.set(`said_${def.name}`, false);
                 }
             }
         }

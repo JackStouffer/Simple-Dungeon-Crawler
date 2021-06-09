@@ -67,9 +67,6 @@ function resolveEnoughCastsForSpellGenerator(spellID: string): GoalResolver {
         const spellData = ai.getOne(SpellsComponent);
         if (spellData === undefined) { return false; }
 
-        const silenceData = ai.getOne(SilenceableComponent);
-        if (silenceData?.silenced === true) { return false; }
-
         return (spellData.knownSpells.get(spellID) ?? -1) > 0;
     };
 }
@@ -111,9 +108,6 @@ export function resolveHasHealSelfSpellCasts(
 ): boolean {
     const spells = ai.getOne(SpellsComponent);
     if (spells === undefined) { return false; }
-
-    const silenceData = ai.getOne(SilenceableComponent);
-    if (silenceData?.silenced === true) { return false; }
 
     const healthSpells = getKnownSpells(spells)
         .filter(i => i.type === SpellType.HealSelf && i.count > 0);
@@ -159,12 +153,53 @@ export function resolveHasHealOtherSpellCasts(
     const spells = ai.getOne(SpellsComponent);
     if (spells === undefined) { return false; }
 
-    const silenceData = ai.getOne(SilenceableComponent);
-    if (silenceData?.silenced === true) { return false; }
-
     const healthSpells = getKnownSpells(spells)
         .filter(i => i.type === SpellType.HealOther && i.count > 0);
     return healthSpells.length > 0;
+}
+
+/**
+ * Does the entity know a damage other spell?
+ *
+ * @param ecs {World} The ECS instance
+ * @param entityMap {EntityMap} A map of tile positions to entity
+ * @param ai {Entity} The entity to resolve for
+ * @returns {boolean}
+ */
+export function resolveKnowsDamageOtherSpell(
+    ecs: World,
+    entityMap:
+    EntityMap,
+    ai: Entity
+): boolean {
+    const spellData = ai.getOne(SpellsComponent);
+    if (spellData === undefined) { return false; }
+
+    const spells = getKnownSpells(spellData)
+        .filter(i => i.type === SpellType.DamageOther);
+    return spells.length > 0;
+}
+
+/**
+ * Does the entity have any casts for a heal other spell?
+ *
+ * @param ecs {World} The ECS instance
+ * @param entityMap {EntityMap} A map of tile positions to entity
+ * @param ai {Entity} The entity to resolve for
+ * @returns {boolean}
+ */
+export function resolveHasDamageOtherSpellCasts(
+    ecs: World,
+    entityMap:
+    EntityMap,
+    ai: Entity
+): boolean {
+    const spellData = ai.getOne(SpellsComponent);
+    if (spellData === undefined) { return false; }
+
+    const spells = getKnownSpells(spellData)
+        .filter(i => i.type === SpellType.DamageOther && i.count > 0);
+    return spells.length > 0;
 }
 
 function resolveAllyLowHealth(ecs: World, entityMap: EntityMap, ai: Entity): boolean {
@@ -364,7 +399,7 @@ export function resolveAliveAllies(ecs: World, entityMap: EntityMap, ai: Entity)
  * @param ai {Entity} THe entity to resolve the goal for
  * @returns {boolean}
  */
-function resolveOnFire(ecs: World, entityMap: EntityMap, ai: Entity): boolean {
+export function resolveOnFire(ecs: World, entityMap: EntityMap, ai: Entity): boolean {
     const flammableData = ai.getOne(FlammableComponent);
 
     if (flammableData !== undefined && flammableData.onFire) {
@@ -408,6 +443,19 @@ function resolveAlliesAlerted(ecs: World, entityMap: EntityMap, ai: Entity): boo
     if (team === undefined) { return false; }
 
     return team.state === "attacking";
+}
+
+/**
+ * Is the entity flammable and currently on fire?
+ *
+ * @param ecs {World} The ECS instance to use
+ * @param entityMap {EntityMap} The current map of postions to entities
+ * @param ai {Entity} THe entity to resolve the goal for
+ * @returns {boolean}
+ */
+export function resolveSilenced(ecs: World, entityMap: EntityMap, ai: Entity): boolean {
+    const silenceData = ai.getOne(SilenceableComponent);
+    return silenceData !== undefined && silenceData.silenced;
 }
 
 type GoalResolver = (ecs: World, entityMap: EntityMap, ai: Entity) => boolean;
@@ -474,6 +522,9 @@ export const GoalData: { [key: string]: GoalDataDetails } = {
     },
     "alliesAlerted": {
         resolver: resolveAlliesAlerted
+    },
+    "silenced": {
+        resolver: resolveSilenced
     }
 };
 

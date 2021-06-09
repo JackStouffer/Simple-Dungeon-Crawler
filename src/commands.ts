@@ -905,39 +905,16 @@ export class RotateReticleCommand implements Command {
  * Have a speech bubble appear over an entity with some text
  */
 export class ShowSpeechBubbleCommand implements Command {
-    private readonly entity: Entity;
-    private readonly effectGraphics: Nullable<PIXI.Graphics> = null;
-    private readonly effectTween: Nullable<Tween> = null;
+    entity: Entity;
+    dialog: string;
+    duration: number;
+    private effectGraphics: Nullable<PIXI.Graphics> = null;
+    private effectTween: Nullable<Tween> = null;
 
     constructor(entity: Entity, dialog: string, duration: number = 1000) {
         this.entity = entity;
-
-        const tilePos = this.entity.getOne(PositionComponent)!.tilePosition();
-        const screenPos = globals.Game!.gameCamera.tilePositionToScreen(
-            tilePos.x,
-            tilePos.y
-        );
-
-        // Only show if we're on screen
-        if (screenPos.x < globals.Game!.gameCamera.viewport.width &&
-            screenPos.x >= 0 &&
-            screenPos.y < globals.Game!.gameCamera.viewport.height &&
-            screenPos.y >= 0) {
-            this.effectGraphics = createSpeechBubbleTexture(
-                screenPos.x, screenPos.y, dialog
-            );
-            globals.Game?.pixiApp.stage.addChild(this.effectGraphics);
-
-            this.effectTween = new Tween({
-                object: this.effectGraphics,
-                key: "alpha",
-                delay: duration,
-                duration: 200,
-                start: 1,
-                end: 0,
-                transition: Transition.Linear
-            });
-        }
+        this.dialog = dialog;
+        this.duration = duration;
     }
 
     usedTurn(): boolean {
@@ -949,6 +926,35 @@ export class ShowSpeechBubbleCommand implements Command {
     }
 
     execute(deltaTime: DOMHighResTimeStamp): void {
+        if (this.effectGraphics === null) {
+            const tilePos = this.entity.getOne(PositionComponent)!.tilePosition();
+            const screenPos = globals.Game!.gameCamera.tilePositionToScreen(
+                tilePos.x,
+                tilePos.y
+            );
+
+            // Only show if we're on screen
+            if (screenPos.x < globals.Game!.gameCamera.viewport.width &&
+                screenPos.x >= 0 &&
+                screenPos.y < globals.Game!.gameCamera.viewport.height &&
+                screenPos.y >= 0) {
+                this.effectGraphics = createSpeechBubbleTexture(
+                    screenPos.x, screenPos.y, this.dialog
+                );
+                globals.Game?.pixiApp.stage.addChild(this.effectGraphics);
+
+                this.effectTween = new Tween({
+                    object: this.effectGraphics,
+                    key: "alpha",
+                    delay: this.duration,
+                    duration: 200,
+                    start: 1,
+                    end: 0,
+                    transition: Transition.Linear
+                });
+            }
+        }
+
         if (this.effectTween !== null) {
             this.effectTween.update(deltaTime);
 

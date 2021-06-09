@@ -1,94 +1,161 @@
 {
-    "bandit_sees_player": {
-        "respondingTo": null,
-        "rules": [
-            ["said_bandit_sees_player", "=", false],
-            ["classification", "=", "bandit"],
-            ["has_target_in_sight", "=", true],
-            ["has_alive_allies", "=", true],
-            ["team_state", "=", "passive"]
-        ],
-        "dialog": [
-            "Never should have come here!",
-            "Enemy spotted!"
-        ],
-        "aiStateChange": {
-            "currentOrder": "alert_allies"
+    "rules": [
+        {
+            "name": "bandit_sees_player",
+            "respondingTo": null,
+            "rules": [
+                ["said_bandit_sees_player", "=", false],
+                ["classification", "=", "bandit"],
+                ["has_target_in_sight", "=", true],
+                ["has_alive_allies", "=", true],
+                ["team_state", "=", "passive"]
+            ],
+            "dialog": [
+                "Never should have come here!",
+                "Enemy spotted!"
+            ],
+            "aiStateChange": {
+                "currentOrder": "alert_allies"
+            },
+            "dialogMemoryChange": {
+                "said_bandit_sees_player": true
+            }
         },
-        "dialogMemoryChange": {
-            "said_bandit_sees_player": true
+        {
+            "name": "bandit_commander_killed",
+            "respondingTo": null,
+            "rules": [
+                ["said_bandit_commander_killed", "=", false],
+                ["race", "=", "human"],
+                ["classification", "=", "bandit"],
+                ["team_commander_alive", "=", false],
+                ["has_target_in_sight", "=", false],
+                ["has_alive_allies", "=", true]
+            ],
+            "dialog": [
+                "They killed the chieftain!"
+            ],
+            "aiStateChange": {},
+            "dialogMemoryChange": {
+                "said_bandit_commander_killed": true
+            }
+        },
+        {
+            "name": "bandit_has_been_silenced",
+            "respondingTo": null,
+            "rules": [
+                ["race", "=", "human"],
+                ["classification", "=", "bandit"],
+                ["is_silenced", "=", true],
+                ["on_fire", "=", false],
+                ["said_bandit_has_been_silenced", "=", false],
+                ["has_alive_allies", "=", true]
+            ],
+            "dialog": [
+                "I can't cast spells!"
+            ],
+            "aiStateChange": {},
+            "dialogMemoryChange": {
+                "said_bandit_has_been_silenced": true
+            }
+        },
+        {
+            "name": "bandit_on_fire",
+            "respondingTo": null,
+            "rules": [
+                ["race", "=", "human"],
+                ["classification", "=", "bandit"],
+                ["on_fire", "=", true],
+                ["said_bandit_on_fire", "=", false]
+            ],
+            "dialog": [
+                "AAAAAAAAAAAHHHHHHHHHHHH!",
+                "PUT IT OUT! PUT IT OUT!"
+            ],
+            "aiStateChange": {},
+            "dialogMemoryChange": {
+                "said_bandit_on_fire": true
+            }
+        },
+        {
+            "name": "bandit_needs_healing",
+            "respondingTo": null,
+            "rules": [
+                ["said_bandit_needs_healing", "=", false],
+                ["race", "=", "human"],
+                ["classification", "=", "bandit"],
+                ["health_percentage", "<", 40],
+                ["has_healing_items", "=", false],
+                ["has_heal_self_spell_casts", "=", false],
+                ["ally_knows_heal_other_spell", "=", true],
+                ["has_alive_allies", "=", true],
+                ["on_fire", "=", false]
+            ],
+            "dialog": [
+                "I need healing!",
+                "Badly injured ... Need help."
+            ],
+            "aiStateChange": {},
+            "dialogMemoryChange": {
+                "said_bandit_needs_healing": true
+            }
+        },
+        {
+            "name": "bandit_has_heal_spells",
+            "respondingTo": "bandit_needs_healing",
+            "rules": [
+                ["race", "=", "human"],
+                ["classification", "=", "bandit"],
+                ["knows_heal_other_spell", "=", true],
+                ["has_heal_other_spell_casts", "=", true],
+                ["is_silenced", "=", false]
+            ],
+            "dialog": [
+                "Casting heal!"
+            ],
+            "aiStateChange": {},
+            "dialogMemoryChange": {
+                "said_bandit_has_heal_spells": true
+            }
+        },
+        {
+            "name": "bandit_has_no_heal_spells",
+            "respondingTo": "bandit_needs_healing",
+            "rules": [
+                ["race", "=", "human"],
+                ["classification", "=", "bandit"],
+                ["knows_heal_other_spell", "=", true],
+                ["has_heal_other_spell_casts", "=", false],
+                ["is_silenced", "=", false]
+            ],
+            "dialog": [
+                "Out of heals",
+                "I'm out of healing spells"
+            ],
+            "aiStateChange": {},
+            "dialogMemoryChange": {
+                "said_bandit_has_no_heal_spells": true
+            }
+        },
+        {
+            "name": "bandit_has_no_damage_spells",
+            "respondingTo": null,
+            "rules": [
+                ["race", "=", "human"],
+                ["classification", "=", "bandit"],
+                ["knows_damage_other_spell", "=", true],
+                ["has_damage_other_spell_casts", "=", false],
+                ["is_silenced", "=", false],
+                ["said_bandit_has_no_damage_spells", "=", false],
+                ["has_alive_allies", "=", true]
+            ],
+            "dialog": [
+                "Out of spells!"
+            ],
+            "aiStateChange": {},
+            "dialogMemoryChange": {
+                "said_bandit_has_no_damage_spells": true
+            }
         }
-    },
-    "bandit_commander_killed": {
-        "respondingTo": null,
-        "rules": [
-            ["said_bandit_commander_killed", "=", false],
-            ["race", "=", "human"],
-            ["classification", "=", "bandit"],
-            ["team_commander_alive", "=", false],
-            ["has_target_in_sight", "=", false],
-            ["has_alive_allies", "=", true]
-        ],
-        "dialog": [
-            "They killed the chieftain!"
-        ],
-        "aiStateChange": {},
-        "dialogMemoryChange": {
-            "said_bandit_commander_killed": true
-        }
-    },
-    "bandit_needs_healing": {
-        "respondingTo": null,
-        "rules": [
-            ["said_bandit_needs_healing", "=", false],
-            ["race", "=", "human"],
-            ["classification", "=", "bandit"],
-            ["health_percentage", "<", 40],
-            ["has_healing_items", "=", false],
-            ["has_heal_self_spell_casts", "=", false],
-            ["ally_knows_heal_other_spell", "=", true],
-            ["has_alive_allies", "=", true]
-        ],
-        "dialog": [
-            "I need healing!",
-            "Badly injured ... Need help."
-        ],
-        "aiStateChange": {},
-        "dialogMemoryChange": {
-            "said_bandit_needs_healing": true
-        }
-    },
-    "bandit_has_heals": {
-        "respondingTo": "bandit_needs_healing",
-        "rules": [
-            ["race", "=", "human"],
-            ["classification", "=", "bandit"],
-            ["knows_heal_other_spell", "=", true],
-            ["has_heal_other_spell_casts", "=", true]
-        ],
-        "dialog": [
-            "Casting heal!"
-        ],
-        "aiStateChange": {},
-        "dialogMemoryChange": {
-            "bandit_has_heals": true
-        }
-    },
-    "bandit_has_no_heals": {
-        "respondingTo": "bandit_needs_healing",
-        "rules": [
-            ["race", "=", "human"],
-            ["classification", "=", "bandit"],
-            ["knows_heal_other_spell", "=", true],
-            ["has_heal_other_spell_casts", "=", false]
-        ],
-        "dialog": [
-            "Out of heals",
-            "I'm out of healing spells"
-        ],
-        "aiStateChange": {},
-        "dialogMemoryChange": {
-            "said_bandit_has_no_heals": true
-        }
-    }
+    ]
 }

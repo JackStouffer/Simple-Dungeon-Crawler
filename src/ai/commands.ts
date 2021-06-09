@@ -15,7 +15,11 @@ import {
     resolveHasHealOtherSpellCasts,
     resolveAliveAllies,
     resolveKnowsHealSelfSpell,
-    resolveHasHealSelfSpellCasts
+    resolveHasHealSelfSpellCasts,
+    resolveSilenced,
+    resolveKnowsDamageOtherSpell,
+    resolveOnFire,
+    resolveHasDamageOtherSpellCasts
 } from "./goals";
 import { ActionData } from "./actions";
 import { GameMap, isBlocked, isSightBlocked, Point } from "../map";
@@ -42,6 +46,7 @@ import { Nullable } from "../util";
 type DialogRule = [string, "=" | ">" | "<" | "<=" | ">=", string | number | boolean];
 
 type DialogDefinition = {
+    "name": string,
     "respondingTo": Nullable<string>,
     "rules": DialogRule[],
     "dialog": string[],
@@ -53,7 +58,7 @@ type DialogDefinition = {
     }
 };
 type DialogData = {
-    [key: string]: DialogDefinition
+    rules: DialogDefinition[];
 };
 
 type DialogQuery = {
@@ -442,25 +447,13 @@ export function generateAICommand(
         const dialogDefinition = queryDialogTable(query);
 
         if (dialogDefinition !== null) {
-            const line = RNG.getItem(dialogDefinition.dialog)!;
+            commands.push(sayDialogDefinition(ai, dialogDefinition));
 
-            if (debugDialog) {
-                // eslint-disable-next-line no-console
-                console.log("randomly chosen line", line);
-            }
-
-            commands.push(new ShowSpeechBubbleCommand(ai, line));
-
-            // Update the dialog memory
-            const dialogMemoryData = ai.getOne(DialogMemoryComponent);
-            if (dialogMemoryData !== undefined) {
-                for (const key in dialogDefinition.dialogMemoryChange) {
-                    dialogMemoryData.memory.set(key, dialogDefinition.dialogMemoryChange[key]);
-                }
-            }
-
-            for (const key in dialogDefinition.aiStateChange) {
-                aiState[key] = dialogDefinition.aiStateChange[key];
+            const allyResponse = queryAlliesForResponses(
+                ecs, map, entityMap, entityTeams, aiState, dialogDefinition
+            );
+            if (allyResponse !== null) {
+                commands.push(sayDialogDefinition(allyResponse.teamMate, allyResponse.response));
             }
         }
 
@@ -482,7 +475,6 @@ export function generateAICommand(
     throw new Error(`Missing AI state on entity ${ai.id}`);
 }
 
-
 function buildDialogQuery(
     ecs: World,
     entityMap: EntityMap,
@@ -499,6 +491,7 @@ function buildDialogQuery(
 
     const team = entityTeams.get(aiState.teamId ?? Infinity);
     if (team !== undefined) {
+        query["is_team_commander"] = team.commanderId === ai.id;
         query["team_commander_alive"] = team.commanderId !== null;
         query["team_state"] = team.state;
         query["has_alive_allies"] = resolveAliveAllies(ecs, entityMap, ai);
@@ -533,44 +526,92 @@ function buildDialogQuery(
     query["knows_target_position"] = aiState.knowsTargetPosition;
     query["has_target_in_sight"] = aiState.hasTargetInSight;
     query["has_healing_items"] = resolveHasHealingItem(ecs, entityMap, ai);
+    query["on_fire"] = resolveOnFire(ecs, entityMap, ai);
+    query["is_silenced"] = resolveSilenced(ecs, entityMap, ai);
     query["knows_heal_other_spell"] = resolveKnowsHealOtherSpell(ecs, entityMap, ai);
     query["has_heal_other_spell_casts"] = resolveHasHealOtherSpellCasts(ecs, entityMap, ai);
     query["knows_heal_self_spell"] = resolveKnowsHealSelfSpell(ecs, entityMap, ai);
     query["has_heal_self_spell_casts"] = resolveHasHealSelfSpellCasts(ecs, entityMap, ai);
+    query["knows_damage_other_spell"] = resolveKnowsDamageOtherSpell(ecs, entityMap, ai);
+    query["has_damage_other_spell_casts"] = resolveHasDamageOtherSpellCasts(ecs, entityMap, ai);
 
     return query;
 }
 
-function queryDialogTable(query: DialogQuery): Nullable<DialogDefinition> {
-    const matches: string[] = [];
+function queryDialogTable(
+    query: DialogQuery,
+    respondingTo: Nullable<string> = null
+): Nullable<DialogDefinition> {
+    const matches: DialogDefinition[] = [];
+    const debugDialog = globals.Game?.debugAIDialog === true;
 
     const dialogData = dialogByClassification[query["classification"]];
     if (dialogData === undefined) {
         return null;
     }
 
-    definitions: for (const key in dialogData) {
-        const dialogDefinition = dialogData[key];
+    definitions: for (const dialogDefinition of dialogData.rules) {
+        if (debugDialog) {
+            // eslint-disable-next-line no-console
+            console.log(`definition ${dialogDefinition.name}`);
+        }
 
-        if (dialogDefinition.respondingTo !== null) {
+        if (respondingTo === null && dialogDefinition.respondingTo !== null) {
+            continue;
+        } else if (respondingTo !== null && respondingTo !== dialogDefinition.respondingTo) {
             continue;
         }
 
         for (const rule of dialogDefinition.rules) {
             if (rule[1] === "=" && query[rule[0]] !== rule[2]) {
+
+                if (debugDialog) {
+                    // eslint-disable-next-line no-console
+                    console.log(`rule fail: ${JSON.stringify(rule)}`);
+                }
+
                 continue definitions;
             } else if (rule[1] === "<" && query[rule[0]] >= rule[2]) {
+
+                if (debugDialog) {
+                    // eslint-disable-next-line no-console
+                    console.log(`rule fail: ${JSON.stringify(rule)}`);
+                }
+
                 continue definitions;
             } else if (rule[1] === ">" && query[rule[0]] <= rule[2]) {
+
+                if (debugDialog) {
+                    // eslint-disable-next-line no-console
+                    console.log(`rule fail: ${JSON.stringify(rule)}`);
+                }
+
                 continue definitions;
             } else if (rule[1] === "<=" && query[rule[0]] > rule[2]) {
+
+                if (debugDialog) {
+                    // eslint-disable-next-line no-console
+                    console.log(`rule fail: ${JSON.stringify(rule)}`);
+                }
+
                 continue definitions;
             } else if (rule[1] === ">=" && query[rule[0]] < rule[2]) {
+
+                if (debugDialog) {
+                    // eslint-disable-next-line no-console
+                    console.log(`rule fail: ${JSON.stringify(rule)}`);
+                }
+
                 continue definitions;
+            }
+
+            if (debugDialog) {
+                // eslint-disable-next-line no-console
+                console.log("definition pass");
             }
         }
 
-        matches.push(key);
+        matches.push(dialogDefinition);
     }
 
     if (matches.length === 0) {
@@ -580,8 +621,8 @@ function queryDialogTable(query: DialogQuery): Nullable<DialogDefinition> {
     // heuristic for best dialog definition match is the one with
     // the most rules
     matches.sort((a, b) => {
-        const aRules = dialogData[b].rules.length;
-        const bRules = dialogData[a].rules.length;
+        const aRules = a.rules.length;
+        const bRules = b.rules.length;
 
         // Coin flip
         if (aRules === bRules) {
@@ -590,7 +631,7 @@ function queryDialogTable(query: DialogQuery): Nullable<DialogDefinition> {
 
         return aRules - bRules;
     });
-    const match = dialogData[matches[0]];
+    const match = matches[0];
 
     if (globals.Game?.debugAIDialog === true) {
         // eslint-disable-next-line no-console
@@ -598,4 +639,101 @@ function queryDialogTable(query: DialogQuery): Nullable<DialogDefinition> {
     }
 
     return match;
+}
+
+/**
+ * Given a dialog definition, pick a line randomly, update the state
+ * of the AI from the definition, and return the command to say the line.
+ *
+ * @param ai The entity to say the dialog
+ * @param dialog The dialog data definition
+ * @returns {ShowSpeechBubbleCommand} A command to show the chosen line
+ */
+function sayDialogDefinition(
+    ai: Entity,
+    dialog: DialogDefinition
+): ShowSpeechBubbleCommand {
+    const aiState = ai.getOne(PlannerAIComponent);
+    if (aiState === undefined) {
+        throw new Error("Entity does not have a planner ai");
+    }
+
+    const line = RNG.getItem(dialog.dialog)!;
+
+    if (globals.Game?.debugAIDialog === true) {
+        // eslint-disable-next-line no-console
+        console.log("randomly chosen line", line);
+    }
+
+    // Update the dialog memory
+    const dialogMemoryData = ai.getOne(DialogMemoryComponent);
+    if (dialogMemoryData !== undefined) {
+        for (const key in dialog.dialogMemoryChange) {
+            dialogMemoryData.memory.set(key, dialog.dialogMemoryChange[key]);
+        }
+    }
+
+    for (const key in dialog.aiStateChange) {
+        aiState[key] = dialog.aiStateChange[key];
+    }
+
+    return new ShowSpeechBubbleCommand(ai, line);
+}
+
+type QueryAlliesReturn = {
+    teamMate: Entity,
+    response: DialogDefinition
+};
+
+function queryAlliesForResponses(
+    ecs: World,
+    map: GameMap,
+    entityMap: EntityMap,
+    entityTeams: EntityTeamMap,
+    aiState: PlannerAIComponent,
+    dialog: DialogDefinition
+): Nullable<QueryAlliesReturn> {
+    const team = entityTeams.get(aiState.teamId ?? Infinity);
+    const possibleResponses: QueryAlliesReturn[] = [];
+
+    if (team !== undefined) {
+        for (const eId of team.memberIds) {
+            const teamMate = ecs.getEntity(eId);
+
+            if (teamMate !== undefined) {
+                const teamMateAIState = teamMate.getOne(PlannerAIComponent);
+                if (teamMateAIState === undefined) {
+                    throw new Error(`team mate ${eId} is missing a PlannerAIComponent`);
+                }
+
+                const response = queryDialogTable(
+                    buildDialogQuery(ecs, entityMap, entityTeams, map, teamMate, teamMateAIState),
+                    dialog.name
+                );
+                if (response !== null) {
+                    possibleResponses.push({ teamMate: teamMate, response });
+                }
+            }
+        }
+    }
+
+    if (possibleResponses.length === 0) {
+        return null;
+    }
+
+    // heuristic for best dialog definition match is the one with
+    // the most rules
+    possibleResponses.sort((a, b) => {
+        const aRules = a.response!.rules.length;
+        const bRules = b.response!.rules.length;
+
+        // Coin flip
+        if (aRules === bRules) {
+            return Math.random() <= .5 ? -1 : 1;
+        }
+
+        return aRules - bRules;
+    });
+
+    return possibleResponses[0];
 }

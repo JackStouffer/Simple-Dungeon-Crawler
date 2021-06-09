@@ -713,13 +713,13 @@ export const ActionData: { [key: string]: Action } = {
         weight: () => 1
     },
     "useHealingSpell": {
-        preconditions: { lowHealth: true, hasSelfHealingSpell: true },
+        preconditions: { lowHealth: true, hasSelfHealingSpell: true, silenced: false },
         postconditions: { lowHealth: false },
         updateFunction: useHealingSpellAction,
         weight: () => 1
     },
     "healAlly": {
-        preconditions: { allyLowHealth: true, hasHealOtherSpell: true },
+        preconditions: { allyLowHealth: true, hasHealOtherSpell: true, silenced: false },
         postconditions: { allyLowHealth: false },
         updateFunction: healAllyAction,
         weight: () => 1
@@ -778,6 +778,7 @@ for (const key in SpellData) {
         ActionData[action] = {
             preconditions: {
                 [goal]: true,
+                silenced: false,
                 targetInLineOfSight: true,
                 targetKilled: false
             },
@@ -787,14 +788,22 @@ for (const key in SpellData) {
         };
     } else if (data.type === SpellType.HealSelf) {
         ActionData[action] = {
-            preconditions: { lowHealth: true, [goal]: true },
+            preconditions: {
+                lowHealth: true,
+                silenced: false,
+                [goal]: true
+            },
             postconditions: { lowHealth: false },
             updateFunction: castSpellAction(key),
             weight: () => 1
         };
     } else if (data.type === SpellType.HealOther) {
         ActionData[action] = {
-            preconditions: { allyLowHealth: true, [goal]: true },
+            preconditions: {
+                allyLowHealth: true,
+                [goal]: true,
+                silenced: false
+            },
             postconditions: { allyLowHealth: false },
             updateFunction: healAllyAction,
             weight: () => 1
