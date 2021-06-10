@@ -50,11 +50,12 @@ export interface Area {
 
 export interface ItemDataDetails {
     id: string;
-    displayName: string,
+    displayName: string;
     description: string;
-    type: ItemType,
-    value: Nullable<number>,
+    type: ItemType;
+    value: Nullable<number>;
     damageType?: DamageType;
+    range?: number;
     statusEffect?: StatusEffectType;
     areaOfEffect?: Area;
     effect?: "lightning" | "particles";
@@ -80,6 +81,7 @@ export interface SpellDataDetails {
     type: SpellType;
     value: Nullable<number>;
     damageType?: DamageType;
+    range?: number;
     statusEffect?: StatusEffectType;
     areaOfEffect?: Area;
     effect?: "lightning" | "particles";
@@ -1041,6 +1043,7 @@ export const ItemData: { [key: string]: ItemDataDetails } = {
         value: 20,
         type: ItemType.DamageScroll,
         damageType: DamageType.Electric,
+        range: 9,
         useFunc: castDamageSpell,
         effect: "lightning",
         lightning: {
@@ -1058,6 +1061,7 @@ export const ItemData: { [key: string]: ItemDataDetails } = {
         type: ItemType.DamageScroll,
         damageType: DamageType.Electric,
         useFunc: castDamageSpell,
+        range: 9,
         effect: "lightning",
         lightning: {
             duration: 500,
@@ -1074,6 +1078,7 @@ export const ItemData: { [key: string]: ItemDataDetails } = {
         type: ItemType.DamageScroll,
         damageType: DamageType.Electric,
         useFunc: castDamageSpell,
+        range: 9,
         effect: "lightning",
         lightning: {
             duration: 500,
@@ -1089,6 +1094,7 @@ export const ItemData: { [key: string]: ItemDataDetails } = {
         value: 20,
         type: ItemType.DamageScroll,
         damageType: DamageType.Fire,
+        range: 9,
         useFunc: castDamageSpell,
         statusEffect: StatusEffectType.OnFire,
         effect: "particles",
@@ -1126,6 +1132,7 @@ export const ItemData: { [key: string]: ItemDataDetails } = {
         value: 50,
         type: ItemType.DamageScroll,
         damageType: DamageType.Fire,
+        range: 9,
         useFunc: castDamageSpell,
         statusEffect: StatusEffectType.OnFire,
         effect: "particles",
@@ -1163,6 +1170,7 @@ export const ItemData: { [key: string]: ItemDataDetails } = {
         value: 100,
         type: ItemType.DamageScroll,
         damageType: DamageType.Fire,
+        range: 9,
         useFunc: castDamageSpell,
         statusEffect: StatusEffectType.OnFire,
         effect: "particles",
@@ -1473,6 +1481,7 @@ export const SpellData: { [key: string]: SpellDataDetails } = {
         value: 20,
         type: SpellType.DamageOther,
         damageType: DamageType.Electric,
+        range: 8,
         useFunc: castDamageSpell,
         effect: "lightning",
         lightning: {
@@ -1505,6 +1514,7 @@ export const SpellData: { [key: string]: SpellDataDetails } = {
         value: 20,
         type: SpellType.DamageOther,
         damageType: DamageType.Fire,
+        range: 10,
         useFunc: castFireBall,
         areaOfEffect: {
             type: "circle",
@@ -1751,6 +1761,7 @@ export const SpellData: { [key: string]: SpellDataDetails } = {
         description: "Only allow your target to take one action per two turns",
         value: 10,
         type: SpellType.DamageOther,
+        range: 9,
         useFunc: castSlow,
         effect: "particles",
         particles: {
@@ -1785,6 +1796,7 @@ export const SpellData: { [key: string]: SpellDataDetails } = {
         value: 10,
         type: SpellType.DamageOther,
         damageType: DamageType.Fire,
+        range: 9,
         areaOfEffect: {
             type: "rectangle",
             width: 1,
@@ -1798,6 +1810,7 @@ export const SpellData: { [key: string]: SpellDataDetails } = {
         description: "Conjure a wall of ice that blocks foe's path",
         value: null,
         type: SpellType.DamageOther,
+        range: 9,
         areaOfEffect: {
             type: "rectangle",
             width: 1,
@@ -1811,6 +1824,7 @@ export const SpellData: { [key: string]: SpellDataDetails } = {
         description: "Doesn't do much damage, but is guaranteed to light something on fire",
         value: 5,
         type: SpellType.DamageOther,
+        range: 9,
         useFunc: castCombust,
         effect: "particles",
         particles: {
@@ -1942,6 +1956,7 @@ export const SpellData: { [key: string]: SpellDataDetails } = {
         description: "Freezes the target solid so they can't move and they become weak to physical damage. Does not damage the target.",
         value: 4,
         type: SpellType.DamageOther,
+        range: 9,
         useFunc: castFreeze
     }
 };

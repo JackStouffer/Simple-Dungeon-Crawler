@@ -380,50 +380,58 @@ export class DrawPlayerSystem extends System {
                     globals.Game.currentActor === entity &&
                     globals.Game.currentCommand === null) {
                     const mousePosition = input.getMousePosition();
-                    const targetArea = getTargetingReticle(
-                        inputStateData.spellForTarget ?? inputStateData.itemForTarget,
-                        mousePosition,
-                        inputStateData.reticleRotation
-                    );
+                    const entityPos = entity.getOne(PositionComponent)!.tilePosition();
+                    const range = inputStateData.spellForTarget?.range ??
+                        inputStateData.itemForTarget?.range ??
+                        Infinity;
 
-                    outer: for (let i = 0; i < targetArea.length; i++) {
-                        // If there's an entity tile like water or mud, we want
-                        // to put the reticle on that instead of the tile beneath it
-                        const entities = getEntitiesAtLocation(
-                            globals.Game.entityMap,
-                            targetArea[i][0],
-                            targetArea[i][1]
+                    if (mousePosition !== null &&
+                        distanceBetweenPoints(mousePosition, entityPos) <= range) {
+                        const targetArea = getTargetingReticle(
+                            inputStateData.spellForTarget ?? inputStateData.itemForTarget,
+                            mousePosition,
+                            inputStateData.reticleRotation
                         );
-                        for (let i = 0; i < entities.length; i++) {
-                            if (entities[i].tags.has("environmentTile")) {
-                                const graphics = entities[i].getOne(GraphicsComponent);
-                                if (graphics !== undefined && graphics.sprite !== null) {
-                                    graphics.sprite.filters = [this.targetFilter];
-                                    this.perviousPath.push(graphics.sprite);
-                                    continue outer;
+
+                        outer: for (let i = 0; i < targetArea.length; i++) {
+                            // If there's an entity tile like water or mud, we want
+                            // to put the reticle on that instead of the tile beneath it
+                            const entities = getEntitiesAtLocation(
+                                globals.Game.entityMap,
+                                targetArea[i][0],
+                                targetArea[i][1]
+                            );
+                            for (let i = 0; i < entities.length; i++) {
+                                if (entities[i].tags.has("environmentTile")) {
+                                    const graphics = entities[i].getOne(GraphicsComponent);
+                                    if (graphics !== undefined && graphics.sprite !== null) {
+                                        graphics.sprite.filters = [this.targetFilter];
+                                        this.perviousPath.push(graphics.sprite);
+                                        continue outer;
+                                    }
                                 }
                             }
-                        }
 
-                        const z = getHighestZIndexWithTile(
-                            globals.Game.map,
-                            targetArea[i][0],
-                            targetArea[i][1]
-                        );
+                            const z = getHighestZIndexWithTile(
+                                globals.Game.map,
+                                targetArea[i][0],
+                                targetArea[i][1]
+                            );
 
-                        if (targetArea[i][0] >= globals.Game.map.width ||
-                        targetArea[i][1] >= globals.Game!.map.height ||
-                        globals.Game
-                            .map
-                            .data[z][targetArea[i][1]][targetArea[i][0]]!.visible === false) {
-                            return;
+                            if (targetArea[i][0] >= globals.Game.map.width ||
+                            targetArea[i][1] >= globals.Game.map.height ||
+                            globals.Game
+                                .map
+                                .data[z][targetArea[i][1]][targetArea[i][0]]!.visible === false) {
+                                return;
+                            }
+                            const sprite = globals.Game
+                                .map
+                                .data[z][targetArea[i][1]][targetArea[i][0]]!
+                                .sprite;
+                            this.perviousPath.push(sprite);
+                            sprite.filters = [this.targetFilter];
                         }
-                        const sprite = globals.Game
-                            .map
-                            .data[z][targetArea[i][1]][targetArea[i][0]]!
-                            .sprite;
-                        this.perviousPath.push(sprite);
-                        sprite.filters = [this.targetFilter];
                     }
                 }
             } else {

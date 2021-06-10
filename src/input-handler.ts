@@ -163,35 +163,42 @@ export function playerInput(
             }
         }
 
-        const position = input.getLeftMouseDown();
-        if (position === null) {
+        const mousePosition = input.getLeftMouseDown();
+        if (mousePosition === null) {
             return null;
         }
 
-        let command: Nullable<Command> = null;
-        if (inputState.itemForTarget !== null) {
-            command = new UseSkillCommand(
-                player,
-                ItemData[inputState.itemForTarget.id],
-                position,
-                inputState.reticleRotation,
-                useItem
-            );
-        } else if (inputState.spellForTarget !== null) {
-            command = new UseSkillCommand(
-                player,
-                SpellData[inputState.spellForTarget.id],
-                position,
-                inputState.reticleRotation,
-                useSpell
-            );
-        }
+        const entityPos = player.getOne(PositionComponent)!.tilePosition();
+        const range = inputState.spellForTarget?.range ??
+            inputState.itemForTarget?.range ??
+            Infinity;
 
-        inputState.state = PlayerState.Combat;
-        inputState.itemForTarget = null;
-        inputState.spellForTarget = null;
-        inputState.update();
-        return command;
+        if (distanceBetweenPoints(mousePosition, entityPos) <= range) {
+            let command: Nullable<Command> = null;
+            if (inputState.itemForTarget !== null) {
+                command = new UseSkillCommand(
+                    player,
+                    ItemData[inputState.itemForTarget.id],
+                    mousePosition,
+                    inputState.reticleRotation,
+                    useItem
+                );
+            } else if (inputState.spellForTarget !== null) {
+                command = new UseSkillCommand(
+                    player,
+                    SpellData[inputState.spellForTarget.id],
+                    mousePosition,
+                    inputState.reticleRotation,
+                    useSpell
+                );
+            }
+
+            inputState.state = PlayerState.Combat;
+            inputState.itemForTarget = null;
+            inputState.spellForTarget = null;
+            inputState.update();
+            return command;
+        }
     }
 
     return null;
