@@ -1590,7 +1590,7 @@ export const ObjectData: { [key: string]: ObjectDataDetails } = {
                 },
                 FearAIComponent: {
                     fear: 0,
-                    isAfraidThreshold: 30,
+                    isAfraidThreshold: 10,
                     isCowering: false
                 },
                 SpeedComponent: {

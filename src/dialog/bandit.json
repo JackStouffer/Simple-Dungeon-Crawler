@@ -8,7 +8,9 @@
                 ["classification", "=", "bandit"],
                 ["has_target_in_sight", "=", true],
                 ["has_alive_allies", "=", true],
-                ["team_state", "=", "passive"]
+                ["team_state", "=", "passive"],
+                ["is_confused", "=", false],
+                ["is_afraid", "=", false]
             ],
             "dialog": [
                 "Never should have come here!",
@@ -22,6 +24,27 @@
             }
         },
         {
+            "name": "bandit_loses_sight_of_player",
+            "respondingTo": null,
+            "rules": [
+                ["classification", "=", "bandit"],
+                ["knows_target_position", "=", true],
+                ["has_target_in_sight", "=", false],
+                ["on_fire", "=", false],
+                ["is_confused", "=", false],
+                ["is_afraid", "=", false]
+            ],
+            "dialog": [
+                "I've lost him!",
+                "Where'd he go!",
+                "Lost track of him!"
+            ],
+            "aiStateChange": {},
+            "dialogMemoryChange": {
+                "bandit_loses_sight_of_player": true
+            }
+        },
+        {
             "name": "bandit_commander_killed",
             "respondingTo": null,
             "rules": [
@@ -30,7 +53,8 @@
                 ["classification", "=", "bandit"],
                 ["team_commander_alive", "=", false],
                 ["has_target_in_sight", "=", false],
-                ["has_alive_allies", "=", true]
+                ["has_alive_allies", "=", true],
+                ["is_confused", "=", false]
             ],
             "dialog": [
                 "They killed the chieftain!"
@@ -49,7 +73,9 @@
                 ["is_silenced", "=", true],
                 ["on_fire", "=", false],
                 ["said_bandit_has_been_silenced", "=", false],
-                ["has_alive_allies", "=", true]
+                ["has_alive_allies", "=", true],
+                ["is_confused", "=", false],
+                ["is_afraid", "=", false]
             ],
             "dialog": [
                 "I can't cast spells!"
@@ -78,6 +104,27 @@
             }
         },
         {
+            "name": "bandit_afraid",
+            "respondingTo": null,
+            "rules": [
+                ["race", "=", "human"],
+                ["classification", "=", "bandit"],
+                ["on_fire", "=", false],
+                ["is_confused", "=", false],
+                ["is_afraid", "=", true],
+                ["said_bandit_afraid", "=", false]
+            ],
+            "dialog": [
+                "Run for your lives!",
+                "I'm getting out of here!",
+                "It's no use!"
+            ],
+            "aiStateChange": {},
+            "dialogMemoryChange": {
+                "said_bandit_afraid": true
+            }
+        },
+        {
             "name": "bandit_needs_healing",
             "respondingTo": null,
             "rules": [
@@ -89,7 +136,8 @@
                 ["has_heal_self_spell_casts", "=", false],
                 ["ally_knows_heal_other_spell", "=", true],
                 ["has_alive_allies", "=", true],
-                ["on_fire", "=", false]
+                ["on_fire", "=", false],
+                ["is_confused", "=", false]
             ],
             "dialog": [
                 "I need healing!",
@@ -108,7 +156,9 @@
                 ["classification", "=", "bandit"],
                 ["knows_heal_other_spell", "=", true],
                 ["has_heal_other_spell_casts", "=", true],
-                ["is_silenced", "=", false]
+                ["is_silenced", "=", false],
+                ["is_confused", "=", false],
+                ["is_afraid", "=", false]
             ],
             "dialog": [
                 "Casting heal!"
@@ -126,7 +176,9 @@
                 ["classification", "=", "bandit"],
                 ["knows_heal_other_spell", "=", true],
                 ["has_heal_other_spell_casts", "=", false],
-                ["is_silenced", "=", false]
+                ["is_silenced", "=", false],
+                ["is_confused", "=", false],
+                ["is_afraid", "=", false]
             ],
             "dialog": [
                 "Out of heals",
@@ -147,7 +199,9 @@
                 ["has_damage_other_spell_casts", "=", false],
                 ["is_silenced", "=", false],
                 ["said_bandit_has_no_damage_spells", "=", false],
-                ["has_alive_allies", "=", true]
+                ["has_alive_allies", "=", true],
+                ["is_confused", "=", false],
+                ["is_afraid", "=", false]
             ],
             "dialog": [
                 "Out of spells!"

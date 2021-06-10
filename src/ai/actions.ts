@@ -475,7 +475,7 @@ function runAwayAction(
 
     if (path[path.length - 1][0] === fearState.runAwayTarget.x &&
         path[path.length - 1][1] === fearState.runAwayTarget.y) {
-        fearState.fear = 0;
+        fearState.fear = Math.round(fearState.fearThreshold * 0.6);
         fearState.runAwayTarget = null;
     }
 

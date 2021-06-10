@@ -19,7 +19,9 @@ import {
     resolveSilenced,
     resolveKnowsDamageOtherSpell,
     resolveOnFire,
-    resolveHasDamageOtherSpellCasts
+    resolveHasDamageOtherSpellCasts,
+    resolveConfused,
+    resolveAfraid
 } from "./goals";
 import { ActionData } from "./actions";
 import { GameMap, isBlocked, isSightBlocked, Point } from "../map";
@@ -554,6 +556,8 @@ function buildDialogQuery(
     query["has_healing_items"] = resolveHasHealingItem(ecs, entityMap, ai);
     query["on_fire"] = resolveOnFire(ecs, entityMap, ai);
     query["is_silenced"] = resolveSilenced(ecs, entityMap, ai);
+    query["is_confused"] = resolveConfused(ecs, entityMap, ai);
+    query["is_afraid"] = resolveAfraid(ecs, entityMap, ai);
     query["knows_heal_other_spell"] = resolveKnowsHealOtherSpell(ecs, entityMap, ai);
     query["has_heal_other_spell_casts"] = resolveHasHealOtherSpellCasts(ecs, entityMap, ai);
     query["knows_heal_self_spell"] = resolveKnowsHealSelfSpell(ecs, entityMap, ai);

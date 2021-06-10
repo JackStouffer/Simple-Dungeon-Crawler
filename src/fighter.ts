@@ -42,7 +42,7 @@ import {
     WetableComponent
 } from "./entity";
 import { displayMessage, MessageType } from "./ui";
-import { assertUnreachable, Nullable } from "./util";
+import { assertUnreachable, Nullable, randomIntFromInterval } from "./util";
 import { SpellData, Area } from "./skills";
 import { createPassableSightCallback } from "./ai/commands";
 import { getEntitiesAtLocation } from "./map";
@@ -69,13 +69,18 @@ export class DeathSystem extends System {
 
             const entities = getEntitiesAtLocation(globals.Game!.entityMap, x, y);
             for (const e of entities) {
+                if (e === target) { continue; }
+
                 const fearData = e.getOne(FearAIComponent);
                 const levelData = e.getOne(LevelComponent);
                 if (fearData === undefined || levelData === undefined) { continue; }
 
-                fearData.fear += Math.max(
-                    (targetLevelData.level - levelData.level) + 5, 1
+                const fearBasis = targetLevelData.level - levelData.level;
+                const fearVariance = Math.round(fearBasis * 0.5);
+                const newFear = randomIntFromInterval(
+                    fearBasis - fearVariance, fearBasis + fearVariance
                 );
+                fearData.fear += Math.max(newFear, 1);
                 fearData.update();
             }
         };
@@ -110,8 +115,7 @@ export class DeathSystem extends System {
         // Calculate the added fear for all of the entities
         // with fear components within an FOV of the current
         // location
-        const pos = target.getOne(PositionComponent);
-        if (pos === undefined) { throw new Error("Position data missing on dead body"); }
+        const pos = target.getOne(PositionComponent)!.tilePosition();
         const fov = new FOV.PreciseShadowcasting(createPassableSightCallback(pos));
         fov.compute(
             pos.x,

@@ -1,6 +1,7 @@
 import { Entity, World } from "ape-ecs";
 import { Affinity, DamageType, ItemType, SpellType, TriggerType } from "../constants";
 import {
+    ConfusedAIComponent,
     EntityMap,
     FallbackAIComponent,
     FearAIComponent,
@@ -338,14 +339,12 @@ function resolveInDangerousArea(ecs: World, entityMap: EntityMap, ai: Entity): b
 
 function resolveTargetKilled(ecs: World, entityMap: EntityMap, ai: Entity) {
     const aiState = ai.getOne(PlannerAIComponent);
-    if (aiState === undefined) { return false; }
-    return aiState.target === null;
+    return aiState !== undefined && aiState.target === null;
 }
 
-function resolveAfraid(ecs: World, entityMap: EntityMap, ai: Entity) {
+export function resolveAfraid(ecs: World, entityMap: EntityMap, ai: Entity) {
     const aiState = ai.getOne(FearAIComponent);
-    if (aiState === undefined) { return false; }
-    return aiState.fear >= aiState.fearThreshold;
+    return aiState !== undefined && aiState.fear >= aiState.fearThreshold;
 }
 
 function resolveCowering(ecs: World, entityMap: EntityMap, ai: Entity) {
@@ -357,8 +356,7 @@ function resolveCowering(ecs: World, entityMap: EntityMap, ai: Entity) {
 
 function resolveAtFallbackPosition(ecs: World, entityMap: EntityMap, ai: Entity): boolean {
     const aiState = ai.getOne(FallbackAIComponent);
-    if (aiState === undefined) { return false; }
-    return aiState.isAtFallbackPosition === true ? true : false;
+    return aiState !== undefined && aiState.isAtFallbackPosition;
 }
 
 /**
@@ -456,6 +454,19 @@ function resolveAlliesAlerted(ecs: World, entityMap: EntityMap, ai: Entity): boo
 export function resolveSilenced(ecs: World, entityMap: EntityMap, ai: Entity): boolean {
     const silenceData = ai.getOne(SilenceableComponent);
     return silenceData !== undefined && silenceData.silenced;
+}
+
+/**
+ * Is the entity confuse-able and currently confused?
+ *
+ * @param ecs {World} The ECS instance to use
+ * @param entityMap {EntityMap} The current map of positions to entities
+ * @param ai {Entity} THe entity to resolve the goal for
+ * @returns {boolean}
+ */
+export function resolveConfused(ecs: World, entityMap: EntityMap, ai: Entity): boolean {
+    const confusedData = ai.getOne(ConfusedAIComponent);
+    return confusedData !== undefined && confusedData.turnsLeft > 0;
 }
 
 type GoalResolver = (ecs: World, entityMap: EntityMap, ai: Entity) => boolean;
