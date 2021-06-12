@@ -4,6 +4,15 @@
 
 _In Development_
 
+* Gameplay
+  * Enemies now have "barks" and dialog
+    * Based on the state of themselves and the world around them
+    * Allies can give specific responses to the line said
+  * Targeted spells and items now have a max range
+* Technical
+  * Entity ids are now deterministic for easier debugging
+  * Game map is now a structure instead of just a multidimensional array so extra data can be saved
+
 ## Version 11
 
 _May 29, 2021_

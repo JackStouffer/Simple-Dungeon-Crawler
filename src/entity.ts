@@ -16,8 +16,9 @@ import {
 } from "./constants";
 import { Nullable } from "./util";
 import { KeyCommand, PlayerState } from "./input-handler";
+import { dialogByClassification } from "./ai/dialog";
 import { Planner, PlannerWorldState } from "./ai/planner";
-import { createPlanner, dialogByClassification } from "./ai/commands";
+import { createPlanner } from "./ai/commands";
 import {
     NoOpCommand,
     OpenInventoryCommand,
