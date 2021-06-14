@@ -15,6 +15,7 @@ interface MyWindow extends Window {
     toggleAIDialogDebug?: () => void;
     startGameLoop?: () => void;
     stopGameLoop?: () => void;
+    loopOnce?: () => void;
     getEntity?: (id: string) => Entity | undefined;
     getEntities?: (x: number, y: number) => Entity[];
     step?: () => void;
@@ -22,7 +23,6 @@ interface MyWindow extends Window {
 
 interface Globals {
     Game: Nullable<SimpleDungeonCrawler>;
-    animationFrameID: Nullable<number>;
     gameEventEmitter: Nullable<EventEmitter>;
     document: Nullable<Document>;
     window: Nullable<MyWindow>;
@@ -30,7 +30,6 @@ interface Globals {
 
 const globals: Globals = {
     Game: null,
-    animationFrameID: null,
     gameEventEmitter: null,
     document: null,
     window: null

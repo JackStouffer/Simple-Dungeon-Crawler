@@ -245,7 +245,7 @@ export class SimpleDungeonCrawler {
                 parent.keyBindingMenu = new KeyBindingMenu(parent.pixiApp.stage);
                 parent.inventoryMenu = new InventoryMenu(parent.pixiApp.stage);
                 parent.spellSelectionMenu = new SpellSelectionMenu(parent.pixiApp.stage);
-                parent.statusBar = new StatusBar(this.pixiApp.stage);
+                parent.statusBar = new StatusBar(parent.pixiApp.stage);
                 parent.gameCamera = new Camera(parent.pixiApp.screen);
                 parent.ecs = new World({
                     trackChanges: true,
@@ -383,8 +383,7 @@ export class SimpleDungeonCrawler {
     loadLevel(name: string): void {
         if (globals.gameEventEmitter === null) { throw new Error("Global gameEventEmitter cannot be null"); }
 
-        const entities = this.ecs.entities.values();
-        for (const e of entities) {
+        for (const e of this.ecs.entities.values()) {
             if (e.id !== this.player.id) {
                 removeEntity(this.ecs, e);
             }
@@ -425,6 +424,9 @@ export class SimpleDungeonCrawler {
         playerPos.tileY = tile.y;
         playerPos.update();
 
+        for (const query of this.ecs.queries) {
+            query.refresh();
+        }
         this.ecs.runSystems("postTurn");
         this.gameCamera.update(this.map);
 

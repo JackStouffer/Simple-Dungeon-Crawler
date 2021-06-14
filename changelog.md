@@ -12,6 +12,9 @@ _In Development_
 * Technical
   * Entity ids are now deterministic for easier debugging
   * Game map is now a structure instead of just a multidimensional array so extra data can be saved
+  * Silence is now a separate state in the AI goal planning
+    * Makes it easier to work with the dialog system
+    * Makes it clearer and therefore harder to forget in the action definitions
 
 ## Version 11
 

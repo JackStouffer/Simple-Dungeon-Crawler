@@ -13,7 +13,8 @@ import {
     stopGameLoop,
     getEntity,
     step,
-    getEntities
+    getEntities,
+    loopOnce
 } from "./console-commands";
 
 globals.window = window;
@@ -31,6 +32,7 @@ globals.window.toggleAIDebug = toggleAIDebug;
 globals.window.toggleAIDialogDebug = toggleAIDialogDebug;
 globals.window.startGameLoop = startGameLoop;
 globals.window.stopGameLoop = stopGameLoop;
+globals.window.loopOnce = loopOnce;
 globals.window.getEntity = getEntity;
 globals.window.getEntities = getEntities;
 globals.window.step = step;

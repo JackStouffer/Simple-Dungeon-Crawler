@@ -1405,7 +1405,8 @@ export function loadTiledMap(
                         textures,
                         type,
                         Math.floor(o.x / tileSize),
-                        Math.floor(o.y / tileSize)
+                        Math.floor(o.y / tileSize),
+                        `${type}-${o.id}`
                     );
 
                     if (inventory !== null) {

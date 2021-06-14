@@ -14,7 +14,7 @@ import {
     InteractableType,
     TriggerType
 } from "./constants";
-import { Nullable } from "./util";
+import { Nullable, randomIntFromInterval } from "./util";
 import { KeyCommand, PlayerState } from "./input-handler";
 import { dialogByClassification } from "./ai/dialog";
 import { Planner, PlannerWorldState } from "./ai/planner";
@@ -1985,10 +1985,9 @@ export function createEntity(
     id?: string
 ): Entity {
     if (globals.Game === null) { throw new Error("Global game is null"); }
-    if (!(type in ObjectData)) { throw new Error(`${type} is not valid object id`); }
+    if (!(type in ObjectData)) { throw new Error(`${type} is not valid object id`); };
 
-    let hash = (x ?? 0) + (y ?? 0) + map(type, (char) => char.charCodeAt(0))
-        .reduce((a, b) => a + b);
+    let hash = randomIntFromInterval(1, 2147483647);
     hash = hash & hash; // Convert to 32bit integer
     const entityId = id ?? `${type}-${hash.toString(16)}`;
 

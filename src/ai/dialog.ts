@@ -89,7 +89,8 @@ export function buildDialogQuery(
             if (entityId === ai.id) { continue; }
             const entity = ecs.getEntity(entityId);
             if (entity !== undefined) {
-                // TODO, Speed: O(n^2).
+                // TODO, Speed: O(n^2). This is evaluated once per team member for every
+                // team member that can speak. Need to cache this information somehow
                 if (resolveKnowsHealOtherSpell(ecs, entityMap, entity) === true) {
                     query["ally_knows_heal_other_spell"] = true;
                     break;

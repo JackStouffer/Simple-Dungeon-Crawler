@@ -10,23 +10,18 @@ import { getEntitiesAtLocation } from "./map";
  * Start the game loop
  */
 export function startGameLoop(): void {
-    if (globals.Game === null) { throw new Error("Global game object is null"); }
-
-    if (globals.animationFrameID === null) {
-        globals.animationFrameID = window.requestAnimationFrame(
-            globals.Game.mainLoop.bind(globals.Game)
-        );
-    }
+    globals.Game!.pixiApp.ticker.start();
 }
-
 
 /**
  * Stop the game loop
  */
 export function stopGameLoop(): void {
-    if (globals.animationFrameID === null) { return; }
-    window.cancelAnimationFrame(globals.animationFrameID);
-    globals.animationFrameID = null;
+    globals.Game!.pixiApp.ticker.stop();
+}
+
+export function loopOnce(): void {
+    globals.Game!.mainLoop.bind(globals.Game)();
 }
 
 /**
