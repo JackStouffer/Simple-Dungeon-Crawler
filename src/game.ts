@@ -455,6 +455,15 @@ export class SimpleDungeonCrawler {
                 if (this.currentActor !== null && this.currentCommand === null) {
                     if (this.commandQueue.length > 0) {
                         this.currentCommand = this.commandQueue.shift()!;
+
+                        // Commands are created all over the place and then placed
+                        // in the queue. We don't want things like the effects to
+                        // be placed into the world until we're ready for them to
+                        // be run. Which is why the set up instructions are not in
+                        // the constructor.
+                        if (this.currentCommand.setUp !== undefined) {
+                            this.currentCommand.setUp();
+                        }
                     } else if (this.currentActor !== this.player) {
                         if (this.processAI) {
                             this.commandQueue.push(...generateAICommands(
@@ -474,7 +483,7 @@ export class SimpleDungeonCrawler {
                 if (this.currentCommand !== null &&
                     this.currentActor !== null &&
                     this.processCommands === true) {
-                    this.currentCommand.execute(this.deltaTime);
+                    this.currentCommand.update(this.deltaTime);
                 }
 
                 // Schedule the next actor and run post command systems if finished
@@ -489,6 +498,9 @@ export class SimpleDungeonCrawler {
                         this.currentActor = null;
                     }
 
+                    if (this.currentCommand.tearDown !== undefined) {
+                        this.currentCommand.tearDown();
+                    }
                     this.currentCommand = null;
 
                     if (this.debugPathfinding) {
@@ -555,7 +567,10 @@ export class SimpleDungeonCrawler {
             }
 
             if (this.currentActor === this.player && this.currentCommand === null) {
-                this.currentCommand = playerInput(this.ecs, this.map, this.entityMap, this.player);
+                const command = playerInput(this.ecs, this.map, this.entityMap, this.player);
+                if (command !== null) {
+                    this.commandQueue.push(command);
+                }
             }
             return;
         } else if (this.state === GameState.PauseMenu) {
@@ -607,13 +622,13 @@ export class SimpleDungeonCrawler {
                         this.state = GameState.Gameplay;
                         this.inventoryMenu.close();
 
-                        this.currentCommand = new UseSkillCommand(
+                        this.commandQueue.push(new UseSkillCommand(
                             this.player,
                             ItemData[item.id],
                             undefined,
                             undefined,
                             useItem
-                        );
+                        ));
                         break;
                     // Items that need to be targeted
                     case ItemType.DamageScroll:
@@ -674,13 +689,13 @@ export class SimpleDungeonCrawler {
                         this.state = GameState.Gameplay;
                         this.spellSelectionMenu.close();
 
-                        this.currentCommand = new UseSkillCommand(
+                        this.commandQueue.push(new UseSkillCommand(
                             this.player,
                             SpellData[spell.id],
                             undefined,
                             undefined,
                             useSpell
-                        );
+                        ));
                         break;
                     case SpellType.DamageOther:
                     case SpellType.HealOther:

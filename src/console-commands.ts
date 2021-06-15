@@ -109,7 +109,7 @@ export function step(): void {
     if (globals.Game === null) { throw new Error("Global game object is null"); }
 
     if (globals.Game.currentCommand !== null && globals.Game.currentActor !== null) {
-        globals.Game.currentCommand.execute(
+        globals.Game.currentCommand.update(
             globals.Game.deltaTime
         );
     }

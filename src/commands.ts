@@ -197,7 +197,9 @@ export function generatePlayerWeightCallback(origin: Point): WeightCallback {
 export interface Command {
     usedTurn: () => boolean;
     isFinished: () => boolean;
-    execute: (dt: DOMHighResTimeStamp) => void;
+    setUp?: () => void;
+    tearDown?: () => void;
+    update: (dt: DOMHighResTimeStamp) => void;
 }
 
 export function getPlayerMovementPath(
@@ -264,7 +266,7 @@ export class NoOpCommand implements Command {
         return true;
     }
 
-    execute(): void {
+    update(): void {
         return;
     }
 }
@@ -291,7 +293,7 @@ export class GoToLocationCommand implements Command {
         return this.done;
     }
 
-    execute(deltaTime: DOMHighResTimeStamp): void {
+    update(deltaTime: DOMHighResTimeStamp): void {
         const destination = this.path[0];
         const { blocks } = isBlocked(
             globals.Game!.map,
@@ -445,7 +447,7 @@ export class PushBackCommand implements Command {
         return this.tilesMoved === this.numTiles;
     }
 
-    execute(deltaTime: DOMHighResTimeStamp): void {
+    update(deltaTime: DOMHighResTimeStamp): void {
         const pos = this.entity.getOne(PositionComponent);
         if (pos === undefined) { throw new Error(`Entity ${this.entity.id} does not have a position for PushBackCommand`); }
         const tilePos = pos.tilePosition();
@@ -595,7 +597,7 @@ export class InteractCommand implements Command {
         return true;
     }
 
-    execute(): void {
+    update(): void {
         const actorStats = this.entity.getOne(StatsComponent);
         const interactableData = this.target.getOne(InteractableTypeComponent);
         const hpData = this.target.getOne(HitPointsComponent);
@@ -645,7 +647,7 @@ export class OpenInventoryCommand implements Command {
         return true;
     }
 
-    execute(): void {
+    update(): void {
         const g = globals.Game;
         if (g === null) { throw new Error("Global Game object is null"); }
         if (globals.gameEventEmitter === null) { throw new Error("Global gameEventEmitter is null"); }
@@ -670,7 +672,7 @@ export class OpenSpellsCommand implements Command {
         return true;
     }
 
-    execute(): void {
+    update(): void {
         const g = globals.Game;
         if (g === null) { throw new Error("Global Game object is null"); }
         if (globals.gameEventEmitter === null) { throw new Error("Global gameEventEmitter is null"); }
@@ -690,7 +692,6 @@ type SkillCallback = (e: Entity, id: string) => void;
  */
 export class UseSkillCommand implements Command {
     private didUseTurn: boolean = false;
-    private shouldCast: boolean = true;
     private readonly entity: Entity;
     private readonly rotation: number | undefined;
     private readonly details: SpellDataDetails | ItemDataDetails;
@@ -732,145 +733,142 @@ export class UseSkillCommand implements Command {
         return true;
     }
 
-    execute(deltaTime: DOMHighResTimeStamp): void {
-        if (this.shouldCast) {
-            // Wild spell target selection
-            if (this.details.type === SpellType.WildDamage ||
-                this.details.type === ItemType.WildDamageScroll) {
-                const targetedEntity = getRandomFighterWithinRange(
-                    globals.Game!.ecs,
-                    globals.Game!.map,
-                    this.entity.getOne(PositionComponent)!.tilePosition(),
-                    16
-                );
-
-                if (targetedEntity === null) {
-                    if (this.entity.id === "player") {
-                        displayMessage("No target is close enough to use the scroll");
-                    }
-
-                    this.didUseTurn = false;
-                    return;
-                }
-
-                this.target = targetedEntity.getOne(PositionComponent)!.tilePosition();
-            }
-
-            this.didUseTurn = this.details.useFunc(
-                this.details,
-                this.entity,
+    setUp() {
+        // Wild spell target selection
+        if (this.details.type === SpellType.WildDamage ||
+            this.details.type === ItemType.WildDamageScroll) {
+            const targetedEntity = getRandomFighterWithinRange(
                 globals.Game!.ecs,
                 globals.Game!.map,
-                globals.Game!.entityMap,
-                this.target,
-                this.rotation
+                this.entity.getOne(PositionComponent)!.tilePosition(),
+                16
             );
 
-            if (this.didUseTurn) {
-                if (this.skillCallback !== undefined) {
-                    this.skillCallback(this.entity, this.details.id);
+            if (targetedEntity === null) {
+                if (this.entity.id === "player") {
+                    displayMessage("No target is close enough to use the scroll");
                 }
 
-                if (this.details.effect === "particles" &&
-                    this.details.particles !== undefined &&
-                    this.shouldCast) {
-                    let sprite: PIXI.Sprite | undefined;
-
-                    if (this.details.particles.particleLocation === "target" && this.target !== undefined) {
-                        // We need to put the emitter at the location. For some reason
-                        // the API requires a container at the location rather than the
-                        // location. So get either the entity sprite there or the highest
-                        // tile sprite.
-                        const entity = getEntitiesAtLocation(
-                            globals.Game!.entityMap,
-                            this.target.x,
-                            this.target.y
-                        )[0];
-
-                        if (entity !== undefined) {
-                            sprite = entity.getOne(GraphicsComponent)?.sprite ?? undefined;
-                        }
-
-                        // Fallback
-                        let z = getHighestZIndexWithTile(
-                            globals.Game!.map, this.target.x, this.target.y
-                        );
-                        while (sprite === undefined) {
-                            const tile = globals.Game!.map.data[z][this.target.y][this.target.x];
-                            if (tile === null || tile.sprite === null) {
-                                --z;
-                                continue;
-                            }
-                            sprite = tile.sprite;
-                        }
-                    } else if (this.details.particles.particleLocation === "self") {
-                        sprite = this.entity.getOne(GraphicsComponent)?.sprite ?? undefined;
-                    }
-
-                    this.particleEmitter = new particles.Emitter(
-                        sprite!,
-                        this.details.particles.particleImages.map(
-                            e => globals.Game!.textureAtlas[e]
-                        ),
-                        this.details.particles.particleConfig
-                    );
-                    this.particleEmitter.emit = true;
-                }
-
-                if (this.details.effect === "lightning" &&
-                    this.details.lightning !== undefined &&
-                    this.target !== undefined) {
-                    const tilePos = this.entity.getOne(PositionComponent)!.tilePosition();
-                    const screenPos = globals.Game!.gameCamera.tilePositionToScreen(
-                        tilePos.x,
-                        tilePos.y
-                    );
-                    this.effectGraphics = createLightningTexture(
-                        screenPos.x,
-                        screenPos.y,
-                        20,
-                        2,
-                        false,
-                        worldDistanceBetweenPoints(
-                            tilePos, this.target, globals.Game!.gameCamera.zoom
-                        )
-                    );
-                    this.effectGraphics.rotation = Math.atan2(
-                        -(this.target.x - tilePos.x),
-                        this.target.y - tilePos.y
-                    );
-                    globals.Game?.pixiApp.stage.addChild(this.effectGraphics);
-
-                    this.effectTween = new Tween({
-                        object: this.effectGraphics,
-                        key: "alpha",
-                        duration: this.details.lightning.fadeOut,
-                        delay: this.details.lightning.duration,
-                        start: 1,
-                        end: 0,
-                        transition: Transition.Linear
-                    });
-                }
-            }
-
-            this.shouldCast = false;
-        }
-
-        if (this.didUseTurn && this.particleEmitter !== null && this.particleEmitter.emit) {
-            this.particleEmitter.update(deltaTime * .001);
-            if (!this.particleEmitter.emit) {
-                this.particleEmitter.destroy();
-            } else {
+                this.didUseTurn = false;
                 return;
             }
+
+            this.target = targetedEntity.getOne(PositionComponent)!.tilePosition();
+        }
+
+        this.didUseTurn = this.details.useFunc(
+            this.details,
+            this.entity,
+            globals.Game!.ecs,
+            globals.Game!.map,
+            globals.Game!.entityMap,
+            this.target,
+            this.rotation
+        );
+
+        if (this.didUseTurn) {
+            if (this.skillCallback !== undefined) {
+                this.skillCallback(this.entity, this.details.id);
+            }
+
+            if (this.details.effect === "particles" &&
+                this.details.particles !== undefined) {
+                let sprite: PIXI.Sprite | undefined;
+
+                if (this.details.particles.particleLocation === "target" && this.target !== undefined) {
+                    // We need to put the emitter at the location. For some reason
+                    // the API requires a container at the location rather than the
+                    // location. So get either the entity sprite there or the highest
+                    // tile sprite.
+                    const entity = getEntitiesAtLocation(
+                        globals.Game!.entityMap,
+                        this.target.x,
+                        this.target.y
+                    )[0];
+
+                    if (entity !== undefined) {
+                        sprite = entity.getOne(GraphicsComponent)?.sprite ?? undefined;
+                    }
+
+                    // Fallback
+                    let z = getHighestZIndexWithTile(
+                        globals.Game!.map, this.target.x, this.target.y
+                    );
+                    while (sprite === undefined) {
+                        const tile = globals.Game!.map.data[z][this.target.y][this.target.x];
+                        if (tile === null || tile.sprite === null) {
+                            --z;
+                            continue;
+                        }
+                        sprite = tile.sprite;
+                    }
+                } else if (this.details.particles.particleLocation === "self") {
+                    sprite = this.entity.getOne(GraphicsComponent)?.sprite ?? undefined;
+                }
+
+                this.particleEmitter = new particles.Emitter(
+                    sprite!,
+                    this.details.particles.particleImages.map(
+                        e => globals.Game!.textureAtlas[e]
+                    ),
+                    this.details.particles.particleConfig
+                );
+                this.particleEmitter.emit = true;
+            }
+
+            if (this.details.effect === "lightning" &&
+                this.details.lightning !== undefined &&
+                this.target !== undefined) {
+                const tilePos = this.entity.getOne(PositionComponent)!.tilePosition();
+                const screenPos = globals.Game!.gameCamera.tilePositionToScreen(
+                    tilePos.x,
+                    tilePos.y
+                );
+                this.effectGraphics = createLightningTexture(
+                    screenPos.x,
+                    screenPos.y,
+                    20,
+                    2,
+                    false,
+                    worldDistanceBetweenPoints(
+                        tilePos, this.target, globals.Game!.gameCamera.zoom
+                    )
+                );
+                this.effectGraphics.rotation = Math.atan2(
+                    -(this.target.x - tilePos.x),
+                    this.target.y - tilePos.y
+                );
+                globals.Game?.pixiApp.stage.addChild(this.effectGraphics);
+
+                this.effectTween = new Tween({
+                    object: this.effectGraphics,
+                    key: "alpha",
+                    duration: this.details.lightning.fadeOut,
+                    delay: this.details.lightning.duration,
+                    start: 1,
+                    end: 0,
+                    transition: Transition.Linear
+                });
+            }
+        }
+    }
+
+    update(deltaTime: DOMHighResTimeStamp): void {
+        if (this.didUseTurn && this.particleEmitter !== null && this.particleEmitter.emit) {
+            this.particleEmitter.update(deltaTime * .001);
         }
 
         if (this.didUseTurn && this.effectTween !== null) {
             this.effectTween.update(deltaTime);
+        }
+    }
 
-            if (this.effectTween.finished && this.effectGraphics !== null) {
-                this.effectGraphics.destroy();
-            }
+    tearDown() {
+        if (this.particleEmitter !== null) {
+            this.particleEmitter.destroy();
+        }
+        if (this.effectGraphics !== null) {
+            this.effectGraphics.destroy();
         }
     }
 }
@@ -890,7 +888,7 @@ export class RotateReticleCommand implements Command {
         return true;
     }
 
-    execute(): void {
+    update(): void {
         const inputHandlerState = this.entity.getOne(InputHandlingComponent);
         if (inputHandlerState === undefined) { return; }
 
@@ -940,42 +938,44 @@ export class ShowSpeechBubbleCommand implements Command {
         return this.effectTween !== null ? this.effectTween.finished : true;
     }
 
-    execute(deltaTime: DOMHighResTimeStamp): void {
-        if (this.effectGraphics === null) {
-            const tilePos = this.entity.getOne(PositionComponent)!.tilePosition();
-            const screenPos = globals.Game!.gameCamera.tilePositionToScreen(
-                tilePos.x,
-                tilePos.y
+    setUp(): void {
+        const tilePos = this.entity.getOne(PositionComponent)!.tilePosition();
+        const screenPos = globals.Game!.gameCamera.tilePositionToScreen(
+            tilePos.x,
+            tilePos.y
+        );
+
+        // Only show if we're on screen
+        if (screenPos.x < globals.Game!.gameCamera.viewport.width &&
+            screenPos.x >= 0 &&
+            screenPos.y < globals.Game!.gameCamera.viewport.height &&
+            screenPos.y >= 0) {
+            this.effectGraphics = createSpeechBubbleTexture(
+                screenPos.x, screenPos.y, this.dialog
             );
+            globals.Game?.pixiApp.stage.addChild(this.effectGraphics);
 
-            // Only show if we're on screen
-            if (screenPos.x < globals.Game!.gameCamera.viewport.width &&
-                screenPos.x >= 0 &&
-                screenPos.y < globals.Game!.gameCamera.viewport.height &&
-                screenPos.y >= 0) {
-                this.effectGraphics = createSpeechBubbleTexture(
-                    screenPos.x, screenPos.y, this.dialog
-                );
-                globals.Game?.pixiApp.stage.addChild(this.effectGraphics);
-
-                this.effectTween = new Tween({
-                    object: this.effectGraphics,
-                    key: "alpha",
-                    delay: this.duration,
-                    duration: 200,
-                    start: 1,
-                    end: 0,
-                    transition: Transition.Linear
-                });
-            }
+            this.effectTween = new Tween({
+                object: this.effectGraphics,
+                key: "alpha",
+                delay: this.duration,
+                duration: 200,
+                start: 1,
+                end: 0,
+                transition: Transition.Linear
+            });
         }
+    }
 
+    update(deltaTime: DOMHighResTimeStamp): void {
         if (this.effectTween !== null) {
             this.effectTween.update(deltaTime);
+        }
+    }
 
-            if (this.effectTween.finished && this.effectGraphics !== null) {
-                this.effectGraphics.destroy();
-            }
+    tearDown() {
+        if (this.effectGraphics !== null) {
+            this.effectGraphics.destroy();
         }
     }
 }
@@ -998,7 +998,7 @@ export class AlertAlliesCommand implements Command {
         return true;
     }
 
-    execute(): void {
+    update(): void {
         const ai = this.entity.getOne(PlannerAIComponent);
         if (ai !== undefined && ai.teamId !== null) {
             const team = globals.Game!.entityTeams.get(ai.teamId);
@@ -1054,28 +1054,28 @@ export class MoveCameraCommand implements Command {
         return finished;
     }
 
-    execute(deltaTime: DOMHighResTimeStamp): void {
-        if (this.xTween === null) {
-            this.xTween = new Tween({
-                object: this.camera,
-                key: "x",
-                delay: 200,
-                duration: this.duration,
-                start: this.camera.x,
-                end: this.position.x,
-                transition: Transition.Linear
-            });
-            this.yTween = new Tween({
-                object: this.camera,
-                key: "y",
-                delay: 200,
-                duration: this.duration,
-                start: this.camera.y,
-                end: this.position.y,
-                transition: Transition.Linear
-            });
-        }
+    setUp() {
+        this.xTween = new Tween({
+            object: this.camera,
+            key: "x",
+            delay: 200,
+            duration: this.duration,
+            start: this.camera.x,
+            end: this.position.x,
+            transition: Transition.Linear
+        });
+        this.yTween = new Tween({
+            object: this.camera,
+            key: "y",
+            delay: 200,
+            duration: this.duration,
+            start: this.camera.y,
+            end: this.position.y,
+            transition: Transition.Linear
+        });
+    }
 
+    update(deltaTime: DOMHighResTimeStamp): void {
         if (this.xTween !== null && this.yTween !== null) {
             this.xTween.update(deltaTime);
             this.yTween.update(deltaTime);
