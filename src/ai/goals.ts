@@ -376,6 +376,7 @@ export function resolveAliveAllies(ecs: World, entityMap: EntityMap, ai: Entity)
 
     const pos = ai.getOne(PositionComponent)!;
     for (const id of team.memberIds) {
+        if (ai.id === id) { continue; }
         const e = ecs.getEntity(id);
         if (e === undefined) { continue; }
 
