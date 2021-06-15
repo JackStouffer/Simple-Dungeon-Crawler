@@ -111,7 +111,7 @@ import {
     ParalyzeSystem,
     FrozenSystem
 } from "./effects";
-import { generateAICommand } from "./ai/commands";
+import { generateAICommands } from "./ai/commands";
 import { ItemData, SpellData } from "./skills";
 
 globals.gameEventEmitter = new EventEmitter();
@@ -443,15 +443,16 @@ export class SimpleDungeonCrawler {
                         this.scheduler.next()!
                     )!;
                     // Camera update
-                    const aiState = this.currentActor.getOne(PlannerAIComponent);
-                    if (this.currentActor !== this.player &&
-                        aiState !== undefined &&
-                        aiState.knowsTargetPosition &&
-                        aiState.target === this.player) {
-                        this.commandQueue.push(
-                            new MoveCameraCommand(this.map, this.gameCamera, this.currentActor)
-                        );
-                    } else if (this.currentActor === this.player &&
+                    // const aiState = this.currentActor.getOne(PlannerAIComponent);
+                    // if (this.currentActor !== this.player &&
+                    //     aiState !== undefined &&
+                    //     aiState.knowsTargetPosition &&
+                    //     aiState.target === this.player) {
+                    //     this.commandQueue.push(
+                    //         new MoveCameraCommand(this.map, this.gameCamera, this.currentActor)
+                    //     );
+                    // } else
+                    if (this.currentActor === this.player &&
                         this.gameCamera.following !== this.player) {
                         this.commandQueue.push(
                             new MoveCameraCommand(this.map, this.gameCamera, this.currentActor)
@@ -465,7 +466,7 @@ export class SimpleDungeonCrawler {
                         this.currentCommand = this.commandQueue.shift()!;
                     } else if (this.currentActor !== this.player) {
                         if (this.processAI) {
-                            this.commandQueue.push(...generateAICommand(
+                            this.commandQueue.push(...generateAICommands(
                                 this.ecs,
                                 this.map,
                                 this.entityMap,

@@ -7,7 +7,7 @@ import { PassableCallback } from "../rot/path/path";
 
 import globals from "../globals";
 import { Planner, ActionList, PlannerWorldState } from "./planner";
-import { Command, GoToLocationCommand, NoOpCommand } from "../commands";
+import { Command, GoToLocationCommand, MoveCameraCommand, NoOpCommand } from "../commands";
 import {
     GoalData
 } from "./goals";
@@ -364,36 +364,35 @@ function confusedAIGenerateCommand(
  * @param ai the entity to generate a command for
  * @returns An array of commands
  */
-export function generateAICommand(
+export function generateAICommands(
     ecs: World,
     map: GameMap,
     entityMap: EntityMap,
     entityTeams: EntityTeamMap,
     ai: Entity
 ): Command[] {
-    const aiState = ai.getOne(PlannerAIComponent);
-    const confusedState = ai.getOne(ConfusedAIComponent);
-    const paralyzableData = ai.getOne(ParalyzableComponent);
-    const freezableData = ai.getOne(FreezableComponent);
     const pos = ai.getOne(PositionComponent)?.tilePosition();
-
     if (pos === undefined) {
         throw new Error(`Entity ${ai.id} is missing a position component`);
     }
 
+    const paralyzableData = ai.getOne(ParalyzableComponent);
     if (paralyzableData !== undefined &&
         paralyzableData.paralyzed) {
         return [new NoOpCommand(true)];
     }
 
+    const freezableData = ai.getOne(FreezableComponent);
     if (freezableData !== undefined && freezableData.frozen) {
         return [new NoOpCommand(true)];
     }
 
+    const confusedState = ai.getOne(ConfusedAIComponent);
     if (confusedState !== undefined) {
         return [confusedAIGenerateCommand(ecs, ai, map, entityMap)];
     }
 
+    const aiState = ai.getOne(PlannerAIComponent);
     if (aiState !== undefined) {
         const commands: Command[] = [];
 
@@ -405,6 +404,10 @@ export function generateAICommand(
             aiState.sightRange,
             createVisibilityCallback(ai)
         );
+
+        if (aiState.knowsTargetPosition && aiState.target === globals.Game!.player) {
+            commands.push(new MoveCameraCommand(map, globals.Game!.gameCamera, ai));
+        }
 
         const query = buildDialogQuery(ecs, map, entityMap, entityTeams, ai, aiState);
         const debugDialog = globals.Game?.debugAIDialog === true;
