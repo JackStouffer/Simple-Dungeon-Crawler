@@ -51,6 +51,7 @@ import { DIRS } from "./rot";
 import { playOpenInventory, playOpenSpells } from "./audio";
 import { createLightningTexture, createSpeechBubbleTexture } from "./graphics";
 import { Transition, Tween } from "./tween";
+import { Camera } from "./camera";
 
 /**
  * Creates a function which returns if an x and y coordinate
@@ -93,6 +94,16 @@ export function createWaterBasedPassableCallback(origin: Point): PassableCallbac
     };
 }
 
+/**
+ * Factory to generate a function which takes an x and y coordinate
+ * and returns the weight for A* pathing calculations on that tile.
+ *
+ * @param ecs The current world
+ * @param map The current game map
+ * @param entityMap A map of tile positions to entities
+ * @param origin The starting point
+ * @returns A function
+ */
 export function generateWeightCallback(
     ecs: World,
     map: GameMap,
@@ -181,7 +192,7 @@ export function generatePlayerWeightCallback(origin: Point): WeightCallback {
  * Encapsulates an action that an entity can perform. Allows
  * entities to do things over multiple frames.
  *
- * SPEED: Perhaps pre-allocate common commands to be reused
+ * TODO, SPEED: Perhaps pre-allocate common commands to be reused
  */
 export interface Command {
     usedTurn: () => boolean;
@@ -196,6 +207,9 @@ export function getPlayerMovementPath(
     map: GameMap,
     entityMap: EntityMap
 ): Nullable<[number, number][]> {
+    // TODO, cleanup: this should not be a nullable return value,
+    // just have the array be empty
+
     // quick distance check to cut down the number of
     // AStar calcs
     if (distanceBetweenPoints(destination, origin) < maxTilesPerMove * 2) {
@@ -228,6 +242,7 @@ export function getPlayerMovementPath(
         if (path.length === 0) { return null; }
         return path;
     }
+
     return null;
 }
 
@@ -990,6 +1005,94 @@ export class AlertAlliesCommand implements Command {
             if (team !== undefined) {
                 team.alert();
             }
+        }
+    }
+}
+
+/**
+ * Move the game camera to an entity then set the camera to follow
+ * that entity
+ */
+export class MoveCameraCommand implements Command {
+    map: GameMap;
+    camera: Camera;
+    to: Entity;
+    duration: number;
+    private xTween: Nullable<Tween> = null;
+    private yTween: Nullable<Tween> = null;
+    private readonly position: Point;
+
+    constructor(map: GameMap, camera: Camera, to: Entity, duration: number = 500) {
+        this.map = map;
+        this.camera = camera;
+        this.camera.following = null;
+        this.to = to;
+        const positionComp = this.to.getOne(PositionComponent)!;
+        this.position = {
+            x: positionComp.x,
+            y: positionComp.y
+        };
+        this.duration = duration;
+    }
+
+    usedTurn(): boolean {
+        return false;
+    }
+
+    isFinished(): boolean {
+        const finished = this.xTween !== null ? this.xTween.finished : true;
+
+        if (finished) {
+            this.camera.following = this.to;
+        }
+
+        return finished;
+    }
+
+    execute(deltaTime: DOMHighResTimeStamp): void {
+        if (this.xTween === null) {
+            let x = Math.floor(this.position.x - (this.camera.viewport.width / 4));
+            let y = Math.floor(this.position.y - (this.camera.viewport.height / 4));
+
+            // clamp values
+            x = Math.max(
+                0,
+                Math.min(
+                    x,
+                    (this.map.width * this.camera.tileSize)
+                )
+            );
+            y = Math.max(
+                0,
+                Math.min(
+                    y,
+                    (this.map.height * this.camera.tileSize)
+                )
+            );
+
+            this.xTween = new Tween({
+                object: this.camera,
+                key: "x",
+                delay: 200,
+                duration: this.duration,
+                start: this.camera.x,
+                end: x,
+                transition: Transition.Linear
+            });
+            this.yTween = new Tween({
+                object: this.camera,
+                key: "y",
+                delay: 200,
+                duration: this.duration,
+                start: this.camera.y,
+                end: y,
+                transition: Transition.Linear
+            });
+        }
+
+        if (this.xTween !== null && this.yTween !== null) {
+            this.xTween.update(deltaTime);
+            this.yTween.update(deltaTime);
         }
     }
 }

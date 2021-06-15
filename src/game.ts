@@ -63,6 +63,7 @@ import {
 } from "./entity";
 import {
     Command,
+    MoveCameraCommand,
     NoOpCommand,
     UseSkillCommand
 } from "./commands";
@@ -436,10 +437,26 @@ export class SimpleDungeonCrawler {
     update(): void {
         switch (this.state) {
             case GameState.Gameplay: {
+                // Turn order
                 if (this.currentActor === null) {
                     this.currentActor = this.ecs.getEntity(
                         this.scheduler.next()!
                     )!;
+                    // Camera update
+                    const aiState = this.currentActor.getOne(PlannerAIComponent);
+                    if (this.currentActor !== this.player &&
+                        aiState !== undefined &&
+                        aiState.knowsTargetPosition &&
+                        aiState.target === this.player) {
+                        this.commandQueue.push(
+                            new MoveCameraCommand(this.map, this.gameCamera, this.currentActor)
+                        );
+                    } else if (this.currentActor === this.player &&
+                        this.gameCamera.following !== this.player) {
+                        this.commandQueue.push(
+                            new MoveCameraCommand(this.map, this.gameCamera, this.currentActor)
+                        );
+                    }
                 }
 
                 // Command generation
@@ -477,10 +494,7 @@ export class SimpleDungeonCrawler {
                         }
 
                         this.ecs.runSystems("postTurn");
-
-                        this.currentActor = this.ecs.getEntity(
-                            this.scheduler.next()!
-                        )!;
+                        this.currentActor = null;
                     }
 
                     this.currentCommand = null;
@@ -693,7 +707,6 @@ export class SimpleDungeonCrawler {
             if (input.isDown("Enter")) {
                 this.player = createEntity(this.ecs, this.textureAtlas, "player", 1, 1);
                 this.scheduler.add(this.player.id, true);
-                this.gameCamera.following = this.player;
 
                 this.openingText.visible = false;
                 this.loadLevel("tutorial_001");

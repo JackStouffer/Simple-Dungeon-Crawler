@@ -8,13 +8,13 @@ import { Nullable } from "./util";
 
 export class Camera {
     // world position
-    private x: number;
-    private y: number;
+    x: number;
+    y: number;
 
-    private readonly tileSize: number = TILE_SIZE;
+    readonly tileSize: number = TILE_SIZE;
     viewport: PIXI.Rectangle;
     following: Nullable<Entity>;
-    // TODO, does pixi.js have a projection thing with WebGL? Can we use that to zoom?
+    // TODO: does pixi.js have a projection thing with WebGL? Can we use that to zoom?
     zoom: number;
 
     constructor(viewport: PIXI.Rectangle) {
@@ -32,7 +32,7 @@ export class Camera {
 
         // make the camera follow the sprite
         this.x = Math.floor(pos.x - (this.viewport.width / 4));
-        this.y = Math.floor((pos.y) - (this.viewport.height / 4));
+        this.y = Math.floor(pos.y - (this.viewport.height / 4));
 
         // clamp values
         this.x = Math.max(

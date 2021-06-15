@@ -1,5 +1,5 @@
 import { World, Component, Entity, EntityRef, System, Query, IEntityConfig } from "ape-ecs";
-import { assignIn, map } from "lodash";
+import { assignIn } from "lodash";
 import * as PIXI from "pixi.js";
 
 import { RNG } from "./rot/index";
@@ -1985,7 +1985,7 @@ export function createEntity(
     id?: string
 ): Entity {
     if (globals.Game === null) { throw new Error("Global game is null"); }
-    if (!(type in ObjectData)) { throw new Error(`${type} is not valid object id`); };
+    if (!(type in ObjectData)) { throw new Error(`${type} is not valid object id`); }
 
     let hash = randomIntFromInterval(1, 2147483647);
     hash = hash & hash; // Convert to 32bit integer
