@@ -31,24 +31,31 @@ export class Camera {
         if (pos === undefined) { return; }
 
         // make the camera follow the sprite
-        this.x = Math.floor(pos.x - (this.viewport.width / 4));
-        this.y = Math.floor(pos.y - (this.viewport.height / 4));
+        const point = this.clamp(pos.x, pos.y, map.width, map.height);
+        this.x = point.x;
+        this.y = point.y;
+    }
+
+    clamp(x: number, y: number, width: number, height: number): Point {
+        let dx = Math.floor(x - (this.viewport.width / 4));
+        let dy = Math.floor(y - (this.viewport.height / 4));
 
         // clamp values
-        this.x = Math.max(
+        dx = Math.max(
             0,
             Math.min(
-                this.x,
-                (map.width * this.tileSize)
+                dx,
+                (width * this.tileSize)
             )
         );
-        this.y = Math.max(
+        dy = Math.max(
             0,
             Math.min(
-                this.y,
-                (map.height * this.tileSize)
+                dy,
+                (height * this.tileSize)
             )
         );
+        return { x: dx, y: dy };
     }
 
     tilePositionToScreen(x: number, y: number): Point {

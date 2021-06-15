@@ -1667,17 +1667,24 @@ export interface Point {
 }
 
 /**
- * Find the distance between two points
+ * Find the tile distance between two points
  * @param  {Point} a A point
  * @param  {Point} b A point
  * @return {number} The distance
  */
-export function distanceBetweenPoints(a: Point, b: Point): number {
+export function tileDistanceBetweenPoints(a: Point, b: Point): number {
     const dx = b.x - a.x;
     const dy = b.y - a.y;
     return Math.sqrt(dx ** 2 + dy ** 2);
 }
 
+/**
+ * Find the world distance between two tile positions. Does not find the
+ * distance between two world positions.
+ * @param  {Point} a A point
+ * @param  {Point} b A point
+ * @return {number} The distance
+ */
 export function worldDistanceBetweenPoints(a: Point, b: Point, zoom: number): number {
     const dx = (b.x * 16 * zoom) - (a.x * 16 * zoom);
     const dy = (b.y * 16 * zoom) - (a.y * 16 * zoom);
@@ -1702,7 +1709,7 @@ export function getRandomFighterWithinRange(
     const possible = [];
     for (const e of entities) {
         const pos = e.getOne(PositionComponent)!;
-        const d = distanceBetweenPoints(origin, pos.tilePosition());
+        const d = tileDistanceBetweenPoints(origin, pos.tilePosition());
         if (pos !== origin && d <= maxDistance) {
             possible.push(e);
         }

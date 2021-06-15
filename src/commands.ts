@@ -17,7 +17,7 @@ import {
 import {
     GameMap,
     isBlocked,
-    distanceBetweenPoints,
+    tileDistanceBetweenPoints,
     Point,
     getEntitiesAtLocation,
     getHighestZIndexWithTile,
@@ -212,7 +212,7 @@ export function getPlayerMovementPath(
 
     // quick distance check to cut down the number of
     // AStar calcs
-    if (distanceBetweenPoints(destination, origin) < maxTilesPerMove * 2) {
+    if (tileDistanceBetweenPoints(destination, origin) < maxTilesPerMove * 2) {
         const aStar = new Path.AStar(
             destination.x,
             destination.y,
@@ -312,7 +312,7 @@ export class GoToLocationCommand implements Command {
 
         const speed = .25;
         const tilePos = pos.tilePosition();
-        const startDistance = distanceBetweenPoints(
+        const startDistance = tileDistanceBetweenPoints(
             globals.Game!.gameCamera.tilePositionToWorld(tilePos.x, tilePos.y),
             globals.Game!.gameCamera.tilePositionToWorld(destination[0], destination[1])
         );
@@ -323,7 +323,7 @@ export class GoToLocationCommand implements Command {
         pos.y += dir[1] * speed * deltaTime;
         pos.update();
 
-        const distance = distanceBetweenPoints(
+        const distance = tileDistanceBetweenPoints(
             globals.Game!.gameCamera.tilePositionToWorld(tilePos.x, tilePos.y),
             pos
         );
@@ -490,7 +490,7 @@ export class PushBackCommand implements Command {
         }
 
         const speed = .5;
-        const startDistance = distanceBetweenPoints(
+        const startDistance = tileDistanceBetweenPoints(
             globals.Game!.gameCamera.tilePositionToWorld(tilePos.x, tilePos.y),
             globals.Game!.gameCamera.tilePositionToWorld(destinationX, destinationY)
         );
@@ -499,7 +499,7 @@ export class PushBackCommand implements Command {
         pos.y += step[1] * speed * deltaTime;
         pos.update();
 
-        const distance = distanceBetweenPoints(
+        const distance = tileDistanceBetweenPoints(
             globals.Game!.gameCamera.tilePositionToWorld(tilePos.x, tilePos.y),
             pos
         );
@@ -1022,17 +1022,22 @@ export class MoveCameraCommand implements Command {
     private yTween: Nullable<Tween> = null;
     private readonly position: Point;
 
-    constructor(map: GameMap, camera: Camera, to: Entity, duration: number = 500) {
+    constructor(map: GameMap, camera: Camera, to: Entity, duration: Nullable<number> = null) {
         this.map = map;
         this.camera = camera;
         this.camera.following = null;
+
         this.to = to;
         const positionComp = this.to.getOne(PositionComponent)!;
-        this.position = {
-            x: positionComp.x,
-            y: positionComp.y
-        };
-        this.duration = duration;
+        this.position = camera.clamp(positionComp.x, positionComp.y, map.width, map.height);
+
+        this.duration = duration ?? Math.min(
+            Math.max(
+                50,
+                tileDistanceBetweenPoints(this.position, camera) * 3.5
+            ),
+            1500
+        );
     }
 
     usedTurn(): boolean {
@@ -1051,32 +1056,13 @@ export class MoveCameraCommand implements Command {
 
     execute(deltaTime: DOMHighResTimeStamp): void {
         if (this.xTween === null) {
-            let x = Math.floor(this.position.x - (this.camera.viewport.width / 4));
-            let y = Math.floor(this.position.y - (this.camera.viewport.height / 4));
-
-            // clamp values
-            x = Math.max(
-                0,
-                Math.min(
-                    x,
-                    (this.map.width * this.camera.tileSize)
-                )
-            );
-            y = Math.max(
-                0,
-                Math.min(
-                    y,
-                    (this.map.height * this.camera.tileSize)
-                )
-            );
-
             this.xTween = new Tween({
                 object: this.camera,
                 key: "x",
                 delay: 200,
                 duration: this.duration,
                 start: this.camera.x,
-                end: x,
+                end: this.position.x,
                 transition: Transition.Linear
             });
             this.yTween = new Tween({
@@ -1085,7 +1071,7 @@ export class MoveCameraCommand implements Command {
                 delay: 200,
                 duration: this.duration,
                 start: this.camera.y,
-                end: y,
+                end: this.position.y,
                 transition: Transition.Linear
             });
         }

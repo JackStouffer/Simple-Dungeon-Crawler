@@ -25,7 +25,7 @@ import {
     SpellsComponent
 } from "../entity";
 import {
-    distanceBetweenPoints,
+    tileDistanceBetweenPoints,
     getRandomOpenSpace,
     GameMap,
     isBlocked,
@@ -235,7 +235,7 @@ function chaseWeight(ecs: World, aiState: PlannerAIComponent): number {
     const posData = aiState.entity.getOne(PositionComponent);
     const targetPosData = aiState.target.getOne(PositionComponent);
     if (posData === undefined || targetPosData === undefined) { throw new Error("no position data for ai"); }
-    return distanceBetweenPoints(posData.tilePosition(), targetPosData.tilePosition());
+    return tileDistanceBetweenPoints(posData.tilePosition(), targetPosData.tilePosition());
 }
 
 /**
@@ -344,7 +344,7 @@ function healAllyAction(
         const ePos = e.getOne(PositionComponent)!;
         const hpPercent = hpData.hp / hpData.maxHp;
 
-        if (distanceBetweenPoints(pos.tilePosition(), ePos.tilePosition()) < 10 &&
+        if (tileDistanceBetweenPoints(pos.tilePosition(), ePos.tilePosition()) < 10 &&
             (target === null || hpPercent < targetHPPercent!)) {
             target = ePos.tilePosition();
             targetHPPercent = hpPercent;
@@ -535,7 +535,7 @@ function repositionAction(
 
     const bfs = new Path.ReverseAStar(
         (x, y) => {
-            const d = distanceBetweenPoints({ x, y }, targetPosData.tilePosition());
+            const d = tileDistanceBetweenPoints({ x, y }, targetPosData.tilePosition());
             return Math.floor(d) === aiState.desiredDistanceToTarget;
         },
         createPassableCallback(tilePos),

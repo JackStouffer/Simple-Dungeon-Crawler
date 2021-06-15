@@ -12,7 +12,7 @@ import {
     WetableComponent
 } from "./entity";
 import input from "./input";
-import { distanceBetweenPoints, getEntitiesAtLocation, getHighestZIndexWithTile, Point } from "./map";
+import { tileDistanceBetweenPoints, getEntitiesAtLocation, getHighestZIndexWithTile, Point } from "./map";
 import { PlayerState } from "./input-handler";
 import { getPlayerMovementPath } from "./commands";
 import { getItems } from "./inventory";
@@ -336,7 +336,7 @@ export class DrawPlayerSystem extends System {
 
                     // quick distance check to cut down the number of
                     // AStar calcs
-                    if (distanceBetweenPoints(pos.tilePosition(), mousePosition) < 40) {
+                    if (tileDistanceBetweenPoints(pos.tilePosition(), mousePosition) < 40) {
                         const path = getPlayerMovementPath(
                             pos.tilePosition(),
                             mousePosition,
@@ -386,7 +386,7 @@ export class DrawPlayerSystem extends System {
                         Infinity;
 
                     if (mousePosition !== null &&
-                        distanceBetweenPoints(mousePosition, entityPos) <= range) {
+                        tileDistanceBetweenPoints(mousePosition, entityPos) <= range) {
                         const targetArea = getTargetingReticle(
                             inputStateData.spellForTarget ?? inputStateData.itemForTarget,
                             mousePosition,

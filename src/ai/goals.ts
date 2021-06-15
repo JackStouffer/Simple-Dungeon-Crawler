@@ -18,7 +18,7 @@ import {
 import { getEffectiveDamageAffinity, getEffectiveHitPointData, getKnownSpells } from "../fighter";
 import globals from "../globals";
 import { getItems } from "../inventory";
-import { distanceBetweenPoints, getEntitiesAtLocation, Point } from "../map";
+import { tileDistanceBetweenPoints, getEntitiesAtLocation, Point } from "../map";
 import { DIRS } from "../rot";
 import { SpellData } from "../skills";
 import { Nullable } from "../util";
@@ -44,7 +44,7 @@ function resolveNextToTarget(ecs: World, entityMap: EntityMap, ai: Entity): bool
     if (pos === undefined || targetPos === undefined) {
         throw new Error(`Entity ${ai.id} is missing data for resolveNextToTarget`);
     }
-    return distanceBetweenPoints(pos.tilePosition(), targetPos.tilePosition()) < 1.5;
+    return tileDistanceBetweenPoints(pos.tilePosition(), targetPos.tilePosition()) < 1.5;
 }
 
 function resolveAtDesiredDistance(ecs: World, entityMap: EntityMap, ai: Entity): boolean {
@@ -59,7 +59,7 @@ function resolveAtDesiredDistance(ecs: World, entityMap: EntityMap, ai: Entity):
         throw new Error(`Entity ${ai.id} is missing data for resolveNextToTarget`);
     }
 
-    const distance = distanceBetweenPoints(pos.tilePosition(), targetPos.tilePosition());
+    const distance = tileDistanceBetweenPoints(pos.tilePosition(), targetPos.tilePosition());
     return Math.floor(distance) === aiState.desiredDistanceToTarget;
 }
 
@@ -224,7 +224,7 @@ function resolveAllyLowHealth(ecs: World, entityMap: EntityMap, ai: Entity): boo
         const aiState = e.getOne(PlannerAIComponent)!;
         const isLowHealth = (hpData.hp / hpData.maxHp) <= aiState.lowHealthThreshold;
 
-        if (distanceBetweenPoints(pos.tilePosition(), ePos.tilePosition()) < 10 &&
+        if (tileDistanceBetweenPoints(pos.tilePosition(), ePos.tilePosition()) < 10 &&
             isLowHealth &&
             (target === null || hpData.hp < targetHPData!.hp)) {
             target = ePos.tilePosition();
@@ -382,7 +382,8 @@ export function resolveAliveAllies(ecs: World, entityMap: EntityMap, ai: Entity)
 
         const ePos = e.getOne(PositionComponent)!;
         const hpData = e.getOne(HitPointsComponent)!;
-        if (distanceBetweenPoints(ePos.tilePosition(), pos.tilePosition()) < 12 && hpData.hp > 0) {
+        if (tileDistanceBetweenPoints(ePos.tilePosition(), pos.tilePosition()) < 12 &&
+            hpData.hp > 0) {
             return true;
         }
     }
@@ -427,7 +428,7 @@ function resolveNearWater(ecs: World, entityMap: EntityMap, ai: Entity): boolean
         if (e.id === ai.id) { continue; }
 
         const ePos = e.getOne(PositionComponent)!;
-        if (distanceBetweenPoints(ePos.tilePosition(), pos) < 15) {
+        if (tileDistanceBetweenPoints(ePos.tilePosition(), pos) < 15) {
             return true;
         }
     }

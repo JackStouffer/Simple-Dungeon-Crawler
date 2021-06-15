@@ -443,18 +443,9 @@ export class SimpleDungeonCrawler {
                         this.scheduler.next()!
                     )!;
                     // Camera update
-                    // const aiState = this.currentActor.getOne(PlannerAIComponent);
-                    // if (this.currentActor !== this.player &&
-                    //     aiState !== undefined &&
-                    //     aiState.knowsTargetPosition &&
-                    //     aiState.target === this.player) {
-                    //     this.commandQueue.push(
-                    //         new MoveCameraCommand(this.map, this.gameCamera, this.currentActor)
-                    //     );
-                    // } else
                     if (this.currentActor === this.player &&
                         this.gameCamera.following !== this.player) {
-                        this.commandQueue.push(
+                        this.commandQueue.unshift(
                             new MoveCameraCommand(this.map, this.gameCamera, this.currentActor)
                         );
                     }

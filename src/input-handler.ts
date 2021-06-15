@@ -9,7 +9,7 @@ import {
     UseSkillCommand,
     InteractCommand
 } from "./commands";
-import { distanceBetweenPoints, getEntitiesAtLocation, GameMap, Point } from "./map";
+import { tileDistanceBetweenPoints, getEntitiesAtLocation, GameMap, Point } from "./map";
 import { Nullable } from "./util";
 import {
     EntityMap,
@@ -120,7 +120,7 @@ export function playerInput(
         const mouseDownPosition = input.getLeftMouseDown();
         if (mouseDownPosition !== null) {
             // Attacking
-            if (distanceBetweenPoints(mouseDownPosition, playerPosition.tilePosition()) < 1.5) {
+            if (tileDistanceBetweenPoints(mouseDownPosition, playerPosition.tilePosition()) < 1.5) {
                 const target = mouseTarget(
                     ecs,
                     map,
@@ -173,7 +173,7 @@ export function playerInput(
             inputState.itemForTarget?.range ??
             Infinity;
 
-        if (distanceBetweenPoints(mousePosition, entityPos) <= range) {
+        if (tileDistanceBetweenPoints(mousePosition, entityPos) <= range) {
             let command: Nullable<Command> = null;
             if (inputState.itemForTarget !== null) {
                 command = new UseSkillCommand(
