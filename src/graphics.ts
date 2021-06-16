@@ -344,7 +344,7 @@ export class DrawPlayerSystem extends System {
                             globals.Game!.map,
                             globals.Game!.entityMap
                         );
-                        if (path === null) { return; }
+                        if (path.length === 0) { return; }
 
                         outer: for (let j = 0; j < path.length; j++) {
                             const step = path[j];

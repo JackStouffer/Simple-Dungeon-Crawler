@@ -208,10 +208,7 @@ export function getPlayerMovementPath(
     maxTilesPerMove: number,
     map: GameMap,
     entityMap: EntityMap
-): Nullable<[number, number][]> {
-    // TODO, cleanup: this should not be a nullable return value,
-    // just have the array be empty
-
+): [number, number][] {
     // quick distance check to cut down the number of
     // AStar calcs
     if (tileDistanceBetweenPoints(destination, origin) < maxTilesPerMove * 2) {
@@ -224,11 +221,11 @@ export function getPlayerMovementPath(
         );
 
         if (destination.y >= map.height || destination.x >= map.width) {
-            return null;
+            return [];
         }
 
         if (isBlocked(map, entityMap, destination.x, destination.y).blocks === true) {
-            return null;
+            return [];
         }
 
         const path: [number, number][] = [];
@@ -237,15 +234,15 @@ export function getPlayerMovementPath(
         }
         aStar.compute(origin.x, origin.y, pathCallback);
 
-        if (path.length === 0 || path.length > maxTilesPerMove) { return null; }
+        if (path.length === 0 || path.length > maxTilesPerMove) { return []; }
 
         // remove our own position
         path.shift();
-        if (path.length === 0) { return null; }
+        if (path.length === 0) { return []; }
         return path;
     }
 
-    return null;
+    return [];
 }
 
 /**

@@ -143,7 +143,7 @@ export function playerInput(
                 map,
                 entityMap
             );
-            if (path !== null) {
+            if (path.length !== 0) {
                 return new GoToLocationCommand(
                     player,
                     path
