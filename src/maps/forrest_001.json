@@ -337,6 +337,138 @@
                  "width":0,
                  "x":696.9067774051,
                  "y":1215.99318532716
+                }, 
+                {
+                 "height":0,
+                 "id":44,
+                 "name":"Bandit",
+                 "point":true,
+                 "properties":[
+                        {
+                         "name":"commander",
+                         "type":"bool",
+                         "value":false
+                        }, 
+                        {
+                         "name":"inventory",
+                         "type":"string",
+                         "value":""
+                        }, 
+                        {
+                         "name":"objectType",
+                         "type":"string",
+                         "value":"bandit"
+                        }, 
+                        {
+                         "name":"teamId",
+                         "type":"int",
+                         "value":2
+                        }],
+                 "rotation":0,
+                 "type":"object",
+                 "visible":true,
+                 "width":0,
+                 "x":662.48370273794,
+                 "y":669.817470664928
+                }, 
+                {
+                 "height":0,
+                 "id":45,
+                 "name":"Dog",
+                 "point":true,
+                 "properties":[
+                        {
+                         "name":"commander",
+                         "type":"bool",
+                         "value":false
+                        }, 
+                        {
+                         "name":"inventory",
+                         "type":"string",
+                         "value":""
+                        }, 
+                        {
+                         "name":"objectType",
+                         "type":"string",
+                         "value":"dog"
+                        }, 
+                        {
+                         "name":"teamId",
+                         "type":"int",
+                         "value":2
+                        }],
+                 "rotation":0,
+                 "type":"object",
+                 "visible":true,
+                 "width":0,
+                 "x":683.670143415906,
+                 "y":699.152542372881
+                }, 
+                {
+                 "height":0,
+                 "id":46,
+                 "name":"Dog",
+                 "point":true,
+                 "properties":[
+                        {
+                         "name":"commander",
+                         "type":"bool",
+                         "value":false
+                        }, 
+                        {
+                         "name":"inventory",
+                         "type":"string",
+                         "value":""
+                        }, 
+                        {
+                         "name":"objectType",
+                         "type":"string",
+                         "value":"dog"
+                        }, 
+                        {
+                         "name":"teamId",
+                         "type":"int",
+                         "value":2
+                        }],
+                 "rotation":0,
+                 "type":"object",
+                 "visible":true,
+                 "width":0,
+                 "x":615.221642764016,
+                 "y":692.633637548892
+                }, 
+                {
+                 "height":0,
+                 "id":47,
+                 "name":"Dog",
+                 "point":true,
+                 "properties":[
+                        {
+                         "name":"commander",
+                         "type":"bool",
+                         "value":false
+                        }, 
+                        {
+                         "name":"inventory",
+                         "type":"string",
+                         "value":""
+                        }, 
+                        {
+                         "name":"objectType",
+                         "type":"string",
+                         "value":"dog"
+                        }, 
+                        {
+                         "name":"teamId",
+                         "type":"int",
+                         "value":2
+                        }],
+                 "rotation":0,
+                 "type":"object",
+                 "visible":true,
+                 "width":0,
+                 "x":634.778357235984,
+                 "y":647.816166883964
                 }],
          "opacity":1,
          "type":"objectgroup",
@@ -402,8 +534,8 @@
                  "type":"fallback_node",
                  "visible":true,
                  "width":0,
-                 "x":650.229552878296,
-                 "y":959.00393411543
+                 "x":657.563320805284,
+                 "y":706.396372185834
                 }, 
                 {
                  "height":0,
@@ -504,7 +636,7 @@
          "y":0
         }],
  "nextlayerid":10,
- "nextobjectid":44,
+ "nextobjectid":48,
  "orientation":"orthogonal",
  "renderorder":"right-down",
  "tiledversion":"1.4.3",

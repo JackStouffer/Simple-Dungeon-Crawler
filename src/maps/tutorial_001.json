@@ -130,7 +130,7 @@
                 {
                  "height":0,
                  "id":43,
-                 "name":"Goblin",
+                 "name":"Rat",
                  "point":true,
                  "properties":[
                         {
@@ -141,14 +141,14 @@
                         {
                          "name":"objectType",
                          "type":"string",
-                         "value":"goblin"
+                         "value":"rat"
                         }],
                  "rotation":0,
                  "type":"object",
                  "visible":true,
                  "width":0,
-                 "x":440.464147920763,
-                 "y":234.645634554859
+                 "x":423.615516029673,
+                 "y":233.297744003572
                 }, 
                 {
                  "height":0,
@@ -326,6 +326,11 @@
                          "name":"objectType",
                          "type":"string",
                          "value":"goblin"
+                        }, 
+                        {
+                         "name":"teamId",
+                         "type":"int",
+                         "value":1
                         }],
                  "rotation":0,
                  "type":"object",
@@ -349,6 +354,11 @@
                          "name":"objectType",
                          "type":"string",
                          "value":"goblin"
+                        }, 
+                        {
+                         "name":"teamId",
+                         "type":"int",
+                         "value":1
                         }],
                  "rotation":0,
                  "type":"object",

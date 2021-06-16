@@ -165,6 +165,11 @@
                          "name":"objectType",
                          "type":"string",
                          "value":"goblin"
+                        }, 
+                        {
+                         "name":"teamId",
+                         "type":"int",
+                         "value":1
                         }],
                  "rotation":0,
                  "type":"object",
@@ -188,6 +193,11 @@
                          "name":"objectType",
                          "type":"string",
                          "value":"goblin"
+                        }, 
+                        {
+                         "name":"teamId",
+                         "type":"int",
+                         "value":1
                         }],
                  "rotation":0,
                  "type":"object",
@@ -356,6 +366,80 @@
                  "width":0,
                  "x":519.146266493196,
                  "y":205.45272751524
+                }, 
+                {
+                 "height":0,
+                 "id":107,
+                 "name":"Goblin",
+                 "point":true,
+                 "properties":[
+                        {
+                         "name":"inventory",
+                         "type":"string",
+                         "value":""
+                        }, 
+                        {
+                         "name":"objectType",
+                         "type":"string",
+                         "value":"goblin"
+                        }, 
+                        {
+                         "name":"teamId",
+                         "type":"int",
+                         "value":1
+                        }],
+                 "rotation":0,
+                 "type":"object",
+                 "visible":true,
+                 "width":0,
+                 "x":1111.11111111111,
+                 "y":233.075906213038
+                }, 
+                {
+                 "height":0,
+                 "id":108,
+                 "name":"Rat",
+                 "point":true,
+                 "properties":[
+                        {
+                         "name":"inventory",
+                         "type":"string",
+                         "value":""
+                        }, 
+                        {
+                         "name":"objectType",
+                         "type":"string",
+                         "value":"rat"
+                        }],
+                 "rotation":0,
+                 "type":"object",
+                 "visible":true,
+                 "width":0,
+                 "x":1079.10665831768,
+                 "y":201.071453419606
+                }, 
+                {
+                 "height":0,
+                 "id":109,
+                 "name":"Rat",
+                 "point":true,
+                 "properties":[
+                        {
+                         "name":"inventory",
+                         "type":"string",
+                         "value":""
+                        }, 
+                        {
+                         "name":"objectType",
+                         "type":"string",
+                         "value":"rat"
+                        }],
+                 "rotation":0,
+                 "type":"object",
+                 "visible":true,
+                 "width":0,
+                 "x":1078.41090934391,
+                 "y":271.342099770403
                 }],
          "opacity":1,
          "type":"objectgroup",
@@ -397,7 +481,7 @@
          "y":0
         }],
  "nextlayerid":11,
- "nextobjectid":107,
+ "nextobjectid":110,
  "orientation":"orthogonal",
  "renderorder":"right-down",
  "tiledversion":"1.4.3",

@@ -1262,7 +1262,7 @@ export const ObjectData: { [key: string]: ObjectDataDetails } = {
                 },
                 SpeedComponent: {
                     speed: BASE_SPEED,
-                    maxTilesPerMove: 5
+                    maxTilesPerMove: 3
                 },
                 HitPointsComponent: {
                     hp: 30,
@@ -1428,12 +1428,12 @@ export const ObjectData: { [key: string]: ObjectDataDetails } = {
                 },
                 FearAIComponent: {
                     fear: 0,
-                    isAfraidThreshold: 10,
+                    isAfraidThreshold: 5,
                     isCowering: false
                 },
                 SpeedComponent: {
                     speed: BASE_SPEED,
-                    maxTilesPerMove: 4
+                    maxTilesPerMove: 5
                 },
                 HitPointsComponent: {
                     hp: 10,
@@ -1828,6 +1828,86 @@ export const ObjectData: { [key: string]: ObjectDataDetails } = {
                 },
                 SilenceableComponent: {
                     silenced: false,
+                    turnsLeft: 0
+                },
+                ParalyzableComponent: {
+                    paralyzed: false,
+                    turnsLeft: 0
+                }
+            }
+        }
+    },
+    "dog": {
+        addPlannerAI: true,
+        sightRange: 7,
+        lowHealthThreshold: 0.5,
+        desiredDistanceToTarget: 1,
+        actions: [
+            "wander",
+            "chase",
+            "goToEnemy",
+            "meleeAttack",
+            "runAway"
+        ],
+        staticallyKnownComponents: {
+            tags: ["blocks", "sentient", "moveable"],
+            c: {
+                TypeComponent: {
+                    entityType: "dog",
+                    race: "dog",
+                    classification: "dog"
+                },
+                DisplayNameComponent: {
+                    name: "Dog"
+                },
+                GraphicsComponent: {
+                    textureKey: "dog",
+                    sprite: null,
+                    zIndex: 5
+                },
+                LoseTargetAIComponent: {
+                    turnsWithTargetOutOfSight: 0,
+                    loseTrackAfterNTurns: 6
+                },
+                FearAIComponent: {
+                    fear: 0,
+                    isAfraidThreshold: 10,
+                    isCowering: false
+                },
+                SpeedComponent: {
+                    speed: BASE_SPEED,
+                    maxTilesPerMove: 7
+                },
+                HitPointsComponent: {
+                    hp: 20,
+                    maxHp: 20,
+                    onDeath: DeathType.Default
+                },
+                StatsComponent: {
+                    strength: 5,
+                    defense: 1,
+                    criticalChance: 0.05,
+                    criticalDamageMultiplier: 1.5,
+                    ailmentSusceptibility: 0.1
+                },
+                LevelComponent: {
+                    level: 3,
+                    experience: 0,
+                    experienceGiven: 10
+                },
+                DamageAffinityComponent: normalTypeDamageValues,
+                FlammableComponent: {
+                    onFire: false,
+                    fireDamage: 0,
+                    turnsLeft: 0
+                },
+                FreezableComponent: {
+                    frozen: false,
+                    turnsLeft: 0,
+                    textureKey: "ice_wall"
+                },
+                WetableComponent: {
+                    wet: false,
                     turnsLeft: 0
                 },
                 ParalyzableComponent: {

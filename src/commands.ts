@@ -180,7 +180,7 @@ export function generateWeightCallback(
 }
 
 /**
- * Simplified distance heuristic
+ * Simplified distance heuristic use for drawing the movement path
  */
 export function generatePlayerWeightCallback(origin: Point): WeightCallback {
     return function (x: number, y: number): number {

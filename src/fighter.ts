@@ -477,8 +477,6 @@ export function takeDamage(
         // the target and that the target is in line of sight
         // TODO: Target acquisition code
         if (aiState !== undefined && aiState.knowsTargetPosition === false) {
-            aiState.knowsTargetPosition = true;
-            aiState.update();
             // Bonus damage for sneak attack
             calculatedDamage = Math.ceil(calculatedDamage * 1.5);
             critical = true;
