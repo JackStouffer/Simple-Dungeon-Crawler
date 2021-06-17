@@ -245,6 +245,15 @@ export function setOnFire(target: Entity, damage?: number, turns?: number): bool
     flammableData.onFire = true;
     flammableData.update();
 
+    if (target === globals.Game!.player) {
+        displayMessage("You are now on fire", MessageType.StatusEffect);
+    } else if (target.tags.has("sentient")) {
+        const displayName = target.getOne(DisplayNameComponent);
+        if (displayName !== undefined) {
+            displayMessage(`${displayName.name} is now on fire`, MessageType.StatusEffect);
+        }
+    }
+
     return true;
 }
 
@@ -335,9 +344,9 @@ export function setFrozen(target: Entity, turns: number): boolean {
         frozenData.update();
 
         if (target === globals.Game?.player) {
-            displayMessage("You are frozen");
+            displayMessage("You are frozen", MessageType.StatusEffect);
         } else if (name !== undefined && target.tags.has("sentient")) {
-            displayMessage(`${name.name} is now frozen`);
+            displayMessage(`${name.name} is now frozen`, MessageType.StatusEffect);
         }
 
         if (triggerData !== undefined &&

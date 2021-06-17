@@ -61,6 +61,16 @@ export class OnFireSystem extends System {
                         entity.removeComponent(entity.getOne(TriggerTypeComponent)!);
                         entity.removeComponent(entity.getOne(FireTriggerComponent)!);
                     }
+
+
+                    if (entity === globals.Game!.player) {
+                        displayMessage("You are no longer on fire", MessageType.StatusEffect);
+                    } else if (entity.tags.has("sentient")) {
+                        const displayName = entity.getOne(DisplayNameComponent);
+                        if (displayName !== undefined) {
+                            displayMessage(`${displayName.name} is no longer on fire`, MessageType.StatusEffect);
+                        }
+                    }
                 } else {
                     // Simulate Fire Spreading
                     // Check neighboring tiles for flammable entities
@@ -95,10 +105,11 @@ export class OnFireSystem extends System {
                 if (globals.Game === null) { continue; }
                 if (entity === globals.Game.player) {
                     displayMessage(`You took ${flammableData.fireDamage} damage from being on fire`);
-                } else {
+                } else if (entity.tags.has("sentient")) {
                     const displayName = entity.getOne(DisplayNameComponent);
-                    if (displayName === undefined) { continue; }
-                    displayMessage(`${displayName.name} took ${flammableData.fireDamage} damage from being on fire`);
+                    if (displayName !== undefined) {
+                        displayMessage(`${displayName.name} took ${flammableData.fireDamage} damage from being on fire`);
+                    }
                 }
             }
         }
@@ -125,6 +136,15 @@ export class WetSystem extends System {
             } else if (effect.wet && effect.turnsLeft <= 0) {
                 effect.wet = false;
                 effect.update();
+
+                if (entity === globals.Game!.player) {
+                    displayMessage("You are no longer wet", MessageType.StatusEffect);
+                } else {
+                    const displayName = entity.getOne(DisplayNameComponent);
+                    if (displayName !== undefined) {
+                        displayMessage(`${displayName.name} is no longer wet`, MessageType.StatusEffect);
+                    }
+                }
             }
         }
     }
@@ -151,8 +171,14 @@ export class SilenceSystem extends System {
                 effect.silenced = false;
                 effect.update();
 
-                const displayName = entity.getOne(DisplayNameComponent)!;
-                displayMessage(`${displayName.name} has recovered from being silenced`);
+                if (entity === globals.Game!.player) {
+                    displayMessage("You are no longer silenced", MessageType.StatusEffect);
+                } else {
+                    const displayName = entity.getOne(DisplayNameComponent);
+                    if (displayName !== undefined) {
+                        displayMessage(`${displayName.name} is no longer silenced`, MessageType.StatusEffect);
+                    }
+                }
             }
         }
     }
@@ -179,8 +205,14 @@ export class StunSystem extends System {
                 effect.stunned = false;
                 effect.update();
 
-                const displayName = entity.getOne(DisplayNameComponent)!;
-                displayMessage(`${displayName.name} has recovered from being stunned`);
+                if (entity === globals.Game!.player) {
+                    displayMessage("You are no longer stunned", MessageType.StatusEffect);
+                } else {
+                    const displayName = entity.getOne(DisplayNameComponent);
+                    if (displayName !== undefined) {
+                        displayMessage(`${displayName.name} is no longer stunned`, MessageType.StatusEffect);
+                    }
+                }
             }
         }
     }
@@ -216,9 +248,13 @@ export class FrozenSystem extends System {
                     ];
                 }
 
-                const name = entity.getOne(DisplayNameComponent);
-                if (name !== undefined) {
-                    displayMessage(`${name.name} is no longer frozen`);
+                if (entity === globals.Game!.player) {
+                    displayMessage("You are no longer frozen", MessageType.StatusEffect);
+                } else {
+                    const displayName = entity.getOne(DisplayNameComponent);
+                    if (displayName !== undefined) {
+                        displayMessage(`${displayName.name} is no longer frozen`, MessageType.StatusEffect);
+                    }
                 }
             }
         }
@@ -315,8 +351,10 @@ export class UpdateSpeedEffectsSystem extends System {
                     entity.removeComponent(effect);
                     effect.destroy();
 
-                    const displayName = entity.getOne(DisplayNameComponent)!;
-                    displayMessage(`${effect.name} has ended for ${displayName.name}`, MessageType.StatusEffect);
+                    if (effect.display) {
+                        const displayName = entity.getOne(DisplayNameComponent)!;
+                        displayMessage(`${effect.name} has ended for ${displayName.name}`, MessageType.StatusEffect);
+                    }
                 } else {
                     effect.update();
                 }

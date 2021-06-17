@@ -60,10 +60,12 @@ export function mudTrigger(actor: Entity): void {
     if (speedData !== undefined) {
         actor.addComponent({
             type: "SpeedEffectComponent",
+            name: "mud",
             stat: "maxTilesPerMove",
             modifierType: "multiply",
             turnsLeft: 1,
-            value: 0.1
+            value: 0.1,
+            display: false
         });
     }
 }
@@ -89,10 +91,12 @@ export function deepWaterTrigger(actor: Entity): void {
         if (speedData !== undefined) {
             actor.addComponent({
                 type: "SpeedEffectComponent",
+                name: "water",
                 stat: "maxTilesPerMove",
                 modifierType: "multiply",
                 turnsLeft: 1,
-                value: 0.1
+                value: 0.1,
+                display: false
             });
         }
     }

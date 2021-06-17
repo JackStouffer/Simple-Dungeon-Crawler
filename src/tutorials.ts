@@ -100,6 +100,6 @@ export function explainEnemySurrounding() {
     if (!hasMessageBeenShown.enemySurrounding) {
         displayMessage("Your defense and movement are penalized for each enemy which surrounds you.", MessageType.Tutorial);
         playPing();
-        hasMessageBeenShown.environment = true;
+        hasMessageBeenShown.enemySurrounding = true;
     }
 }

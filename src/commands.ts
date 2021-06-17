@@ -25,7 +25,7 @@ import {
     getRandomFighterWithinRange
 } from "./map";
 import { assertUnreachable, Nullable, randomIntFromInterval } from "./util";
-import { displayMessage } from "./ui";
+import { displayMessage, MessageType } from "./ui";
 import {
     DisplayNameComponent,
     EntityMap,
@@ -466,7 +466,7 @@ export class PushBackCommand implements Command {
                 const stunned = setStunned(this.entity, 3);
                 if (stunned) {
                     const displayName = this.entity.getOne(DisplayNameComponent)!;
-                    displayMessage(`${displayName.name} is now stunned`);
+                    displayMessage(`${displayName.name} is now stunned`, MessageType.StatusEffect);
                 }
             }
 
@@ -479,7 +479,7 @@ export class PushBackCommand implements Command {
                     const stunned = setStunned(blocker, 3);
                     if (stunned) {
                         const displayName = blocker.getOne(DisplayNameComponent)!;
-                        displayMessage(`${displayName.name} is now stunned`);
+                        displayMessage(`${displayName.name} is now stunned`, MessageType.StatusEffect);
                     }
                 }
             }

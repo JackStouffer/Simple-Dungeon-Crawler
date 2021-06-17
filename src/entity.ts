@@ -208,6 +208,7 @@ export class SpeedEffectComponent extends Component {
     modifierType: "multiply" | "add";
     turnsLeft: number;
     value: number;
+    display: boolean;
 
     static typeName = "SpeedEffectComponent";
     static properties = {
@@ -215,7 +216,8 @@ export class SpeedEffectComponent extends Component {
         stat: "speed",
         modifierType: "add",
         turnsLeft: 0,
-        value: 0
+        value: 0,
+        display: true
     }
 }
 
