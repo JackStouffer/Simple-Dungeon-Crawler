@@ -882,7 +882,7 @@ export function castExhale(
         const { entity } = isBlocked(map, entityMap, dx, dy);
         if (entity !== null) {
             if (entity.tags.has("moveable")) {
-                globals.Game!.commandQueue.push(new PushBackCommand(entity, i, 3));
+                globals.Game!.commandQueue.push(new PushBackCommand(entity, i, 3, 1));
             }
         }
     }
@@ -1937,7 +1937,7 @@ export const SpellData: { [key: string]: SpellDataDetails } = {
     "exhale": {
         id: "exhale",
         displayName: "Exhale",
-        description: "Send out a burst of air from your body in all directions, pushing away anything that's too close. Enemies which slam into objects take physical damage and have a chance to be stunned.",
+        description: "Send out a burst of air from your body in all directions, pushing away anything that's too close and stunning enemies. Enemies which slam into objects take physical damage.",
         value: 4,
         type: SpellType.Push,
         useFunc: castExhale,

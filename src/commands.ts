@@ -425,15 +425,17 @@ export class GoToLocationCommand implements Command {
  * Push an actor back a specified number of tiles
  */
 export class PushBackCommand implements Command {
-    private readonly entity: Entity;
-    private readonly dir: number;
-    private numTiles: number;
-    private tilesMoved: number = 0;
+    readonly entity: Entity;
+    readonly dir: number;
+    numTiles: number;
+    tilesMoved: number = 0;
+    readonly stunProbability: number;
 
-    constructor(entity: Entity, dir: number, numTiles: number) {
+    constructor(entity: Entity, dir: number, numTiles: number, stunProbability: number = 0.3) {
         this.entity = entity;
         this.dir = dir;
         this.numTiles = numTiles;
+        this.stunProbability = stunProbability;
     }
 
     usedTurn(): boolean {
@@ -442,6 +444,12 @@ export class PushBackCommand implements Command {
 
     isFinished(): boolean {
         return this.tilesMoved === this.numTiles;
+    }
+
+    tearDown() {
+        if (Math.random() <= this.stunProbability) {
+            setStunned(this.entity, 1);
+        }
     }
 
     update(deltaTime: DOMHighResTimeStamp): void {
@@ -470,17 +478,18 @@ export class PushBackCommand implements Command {
                 }
             }
 
-            if (blocker !== null && blocker.tags.has("moveable")) {
+            if (blocker !== null) {
                 takeDamage(blocker, damage, false, DamageType.Physical);
-                // TODO: pushing directly onto the command queue sort of sucks
-                globals.Game?.commandQueue.push(new PushBackCommand(blocker, this.dir, tilesLeft));
 
-                if (Math.random() > 0.3) {
-                    const stunned = setStunned(blocker, 3);
-                    if (stunned) {
-                        const displayName = blocker.getOne(DisplayNameComponent)!;
-                        displayMessage(`${displayName.name} is now stunned`, MessageType.StatusEffect);
-                    }
+                if (Math.random() <= this.stunProbability) {
+                    setStunned(blocker, 1);
+                }
+                if (blocker.tags.has("moveable")) {
+                    // TODO, cleanup: Pushing directly onto the command queue sort of sucks.
+                    // Have some way for commands to cleanly spawn other commands
+                    globals.Game?.commandQueue.push(
+                        new PushBackCommand(blocker, this.dir, tilesLeft)
+                    );
                 }
             }
 
