@@ -22,7 +22,7 @@ import {
     FreezableComponent,
     LevelComponent,
     LoseTargetAIComponent,
-    ParalyzableComponent,
+    StunnableComponent,
     PlannerAIComponent,
     PositionComponent,
 } from "../entity";
@@ -376,9 +376,9 @@ export function generateAICommands(
         throw new Error(`Entity ${ai.id} is missing a position component`);
     }
 
-    const paralyzableData = ai.getOne(ParalyzableComponent);
-    if (paralyzableData !== undefined &&
-        paralyzableData.paralyzed) {
+    const stunnableData = ai.getOne(StunnableComponent);
+    if (stunnableData !== undefined &&
+        stunnableData.stunned) {
         return [new NoOpCommand(true)];
     }
 

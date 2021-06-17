@@ -84,7 +84,7 @@ export enum SpellType {
 export enum StatusEffectType {
     OnFire,
     Frozen,
-    Paralyzed
+    Stunned
 }
 
 export enum InteractableType {

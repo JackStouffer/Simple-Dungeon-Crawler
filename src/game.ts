@@ -55,7 +55,7 @@ import {
     SilenceableComponent,
     UpdateEntityMapSystem,
     EntityMap,
-    ParalyzableComponent,
+    StunnableComponent,
     removeEntity,
     EntityTeamMap,
     DialogMemoryComponent,
@@ -109,7 +109,7 @@ import {
     UpdateSpeedEffectsSystem,
     WetSystem,
     SilenceSystem,
-    ParalyzeSystem,
+    StunSystem,
     FrozenSystem
 } from "./effects";
 import { generateAICommands } from "./ai/commands";
@@ -334,7 +334,7 @@ export class SimpleDungeonCrawler {
         this.ecs.registerComponent(FlammableComponent, 50);
         this.ecs.registerComponent(WetableComponent, 50);
         this.ecs.registerComponent(SilenceableComponent, 50);
-        this.ecs.registerComponent(ParalyzableComponent, 50);
+        this.ecs.registerComponent(StunnableComponent, 50);
         this.ecs.registerComponent(TriggerTypeComponent, 50);
         this.ecs.registerComponent(FireTriggerComponent, 20);
         this.ecs.registerComponent(EventTriggerComponent, 20);
@@ -359,7 +359,7 @@ export class SimpleDungeonCrawler {
         this.ecs.registerSystem("postOneTurnCycle", WetSystem);
         this.ecs.registerSystem("postOneTurnCycle", OnFireSystem);
         this.ecs.registerSystem("postOneTurnCycle", SilenceSystem);
-        this.ecs.registerSystem("postOneTurnCycle", ParalyzeSystem);
+        this.ecs.registerSystem("postOneTurnCycle", StunSystem);
         this.ecs.registerSystem("postOneTurnCycle", FrozenSystem);
         this.ecs.registerSystem("postOneTurnCycle", LevelUpSystem);
 

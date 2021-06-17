@@ -2,7 +2,7 @@ import { Query, System } from "ape-ecs";
 
 import globals from "./globals";
 import { DamageType } from "./constants";
-import { displayMessage } from "./ui";
+import { displayMessage, MessageType } from "./ui";
 import {
     DisplayNameComponent,
     FireTriggerComponent,
@@ -12,7 +12,7 @@ import {
     HitPointsComponent,
     HitPointsEffectComponent,
     ObjectData,
-    ParalyzableComponent,
+    StunnableComponent,
     PositionComponent,
     SilenceableComponent,
     SpeedEffectComponent,
@@ -158,29 +158,29 @@ export class SilenceSystem extends System {
     }
 }
 
-export class ParalyzeSystem extends System {
+export class StunSystem extends System {
     private mainQuery: Query;
 
     init() {
         this.mainQuery = this
             .createQuery()
-            .fromAll(ParalyzableComponent)
+            .fromAll(StunnableComponent)
             .persist();
     }
 
     update() {
         const entities = this.mainQuery.execute();
         for (const entity of entities) {
-            const effect = entity.getOne(ParalyzableComponent)!;
-            if (effect.paralyzed && effect.turnsLeft > 0) {
+            const effect = entity.getOne(StunnableComponent)!;
+            if (effect.stunned && effect.turnsLeft > 0) {
                 effect.turnsLeft--;
                 effect.update();
-            } else if (effect.paralyzed && effect.turnsLeft <= 0) {
-                effect.paralyzed = false;
+            } else if (effect.stunned && effect.turnsLeft <= 0) {
+                effect.stunned = false;
                 effect.update();
 
                 const displayName = entity.getOne(DisplayNameComponent)!;
-                displayMessage(`${displayName.name} has recovered from being paralyzed`);
+                displayMessage(`${displayName.name} has recovered from being stunned`);
             }
         }
     }
@@ -250,7 +250,7 @@ export class UpdateHitPointsEffectsSystem extends System {
                     effect.destroy();
 
                     const displayName = entity.getOne(DisplayNameComponent)!;
-                    displayMessage(`${effect.name} has ended for ${displayName.name}`);
+                    displayMessage(`${effect.name} has ended for ${displayName.name}`, MessageType.StatusEffect);
                 } else {
                     effect.update();
                 }
@@ -283,7 +283,7 @@ export class UpdateStatsEffectsSystem extends System {
                     effect.destroy();
 
                     const displayName = entity.getOne(DisplayNameComponent)!;
-                    displayMessage(`${effect.name} has ended for ${displayName.name}`);
+                    displayMessage(`${effect.name} has ended for ${displayName.name}`, MessageType.StatusEffect);
                 } else {
                     effect.update();
                 }
@@ -316,7 +316,7 @@ export class UpdateSpeedEffectsSystem extends System {
                     effect.destroy();
 
                     const displayName = entity.getOne(DisplayNameComponent)!;
-                    displayMessage(`${effect.name} has ended for ${displayName.name}`);
+                    displayMessage(`${effect.name} has ended for ${displayName.name}`, MessageType.StatusEffect);
                 } else {
                     effect.update();
                 }

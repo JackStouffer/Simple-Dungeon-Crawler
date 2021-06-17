@@ -29,7 +29,7 @@ import {
     InventoryComponent,
     LevelComponent,
     LoseTargetAIComponent,
-    ParalyzableComponent,
+    StunnableComponent,
     PlannerAIComponent,
     PositionComponent,
     removeEntity,
@@ -137,7 +137,7 @@ export class DeathSystem extends System {
             WetableComponent,
             TriggerTypeComponent,
             FireTriggerComponent,
-            ParalyzableComponent
+            StunnableComponent
         ];
 
         for (let i = 0; i < compArray.length; i++) {

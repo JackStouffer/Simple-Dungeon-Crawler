@@ -13,7 +13,7 @@ import {
     getEntitiesAtLocation,
     getHighestZIndexWithTile
 } from "./map";
-import { displayMessage } from "./ui";
+import { displayMessage, MessageType } from "./ui";
 import { DamageType, ItemType, SpellType, StatusEffectType, TriggerType } from "./constants";
 import {
     createEntity,
@@ -23,7 +23,7 @@ import {
     FreezableComponent,
     GraphicsComponent,
     HitPointsComponent,
-    ParalyzableComponent,
+    StunnableComponent,
     PlannerAIComponent,
     PositionComponent,
     removeEntity,
@@ -182,10 +182,10 @@ export function setOnFire(target: Entity, damage?: number, turns?: number): bool
     const blocks = target.tags.has("blocks");
     if (flammableData === undefined) {
         if (target === globals.Game?.player) {
-            displayMessage("You were not set on fire because you're immune");
+            displayMessage("You were not set on fire because you're immune", MessageType.StatusEffect);
         } else {
             const displayName = target.getOne(DisplayNameComponent)!;
-            displayMessage(`${displayName.name} was not set on fire because it is immune`);
+            displayMessage(`${displayName.name} was not set on fire because it is immune`, MessageType.StatusEffect);
         }
         return false;
     }
@@ -197,10 +197,10 @@ export function setOnFire(target: Entity, damage?: number, turns?: number): bool
         wetData.update();
 
         if (target === globals.Game?.player) {
-            displayMessage("You were not set on fire because you were wet");
+            displayMessage("You were not set on fire because you were wet", MessageType.StatusEffect);
         } else {
             const displayName = target.getOne(DisplayNameComponent)!;
-            displayMessage(`${displayName.name} was not set on fire because it was wet`);
+            displayMessage(`${displayName.name} was not set on fire because it was wet`, MessageType.StatusEffect);
         }
 
         return false;
@@ -258,7 +258,7 @@ export function setWet(target: Entity, turns?: number): boolean {
         flammableData.update();
 
         if (target === globals.Game?.player) {
-            displayMessage("The water doused you");
+            displayMessage("The water doused you", MessageType.StatusEffect);
         }
     }
 
@@ -274,23 +274,30 @@ export function setWet(target: Entity, turns?: number): boolean {
     return false;
 }
 
-export function setParalyzed(target: Entity, turns?: number): boolean {
-    const paralyzableData = target.getOne(ParalyzableComponent);
-    if (paralyzableData === undefined) { return false; }
+export function setStunned(target: Entity, turns?: number): boolean {
+    const stunnableData = target.getOne(StunnableComponent);
+    if (stunnableData === undefined) { return false; }
 
     turns = turns ?? randomIntFromInterval(2, 4);
 
-    if (paralyzableData.paralyzed && paralyzableData.turnsLeft >= turns) {
+    if (stunnableData.stunned && stunnableData.turnsLeft >= turns) {
         return false;
-    } else if (paralyzableData.paralyzed && paralyzableData.turnsLeft < turns) {
-        paralyzableData.turnsLeft = turns ?? 0;
-        paralyzableData.update();
+    } else if (stunnableData.stunned && stunnableData.turnsLeft < turns) {
+        stunnableData.turnsLeft = turns ?? 0;
+        stunnableData.update();
         return true;
     }
 
-    paralyzableData.paralyzed = true;
-    paralyzableData.turnsLeft = turns;
-    paralyzableData.update();
+    stunnableData.stunned = true;
+    stunnableData.turnsLeft = turns;
+    stunnableData.update();
+
+    if (target === globals.Game?.player) {
+        displayMessage("You are stunned!", MessageType.StatusEffect);
+    } else {
+        const displayName = target.getOne(DisplayNameComponent)!;
+        displayMessage(`${displayName.name} is now stunned`, MessageType.StatusEffect);
+    }
 
     return true;
 }
@@ -371,8 +378,8 @@ function rollForStatusEffect(
                 break;
             case StatusEffectType.Frozen:
                 throw new Error("Not implemented");
-            case StatusEffectType.Paralyzed:
-                setParalyzed(target, randomIntFromInterval(2, 4));
+            case StatusEffectType.Stunned:
+                setStunned(target, randomIntFromInterval(2, 4));
                 break;
             default:
                 assertUnreachable(item.statusEffect);

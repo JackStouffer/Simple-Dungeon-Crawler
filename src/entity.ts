@@ -457,13 +457,13 @@ export class SilenceableComponent extends Component {
     }
 }
 
-export class ParalyzableComponent extends Component {
-    paralyzed: boolean;
+export class StunnableComponent extends Component {
+    stunned: boolean;
     turnsLeft: number;
 
-    static typeName = "ParalyzableComponent";
+    static typeName = "StunnableComponent";
     static properties = {
-        paralyzed: false,
+        stunned: false,
         turnsLeft: 0
     }
 }
@@ -1296,8 +1296,8 @@ export const ObjectData: { [key: string]: ObjectDataDetails } = {
                     wet: false,
                     turnsLeft: 0
                 },
-                ParalyzableComponent: {
-                    paralyzed: false,
+                StunnableComponent: {
+                    stunned: false,
                     turnsLeft: 0
                 }
             }
@@ -1385,8 +1385,8 @@ export const ObjectData: { [key: string]: ObjectDataDetails } = {
                     wet: false,
                     turnsLeft: 0
                 },
-                ParalyzableComponent: {
-                    paralyzed: false,
+                StunnableComponent: {
+                    stunned: false,
                     turnsLeft: 0
                 }
             }
@@ -1467,8 +1467,8 @@ export const ObjectData: { [key: string]: ObjectDataDetails } = {
                     wet: false,
                     turnsLeft: 0
                 },
-                ParalyzableComponent: {
-                    paralyzed: false,
+                StunnableComponent: {
+                    stunned: false,
                     turnsLeft: 0
                 }
             }
@@ -1538,8 +1538,8 @@ export const ObjectData: { [key: string]: ObjectDataDetails } = {
                     turnsLeft: 0,
                     textureKey: "ice_wall"
                 },
-                ParalyzableComponent: {
-                    paralyzed: false,
+                StunnableComponent: {
+                    stunned: false,
                     turnsLeft: 0
                 }
             }
@@ -1630,8 +1630,8 @@ export const ObjectData: { [key: string]: ObjectDataDetails } = {
                     wet: false,
                     turnsLeft: 0
                 },
-                ParalyzableComponent: {
-                    paralyzed: false,
+                StunnableComponent: {
+                    stunned: false,
                     turnsLeft: 0
                 }
             }
@@ -1733,8 +1733,8 @@ export const ObjectData: { [key: string]: ObjectDataDetails } = {
                     silenced: false,
                     turnsLeft: 0
                 },
-                ParalyzableComponent: {
-                    paralyzed: false,
+                StunnableComponent: {
+                    stunned: false,
                     turnsLeft: 0
                 }
             }
@@ -1830,8 +1830,8 @@ export const ObjectData: { [key: string]: ObjectDataDetails } = {
                     silenced: false,
                     turnsLeft: 0
                 },
-                ParalyzableComponent: {
-                    paralyzed: false,
+                StunnableComponent: {
+                    stunned: false,
                     turnsLeft: 0
                 }
             }
@@ -1910,8 +1910,8 @@ export const ObjectData: { [key: string]: ObjectDataDetails } = {
                     wet: false,
                     turnsLeft: 0
                 },
-                ParalyzableComponent: {
-                    paralyzed: false,
+                StunnableComponent: {
+                    stunned: false,
                     turnsLeft: 0
                 }
             }

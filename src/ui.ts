@@ -241,7 +241,8 @@ export class StatusBar {
 export enum MessageType {
     Default,
     Tutorial,
-    Critical
+    Critical,
+    StatusEffect
 }
 
 export function displayMessage(text: string, type: MessageType = MessageType.Default): void {
@@ -260,6 +261,9 @@ export function displayMessage(text: string, type: MessageType = MessageType.Def
         el.className = "tutorial";
     } else if (type === MessageType.Critical) {
         el.className = "critical";
+        small.innerHTML = `<small>Turn: ${globals.Game.getTurnNumber()}</small>`;
+    } else if (type === MessageType.StatusEffect) {
+        el.className = "status-effect";
         small.innerHTML = `<small>Turn: ${globals.Game.getTurnNumber()}</small>`;
     } else {
         small.innerHTML = `<small>Turn: ${globals.Game.getTurnNumber()}</small>`;

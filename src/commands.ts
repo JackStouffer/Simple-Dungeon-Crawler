@@ -46,7 +46,7 @@ import { attack, getEffectiveSpeedData, getKnownSpells, takeDamage } from "./fig
 import { getItems } from "./inventory";
 import { deepWaterTrigger, eventTrigger, fireTrigger, mudTrigger, shallowWaterTrigger, steamTrigger } from "./trigger";
 import { giveItemsInteract, giveSpellsInteract, doorInteract, levelLoadInteract } from "./interactable";
-import { setOnFire, setParalyzed, SpellDataDetails, ItemDataDetails } from "./skills";
+import { setOnFire, setStunned, SpellDataDetails, ItemDataDetails } from "./skills";
 import { DIRS } from "./rot";
 import { playOpenInventory, playOpenSpells } from "./audio";
 import { createLightningTexture, createSpeechBubbleTexture } from "./graphics";
@@ -463,10 +463,10 @@ export class PushBackCommand implements Command {
             const damage = (this.numTiles * 3) + (tilesLeft * 2);
             takeDamage(this.entity, damage, false, DamageType.Physical);
             if (Math.random() > 0.3) {
-                const paralyzed = setParalyzed(this.entity, 3);
-                if (paralyzed) {
+                const stunned = setStunned(this.entity, 3);
+                if (stunned) {
                     const displayName = this.entity.getOne(DisplayNameComponent)!;
-                    displayMessage(`${displayName.name} is now paralyzed`);
+                    displayMessage(`${displayName.name} is now stunned`);
                 }
             }
 
@@ -476,10 +476,10 @@ export class PushBackCommand implements Command {
                 globals.Game?.commandQueue.push(new PushBackCommand(blocker, this.dir, tilesLeft));
 
                 if (Math.random() > 0.3) {
-                    const paralyzed = setParalyzed(blocker, 3);
-                    if (paralyzed) {
+                    const stunned = setStunned(blocker, 3);
+                    if (stunned) {
                         const displayName = blocker.getOne(DisplayNameComponent)!;
-                        displayMessage(`${displayName.name} is now paralyzed`);
+                        displayMessage(`${displayName.name} is now stunned`);
                     }
                 }
             }
