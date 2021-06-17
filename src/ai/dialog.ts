@@ -21,6 +21,7 @@ import {
 import { ShowSpeechBubbleCommand } from "../commands";
 import { Nullable } from "../util";
 import * as BanditDialogJSON from "../dialog/bandit.json";
+import * as GoblinDialogJSON from "../dialog/goblin.json";
 
 type DialogRule = [string, "=" | ">" | "<" | "<=" | ">=", string | number | boolean];
 
@@ -47,7 +48,8 @@ interface DialogQuery {
 export const dialogByClassification: {
     [key: string]: DialogData
 } = {
-    "bandit": (BanditDialogJSON as any).default as DialogData
+    "bandit": (BanditDialogJSON as any).default as DialogData,
+    "goblin": (GoblinDialogJSON as any).default as DialogData
 };
 
 /**

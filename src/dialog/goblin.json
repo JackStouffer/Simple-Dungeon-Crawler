@@ -1,11 +1,11 @@
 {
     "rules": [
         {
-            "name": "bandit_sees_player",
+            "name": "goblin_sees_player",
             "respondingTo": null,
             "rules": [
-                ["race", "=", "human"],
-                ["said_bandit_sees_player", "=", false],
+                ["race", "=", "goblin"],
+                ["said_goblin_sees_player", "=", false],
                 ["has_target_in_sight", "=", true],
                 ["has_alive_allies", "=", true],
                 ["team_state", "=", "passive"],
@@ -13,21 +13,20 @@
                 ["is_afraid", "=", false]
             ],
             "dialog": [
-                "Never should have come here!",
-                "Enemy spotted!"
+                "[goblin language here]"
             ],
             "aiStateChange": {
                 "currentOrder": "alert_allies"
             },
             "dialogMemoryChange": {
-                "said_bandit_sees_player": true
+                "said_goblin_sees_player": true
             }
         },
         {
-            "name": "bandit_loses_sight_of_player",
+            "name": "goblin_loses_sight_of_player",
             "respondingTo": null,
             "rules": [
-                ["race", "=", "human"],
+                ["race", "=", "goblin"],
                 ["knows_target_position", "=", true],
                 ["has_target_in_sight", "=", false],
                 ["on_fire", "=", false],
@@ -35,97 +34,92 @@
                 ["is_afraid", "=", false]
             ],
             "dialog": [
-                "I've lost him!",
-                "Where'd he go!",
-                "Lost track of him!"
+                "[goblin language here]"
             ],
             "aiStateChange": {},
             "dialogMemoryChange": {
-                "bandit_loses_sight_of_player": true
+                "goblin_loses_sight_of_player": true
             }
         },
         {
-            "name": "bandit_commander_killed",
+            "name": "goblin_commander_killed",
             "respondingTo": null,
             "rules": [
-                ["race", "=", "human"],
-                ["said_bandit_commander_killed", "=", false],
+                ["race", "=", "goblin"],
+                ["said_goblin_commander_killed", "=", false],
                 ["team_commander_alive", "=", false],
                 ["has_target_in_sight", "=", false],
                 ["has_alive_allies", "=", true],
                 ["is_confused", "=", false]
             ],
             "dialog": [
-                "They killed the chieftain!"
+                "[goblin language here]"
             ],
             "aiStateChange": {},
             "dialogMemoryChange": {
-                "said_bandit_commander_killed": true
+                "said_goblin_commander_killed": true
             }
         },
         {
-            "name": "bandit_has_been_silenced",
+            "name": "goblin_has_been_silenced",
             "respondingTo": null,
             "rules": [
-                ["race", "=", "human"],
-                ["said_bandit_has_been_silenced", "=", false],
+                ["race", "=", "goblin"],
                 ["is_silenced", "=", true],
                 ["on_fire", "=", false],
+                ["said_goblin_has_been_silenced", "=", false],
                 ["has_alive_allies", "=", true],
                 ["is_confused", "=", false],
                 ["is_afraid", "=", false]
             ],
             "dialog": [
-                "I can't cast spells!"
+                "[goblin language here]"
             ],
             "aiStateChange": {},
             "dialogMemoryChange": {
-                "said_bandit_has_been_silenced": true
+                "said_goblin_has_been_silenced": true
             }
         },
         {
-            "name": "bandit_on_fire",
+            "name": "goblin_on_fire",
             "respondingTo": null,
             "rules": [
-                ["race", "=", "human"],
-                ["said_bandit_on_fire", "=", false],
-                ["on_fire", "=", true]
+                ["race", "=", "goblin"],
+                ["on_fire", "=", true],
+                ["said_goblin_on_fire", "=", false]
             ],
             "dialog": [
-                "AAAAAAAAAAAHHHHHHHHHHHH!",
-                "PUT IT OUT! PUT IT OUT!"
+                "[goblin language here]"
             ],
             "aiStateChange": {},
             "dialogMemoryChange": {
-                "said_bandit_on_fire": true
+                "said_goblin_on_fire": true
             }
         },
         {
-            "name": "bandit_afraid",
+            "name": "goblin_afraid",
             "respondingTo": null,
             "rules": [
-                ["race", "=", "human"],
-                ["said_bandit_afraid", "=", false],
+                ["race", "=", "goblin"],
                 ["on_fire", "=", false],
                 ["is_confused", "=", false],
-                ["is_afraid", "=", true]
+                ["is_afraid", "=", true],
+                ["said_goblin_afraid", "=", false]
             ],
             "dialog": [
-                "Run for your lives!",
-                "I'm getting out of here!",
-                "It's no use!"
+                "[goblin language here]"
             ],
             "aiStateChange": {},
             "dialogMemoryChange": {
-                "said_bandit_afraid": true
+                "said_goblin_afraid": true
             }
         },
         {
-            "name": "bandit_needs_healing",
+            "name": "goblin_needs_healing",
             "respondingTo": null,
             "rules": [
-                ["race", "=", "human"],
-                ["said_bandit_needs_healing", "=", false],
+                ["race", "=", "goblin"],
+                ["said_goblin_needs_healing", "=", false],
                 ["health_percentage", "<", 40],
                 ["has_healing_items", "=", false],
                 ["has_heal_self_spell_casts", "=", false],
@@ -135,19 +129,18 @@
                 ["is_confused", "=", false]
             ],
             "dialog": [
-                "I need healing!",
-                "Badly injured ... Need help."
+                "[goblin language here]"
             ],
             "aiStateChange": {},
             "dialogMemoryChange": {
-                "said_bandit_needs_healing": true
+                "said_goblin_needs_healing": true
             }
         },
         {
-            "name": "bandit_has_heal_spells",
-            "respondingTo": "bandit_needs_healing",
+            "name": "goblin_has_heal_spells",
+            "respondingTo": "goblin_needs_healing",
             "rules": [
-                ["race", "=", "human"],
+                ["race", "=", "goblin"],
                 ["knows_heal_other_spell", "=", true],
                 ["has_heal_other_spell_casts", "=", true],
                 ["is_silenced", "=", false],
@@ -155,18 +148,18 @@
                 ["is_afraid", "=", false]
             ],
             "dialog": [
-                "Casting heal!"
+                "[goblin language here]"
             ],
             "aiStateChange": {},
             "dialogMemoryChange": {
-                "said_bandit_has_heal_spells": true
+                "said_goblin_has_heal_spells": true
             }
         },
         {
-            "name": "bandit_has_no_heal_spells",
-            "respondingTo": "bandit_needs_healing",
+            "name": "goblin_has_no_heal_spells",
+            "respondingTo": "goblin_needs_healing",
             "rules": [
-                ["race", "=", "human"],
+                ["race", "=", "goblin"],
                 ["knows_heal_other_spell", "=", true],
                 ["has_heal_other_spell_casts", "=", false],
                 ["is_silenced", "=", false],
@@ -174,33 +167,32 @@
                 ["is_afraid", "=", false]
             ],
             "dialog": [
-                "Out of heals",
-                "I'm out of healing spells"
+                "[goblin language here]"
             ],
             "aiStateChange": {},
             "dialogMemoryChange": {
-                "said_bandit_has_no_heal_spells": true
+                "said_goblin_has_no_heal_spells": true
             }
         },
         {
-            "name": "bandit_has_no_damage_spells",
+            "name": "goblin_has_no_damage_spells",
             "respondingTo": null,
             "rules": [
-                ["race", "=", "human"],
+                ["race", "=", "goblin"],
                 ["knows_damage_other_spell", "=", true],
                 ["has_damage_other_spell_casts", "=", false],
                 ["is_silenced", "=", false],
-                ["said_bandit_has_no_damage_spells", "=", false],
+                ["said_goblin_has_no_damage_spells", "=", false],
                 ["has_alive_allies", "=", true],
                 ["is_confused", "=", false],
                 ["is_afraid", "=", false]
             ],
             "dialog": [
-                "Out of spells!"
+                "[goblin language here]"
             ],
             "aiStateChange": {},
             "dialogMemoryChange": {
-                "said_bandit_has_no_damage_spells": true
+                "said_goblin_has_no_damage_spells": true
             }
         }
     ]
