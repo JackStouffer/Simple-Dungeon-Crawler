@@ -147,7 +147,7 @@ export class StatusBar {
         if (player === undefined) { throw new Error("No player entity found"); }
 
         const hpData = getEffectiveHitPointData(player);
-        const statData = getEffectiveStatData(player);
+        const statData = getEffectiveStatData(entityMap, player);
         const levelData = player.getOne(LevelComponent);
         const inputHandlerData = player.getOne(InputHandlingComponent);
         const flammableData = player.getOne(FlammableComponent);

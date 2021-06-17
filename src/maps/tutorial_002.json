@@ -440,6 +440,121 @@
                  "width":0,
                  "x":1078.41090934391,
                  "y":271.342099770403
+                }, 
+                {
+                 "height":0,
+                 "id":110,
+                 "name":"Surrounding Penalty Tutorial",
+                 "point":true,
+                 "properties":[
+                        {
+                         "name":"event",
+                         "type":"string",
+                         "value":"tutorial.enemySurrounding"
+                        }, 
+                        {
+                         "name":"objectType",
+                         "type":"string",
+                         "value":"event_trigger"
+                        }],
+                 "rotation":0,
+                 "type":"object",
+                 "visible":true,
+                 "width":0,
+                 "x":934.390871773464,
+                 "y":267.167605927781
+                }, 
+                {
+                 "height":0,
+                 "id":111,
+                 "name":"Surrounding Penalty Tutorial",
+                 "point":true,
+                 "properties":[
+                        {
+                         "name":"event",
+                         "type":"string",
+                         "value":"tutorial.enemySurrounding"
+                        }, 
+                        {
+                         "name":"objectType",
+                         "type":"string",
+                         "value":"event_trigger"
+                        }],
+                 "rotation":0,
+                 "type":"object",
+                 "visible":true,
+                 "width":0,
+                 "x":935.695452257296,
+                 "y":282.719181389943
+                }, 
+                {
+                 "height":0,
+                 "id":112,
+                 "name":"Surrounding Penalty Tutorial",
+                 "point":true,
+                 "properties":[
+                        {
+                         "name":"event",
+                         "type":"string",
+                         "value":"tutorial.enemySurrounding"
+                        }, 
+                        {
+                         "name":"objectType",
+                         "type":"string",
+                         "value":"event_trigger"
+                        }],
+                 "rotation":0,
+                 "type":"object",
+                 "visible":true,
+                 "width":0,
+                 "x":934.730714452343,
+                 "y":248.374556460029
+                }, 
+                {
+                 "height":0,
+                 "id":113,
+                 "name":"Surrounding Penalty Tutorial",
+                 "point":true,
+                 "properties":[
+                        {
+                         "name":"event",
+                         "type":"string",
+                         "value":"tutorial.enemySurrounding"
+                        }, 
+                        {
+                         "name":"objectType",
+                         "type":"string",
+                         "value":"event_trigger"
+                        }],
+                 "rotation":0,
+                 "type":"object",
+                 "visible":true,
+                 "width":0,
+                 "x":934.06862745098,
+                 "y":232.598039215686
+                }, 
+                {
+                 "height":0,
+                 "id":114,
+                 "name":"Surrounding Penalty Tutorial",
+                 "point":true,
+                 "properties":[
+                        {
+                         "name":"event",
+                         "type":"string",
+                         "value":"tutorial.enemySurrounding"
+                        }, 
+                        {
+                         "name":"objectType",
+                         "type":"string",
+                         "value":"event_trigger"
+                        }],
+                 "rotation":0,
+                 "type":"object",
+                 "visible":true,
+                 "width":0,
+                 "x":934.558823529412,
+                 "y":216.176470588235
                 }],
          "opacity":1,
          "type":"objectgroup",
@@ -481,7 +596,7 @@
          "y":0
         }],
  "nextlayerid":11,
- "nextobjectid":110,
+ "nextobjectid":115,
  "orientation":"orthogonal",
  "renderorder":"right-down",
  "tiledversion":"1.4.3",

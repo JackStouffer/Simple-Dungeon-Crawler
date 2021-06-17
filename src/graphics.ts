@@ -279,7 +279,7 @@ export class DrawPlayerSystem extends System {
             const pos = entity.getOne(PositionComponent)!;
             const tilePosition = pos.tilePosition();
             const inputStateData = entity.getOne(InputHandlingComponent);
-            const speedData = getEffectiveSpeedData(entity);
+            const speedData = getEffectiveSpeedData(globals.Game!.entityMap, entity);
             const graphics = entity.getOne(GraphicsComponent);
 
             if (speedData === null ||
@@ -336,7 +336,8 @@ export class DrawPlayerSystem extends System {
 
                     // quick distance check to cut down the number of
                     // AStar calcs
-                    if (tileDistanceBetweenPoints(pos.tilePosition(), mousePosition) < 40) {
+                    const max = speedData.maxTilesPerMove * 2;
+                    if (tileDistanceBetweenPoints(pos.tilePosition(), mousePosition) < max) {
                         const path = getPlayerMovementPath(
                             pos.tilePosition(),
                             mousePosition,

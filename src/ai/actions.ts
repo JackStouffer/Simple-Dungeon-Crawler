@@ -230,7 +230,7 @@ function chaseAction(
 /**
  * Find the weight of chasing the AI's target
  */
-function chaseWeight(ecs: World, aiState: PlannerAIComponent): number {
+function chaseWeight(ecs: World, entityMap: EntityMap, aiState: PlannerAIComponent): number {
     if (aiState.target === null) { return 1; }
     const posData = aiState.entity.getOne(PositionComponent);
     const targetPosData = aiState.target.getOne(PositionComponent);
@@ -258,10 +258,10 @@ function meleeAttackAction(
  * will have the lowest weight. Therefore, the AI will choose the most
  * effective attack
  */
-function meleeAttackWeight(ecs: World, aiState: PlannerAIComponent): number {
+function meleeAttackWeight(ecs: World, entityMap: EntityMap, aiState: PlannerAIComponent): number {
     if (aiState.target === null) { return 1; }
     const targetHPData = aiState.target.getOne(HitPointsComponent)!;
-    const stats = getEffectiveStatData(aiState.entity)!;
+    const stats = getEffectiveStatData(entityMap, aiState.entity)!;
 
     return Math.max(
         1,
@@ -402,7 +402,7 @@ function castSpellAction(spellID: string): ActionUpdateFunction {
  * effective attack
  */
 function castSpellWeight(spellID: string) {
-    return function (ecs: World, aiState: PlannerAIComponent): number {
+    return function (ecs: World, entityMap: EntityMap, aiState: PlannerAIComponent): number {
         if (aiState.target === null) { return 1; }
         const targetHPData = aiState.target.getOne(HitPointsComponent)!;
         const damage = SpellData[spellID].value ?? 1;
@@ -562,7 +562,7 @@ function repositionAction(
  * Stand by until you're the last man standing, then you should melee attack
  * (or run away, but that's not handled here)
  */
-function standbyWeight(ecs: World, aiState: PlannerAIComponent): number {
+function standbyWeight(ecs: World, entityMap: EntityMap, aiState: PlannerAIComponent): number {
     if (aiState.target === null) { throw new Error("Cannot find standbyWeight without a target"); }
     const hpData = aiState.target.getOne(HitPointsComponent);
     if (hpData === undefined) {
@@ -648,7 +648,7 @@ interface Action {
     preconditions: { [key: string]: boolean },
     postconditions: { [key: string]: boolean }
     updateFunction: ActionUpdateFunction,
-    weight: (ecs: World, aiState: PlannerAIComponent) => number
+    weight: (ecs: World, entityMap: EntityMap, aiState: PlannerAIComponent) => number
 }
 
 /**

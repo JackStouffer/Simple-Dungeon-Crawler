@@ -1,7 +1,7 @@
 import { System, Query, Entity } from "ape-ecs";
 import { cloneDeep, pick } from "lodash";
 
-import { FOV, RNG } from "./rot/index";
+import { DIRS, FOV, RNG } from "./rot/index";
 
 import globals from "./globals";
 import {
@@ -17,6 +17,7 @@ import {
     createEntity,
     DamageAffinityComponent,
     DisplayNameComponent,
+    EntityMap,
     FearAIComponent,
     FireTriggerComponent,
     FlammableComponent,
@@ -291,7 +292,7 @@ export class LevelUpSystem extends System {
                 const hpData = entity.getOne(HitPointsComponent);
                 const statsData = entity.getOne(StatsComponent);
                 const effectiveHp = getEffectiveHitPointData(entity);
-                const effectiveStats = getEffectiveStatData(entity);
+                const effectiveStats = getEffectiveStatData(globals.Game!.entityMap, entity);
 
                 if (hpData !== undefined && effectiveHp !== null) {
                     hpData.hp = effectiveHp.maxHp;
@@ -376,16 +377,48 @@ export function getEffectiveHitPointData(entity: Entity) {
  * Find the fighter's current stats after the effects of all
  * of the statistic effects are taken into account.
  */
-export function getEffectiveStatData(entity: Entity) {
+export function getEffectiveStatData(entityMap: EntityMap, entity: Entity) {
     const effects = entity.getComponents(StatsEffectComponent);
     const stats = entity.getOne(StatsComponent);
     if (stats === undefined) { return null; }
-    if (effects.size === 0) { return stats; }
 
-    let newStats = pick(stats, "strength", "defense", "criticalChance", "criticalDamageMultiplier", "ailmentSusceptibility");
+    let newStats = pick(
+        stats,
+        "strength",
+        "defense",
+        "criticalChance",
+        "criticalDamageMultiplier",
+        "ailmentSusceptibility"
+    );
     effects.forEach(e => {
         newStats = calculateStatModifier(e, newStats);
     });
+
+    // Punish the player for being surrounded by enemies
+    if (entity.id === "player") {
+        let numberOfEnemies = 0;
+        const pos = entity.getOne(PositionComponent)!.tilePosition();
+        for (const dir of DIRS[8]) {
+            const entities = getEntitiesAtLocation(entityMap, pos.x + dir[0], pos.y + dir[1]);
+            for (const e of entities) {
+                // TODO: Target selection. Should only consider hostiles
+                if (e.tags.has("sentient") && e.id !== "player") {
+                    ++numberOfEnemies;
+                }
+            }
+        }
+
+        if (numberOfEnemies > 1) {
+            newStats.defense -= (numberOfEnemies - 1) * Math.max(
+                1,
+                Math.floor(newStats.defense * 0.15)
+            );
+        }
+    }
+
+    newStats.strength = Math.max(1, newStats.strength);
+    newStats.defense = Math.max(0, newStats.defense);
+    newStats.ailmentSusceptibility = Math.min(1, newStats.ailmentSusceptibility);
 
     return newStats;
 }
@@ -394,16 +427,34 @@ export function getEffectiveStatData(entity: Entity) {
  * Find the fighter's current stats after the effects of all
  * of the statistic effects are taken into account.
  */
-export function getEffectiveSpeedData(entity: Entity) {
+export function getEffectiveSpeedData(entityMap: EntityMap, entity: Entity) {
     const effects = entity.getComponents(SpeedEffectComponent);
     const speed = entity.getOne(SpeedComponent);
     if (speed === undefined) { return null; }
-    if (effects.size === 0) { return speed; }
 
     let newStats = pick(speed, "speed", "maxTilesPerMove");
     effects.forEach(e => {
         newStats = calculateStatModifier(e, newStats);
     });
+
+    // Punish the player for being surrounded by enemies
+    if (entity.id === "player") {
+        let numberOfEnemies = 0;
+        const pos = entity.getOne(PositionComponent)!.tilePosition();
+        for (const dir of DIRS[8]) {
+            const entities = getEntitiesAtLocation(entityMap, pos.x + dir[0], pos.y + dir[1]);
+            for (const e of entities) {
+                // TODO: Target selection. Should only consider hostiles
+                if (e.tags.has("sentient") && e.id !== "player") {
+                    ++numberOfEnemies;
+                }
+            }
+        }
+
+        if (numberOfEnemies > 1) {
+            newStats.maxTilesPerMove -= numberOfEnemies - 1;
+        }
+    }
 
     newStats.maxTilesPerMove = Math.max(1, newStats.maxTilesPerMove);
     newStats.speed = Math.max(1, newStats.speed);
@@ -457,7 +508,7 @@ export function takeDamage(
     const hpData = target.getOne(HitPointsComponent);
     if (hpData === undefined) { return false; }
 
-    const targetStats = getEffectiveStatData(target);
+    const targetStats = getEffectiveStatData(globals.Game!.entityMap, target);
     const damageAffinity = getEffectiveDamageAffinity(target);
 
     if (targetStats !== null && damageAffinity !== null) {
@@ -514,7 +565,7 @@ export function takeDamage(
  */
 export function attack(attacker: Entity, target: Entity): void {
     const attackerLevelData = attacker.getOne(LevelComponent);
-    const attackerEffectiveStats = getEffectiveStatData(attacker);
+    const attackerEffectiveStats = getEffectiveStatData(globals.Game!.entityMap, attacker);
     const attackerDisplayName = attacker.getOne(DisplayNameComponent);
     const targetLevelData = target.getOne(LevelComponent);
     const targetDisplayName = target.getOne(DisplayNameComponent);

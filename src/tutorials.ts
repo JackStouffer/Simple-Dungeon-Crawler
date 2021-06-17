@@ -11,7 +11,8 @@ const hasMessageBeenShown = {
     wildSpells: false,
     spellCasts: false,
     spellShrines: false,
-    environment: false
+    environment: false,
+    enemySurrounding: false
 };
 
 export function explainMovement() {
@@ -90,6 +91,14 @@ export function explainSpellShrine() {
 export function explainEnvironmentInteractivity() {
     if (!hasMessageBeenShown.environment) {
         displayMessage("Spells can interact with the environment in different ways", MessageType.Tutorial);
+        playPing();
+        hasMessageBeenShown.environment = true;
+    }
+}
+
+export function explainEnemySurrounding() {
+    if (!hasMessageBeenShown.enemySurrounding) {
+        displayMessage("Your defense and movement are penalized for each enemy which surrounds you.", MessageType.Tutorial);
         playPing();
         hasMessageBeenShown.environment = true;
     }

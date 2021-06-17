@@ -408,7 +408,7 @@ export class GoToLocationCommand implements Command {
 
             // check for max movement differences in case one of the
             // triggers changed it
-            const speedData = getEffectiveSpeedData(this.entity);
+            const speedData = getEffectiveSpeedData(globals.Game!.entityMap, this.entity);
             if (speedData !== null && speedData.maxTilesPerMove <= this.tilesMoved) {
                 this.done = true;
                 return;

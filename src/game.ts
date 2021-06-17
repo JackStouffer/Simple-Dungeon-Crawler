@@ -94,7 +94,8 @@ import {
     explainPickUpItem,
     explainSpellCasts,
     explainSpellShrine,
-    explainEnvironmentInteractivity
+    explainEnvironmentInteractivity,
+    explainEnemySurrounding
 } from "./tutorials";
 import { getItems, hasItem, InventoryItemDetails, useItem } from "./inventory";
 import { assertUnreachable, Nullable } from "./util";
@@ -372,6 +373,7 @@ export class SimpleDungeonCrawler {
         globals.gameEventEmitter.on("tutorial.spellCasts", explainSpellCasts);
         globals.gameEventEmitter.on("tutorial.spellShrine", explainSpellShrine);
         globals.gameEventEmitter.on("tutorial.environmentInteractivity", explainEnvironmentInteractivity);
+        globals.gameEventEmitter.on("tutorial.enemySurrounding", explainEnemySurrounding);
 
         input.init();
         this.loadingText.visible = false;

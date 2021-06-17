@@ -470,7 +470,7 @@ export function castDamageSpell(
         takeDamage(targetedEntity, item.value, false, item.damageType ?? DamageType.Physical);
     }
 
-    const stats = getEffectiveStatData(targetedEntity);
+    const stats = getEffectiveStatData(entityMap, targetedEntity);
     const hp = getEffectiveHitPointData(targetedEntity);
     if (stats === null || hp === null) { return true; }
     rollForStatusEffect(item, targetedEntity, stats, hp);
@@ -507,7 +507,7 @@ export function castFireBall(
                 } else {
                     takeDamage(entity, item.value, false, item.damageType ?? DamageType.Physical);
 
-                    const stats = getEffectiveStatData(entity);
+                    const stats = getEffectiveStatData(entityMap, entity);
                     const hp = getEffectiveHitPointData(entity);
                     if (stats !== null && hp !== null) {
                         rollForStatusEffect(item, entity, stats, hp);

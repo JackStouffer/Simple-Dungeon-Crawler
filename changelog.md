@@ -9,6 +9,7 @@ _In Development_
     * Based on the state of themselves and the world around them
     * Allies can give specific responses to the line said
   * Targeted spells and items now have a max range
+  * The player is now penalized for being surrounded by more than one enemy with lower movement speed and defense
 * Technical
   * Entity ids are now deterministic for easier debugging
   * Game map is now a structure instead of just a multidimensional array so extra data can be saved

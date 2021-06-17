@@ -1186,7 +1186,7 @@ export const ObjectData: { [key: string]: ObjectDataDetails } = {
                 },
                 StatsComponent: {
                     strength: 5,
-                    defense: 1,
+                    defense: 2,
                     criticalChance: 0.05,
                     criticalDamageMultiplier: 1.5,
                     ailmentSusceptibility: 0.1

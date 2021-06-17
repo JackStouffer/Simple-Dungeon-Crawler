@@ -208,7 +208,7 @@ export function getPlan(
         const action = actions[i];
         const actionData = ActionData[action];
         if (actionData !== undefined) {
-            const weight = actionData.weight(ecs, aiState);
+            const weight = actionData.weight(ecs, entityMap, aiState);
             aiState.planner.actionList!.setWeight(action, weight);
 
             if (debug) {
