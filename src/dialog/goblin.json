@@ -9,11 +9,12 @@
                 ["has_target_in_sight", "=", true],
                 ["has_alive_allies", "=", true],
                 ["team_state", "=", "passive"],
+                ["on_fire", "=", false],
                 ["is_confused", "=", false],
                 ["is_afraid", "=", false]
             ],
             "dialog": [
-                "[goblin language here]"
+                "[goblin_sees_player]"
             ],
             "aiStateChange": {
                 "currentOrder": "alert_allies"
@@ -27,6 +28,7 @@
             "respondingTo": null,
             "rules": [
                 ["race", "=", "goblin"],
+                ["said_goblin_loses_sight_of_player", "=", false],
                 ["knows_target_position", "=", true],
                 ["has_target_in_sight", "=", false],
                 ["on_fire", "=", false],
@@ -34,11 +36,11 @@
                 ["is_afraid", "=", false]
             ],
             "dialog": [
-                "[goblin language here]"
+                "[goblin_loses_sight_of_player]"
             ],
             "aiStateChange": {},
             "dialogMemoryChange": {
-                "goblin_loses_sight_of_player": true
+                "said_goblin_loses_sight_of_player": true
             }
         },
         {
@@ -53,7 +55,7 @@
                 ["is_confused", "=", false]
             ],
             "dialog": [
-                "[goblin language here]"
+                "[goblin_commander_killed]"
             ],
             "aiStateChange": {},
             "dialogMemoryChange": {
@@ -73,7 +75,7 @@
                 ["is_afraid", "=", false]
             ],
             "dialog": [
-                "[goblin language here]"
+                "[goblin_has_been_silenced]"
             ],
             "aiStateChange": {},
             "dialogMemoryChange": {
@@ -89,7 +91,7 @@
                 ["said_goblin_on_fire", "=", false]
             ],
             "dialog": [
-                "[goblin language here]"
+                "[goblin_on_fire]"
             ],
             "aiStateChange": {},
             "dialogMemoryChange": {
@@ -107,7 +109,7 @@
                 ["said_goblin_afraid", "=", false]
             ],
             "dialog": [
-                "[goblin language here]"
+                "[goblin_afraid]"
             ],
             "aiStateChange": {},
             "dialogMemoryChange": {
@@ -129,7 +131,7 @@
                 ["is_confused", "=", false]
             ],
             "dialog": [
-                "[goblin language here]"
+                "[goblin_needs_healing]"
             ],
             "aiStateChange": {},
             "dialogMemoryChange": {
@@ -148,7 +150,7 @@
                 ["is_afraid", "=", false]
             ],
             "dialog": [
-                "[goblin language here]"
+                "[goblin_has_heal_spells]"
             ],
             "aiStateChange": {},
             "dialogMemoryChange": {
@@ -167,7 +169,7 @@
                 ["is_afraid", "=", false]
             ],
             "dialog": [
-                "[goblin language here]"
+                "[goblin_has_no_heal_spells]"
             ],
             "aiStateChange": {},
             "dialogMemoryChange": {
@@ -188,7 +190,7 @@
                 ["is_afraid", "=", false]
             ],
             "dialog": [
-                "[goblin language here]"
+                "[goblin_has_no_damage_spells]"
             ],
             "aiStateChange": {},
             "dialogMemoryChange": {

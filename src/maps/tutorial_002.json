@@ -386,7 +386,7 @@
                         {
                          "name":"teamId",
                          "type":"int",
-                         "value":1
+                         "value":2
                         }],
                  "rotation":0,
                  "type":"object",
@@ -410,6 +410,11 @@
                          "name":"objectType",
                          "type":"string",
                          "value":"rat"
+                        }, 
+                        {
+                         "name":"teamId",
+                         "type":"int",
+                         "value":2
                         }],
                  "rotation":0,
                  "type":"object",
@@ -433,6 +438,11 @@
                          "name":"objectType",
                          "type":"string",
                          "value":"rat"
+                        }, 
+                        {
+                         "name":"teamId",
+                         "type":"int",
+                         "value":2
                         }],
                  "rotation":0,
                  "type":"object",
