@@ -11,12 +11,15 @@ _In Development_
   * Targeted spells and items now have a max range
   * The player is now penalized for being surrounded by more than one enemy with lower movement speed and defense
   * Added fast moving dog enemy
+  * Rename "paralyzed" status effect to "stunned"
+  * Buff "exhale" spell by always stunning pushed back enemies
 * Technical
   * Some entity ids are now deterministic for easier debugging
   * Game map is now a structure instead of just a multidimensional array so extra data can be saved
   * Silence is now a separate state in the AI goal planning
     * Makes it easier to work with the dialog system
     * Makes it clearer and therefore harder to forget in the action definitions
+  * Commands can now be run in parallel in the command queue in a single turn
 
 ## Version 11
 

@@ -177,6 +177,9 @@ function castHealOther(
  * types of entities
  */
 export function setOnFire(target: Entity, damage?: number, turns?: number): boolean {
+    const displayName = target.getOne(DisplayNameComponent);
+    if (displayName === undefined) { throw new Error(`Undefined display name on ${target.id}`); }
+
     const flammableData = target.getOne(FlammableComponent);
     const wetData = target.getOne(WetableComponent);
     const blocks = target.tags.has("blocks");
@@ -184,7 +187,6 @@ export function setOnFire(target: Entity, damage?: number, turns?: number): bool
         if (target === globals.Game?.player) {
             displayMessage("You were not set on fire because you're immune", MessageType.StatusEffect);
         } else {
-            const displayName = target.getOne(DisplayNameComponent)!;
             displayMessage(`${displayName.name} was not set on fire because it is immune`, MessageType.StatusEffect);
         }
         return false;
@@ -199,7 +201,6 @@ export function setOnFire(target: Entity, damage?: number, turns?: number): bool
         if (target === globals.Game?.player) {
             displayMessage("You were not set on fire because you were wet", MessageType.StatusEffect);
         } else {
-            const displayName = target.getOne(DisplayNameComponent)!;
             displayMessage(`${displayName.name} was not set on fire because it was wet`, MessageType.StatusEffect);
         }
 
@@ -249,9 +250,8 @@ export function setOnFire(target: Entity, damage?: number, turns?: number): bool
         displayMessage("You are now on fire", MessageType.StatusEffect);
     } else if (target.tags.has("sentient")) {
         const displayName = target.getOne(DisplayNameComponent);
-        if (displayName !== undefined) {
-            displayMessage(`${displayName.name} is now on fire`, MessageType.StatusEffect);
-        }
+        if (displayName === undefined) { throw new Error(`Undefined display name on ${target.id}`); }
+        displayMessage(`${displayName.name} is now on fire`, MessageType.StatusEffect);
     }
 
     return true;
@@ -304,7 +304,8 @@ export function setStunned(target: Entity, turns?: number): boolean {
     if (target === globals.Game?.player) {
         displayMessage("You are stunned!", MessageType.StatusEffect);
     } else {
-        const displayName = target.getOne(DisplayNameComponent)!;
+        const displayName = target.getOne(DisplayNameComponent);
+        if (displayName === undefined) { throw new Error(`Undefined display name on ${target.id}`); }
         displayMessage(`${displayName.name} is now stunned`, MessageType.StatusEffect);
     }
 
@@ -565,9 +566,8 @@ export function castConfuse(
     });
 
     const name = entity.getOne(DisplayNameComponent);
-    if (name !== undefined) {
-        displayMessage(`${name.name} is now confused`);
-    }
+    if (name === undefined) { throw new Error(`Undefined display name on ${entity.id}`); }
+    displayMessage(`${name.name} is now confused`);
 
     return true;
 }

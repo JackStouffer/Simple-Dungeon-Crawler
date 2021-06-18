@@ -71,7 +71,7 @@ export function togglePlayerFOV(): void {
 export function toggleCommandExecution(): void {
     if (globals.Game === null) { throw new Error("Global game object is null"); }
 
-    globals.Game.processCommands = !(globals.Game.processCommands as boolean);
+    globals.Game.shouldProcessCommands = !(globals.Game.shouldProcessCommands as boolean);
 }
 
 export function togglePathfindingDebug(): void {
@@ -108,9 +108,5 @@ export function getEntities(x: number, y: number): Entity[] {
 export function step(): void {
     if (globals.Game === null) { throw new Error("Global game object is null"); }
 
-    if (globals.Game.currentCommand !== null && globals.Game.currentActor !== null) {
-        globals.Game.currentCommand.update(
-            globals.Game.deltaTime
-        );
-    }
+    globals.Game.processCommands();
 }

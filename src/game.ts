@@ -129,7 +129,7 @@ export class SimpleDungeonCrawler {
 
     // debug flags
     processAI: boolean;
-    processCommands: boolean;
+    shouldProcessCommands: boolean;
     isLightingEnabled: boolean;
     debugPathfinding: boolean;
     debugAI: boolean;
@@ -141,7 +141,6 @@ export class SimpleDungeonCrawler {
     scheduler: EntityScheduler;
     player: Entity;
     currentActor: Nullable<Entity>;
-    currentCommand: Nullable<Command>;
     commandQueue: Command[];
     map: GameMap;
     entityMap: EntityMap;
@@ -166,7 +165,6 @@ export class SimpleDungeonCrawler {
         this.state = GameState.OpeningCinematic;
         this.canvas = null;
         this.currentActor = null;
-        this.currentCommand = null;
         this.commandQueue = [];
         this.scheduler = new EntityScheduler();
         this.map = new GameMap("", [[[]]]);
@@ -176,7 +174,7 @@ export class SimpleDungeonCrawler {
 
         // debug flags
         this.processAI = true;
-        this.processCommands = true;
+        this.shouldProcessCommands = true;
         this.isLightingEnabled = true;
         this.debugPathfinding = false;
         this.debugAI = false;
@@ -436,6 +434,44 @@ export class SimpleDungeonCrawler {
         playLevelTheme(name);
     }
 
+    processCommands(): void {
+        for (let i = 0; i < this.commandQueue.length; i++) {
+            const command = this.commandQueue[i];
+
+            if (command.setUp !== undefined && !command.isSetUp) {
+                command.setUp();
+                command.isSetUp = true;
+            }
+
+            command.update(this.deltaTime);
+
+            if (command.isFinished()) {
+                if (command.usedTurn()) {
+                    if (this.currentActor === this.player) {
+                        this.ecs.runSystems("postOneTurnCycle");
+                        this.totalTurns++;
+                    }
+
+                    this.ecs.runSystems("postTurn");
+                    this.currentActor = null;
+                }
+
+
+                if (command.tearDown !== undefined) {
+                    command.tearDown();
+                }
+                this.commandQueue.splice(i, 1);
+                --i;
+
+                if (this.debugPathfinding) {
+                    resetTilePathCosts(this.map);
+                }
+            }
+
+            if (command.blocks) { break; }
+        }
+    }
+
     update(): void {
         switch (this.state) {
             case GameState.Gameplay: {
@@ -454,60 +490,24 @@ export class SimpleDungeonCrawler {
                 }
 
                 // Command generation
-                if (this.currentActor !== null && this.currentCommand === null) {
-                    if (this.commandQueue.length > 0) {
-                        this.currentCommand = this.commandQueue.shift()!;
-
-                        // Commands are created all over the place and then placed
-                        // in the queue. We don't want things like the effects to
-                        // be placed into the world until we're ready for them to
-                        // be run. Which is why the set up instructions are not in
-                        // the constructor.
-                        if (this.currentCommand.setUp !== undefined) {
-                            this.currentCommand.setUp();
-                        }
-                    } else if (this.currentActor !== this.player) {
-                        if (this.processAI) {
-                            this.commandQueue.push(...generateAICommands(
-                                this.ecs,
-                                this.map,
-                                this.entityMap,
-                                this.entityTeams,
-                                this.currentActor
-                            ));
-                        } else {
-                            this.currentCommand = new NoOpCommand(true);
-                        }
+                if (this.currentActor !== null &&
+                    this.currentActor !== this.player &&
+                    this.commandQueue.length === 0) {
+                    if (this.processAI) {
+                        this.commandQueue.push(...generateAICommands(
+                            this.ecs,
+                            this.map,
+                            this.entityMap,
+                            this.entityTeams,
+                            this.currentActor
+                        ));
+                    } else {
+                        this.commandQueue.push(new NoOpCommand(true));
                     }
                 }
 
-                // Run the command
-                if (this.currentCommand !== null &&
-                    this.currentActor !== null &&
-                    this.processCommands === true) {
-                    this.currentCommand.update(this.deltaTime);
-                }
-
-                // Schedule the next actor and run post command systems if finished
-                if (this.currentCommand !== null && this.currentCommand.isFinished()) {
-                    if (this.currentCommand.usedTurn()) {
-                        if (this.currentActor === this.player) {
-                            this.ecs.runSystems("postOneTurnCycle");
-                            this.totalTurns++;
-                        }
-
-                        this.ecs.runSystems("postTurn");
-                        this.currentActor = null;
-                    }
-
-                    if (this.currentCommand.tearDown !== undefined) {
-                        this.currentCommand.tearDown();
-                    }
-                    this.currentCommand = null;
-
-                    if (this.debugPathfinding) {
-                        resetTilePathCosts(this.map);
-                    }
+                if (this.shouldProcessCommands && this.currentActor !== null) {
+                    this.processCommands();
                 }
 
                 const hpData = getEffectiveHitPointData(this.player);
@@ -552,7 +552,7 @@ export class SimpleDungeonCrawler {
                 return;
             }
 
-            // TODO: Maybe move these ifs to the player input handling code
+            // TODO, cleanup: Maybe move these ifs to the player input handling code
             if (input.isDown("Escape") && inputHandlerState.state === PlayerState.Combat) {
                 pauseMusic();
                 playUIClick();
@@ -568,7 +568,7 @@ export class SimpleDungeonCrawler {
                 return;
             }
 
-            if (this.currentActor === this.player && this.currentCommand === null) {
+            if (this.currentActor === this.player) {
                 const command = playerInput(this.ecs, this.map, this.entityMap, this.player);
                 if (command !== null) {
                     this.commandQueue.push(command);

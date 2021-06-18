@@ -326,7 +326,7 @@ export class DrawPlayerSystem extends System {
 
                 if (inputStateData.state === PlayerState.Combat &&
                     globals.Game.currentActor === entity &&
-                    globals.Game.currentCommand === null) {
+                    globals.Game.commandQueue.length === 0) {
                     const mousePosition = input.getMousePosition();
                     if (mousePosition === null) { return; }
                     const tile = globals.Game.map.data[0][mousePosition.y][mousePosition.x];
@@ -379,7 +379,7 @@ export class DrawPlayerSystem extends System {
                     }
                 } else if (inputStateData.state === PlayerState.Target &&
                     globals.Game.currentActor === entity &&
-                    globals.Game.currentCommand === null) {
+                    globals.Game.commandQueue.length === 0) {
                     const mousePosition = input.getMousePosition();
                     const entityPos = entity.getOne(PositionComponent)!.tilePosition();
                     const range = inputStateData.spellForTarget?.range ??

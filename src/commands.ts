@@ -195,8 +195,24 @@ export function generatePlayerWeightCallback(origin: Point): WeightCallback {
  * TODO, SPEED: Perhaps pre-allocate common commands to be reused
  */
 export interface Command {
+    /**
+     * Controls if this command should stop commands after it in the
+     * queue from being executed. This allows several commands to be
+     * run at once in a single turn, e.g. a switch could open multiple
+     * doors.
+     */
+    blocks: boolean;
+    isSetUp: boolean;
+
     usedTurn: () => boolean;
     isFinished: () => boolean;
+    /**
+     * Commands are created all over the place and then placed
+     * in the queue. We don't want things like the effects to
+     * be placed into the world until we're ready for them to
+     * be run. Which is why the set up instructions are not in
+     * the constructor.
+     */
     setUp?: () => void;
     tearDown?: () => void;
     update: (dt: DOMHighResTimeStamp) => void;
@@ -249,7 +265,9 @@ export function getPlayerMovementPath(
  * Command that does nothing. Useful for passing a turn
  */
 export class NoOpCommand implements Command {
-    private readonly usesTurn: boolean;
+    blocks: boolean = true;
+    isSetUp: boolean = false;
+    readonly usesTurn: boolean;
 
     constructor(usesTurn: boolean) {
         this.usesTurn = usesTurn;
@@ -272,6 +290,8 @@ export class NoOpCommand implements Command {
  * Move the game object to a specific point on the map
  */
 export class GoToLocationCommand implements Command {
+    blocks: boolean = true;
+    isSetUp: boolean = false;
     private readonly entity: Entity;
     private readonly path: number[][];
     private tilesMoved: number = 0;
@@ -425,6 +445,8 @@ export class GoToLocationCommand implements Command {
  * Push an actor back a specified number of tiles
  */
 export class PushBackCommand implements Command {
+    blocks = false;
+    isSetUp: boolean = false;
     readonly entity: Entity;
     readonly dir: number;
     numTiles: number;
@@ -586,6 +608,8 @@ export class PushBackCommand implements Command {
  * attacking the fighter
  */
 export class InteractCommand implements Command {
+    blocks = true;
+    isSetUp: boolean = false;
     private readonly entity: Entity;
     private interacted: boolean = true;
     private readonly target: Entity;
@@ -645,6 +669,9 @@ export class InteractCommand implements Command {
  * @return {Function} A function which always returns false
  */
 export class OpenInventoryCommand implements Command {
+    blocks: boolean = true;
+    isSetUp: boolean = false;
+
     usedTurn(): boolean {
         return false;
     }
@@ -670,6 +697,9 @@ export class OpenInventoryCommand implements Command {
  * @returns {Function} A function which always returns false
  */
 export class OpenSpellsCommand implements Command {
+    blocks: boolean = true;
+    isSetUp: boolean = false;
+
     usedTurn(): boolean {
         return false;
     }
@@ -697,6 +727,8 @@ type SkillCallback = (e: Entity, id: string) => void;
  * point. Calls the callback if the skill was cast.
  */
 export class UseSkillCommand implements Command {
+    blocks: boolean = true;
+    isSetUp: boolean = false;
     private didUseTurn: boolean = false;
     private readonly entity: Entity;
     private readonly rotation: number | undefined;
@@ -880,7 +912,9 @@ export class UseSkillCommand implements Command {
 }
 
 export class RotateReticleCommand implements Command {
-    private readonly entity: Entity;
+    blocks: boolean = true;
+    isSetUp: boolean = false;
+    readonly entity: Entity;
 
     constructor(entity: Entity) {
         this.entity = entity;
@@ -924,6 +958,8 @@ export class RotateReticleCommand implements Command {
  * Have a speech bubble appear over an entity with some text
  */
 export class ShowSpeechBubbleCommand implements Command {
+    blocks: boolean = true;
+    isSetUp: boolean = false;
     entity: Entity;
     dialog: string;
     duration: number;
@@ -990,7 +1026,9 @@ export class ShowSpeechBubbleCommand implements Command {
  * Let all allies in the entity team know where the player is
  */
 export class AlertAlliesCommand implements Command {
-    private readonly entity: Entity;
+    blocks: boolean = true;
+    isSetUp: boolean = false;
+    readonly entity: Entity;
 
     constructor(entity: Entity) {
         this.entity = entity;
@@ -1020,6 +1058,8 @@ export class AlertAlliesCommand implements Command {
  * that entity
  */
 export class MoveCameraCommand implements Command {
+    blocks: boolean = true;
+    isSetUp: boolean = false;
     map: GameMap;
     camera: Camera;
     to: Entity;
