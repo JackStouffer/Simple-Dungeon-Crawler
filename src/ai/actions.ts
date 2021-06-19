@@ -115,11 +115,17 @@ function wanderAction(
         const newX = pos.x + dir[0];
         const newY = pos.y + dir[1];
         const { blocks, entity } = isBlocked(map, entityMap, newX, newY);
-        // TODO: check for triggers on the tiles
+
         if (aiState.entity.tags.has("aquatic") && blocks === false && entity !== null && entity.tags.has("waterTile")) {
             validPositions.push([newX, newY]);
         } else if (!aiState.entity.tags.has("aquatic") && blocks === false && entity === null) {
-            validPositions.push([newX, newY]);
+            // expensive, only want to do this check if all others pass
+            const isDangerous = isPositionPotentiallyDangerous(
+                ecs, entityMap, aiState.entity, newX, newY
+            );
+            if (!isDangerous) {
+                validPositions.push([newX, newY]);
+            }
         }
     }
 

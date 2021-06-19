@@ -259,6 +259,7 @@ export function isPositionPotentiallyDangerous(
 
     const selfDamageTypes = getEffectiveDamageAffinity(self);
 
+    // TODO, speed: Why are we looping twice here? Just loop over DIRS
     positions.push({ x, y });
     for (let i = 0; i < DIRS[8].length; i++) {
         const dir = DIRS[8][i];
