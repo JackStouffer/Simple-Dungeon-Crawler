@@ -178,15 +178,14 @@ function castHealOther(
  */
 export function setOnFire(target: Entity, damage?: number, turns?: number): boolean {
     const displayName = target.getOne(DisplayNameComponent);
-    if (displayName === undefined) { throw new Error(`Undefined display name on ${target.id}`); }
-
     const flammableData = target.getOne(FlammableComponent);
     const wetData = target.getOne(WetableComponent);
     const blocks = target.tags.has("blocks");
+
     if (flammableData === undefined) {
         if (target === globals.Game?.player) {
             displayMessage("You were not set on fire because you're immune", MessageType.StatusEffect);
-        } else {
+        } else if (displayName !== undefined) {
             displayMessage(`${displayName.name} was not set on fire because it is immune`, MessageType.StatusEffect);
         }
         return false;
@@ -200,7 +199,7 @@ export function setOnFire(target: Entity, damage?: number, turns?: number): bool
 
         if (target === globals.Game?.player) {
             displayMessage("You were not set on fire because you were wet", MessageType.StatusEffect);
-        } else {
+        } else if (displayName !== undefined) {
             displayMessage(`${displayName.name} was not set on fire because it was wet`, MessageType.StatusEffect);
         }
 
