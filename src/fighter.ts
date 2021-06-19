@@ -616,13 +616,13 @@ export function heal(hpData: HitPointsComponent, amount: number): void {
  */
 export function useSpell(entity: Entity, id: string) {
     const spellData = entity.getOne(SpellsComponent)!;
-    if (!spellData.knownSpells.has(id)) {
+    if (!(id in spellData.knownSpells)) {
         throw new Error(`Spell ${id} is not known`);
     }
 
-    const count = spellData.knownSpells.get(id)! - 1;
+    const count = spellData.knownSpells[id].count - 1;
     if (count > -1) {
-        spellData.knownSpells.set(id, count);
+        spellData.knownSpells[id].count = count;
     }
     spellData.update();
 }
@@ -631,13 +631,13 @@ export function useSpell(entity: Entity, id: string) {
  * Add a spell to the set of known spells by this
  * fighter
  */
-export function addSpellById(entity: Entity, id: string, count: number): boolean {
+export function addSpellById(entity: Entity, id: string, count: number, maxCount: number): boolean {
     if (globals.Game === null) { throw new Error("Global Game object is null"); }
     if (globals.gameEventEmitter === null) { throw new Error("Global gameEventEmitter object is null"); }
     if (!(id in SpellData)) { throw new Error(`${id} is not a valid spell id`); }
 
     const spellData = entity.getOne(SpellsComponent);
-    if (spellData === undefined || spellData.knownSpells.has(id) === true) { return false; }
+    if (spellData === undefined || id in spellData.knownSpells) { return false; }
 
     if (entity === globals.Game.player) {
         globals.gameEventEmitter.emit("tutorial.spellMenu");
@@ -647,7 +647,7 @@ export function addSpellById(entity: Entity, id: string, count: number): boolean
         }
     }
 
-    spellData.knownSpells.set(id, count);
+    spellData.knownSpells[id] = { count, maxCount };
     spellData.update();
     return true;
 }
@@ -655,6 +655,7 @@ export function addSpellById(entity: Entity, id: string, count: number): boolean
 export interface KnownSpellDetails {
     id: string;
     count: number;
+    maxCount: number;
     displayName: string;
     description: string;
     type: SpellType;
@@ -665,10 +666,11 @@ export interface KnownSpellDetails {
 }
 
 export function getKnownSpells(data: SpellsComponent): KnownSpellDetails[] {
-    return [...data.knownSpells.entries()].map(([k, v]) => {
+    return [...Object.entries(data.knownSpells)].map(([k, v]) => {
         return {
             id: k,
-            count: v,
+            count: v.count,
+            maxCount: v.maxCount,
             displayName: SpellData[k].displayName,
             description: SpellData[k].description,
             type: SpellData[k].type,
@@ -683,5 +685,5 @@ export function getKnownSpells(data: SpellsComponent): KnownSpellDetails[] {
 export function hasSpell(entity: Entity, spellID: string) {
     const spellData = entity.getOne(SpellsComponent);
     if (spellData === undefined) { return false; }
-    return spellData.knownSpells.has(spellID);
+    return spellID in spellData.knownSpells;
 }

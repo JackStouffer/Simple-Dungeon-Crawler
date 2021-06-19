@@ -287,12 +287,17 @@ export class DamageAffinityComponent extends Component {
     };
 }
 
+interface KnownSpellData {
+    count: number;
+    maxCount: number;
+}
+
 export class SpellsComponent extends Component {
-    knownSpells: Map<string, number>;
+    knownSpells: { [key: string]: KnownSpellData };
 
     static typeName = "SpellsComponent";
     static properties = {
-        knownSpells: null
+        knownSpells: {}
     }
 }
 
@@ -2116,8 +2121,10 @@ export function createEntity(
     }
 
     if (data.spells !== undefined && entity.has(SpellsComponent) === false) {
-        const spells = new Map();
-        data.spells.forEach(s => spells.set(s[0], s[1]));
+        const spells: { [key: string]: KnownSpellData } = {};
+        data.spells.forEach(s => {
+            spells[s[0]] = { count: s[1], maxCount: s[1] };
+        });
         entity.addComponent({ type: "SpellsComponent", knownSpells: spells });
     }
 

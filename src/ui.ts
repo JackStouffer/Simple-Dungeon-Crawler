@@ -559,7 +559,7 @@ export class SpellSelectionMenu {
                     assertUnreachable(spell.type);
             }
 
-            const count = new Text(`Count: ${spell.count}`, this.unselectedStyle);
+            const count = new Text(`Count: ${spell.count}/${spell.maxCount}`, this.unselectedStyle);
             count.x = 600;
             count.y = y;
             count.zIndex = 22;

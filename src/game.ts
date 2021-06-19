@@ -428,12 +428,12 @@ const SpellMenuState: GameState = {
                 return;
             }
 
-            if (playerSpells.knownSpells.has(spell.id) === false) {
+            if (!(spell.id in playerSpells.knownSpells)) {
                 displayMessage(`You don't know ${spell.displayName}`);
                 return;
             }
 
-            if ((playerSpells.knownSpells.get(spell.id) ?? -1) < 1) {
+            if ((playerSpells.knownSpells[spell.id]?.count ?? -1) < 1) {
                 displayMessage(`You don't have enough casts to use ${spell.displayName}`);
                 return;
             }

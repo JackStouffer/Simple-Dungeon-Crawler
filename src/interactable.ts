@@ -7,13 +7,12 @@ import {
     TypeComponent,
     LoadLevelComponent,
     removeEntity,
-    HitPointsComponent,
-    ObjectData
+    HitPointsComponent
 } from "./entity";
 import { addItem, getItems, useItem } from "./inventory";
 import { displayMessage } from "./ui";
-import { addSpellById } from "./fighter";
-import { ItemData, SpellData } from "./skills";
+import { addSpellById, getKnownSpells } from "./fighter";
+import { ItemData } from "./skills";
 import { playChestOpen, playDoorOpen } from "./audio";
 
 /**
@@ -53,19 +52,20 @@ export function giveItemsInteract(actor: Entity, interactable: Entity) {
 /**
  * Give the actor all of the spells in the interactable's known spells
  */
-export function giveSpellsInteract(actor: Entity, interactable: Entity): void {
-    const spellData = interactable.getOne(SpellsComponent);
-    if (spellData === undefined) {
+export function giveSpellsInteract(entity: Entity, interactable: Entity): void {
+    const interactableSpellData = interactable.getOne(SpellsComponent);
+    if (interactableSpellData === undefined) {
         throw new Error(`Entity ${interactable.id} is missing a SpellsComponent`);
     }
 
-    for (const [spell, count] of spellData.knownSpells.entries()) {
-        const res = addSpellById(actor, spell, count);
-        if (actor === globals.Game?.player) {
+    const spells = getKnownSpells(interactableSpellData);
+    for (const spell of spells) {
+        const res = addSpellById(entity, spell.id, spell.count, spell.maxCount);
+        if (entity === globals.Game?.player) {
             if (res) {
-                displayMessage(`You learned a new spell: ${SpellData[spell].displayName}`);
+                displayMessage(`You learned a new spell: ${spell.displayName}`);
             } else {
-                displayMessage(`You already know ${SpellData[spell].displayName}`);
+                displayMessage(`You already know ${spell.displayName}`);
             }
         }
     }
@@ -105,12 +105,11 @@ export function restPointInteract(entity: Entity): void {
         hpData.update();
     }
 
-    const typeInfo = entity.getOne(TypeComponent);
-    const spells = entity.getOne(SpellsComponent);
-    if (spells !== undefined && typeInfo !== undefined) {
-        const data = ObjectData[typeInfo.entityType];
-        for (const spell of data?.spells ?? []) {
-            spells.knownSpells.set(spell[0], spell[1]);
+    const entitySpellData = entity.getOne(SpellsComponent);
+    if (entitySpellData !== undefined) {
+        const spells = getKnownSpells(entitySpellData);
+        for (const spell of spells) {
+            entitySpellData.knownSpells[spell.id].count = spell.maxCount;
         }
     }
 

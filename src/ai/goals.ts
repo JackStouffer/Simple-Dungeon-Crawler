@@ -68,7 +68,7 @@ function resolveEnoughCastsForSpellGenerator(spellID: string): GoalResolver {
         const spellData = ai.getOne(SpellsComponent);
         if (spellData === undefined) { return false; }
 
-        return (spellData.knownSpells.get(spellID) ?? -1) > 0;
+        return (spellData.knownSpells[spellID].count ?? -1) > 0;
     };
 }
 
