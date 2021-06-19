@@ -8,7 +8,6 @@ import { WeightCallback, PassableCallback } from "./rot/path/path";
 import globals from "./globals";
 import {
     DamageType,
-    GameState,
     InteractableType,
     ItemType,
     SpellType,
@@ -35,20 +34,16 @@ import {
     HitPointsComponent,
     InputHandlingComponent,
     InteractableTypeComponent,
-    InventoryComponent,
     PlannerAIComponent,
     PositionComponent,
-    SpellsComponent,
     StatsComponent,
     TriggerTypeComponent
 } from "./entity";
-import { attack, getEffectiveSpeedData, getKnownSpells, takeDamage } from "./fighter";
-import { getItems } from "./inventory";
+import { attack, getEffectiveSpeedData, takeDamage } from "./fighter";
 import { deepWaterTrigger, eventTrigger, fireTrigger, mudTrigger, shallowWaterTrigger, steamTrigger } from "./trigger";
 import { giveItemsInteract, giveSpellsInteract, doorInteract, levelLoadInteract } from "./interactable";
 import { setOnFire, setStunned, SpellDataDetails, ItemDataDetails } from "./skills";
 import { DIRS } from "./rot";
-import { playOpenInventory, playOpenSpells } from "./audio";
 import { createLightningTexture, createSpeechBubbleTexture } from "./graphics";
 import { Transition, Tween } from "./tween";
 import { Camera } from "./camera";
@@ -683,12 +678,8 @@ export class OpenInventoryCommand implements Command {
     update(): void {
         const g = globals.Game;
         if (g === null) { throw new Error("Global Game object is null"); }
-        if (globals.gameEventEmitter === null) { throw new Error("Global gameEventEmitter is null"); }
 
-        playOpenInventory();
-        g.state = GameState.InventoryMenu;
-        const invData = g.player.getOne(InventoryComponent)!;
-        g.inventoryMenu.open(getItems(invData));
+        g.setState(g.inventoryMenuState);
     }
 }
 
@@ -709,14 +700,7 @@ export class OpenSpellsCommand implements Command {
     }
 
     update(): void {
-        const g = globals.Game;
-        if (g === null) { throw new Error("Global Game object is null"); }
-        if (globals.gameEventEmitter === null) { throw new Error("Global gameEventEmitter is null"); }
-
-        playOpenSpells();
-        g.state = GameState.SpellMenu;
-        const spellsData = g.player.getOne(SpellsComponent)!;
-        g.spellSelectionMenu.open(getKnownSpells(spellsData));
+        globals.Game?.setState(globals.Game.spellMenuState);
     }
 }
 

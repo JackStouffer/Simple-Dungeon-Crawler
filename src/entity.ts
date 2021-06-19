@@ -1551,7 +1551,7 @@ export const ObjectData: { [key: string]: ObjectDataDetails } = {
         addInventory: true,
         addPlannerAI: true,
         addDialogMemory: true,
-        sightRange: 10,
+        sightRange: 8,
         lowHealthThreshold: 0.5,
         desiredDistanceToTarget: 1,
         actions: [

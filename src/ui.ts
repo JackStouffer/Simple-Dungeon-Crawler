@@ -4,7 +4,6 @@ import globals from "./globals";
 import {
     LEVEL_UP_BASE,
     LEVEL_UP_FACTOR,
-    GameState,
     SpellType
 } from "./constants";
 import input from "./input";
@@ -110,39 +109,26 @@ export class StatusBar {
         stage.addChild(this.targetText);
     }
 
+    setVisible(visible: boolean): void {
+        this.background.visible = visible;
+        this.healthText.visible = visible;
+        this.strengthText.visible = visible;
+        this.defenseText.visible = visible;
+        this.experienceText.visible = visible;
+        this.stateText.visible = visible;
+        this.statusText.visible = visible;
+        this.targetText.visible = visible;
+
+        if (globals.Game?.debugPathfinding === true) {
+            this.debugPathfindingText.visible = visible;
+        }
+    }
+
     update(
-        state: GameState,
         ecs: World,
         map: GameMap,
         entityMap: EntityMap
     ) {
-        if (state !== GameState.Gameplay) {
-            this.background.visible = false;
-            this.healthText.visible = false;
-            this.strengthText.visible = false;
-            this.defenseText.visible = false;
-            this.experienceText.visible = false;
-            this.stateText.visible = false;
-            this.statusText.visible = false;
-            this.targetText.visible = false;
-            this.debugPathfindingText.visible = false;
-
-            return;
-        } else {
-            this.background.visible = true;
-            this.healthText.visible = true;
-            this.strengthText.visible = true;
-            this.defenseText.visible = true;
-            this.experienceText.visible = true;
-            this.stateText.visible = true;
-            this.statusText.visible = true;
-            this.targetText.visible = true;
-
-            if (globals.Game?.debugPathfinding === true) {
-                this.debugPathfindingText.visible = true;
-            }
-        }
-
         const player = ecs.getEntity("player");
         if (player === undefined) { throw new Error("No player entity found"); }
 
@@ -261,12 +247,12 @@ export function displayMessage(text: string, type: MessageType = MessageType.Def
         el.className = "tutorial";
     } else if (type === MessageType.Critical) {
         el.className = "critical";
-        small.innerHTML = `<small>Turn: ${globals.Game.getTurnNumber()}</small>`;
+        small.innerHTML = `<small>Turn: ${globals.Game.totalTurns}</small>`;
     } else if (type === MessageType.StatusEffect) {
         el.className = "status-effect";
-        small.innerHTML = `<small>Turn: ${globals.Game.getTurnNumber()}</small>`;
+        small.innerHTML = `<small>Turn: ${globals.Game.totalTurns}</small>`;
     } else {
-        small.innerHTML = `<small>Turn: ${globals.Game.getTurnNumber()}</small>`;
+        small.innerHTML = `<small>Turn: ${globals.Game.totalTurns}</small>`;
     }
 
     el.appendChild(p);

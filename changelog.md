@@ -20,6 +20,9 @@ _In Development_
     * Makes it easier to work with the dialog system
     * Makes it clearer and therefore harder to forget in the action definitions
   * Commands can now be run in parallel in the command queue in a single turn
+  * Game states are now grouped into their own static objects
+    * Enter and exit functions make it much easier to manage moving from one state to another
+    * Each state object has its own rendering, update, and input handling implementations
 
 ## Version 11
 

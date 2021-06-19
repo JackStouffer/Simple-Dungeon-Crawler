@@ -51,16 +51,6 @@ export enum LightingType {
     TwoPass
 }
 
-export enum GameState {
-    Gameplay,
-    OpeningCinematic,
-    WinCinematic,
-    LoseCinematic,
-    PauseMenu,
-    InventoryMenu,
-    SpellMenu
-}
-
 export enum ItemType {
     HealSelf,
     DamageScroll,
