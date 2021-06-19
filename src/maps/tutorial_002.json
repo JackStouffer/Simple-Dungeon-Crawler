@@ -565,6 +565,24 @@
                  "width":0,
                  "x":934.558823529412,
                  "y":216.176470588235
+                }, 
+                {
+                 "height":0,
+                 "id":115,
+                 "name":"Rest Point",
+                 "point":true,
+                 "properties":[
+                        {
+                         "name":"objectType",
+                         "type":"string",
+                         "value":"rest_point"
+                        }],
+                 "rotation":0,
+                 "type":"object",
+                 "visible":true,
+                 "width":0,
+                 "x":1194.60067491564,
+                 "y":218.972628421447
                 }],
          "opacity":1,
          "type":"objectgroup",
@@ -606,7 +624,7 @@
          "y":0
         }],
  "nextlayerid":11,
- "nextobjectid":115,
+ "nextobjectid":116,
  "orientation":"orthogonal",
  "renderorder":"right-down",
  "tiledversion":"1.4.3",

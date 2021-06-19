@@ -12,7 +12,9 @@ _In Development_
   * The player is now penalized for being surrounded by more than one enemy with lower movement speed and defense
   * Added fast moving dog enemy
   * Rename "paralyzed" status effect to "stunned"
+  * Gave the status effect messages their own styling to be more noticeable
   * Buff "exhale" spell by always stunning pushed back enemies
+  * Fixed a bug where wandering enemies could set themselves on fire
 * Technical
   * Some entity ids are now deterministic for easier debugging
   * Game map is now a structure instead of just a multidimensional array so extra data can be saved

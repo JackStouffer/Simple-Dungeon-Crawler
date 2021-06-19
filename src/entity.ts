@@ -812,6 +812,28 @@ export const ObjectData: { [key: string]: ObjectDataDetails } = {
             }
         }
     },
+    "rest_point": {
+        staticallyKnownComponents: {
+            c: {
+                TypeComponent: {
+                    entityType: "rest_point",
+                    race: null,
+                    classification: "object"
+                },
+                DisplayNameComponent: {
+                    name: "Bedroll"
+                },
+                GraphicsComponent: {
+                    textureKey: "green_bedroll_right",
+                    sprite: null,
+                    zIndex: 5
+                },
+                InteractableTypeComponent: {
+                    interactableType: InteractableType.Rest
+                }
+            }
+        }
+    },
     "fire_effect": {
         staticallyKnownComponents: {
             c: {

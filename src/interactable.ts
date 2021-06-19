@@ -6,7 +6,9 @@ import {
     InventoryComponent,
     TypeComponent,
     LoadLevelComponent,
-    removeEntity
+    removeEntity,
+    HitPointsComponent,
+    ObjectData
 } from "./entity";
 import { addItem, getItems, useItem } from "./inventory";
 import { displayMessage } from "./ui";
@@ -94,4 +96,23 @@ export function levelLoadInteract(actor: Entity, interactable: Entity): void {
     if (typeData?.entityType === "load_door") {
         playDoorOpen();
     }
+}
+
+export function restPointInteract(entity: Entity): void {
+    const hpData = entity.getOne(HitPointsComponent);
+    if (hpData !== undefined) {
+        hpData.hp = hpData.maxHp;
+        hpData.update();
+    }
+
+    const typeInfo = entity.getOne(TypeComponent);
+    const spells = entity.getOne(SpellsComponent);
+    if (spells !== undefined && typeInfo !== undefined) {
+        const data = ObjectData[typeInfo.entityType];
+        for (const spell of data?.spells ?? []) {
+            spells.knownSpells.set(spell[0], spell[1]);
+        }
+    }
+
+    displayMessage("You are now rested");
 }

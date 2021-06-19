@@ -116,14 +116,10 @@ function wanderAction(
         const newY = pos.y + dir[1];
         const { blocks, entity } = isBlocked(map, entityMap, newX, newY);
 
-        if (aiState.entity.tags.has("aquatic") && blocks === false && entity !== null && entity.tags.has("waterTile")) {
-            validPositions.push([newX, newY]);
-        } else if (!aiState.entity.tags.has("aquatic") && blocks === false && entity === null) {
+        if ((aiState.entity.tags.has("aquatic") && blocks === false && entity !== null && entity.tags.has("waterTile")) ||
+            (!aiState.entity.tags.has("aquatic") && blocks === false && entity === null)) {
             // expensive, only want to do this check if all others pass
-            const isDangerous = isPositionPotentiallyDangerous(
-                ecs, entityMap, aiState.entity, newX, newY
-            );
-            if (!isDangerous) {
+            if (!isPositionPotentiallyDangerous(ecs, entityMap, aiState.entity, newX, newY)) {
                 validPositions.push([newX, newY]);
             }
         }

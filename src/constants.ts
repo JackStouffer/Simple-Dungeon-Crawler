@@ -81,7 +81,8 @@ export enum InteractableType {
     LoadLevel,
     Door,
     GiveItems,
-    GiveSpells
+    GiveSpells,
+    Rest
 }
 
 export enum TriggerType {

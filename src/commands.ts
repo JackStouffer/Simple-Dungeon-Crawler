@@ -41,7 +41,7 @@ import {
 } from "./entity";
 import { attack, getEffectiveSpeedData, takeDamage } from "./fighter";
 import { deepWaterTrigger, eventTrigger, fireTrigger, mudTrigger, shallowWaterTrigger, steamTrigger } from "./trigger";
-import { giveItemsInteract, giveSpellsInteract, doorInteract, levelLoadInteract } from "./interactable";
+import { giveItemsInteract, giveSpellsInteract, doorInteract, levelLoadInteract, restPointInteract } from "./interactable";
 import { setOnFire, setStunned, SpellDataDetails, ItemDataDetails } from "./skills";
 import { DIRS } from "./rot";
 import { createLightningTexture, createSpeechBubbleTexture } from "./graphics";
@@ -640,6 +640,9 @@ export class InteractCommand implements Command {
                     break;
                 case InteractableType.LoadLevel:
                     levelLoadInteract(this.entity, this.target);
+                    break;
+                case InteractableType.Rest:
+                    restPointInteract(this.entity);
                     break;
                 default:
                     assertUnreachable(interactableData.interactableType);

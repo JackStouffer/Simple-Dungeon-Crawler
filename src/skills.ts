@@ -1496,7 +1496,7 @@ export const SpellData: { [key: string]: SpellDataDetails } = {
         value: 20,
         type: SpellType.DamageOther,
         damageType: DamageType.Electric,
-        range: 8,
+        range: 9,
         useFunc: castDamageSpell,
         effect: "lightning",
         lightning: {
@@ -1839,7 +1839,7 @@ export const SpellData: { [key: string]: SpellDataDetails } = {
         description: "Doesn't do much damage, but is guaranteed to light something on fire",
         value: 5,
         type: SpellType.DamageOther,
-        range: 9,
+        range: 11,
         useFunc: castCombust,
         effect: "particles",
         particles: {
