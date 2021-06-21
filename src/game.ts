@@ -605,75 +605,11 @@ export class SimpleDungeonCrawler {
         this.loadingText.zIndex = 25;
         this.pixiApp.stage.addChild(this.loadingText);
 
-        const parent = this;
-        PIXI.Loader
-            .shared
-            .add("bin/images/packed_rougelike_sheet.png")
-            .add("bin/images/sprites.json")
-            .load((loader, resources) => {
-                parent.textureAtlas = resources["bin/images/sprites.json"]!.textures!;
-
-                const loading: Nullable<HTMLElement> = globals.document!.getElementById("loading");
-                if (loading === null || loading.parentNode === null) { throw new Error("this.canvas cannot be null"); }
-                loading.parentNode.removeChild(loading);
-
-                parent.keyBindingMenu = new KeyBindingMenu(parent.pixiApp.stage);
-                parent.inventoryMenu = new InventoryMenu(parent.pixiApp.stage);
-                parent.spellSelectionMenu = new SpellSelectionMenu(parent.pixiApp.stage);
-                parent.statusBar = new StatusBar(parent.pixiApp.stage);
-                parent.gameCamera = new Camera(parent.pixiApp.screen);
-                parent.ecs = new World({
-                    trackChanges: true,
-                    entityPool: 200,
-                    cleanupPools: true
-                });
-
-                parent
-                    .startGameplay()
-                    .then(() => parent.pixiApp.ticker.add(parent.mainLoop.bind(parent)));
-            });
-    }
-
-    setState(state: GameState): void {
-        this.state.exit(this);
-        this.state = state;
-        this.state.enter(this);
-    }
-
-    reset(): void {
-        if (globals.document === null) { throw new Error("Global document cannot be null"); }
-
-        this.scheduler.clear();
-        this.ecs.entities.forEach((e) => {
-            removeEntity(this.ecs, e);
+        this.ecs = new World({
+            trackChanges: true,
+            entityPool: 200,
+            cleanupPools: true
         });
-
-        this.currentActor = null;
-        this.player = createEntity(this.ecs, this.textureAtlas, "player", 1, 1);
-        this.totalTurns = 1;
-
-        this.loadLevel("tutorial_001");
-        this.scheduler.add(this.player.id, true);
-        this.gameCamera.following = this.player;
-
-        const log = globals.document.getElementById("log");
-        if (log === null) { return; }
-        log.innerHTML = "";
-    }
-
-    async startGameplay(): Promise<void> {
-        if (globals.gameEventEmitter === null) { throw new Error("Global gameEventEmitter cannot be null"); }
-
-        this.loadingText.text = "Loading Sounds";
-
-        try {
-            await loadSounds();
-        } catch (err) {
-            this.loadingText.text = "There was an error when loading sounds. Please reload and try again";
-            return;
-        }
-
-        loadEventualSounds();
 
         this.ecs.registerTags(
             "blocks",
@@ -744,6 +680,7 @@ export class SimpleDungeonCrawler {
         this.ecs.registerSystem("postOneTurnCycle", FrozenSystem);
         this.ecs.registerSystem("postOneTurnCycle", LevelUpSystem);
 
+        if (globals.gameEventEmitter === null) { throw new Error("Global gameEventEmitter cannot be null"); }
         globals.gameEventEmitter.on("tutorial.start", explainMovement);
         globals.gameEventEmitter.on("tutorial.attacking", explainAttacking);
         globals.gameEventEmitter.on("tutorial.inventory", explainInventory);
@@ -755,6 +692,65 @@ export class SimpleDungeonCrawler {
         globals.gameEventEmitter.on("tutorial.spellShrine", explainSpellShrine);
         globals.gameEventEmitter.on("tutorial.environmentInteractivity", explainEnvironmentInteractivity);
         globals.gameEventEmitter.on("tutorial.enemySurrounding", explainEnemySurrounding);
+
+        this.keyBindingMenu = new KeyBindingMenu(this.pixiApp.stage);
+        this.inventoryMenu = new InventoryMenu(this.pixiApp.stage);
+        this.spellSelectionMenu = new SpellSelectionMenu(this.pixiApp.stage);
+        this.statusBar = new StatusBar(this.pixiApp.stage);
+        this.gameCamera = new Camera(this.pixiApp.screen);
+
+        const parent = this;
+        PIXI.Loader
+            .shared
+            .add("bin/images/packed_rougelike_sheet.png")
+            .add("bin/images/sprites.json")
+            .load((loader, resources) => {
+                parent.textureAtlas = resources["bin/images/sprites.json"]!.textures!;
+
+                parent
+                    .startGameplay()
+                    .then(() => parent.pixiApp.ticker.add(parent.mainLoop.bind(parent)));
+            });
+    }
+
+    setState(state: GameState): void {
+        this.state.exit(this);
+        this.state = state;
+        this.state.enter(this);
+    }
+
+    reset(): void {
+        if (globals.document === null) { throw new Error("Global document cannot be null"); }
+
+        this.scheduler.clear();
+        this.ecs.entities.forEach((e) => {
+            removeEntity(this.ecs, e);
+        });
+
+        this.currentActor = null;
+        this.player = createEntity(this.ecs, this.textureAtlas, "player", 1, 1);
+        this.totalTurns = 1;
+
+        this.loadLevel("tutorial_001");
+        this.scheduler.add(this.player.id, true);
+        this.gameCamera.following = this.player;
+
+        const log = globals.document.getElementById("log");
+        if (log === null) { return; }
+        log.innerHTML = "";
+    }
+
+    async startGameplay(): Promise<void> {
+        this.loadingText.text = "Loading Sounds";
+
+        try {
+            await loadSounds();
+        } catch (err) {
+            this.loadingText.text = "There was an error when loading sounds. Please reload and try again";
+            return;
+        }
+
+        loadEventualSounds();
 
         input.init();
         this.loadingText.visible = false;

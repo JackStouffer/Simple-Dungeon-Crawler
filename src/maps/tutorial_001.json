@@ -58,7 +58,7 @@
                  "value":"tile"
                 }],
          "type":"tilelayer",
-         "visible":true,
+         "visible":false,
          "width":80,
          "x":0,
          "y":0
@@ -578,7 +578,7 @@
          "y":0
         }],
  "nextlayerid":11,
- "nextobjectid":99,
+ "nextobjectid":104,
  "orientation":"orthogonal",
  "renderorder":"right-down",
  "tiledversion":"1.4.3",

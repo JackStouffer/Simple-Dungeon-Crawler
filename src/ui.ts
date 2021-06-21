@@ -502,7 +502,7 @@ export class SpellSelectionMenu {
     open(spells: KnownSpellDetails[]): void {
         if (globals.Game === null) { throw new Error("Global Game object is null"); }
 
-        // SPEED: Mark all tiles and entities as invisible
+        // TODO, SPEED: Mark all tiles and entities as invisible
 
         this.background.visible = true;
         this.titleText.visible = true;

@@ -19,8 +19,6 @@ import {
 
 globals.window = window;
 globals.document = document;
-globals.Game = new SimpleDungeonCrawler();
-globals.window.Game = globals.Game;
 
 globals.window.giveAllItems = giveAllItems;
 globals.window.giveAllSpells = giveAllSpells;
@@ -36,3 +34,20 @@ globals.window.loopOnce = loopOnce;
 globals.window.getEntity = getEntity;
 globals.window.getEntities = getEntities;
 globals.window.step = step;
+
+window.addEventListener("load", function() {
+    const loading = globals.document!.getElementById("loading")!;
+    loading.parentNode!.removeChild(loading);
+
+    const playButton = document.createElement("button");
+    playButton.innerText = "Play";
+    playButton.classList.add("play-button");
+    playButton.addEventListener("click", function () {
+        globals.Game = new SimpleDungeonCrawler();
+        globals.window!.Game = globals.Game;
+        playButton.remove();
+    });
+
+    const canvas = document.getElementById("canvas")!;
+    canvas.prepend(playButton);
+});

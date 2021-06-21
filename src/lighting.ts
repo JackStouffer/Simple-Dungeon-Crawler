@@ -85,50 +85,6 @@ export class LightingSystem extends System {
         }
     }
 
-    computePlayerIndoorLighting(pos: PositionComponent, light: LightingComponent) {
-        const tilePos = pos.tilePosition();
-
-        function lightingCallback(x: number, y: number, color: Color) {
-            if (x < 0 ||
-                y < 0 ||
-                y >= globals.Game!.map.height ||
-                x >= globals.Game!.map.width) {
-                return;
-            }
-            globals.Game!.map.data[0][y][x]!.lightingColor = toRGB(
-                add(
-                    fromString(globals.Game!.map.data[0][y][x]!.lightingColor),
-                    color
-                )
-            );
-            globals.Game!.map.data[0][y][x]!.explored = true;
-        }
-
-        const sightFov = new FOV.PreciseShadowcasting(
-            createPassableSightCallback(tilePos)
-        );
-        sightFov.compute(tilePos.x, tilePos.y, 50, function(x, y) {
-            if (x < 0 ||
-                y < 0 ||
-                y >= globals.Game!.map.height ||
-                x >= globals.Game!.map.width) {
-                return;
-            }
-            globals.Game!.map.data[0][y][x]!.visible = true;
-        });
-
-        const lightingFov = new FOV.PreciseShadowcasting(
-            createPassableSightCallback(tilePos)
-        );
-        const lighting = new Lighting(
-            createReflectivityCallback(globals.Game!.map),
-            { range: light.range, passes: 2 }
-        );
-        lighting.setFOV(lightingFov);
-        lighting.setLight(tilePos.x, tilePos.y, light.color);
-        lighting.compute(lightingCallback);
-    }
-
     computeReflectivityLighting(pos: PositionComponent, light: LightingComponent) {
         const tilePos = pos.tilePosition();
 
