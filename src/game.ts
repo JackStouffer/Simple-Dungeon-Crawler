@@ -543,7 +543,7 @@ export class SimpleDungeonCrawler {
         this.debugAI = false;
         this.debugAIDialog = false;
 
-        this.pixiApp = new PIXI.Application({ width: 928, height: 608 });
+        this.pixiApp = new PIXI.Application({ width: 1024, height: 608 });
 
         const canvasContainer: Nullable<HTMLElement> = globals.document.getElementById("canvas");
         if (canvasContainer === null) { throw new Error("this.canvas cannot be null"); }
@@ -694,9 +694,9 @@ export class SimpleDungeonCrawler {
         globals.gameEventEmitter.on("tutorial.enemySurrounding", explainEnemySurrounding);
 
         this.keyBindingMenu = new KeyBindingMenu(this.pixiApp.stage);
-        this.inventoryMenu = new InventoryMenu(this.pixiApp.stage);
-        this.spellSelectionMenu = new SpellSelectionMenu(this.pixiApp.stage);
-        this.statusBar = new StatusBar(this.pixiApp.stage);
+        this.inventoryMenu = new InventoryMenu(this.pixiApp.screen, this.pixiApp.stage);
+        this.spellSelectionMenu = new SpellSelectionMenu(this.pixiApp.screen, this.pixiApp.stage);
+        this.statusBar = new StatusBar(this.pixiApp.screen, this.pixiApp.stage);
         this.gameCamera = new Camera(this.pixiApp.screen);
 
         const parent = this;

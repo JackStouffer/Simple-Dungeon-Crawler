@@ -1,4 +1,5 @@
 import { Entity, World } from "ape-ecs";
+import * as PIXI from "pixi.js";
 
 import globals from "./globals";
 import {
@@ -25,75 +26,77 @@ import { getEffectiveHitPointData, getEffectiveStatData, KnownSpellDetails } fro
 import { GameMap, getEntitiesAtLocation, getHighestZIndexWithTile } from "./map";
 import { assertUnreachable, Nullable } from "./util";
 import { SpellData, SpellDataDetails } from "./skills";
-import { Container, Graphics, Sprite, Text, Texture } from "pixi.js";
 import { playUIClick, playUIRollover } from "./audio";
 
 export class StatusBar {
-    private readonly background: Graphics;
-    private readonly healthText: Text;
-    private readonly strengthText: Text;
-    private readonly defenseText: Text;
-    private readonly experienceText: Text;
-    private readonly stateText: Text;
-    private readonly statusText: Text;
-    private readonly targetText: Text;
-    private readonly debugPathfindingText: Text;
+    private readonly background: PIXI.Graphics;
+    private readonly healthText: PIXI.Text;
+    private readonly strengthText: PIXI.Text;
+    private readonly defenseText: PIXI.Text;
+    private readonly experienceText: PIXI.Text;
+    private readonly stateText: PIXI.Text;
+    private readonly statusText: PIXI.Text;
+    private readonly targetText: PIXI.Text;
+    private readonly debugPathfindingText: PIXI.Text;
 
-    constructor(stage: Container) {
-        this.background = new Graphics();
+    constructor(viewport: PIXI.Rectangle, stage: PIXI.Container) {
+        const height = 100;
+        const top = viewport.height - height;
+
+        this.background = new PIXI.Graphics();
         this.background.beginFill(0x0000FF);
-        this.background.drawRect(0, 0, 928, 100);
+        this.background.drawRect(0, 0, viewport.width, height);
         this.background.endFill();
         this.background.x = 0;
-        this.background.y = 512;
+        this.background.y = top;
         this.background.zIndex = 20;
         this.background.visible = false;
 
-        this.healthText = new Text("", { fontFamily : "monospace", fontSize: 14, fill : 0xFFFFFF });
+        this.healthText = new PIXI.Text("", { fontFamily : "monospace", fontSize: 14, fill : 0xFFFFFF });
         this.healthText.x = 20;
-        this.healthText.y = 520;
+        this.healthText.y = top + 15;
         this.healthText.zIndex = 21;
         this.healthText.visible = false;
 
-        this.strengthText = new Text("", { fontFamily : "monospace", fontSize: 14, fill : 0xFFFFFF });
+        this.strengthText = new PIXI.Text("", { fontFamily : "monospace", fontSize: 14, fill : 0xFFFFFF });
         this.strengthText.x = 200;
-        this.strengthText.y = 520;
+        this.strengthText.y = top + 15;
         this.strengthText.zIndex = 21;
         this.strengthText.visible = false;
 
-        this.defenseText = new Text("", { fontFamily : "monospace", fontSize: 14, fill : 0xFFFFFF });
+        this.defenseText = new PIXI.Text("", { fontFamily : "monospace", fontSize: 14, fill : 0xFFFFFF });
         this.defenseText.x = 350;
-        this.defenseText.y = 520;
+        this.defenseText.y = top + 15;
         this.defenseText.zIndex = 21;
         this.defenseText.visible = false;
 
-        this.experienceText = new Text("", { fontFamily : "monospace", fontSize: 14, fill : 0xFFFFFF });
+        this.experienceText = new PIXI.Text("", { fontFamily : "monospace", fontSize: 14, fill : 0xFFFFFF });
         this.experienceText.x = 500;
-        this.experienceText.y = 520;
+        this.experienceText.y = top + 15;
         this.experienceText.zIndex = 21;
         this.experienceText.visible = false;
 
-        this.stateText = new Text("", { fontFamily : "monospace", fontSize: 14, fill : 0xFFFFFF });
+        this.stateText = new PIXI.Text("", { fontFamily : "monospace", fontSize: 14, fill : 0xFFFFFF });
         this.stateText.x = 20;
-        this.stateText.y = 560;
+        this.stateText.y = top + 45;
         this.stateText.zIndex = 21;
         this.stateText.visible = false;
 
-        this.statusText = new Text("", { fontFamily : "monospace", fontSize: 14, fill : 0xFFFFFF });
+        this.statusText = new PIXI.Text("", { fontFamily : "monospace", fontSize: 14, fill : 0xFFFFFF });
         this.statusText.x = 200;
-        this.statusText.y = 560;
+        this.statusText.y = top + 45;
         this.statusText.zIndex = 21;
         this.statusText.visible = false;
 
-        this.targetText = new Text("", { fontFamily : "monospace", fontSize: 14, fill : 0xFFFFFF });
+        this.targetText = new PIXI.Text("", { fontFamily : "monospace", fontSize: 14, fill : 0xFFFFFF });
         this.targetText.x = 350;
-        this.targetText.y = 560;
+        this.targetText.y = top + 45;
         this.targetText.zIndex = 21;
         this.targetText.visible = false;
 
-        this.debugPathfindingText = new Text("", { fontFamily : "monospace", fontSize: 14, fill : 0xFFFFFF });
+        this.debugPathfindingText = new PIXI.Text("", { fontFamily : "monospace", fontSize: 14, fill : 0xFFFFFF });
         this.debugPathfindingText.x = 650;
-        this.debugPathfindingText.y = 560;
+        this.debugPathfindingText.y = top + 45;
         this.debugPathfindingText.zIndex = 21;
         this.debugPathfindingText.visible = false;
 
@@ -267,60 +270,78 @@ export function displayMessage(text: string, type: MessageType = MessageType.Def
 }
 
 interface InventoryMenuRow {
-    bg: Sprite;
-    name: Text;
-    count: Text;
+    bg: PIXI.Sprite;
+    name: PIXI.Text;
+    count: PIXI.Text;
 }
 
 export class InventoryMenu {
-    private readonly pageSize: number = 16;
+    readonly pageSize: number = 16;
 
-    private currentSelection: number;
-    private readonly currentStage: Container;
+    currentSelection: number;
+    readonly viewport: PIXI.Rectangle;
+    readonly currentStage: PIXI.Container;
 
-    private readonly background: Graphics;
-    private readonly descriptionBackground: Graphics;
-    private readonly titleText: Text;
-    private readonly descriptionText: Text;
+    readonly background: PIXI.Graphics;
+    readonly descriptionBackground: PIXI.Graphics;
+    readonly titleText: PIXI.Text;
+    readonly descriptionText: PIXI.Text;
 
-    private menuItems: InventoryMenuRow[];
+    menuItems: InventoryMenuRow[];
 
-    private readonly unselectedStyle = { fontFamily : "monospace", fontSize: 14, fill : 0xFFFFFF };
-    private readonly selectedStyle = { fontFamily : "monospace", fontSize: 14, fill : 0x0 };
+    readonly unselectedStyle = { fontFamily : "monospace", fontSize: 14, fill : 0xFFFFFF };
+    readonly selectedStyle = { fontFamily : "monospace", fontSize: 14, fill : 0x0 };
 
-    constructor(stage: Container) {
+    constructor(viewport: PIXI.Rectangle, stage: PIXI.Container) {
         this.currentSelection = 0;
+        this.viewport = viewport;
         this.currentStage = stage;
 
-        this.background = new Graphics();
-        this.background.lineStyle(4, 0x999999, 1);
+        const backgroundLineWidth = 4;
+        this.background = new PIXI.Graphics();
+        this.background.lineStyle(backgroundLineWidth, 0x999999, 1, 1);
         this.background.beginFill(0x000000);
-        this.background.drawRect(0, 0, 924, 604);
+        this.background.drawRect(
+            0,
+            0,
+            viewport.width - (backgroundLineWidth * 2),
+            viewport.height - (backgroundLineWidth * 2)
+        );
         this.background.endFill();
-        this.background.x = 2;
-        this.background.y = 2;
+        this.background.x = backgroundLineWidth;
+        this.background.y = backgroundLineWidth;
         this.background.zIndex = 20;
         this.background.visible = false;
 
-        this.descriptionBackground = new Graphics();
-        this.descriptionBackground.lineStyle(4, 0xFFFFFF, 1);
-        this.descriptionBackground.beginFill(0x000000);
-        this.descriptionBackground.drawRect(0, 0, 916, 100);
-        this.descriptionBackground.endFill();
-        this.descriptionBackground.x = 6;
-        this.descriptionBackground.y = 502;
-        this.descriptionBackground.zIndex = 22;
-        this.descriptionBackground.visible = false;
-
-        this.titleText = new Text("Inventory", { fontFamily : "monospace", fontSize: 24, fill : 0xFFFFFF, align : "center" });
-        this.titleText.x = 410;
-        this.titleText.y = 5;
+        this.titleText = new PIXI.Text("Inventory", { fontFamily : "monospace", fontSize: 24, fill : 0xFFFFFF, align : "center" });
+        this.titleText.x = (viewport.width / 2) - (this.titleText.width / 2);
+        this.titleText.y = 5 + backgroundLineWidth;
         this.titleText.zIndex = 21;
         this.titleText.visible = false;
 
-        this.descriptionText = new Text("", { fontFamily : "monospace", fontSize: 14, fill : 0xFFFFFF });
+        const descriptionLineWidth = 4;
+        const descriptionBoxHeight = 96;
+        const descriptionBoxTop = viewport.height
+            - descriptionBoxHeight
+            - (backgroundLineWidth * 2);
+        this.descriptionBackground = new PIXI.Graphics();
+        this.descriptionBackground.lineStyle(descriptionLineWidth, 0xFFFFFF, 1, 1);
+        this.descriptionBackground.beginFill(0x000000);
+        this.descriptionBackground.drawRect(
+            0,
+            0,
+            viewport.width - (descriptionLineWidth * 2) - (backgroundLineWidth * 2),
+            descriptionBoxHeight
+        );
+        this.descriptionBackground.endFill();
+        this.descriptionBackground.x = descriptionLineWidth + backgroundLineWidth;
+        this.descriptionBackground.y = descriptionBoxTop;
+        this.descriptionBackground.zIndex = 22;
+        this.descriptionBackground.visible = false;
+
+        this.descriptionText = new PIXI.Text("", { fontFamily : "monospace", fontSize: 14, fill : 0xFFFFFF });
         this.descriptionText.x = 20;
-        this.descriptionText.y = 520;
+        this.descriptionText.y = descriptionBoxTop + 15;
         this.descriptionText.zIndex = 23;
         this.descriptionText.visible = false;
 
@@ -347,24 +368,24 @@ export class InventoryMenu {
 
         for (let i = 0; i < inventoryItems.length; i++) {
             const item = inventoryItems[i];
-            const y = 20 * (i + 2);
+            const y = 20 * (i + 3);
 
-            const bg = new Sprite(Texture.WHITE);
-            bg.width = 900;
+            const bg = new PIXI.Sprite(PIXI.Texture.WHITE);
+            bg.width = this.viewport.width * 0.98;
             bg.height = 20;
-            bg.x = 12;
+            bg.x = this.viewport.width * 0.01;
             bg.y = y - 3;
             bg.zIndex = 21;
             bg.visible = false;
 
-            const name = new Text(`${item.displayName}`, this.unselectedStyle);
-            name.x = 20;
+            const name = new PIXI.Text(`${item.displayName}`, this.unselectedStyle);
+            name.x = this.viewport.width * 0.02;
             name.y = y;
             name.zIndex = 22;
             name.visible = true;
 
-            const count = new Text(`Count: ${item.count}`, this.unselectedStyle);
-            count.x = 600;
+            const count = new PIXI.Text(`Count: ${item.count}`, this.unselectedStyle);
+            count.x = this.viewport.width * 0.85;
             count.y = y;
             count.zIndex = 22;
             count.visible = true;
@@ -433,63 +454,81 @@ export class InventoryMenu {
 }
 
 interface SpellMenuRow {
-    bg: Sprite;
-    name: Text;
-    info: Text;
-    count: Text;
+    bg: PIXI.Sprite;
+    name: PIXI.Text;
+    info: PIXI.Text;
+    count: PIXI.Text;
 }
 
 export class SpellSelectionMenu {
-    private readonly pageSize: number = 16;
+    readonly pageSize: number = 16;
 
-    private currentSelection: number;
-    private readonly currentStage: Container;
+    currentSelection: number;
+    readonly viewport: PIXI.Rectangle;
+    readonly currentStage: PIXI.Container;
 
-    private readonly background: Graphics;
-    private readonly descriptionBackground: Graphics;
-    private readonly titleText: Text;
-    private readonly descriptionText: Text;
+    private readonly background: PIXI.Graphics;
+    private readonly descriptionBackground: PIXI.Graphics;
+    private readonly titleText: PIXI.Text;
+    private readonly descriptionText: PIXI.Text;
 
     private menuItems: SpellMenuRow[];
 
     private readonly unselectedStyle = { fontFamily : "monospace", fontSize: 14, fill : 0xFFFFFF };
     private readonly selectedStyle = { fontFamily : "monospace", fontSize: 14, fill : 0x0 };
 
-    constructor(stage: Container) {
+    constructor(viewport: PIXI.Rectangle, stage: PIXI.Container) {
         this.currentSelection = 0;
+        this.viewport = viewport;
         this.currentStage = stage;
 
-        this.background = new Graphics();
-        this.background.lineStyle(4, 0x999999, 1);
+        const backgroundLineWidth = 4;
+        this.background = new PIXI.Graphics();
+        this.background.lineStyle(backgroundLineWidth, 0x999999, 1, 1);
         this.background.beginFill(0x000000);
-        this.background.drawRect(0, 0, 924, 604);
+        this.background.drawRect(
+            0,
+            0,
+            viewport.width - (backgroundLineWidth * 2),
+            viewport.height - (backgroundLineWidth * 2)
+        );
         this.background.endFill();
-        this.background.x = 2;
-        this.background.y = 2;
+        this.background.x = backgroundLineWidth;
+        this.background.y = backgroundLineWidth;
         this.background.zIndex = 20;
         this.background.visible = false;
 
-        this.titleText = new Text("Spells", { fontFamily : "monospace", fontSize: 24, fill : 0xFFFFFF, align : "center" });
-        this.titleText.x = 400;
-        this.titleText.y = 0;
+        this.titleText = new PIXI.Text("Spells", { fontFamily : "monospace", fontSize: 24, fill : 0xFFFFFF, align : "center" });
+        this.titleText.x = (viewport.width / 2) - (this.titleText.width / 2);
+        this.titleText.y = 15;
         this.titleText.zIndex = 21;
         this.titleText.visible = false;
 
-        this.descriptionText = new Text("Spells", { fontFamily : "monospace", fontSize: 14, fill : 0xFFFFFF });
-        this.descriptionText.x = 20;
-        this.descriptionText.y = 520;
-        this.descriptionText.zIndex = 23;
-        this.descriptionText.visible = false;
-
-        this.descriptionBackground = new Graphics();
-        this.descriptionBackground.lineStyle(4, 0xFFFFFF, 1);
+        const descriptionLineWidth = 4;
+        const descriptionBoxHeight = 96;
+        const descriptionBoxTop = viewport.height
+            - descriptionBoxHeight
+            - (backgroundLineWidth * 2);
+        this.descriptionBackground = new PIXI.Graphics();
+        this.descriptionBackground.lineStyle(descriptionLineWidth, 0xFFFFFF, 1, 1);
         this.descriptionBackground.beginFill(0x000000);
-        this.descriptionBackground.drawRect(0, 0, 916, 100);
+        this.descriptionBackground.drawRect(
+            0,
+            0,
+            viewport.width - (descriptionLineWidth * 2) - (backgroundLineWidth * 2),
+            descriptionBoxHeight
+        );
         this.descriptionBackground.endFill();
-        this.descriptionBackground.x = 6;
-        this.descriptionBackground.y = 502;
+        this.descriptionBackground.x = descriptionLineWidth + backgroundLineWidth;
+        this.descriptionBackground.y = descriptionBoxTop;
         this.descriptionBackground.zIndex = 22;
         this.descriptionBackground.visible = false;
+
+        this.descriptionText = new PIXI.Text("", { fontFamily : "monospace", fontSize: 14, fill : 0xFFFFFF });
+        this.descriptionText.x = 20;
+        this.descriptionText.y = descriptionBoxTop + 15;
+        this.descriptionText.zIndex = 23;
+        this.descriptionText.visible = false;
 
         this.menuItems = [];
 
@@ -502,7 +541,7 @@ export class SpellSelectionMenu {
     open(spells: KnownSpellDetails[]): void {
         if (globals.Game === null) { throw new Error("Global Game object is null"); }
 
-        // TODO, SPEED: Mark all tiles and entities as invisible
+        // TODO, SPEED: Mark all map tiles and entities as invisible
 
         this.background.visible = true;
         this.titleText.visible = true;
@@ -514,26 +553,27 @@ export class SpellSelectionMenu {
             this.descriptionText.text = info.description;
         }
 
+        // TODO, SPEED: these objects are allocated every time the menu is opened
         for (let i = 0; i < spells.length; i++) {
             const spell = spells[i];
-            const y = 20 * (i + 2);
+            const y = 20 * (i + 3);
 
-            const bg = new Sprite(Texture.WHITE);
-            bg.width = 900;
+            const bg = new PIXI.Sprite(PIXI.Texture.WHITE);
+            bg.width = this.viewport.width * 0.98;
             bg.height = 20;
-            bg.x = 12;
+            bg.x = this.viewport.width * 0.01;
             bg.y = y - 3;
             bg.zIndex = 21;
             bg.visible = false;
 
-            const name = new Text(`${spell.displayName}`, this.unselectedStyle);
-            name.x = 20;
+            const name = new PIXI.Text(`${spell.displayName}`, this.unselectedStyle);
+            name.x = this.viewport.width * 0.02;
             name.y = y;
             name.zIndex = 22;
             name.visible = true;
 
-            const info = new Text("", this.unselectedStyle);
-            info.x = 400;
+            const info = new PIXI.Text("", this.unselectedStyle);
+            info.x = this.viewport.width * 0.55;
             info.y = y;
             info.zIndex = 22;
             info.visible = true;
@@ -559,8 +599,8 @@ export class SpellSelectionMenu {
                     assertUnreachable(spell.type);
             }
 
-            const count = new Text(`Count: ${spell.count}/${spell.maxCount}`, this.unselectedStyle);
-            count.x = 600;
+            const count = new PIXI.Text(`Count: ${spell.count}/${spell.maxCount}`, this.unselectedStyle);
+            count.x = this.viewport.width * 0.85;
             count.y = y;
             count.zIndex = 22;
             count.visible = true;
@@ -636,30 +676,30 @@ export class SpellSelectionMenu {
 }
 
 interface KeyCommandMenuRow {
-    bg: Sprite;
-    description: Text;
-    key: Text;
+    bg: PIXI.Sprite;
+    description: PIXI.Text;
+    key: PIXI.Text;
 }
 
 export class KeyBindingMenu {
     private state: "selection" | "change";
     private currentSelection: number;
-    private readonly currentStage: Container;
+    private readonly currentStage: PIXI.Container;
 
-    private readonly background: Graphics;
-    private readonly titleText: Text;
+    private readonly background: PIXI.Graphics;
+    private readonly titleText: PIXI.Text;
 
     private menuItems: KeyCommandMenuRow[];
 
     private readonly unselectedStyle = { fontFamily : "monospace", fontSize: 14, fill : 0xFFFFFF };
     private readonly selectedStyle = { fontFamily : "monospace", fontSize: 14, fill : 0x0 };
 
-    constructor(stage: Container) {
+    constructor(stage: PIXI.Container) {
         this.state = "selection";
         this.currentSelection = 0;
         this.currentStage = stage;
 
-        this.background = new Graphics();
+        this.background = new PIXI.Graphics();
         this.background.lineStyle(4, 0x999999, 1);
         this.background.beginFill(0x000000);
         this.background.drawRect(0, 0, 928, 608);
@@ -669,7 +709,7 @@ export class KeyBindingMenu {
         this.background.zIndex = 20;
         this.background.visible = false;
 
-        this.titleText = new Text("Keybindings", { fontFamily : "monospace", fontSize: 24, fill : 0xFFFFFF, align : "center" });
+        this.titleText = new PIXI.Text("Keybindings", { fontFamily : "monospace", fontSize: 24, fill : 0xFFFFFF, align : "center" });
         this.titleText.x = 380;
         this.titleText.y = 0;
         this.titleText.zIndex = 21;
@@ -691,7 +731,7 @@ export class KeyBindingMenu {
             const command = keyCommands[i];
             const y = 20 * (i + 2);
 
-            const bg = new Sprite(Texture.WHITE);
+            const bg = new PIXI.Sprite(PIXI.Texture.WHITE);
             bg.width = 900;
             bg.height = 20;
             bg.x = 12;
@@ -699,13 +739,13 @@ export class KeyBindingMenu {
             bg.zIndex = 21;
             bg.visible = false;
 
-            const description = new Text(command.description, this.unselectedStyle);
+            const description = new PIXI.Text(command.description, this.unselectedStyle);
             description.x = 20;
             description.y = y;
             description.zIndex = 22;
             description.visible = true;
 
-            const key = new Text(command.key, this.unselectedStyle);
+            const key = new PIXI.Text(command.key, this.unselectedStyle);
             key.x = 600;
             key.y = y;
             key.zIndex = 22;

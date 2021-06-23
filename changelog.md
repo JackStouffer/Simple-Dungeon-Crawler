@@ -25,6 +25,9 @@ _In Development_
   * Game states are now grouped into their own static objects
     * Enter and exit functions make it much easier to manage moving from one state to another
     * Each state object has its own rendering, update, and input handling implementations
+  * Added a "Play" button which must be pressed to start the game
+    * This is to get around the auto-playing audio control rules in browsers
+    * These rules stopped all game audio from starting
 
 ## Version 11
 
