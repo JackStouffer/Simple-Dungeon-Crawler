@@ -505,7 +505,7 @@ export class SimpleDungeonCrawler {
     commandQueue: Command[];
     map: GameMap;
     entityMap: EntityMap;
-    // Shadow boxes are a way of forcing multi-tiled entities and static tile objects to be lit properly
+    /** Shadow boxes are a way of forcing multi-tiled entities and static tile objects to be lit properly */
     shadowBoxes: ShadowBox[];
     entityTeams: EntityTeamMap;
 
@@ -697,7 +697,12 @@ export class SimpleDungeonCrawler {
         this.inventoryMenu = new InventoryMenu(this.pixiApp.screen, this.pixiApp.stage);
         this.spellSelectionMenu = new SpellSelectionMenu(this.pixiApp.screen, this.pixiApp.stage);
         this.statusBar = new StatusBar(this.pixiApp.screen, this.pixiApp.stage);
-        this.gameCamera = new Camera(this.pixiApp.screen);
+        this.gameCamera = new Camera({
+            x: this.pixiApp.screen.x,
+            y: this.pixiApp.screen.y,
+            width: this.pixiApp.screen.width,
+            height: this.pixiApp.screen.height - this.statusBar.height
+        });
 
         const parent = this;
         PIXI.Loader

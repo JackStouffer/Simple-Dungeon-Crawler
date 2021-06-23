@@ -1,10 +1,16 @@
 import { Entity } from "ape-ecs";
-import * as PIXI from "pixi.js";
 
 import { TILE_SIZE } from "./constants";
 import { PositionComponent } from "./entity";
 import { GameMap, Point } from "./map";
 import { Nullable } from "./util";
+
+export interface Rectangle {
+    x: number;
+    y: number;
+    width: number;
+    height: number;
+}
 
 export class Camera {
     // world position
@@ -12,12 +18,12 @@ export class Camera {
     y: number;
 
     readonly tileSize: number = TILE_SIZE;
-    viewport: PIXI.Rectangle;
+    viewport: Rectangle;
     following: Nullable<Entity>;
     // TODO: does pixi.js have a projection thing with WebGL? Can we use that to zoom?
     zoom: number;
 
-    constructor(viewport: PIXI.Rectangle) {
+    constructor(viewport: Rectangle) {
         this.x = 0;
         this.y = 0;
         this.zoom = 2; // TODO, bind to key?

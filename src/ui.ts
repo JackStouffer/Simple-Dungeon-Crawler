@@ -29,6 +29,7 @@ import { SpellData, SpellDataDetails } from "./skills";
 import { playUIClick, playUIRollover } from "./audio";
 
 export class StatusBar {
+    readonly height = 96;
     private readonly background: PIXI.Graphics;
     private readonly healthText: PIXI.Text;
     private readonly strengthText: PIXI.Text;
@@ -40,12 +41,11 @@ export class StatusBar {
     private readonly debugPathfindingText: PIXI.Text;
 
     constructor(viewport: PIXI.Rectangle, stage: PIXI.Container) {
-        const height = 100;
-        const top = viewport.height - height;
+        const top = viewport.height - this.height;
 
         this.background = new PIXI.Graphics();
         this.background.beginFill(0x0000FF);
-        this.background.drawRect(0, 0, viewport.width, height);
+        this.background.drawRect(0, 0, viewport.width, this.height);
         this.background.endFill();
         this.background.x = 0;
         this.background.y = top;

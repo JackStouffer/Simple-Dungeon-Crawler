@@ -26,7 +26,7 @@ import {
     PlannerAIComponent,
     PositionComponent
 } from "./entity";
-import { Camera } from "./camera";
+import { Camera, Rectangle } from "./camera";
 import { Nullable, randomIntFromInterval } from "./util";
 import { createPlanner } from "./ai/commands";
 import { ItemData } from "./skills";
@@ -1618,7 +1618,7 @@ export function isSightBlocked(map: GameMap, entityMap: EntityMap, x: number, y:
  * Draw a tile given the tile data and the coordinates
  */
 export function drawTile(
-    viewport: PIXI.Rectangle,
+    viewport: Rectangle,
     tile: Tile,
     x: number,
     y: number,
