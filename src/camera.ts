@@ -2,7 +2,7 @@ import { Entity } from "ape-ecs";
 
 import { TILE_SIZE } from "./constants";
 import { PositionComponent } from "./entity";
-import { GameMap, Point } from "./map";
+import { GameMap, Vector2D } from "./map";
 import { Nullable } from "./util";
 
 export interface Rectangle {
@@ -42,7 +42,7 @@ export class Camera {
         this.y = point.y;
     }
 
-    clamp(x: number, y: number, width: number, height: number): Point {
+    clamp(x: number, y: number, width: number, height: number): Vector2D {
         let dx = Math.floor(x - (this.viewport.width / 4));
         let dy = Math.floor(y - (this.viewport.height / 4));
 
@@ -61,42 +61,44 @@ export class Camera {
                 (height * this.tileSize)
             )
         );
-        return { x: dx, y: dy };
+        return new Vector2D(dx, dy);
     }
 
-    tilePositionToScreen(x: number, y: number): Point {
+    tilePositionToScreen(x: number, y: number): Vector2D {
         const dx = (x * this.tileSize * this.zoom) - (this.x * this.zoom);
         const dy = (y * this.tileSize * this.zoom) - (this.y * this.zoom);
-        return { x: dx, y: dy };
+        return new Vector2D(dx, dy);
     }
 
-    worldPositionToScreen(x: number, y: number): Point {
+    worldPositionToScreen(x: number, y: number): Vector2D {
         const dx = (x * this.zoom) - (this.x * this.zoom);
         const dy = (y * this.zoom) - (this.y * this.zoom);
-        return { x: dx, y: dy };
+        return new Vector2D(dx, dy);
     }
 
-    tilePositionToWorld(x: number, y: number): Point {
-        return { x: x * this.tileSize, y: y * this.tileSize };
+    tilePositionToWorld(x: number, y: number): Vector2D {
+        return new Vector2D(x * this.tileSize, y * this.tileSize);
     }
 
-    worldPositionToTile(x: number, y: number): Point {
-        return { x: Math.floor(x / this.tileSize), y: Math.floor(y / this.tileSize) };
+    worldPositionToTile(x: number, y: number): Vector2D {
+        return new Vector2D(Math.floor(x / this.tileSize), Math.floor(y / this.tileSize));
     }
 
-    screenToTilePosition(x: number, y: number): Point {
-        return {
-            x: Math.floor(x / (this.tileSize * this.zoom)) + Math.floor(this.x / this.tileSize),
-            y: Math.floor(y / (this.tileSize * this.zoom)) + Math.floor(this.y / this.tileSize)
-        };
+    screenToTilePosition(x: number, y: number): Vector2D {
+        return new Vector2D(
+            Math.floor(x / (this.tileSize * this.zoom)) + Math.floor(this.x / this.tileSize),
+            Math.floor(y / (this.tileSize * this.zoom)) + Math.floor(this.y / this.tileSize)
+        );
     }
 
-    // Like screenToTilePosition, but using rounding because it feels better for input code
-    mouseToTilePosition(x: number, y: number): Point {
+    /**
+     * Like screenToTilePosition, but using rounding because it feels better for input code
+     */
+    mouseToTilePosition(x: number, y: number): Vector2D {
         // TODO, BUG: This is wrong somehow when the camera is all the way to the left
-        return {
-            x: Math.round(x / (this.tileSize * this.zoom)) + Math.floor(this.x / this.tileSize),
-            y: Math.round(y / (this.tileSize * this.zoom)) + Math.floor(this.y / this.tileSize)
-        };
+        return new Vector2D(
+            Math.round(x / (this.tileSize * this.zoom)) + Math.floor(this.x / this.tileSize),
+            Math.round(y / (this.tileSize * this.zoom)) + Math.floor(this.y / this.tileSize)
+        );
     }
 }

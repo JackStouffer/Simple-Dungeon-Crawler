@@ -1,6 +1,6 @@
 import { get } from "lodash";
 import globals from "./globals";
-import { Point } from "./map";
+import { Vector2D } from "./map";
 import { Nullable } from "./util";
 
 const pressed: Set<string> = new Set();
@@ -66,9 +66,9 @@ function getFirstKeyPressed(): Nullable<string> {
 /**
  * Give the world position of the mouse click if there is
  * one, null otherwise.
- * @returns {Point} the position in the game world
+ * @returns {Vector2D} the position in the game world
  */
-function getLeftMouseDown(): Nullable<Point> {
+function getLeftMouseDown(): Nullable<Vector2D> {
     if (globals.Game === null ||
         globals.Game === undefined ||
         mouseDownEvent === null
@@ -95,9 +95,9 @@ function getLeftMouseDown(): Nullable<Point> {
 /**
  * Give the world position of the mouse cursor's position if there is
  * one, null otherwise.
- * @returns {Point} the position in the game world
+ * @returns {Vector2D} the position in the game world
  */
-function getMousePosition(): Nullable<Point> {
+function getMousePosition(): Nullable<Vector2D> {
     if (globals.Game === null ||
         globals.Game === undefined ||
         mouseMoveEvent === null

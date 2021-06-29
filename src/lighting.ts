@@ -34,11 +34,11 @@ export class LightingSystem extends System {
     }
 
     computePlayerLighting(pos: PositionComponent, light: LightingComponent) {
-        const tilePos = pos.tilePosition();
+        const playerTilePos = pos.tilePosition();
         const sightFov = new FOV.PreciseShadowcasting(
-            createPassableSightCallback(tilePos)
+            createPassableSightCallback(playerTilePos)
         );
-        sightFov.compute(tilePos.x, tilePos.y, 30, function(x, y, r, visibility) {
+        sightFov.compute(playerTilePos.x, playerTilePos.y, 30, function(x, y, r, visibility) {
             if (globals.Game === null ||
                 x < 0 ||
                 y < 0 ||

@@ -12,7 +12,7 @@ import {
     GoalData
 } from "./goals";
 import { ActionData } from "./actions";
-import { GameMap, isBlocked, isSightBlocked, Point } from "../map";
+import { GameMap, isBlocked, isSightBlocked, Vector2D } from "../map";
 import {
     ConfusedAIComponent,
     DisplayNameComponent,
@@ -76,7 +76,7 @@ function createVisibilityCallback(ai: Entity): VisibilityCallback {
  * Creates a function which returns if an x and y coordinate
  * represents a spot on the map which can be seen through
  */
-export function createPassableSightCallback(origin: Point): PassableCallback {
+export function createPassableSightCallback(origin: Vector2D): PassableCallback {
     return function(x: number, y: number) {
         if (globals.Game === null) { throw new Error("Global game object is null"); }
 

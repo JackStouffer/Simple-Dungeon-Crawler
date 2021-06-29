@@ -7,7 +7,7 @@ import globals from "./globals";
 import {
     GameMap,
     isBlocked,
-    Point,
+    Vector2D,
     setAllToExplored,
     getRandomOpenSpace,
     getEntitiesAtLocation,
@@ -106,7 +106,7 @@ export type SkillFunction = (
     ecs?: World,
     map?: GameMap,
     entityMap?: EntityMap,
-    target?: Point,
+    target?: Vector2D,
     rotation?: number
 ) => boolean;
 
@@ -150,7 +150,7 @@ function castHealOther(
     ecs: World,
     map: GameMap,
     entityMap: EntityMap,
-    target: Point
+    target: Vector2D
 ): boolean {
     if (item.value === null) { throw new Error("Item does not have a value for castDamageSpell"); }
 
@@ -402,13 +402,13 @@ export function castDamageSpell(
     ecs: World,
     map: GameMap,
     entityMap: EntityMap,
-    target: Point
+    target: Vector2D
 ): boolean {
-    function findEntitiesInBodyOfWater(start: Point): Entity[] {
+    function findEntitiesInBodyOfWater(start: Vector2D): Entity[] {
         const entitiesInWater: Entity[] = [];
         // TODO, Speed: JS doesn't have a hash set so you can't do a set of objects.
         // Write one so we don't have to use string keys
-        const todo: Map<string, Point> = new Map();
+        const todo: Map<string, Vector2D> = new Map();
         todo.set(`${start.x},${start.y}`, start);
         const done: Set<string> = new Set();
 
@@ -439,7 +439,7 @@ export function castDamageSpell(
                 const entities = getEntitiesAtLocation(entityMap, x, y);
                 const hasWater = entities.filter(e => e.tags.has("waterTile")).length > 0;
                 if (hasWater) {
-                    todo.set(`${x},${y}`, { x, y });
+                    todo.set(`${x},${y}`, new Vector2D(x, y));
                 }
             }
         }
@@ -469,7 +469,7 @@ export function castDamageSpell(
         const entities = getEntitiesAtLocation(entityMap, target.x, target.y);
         const isOnWater = entities.filter(e => e.tags.has("waterTile")).length > 0;
         if (isOnWater) {
-            const entitiesToDamage = findEntitiesInBodyOfWater({ x: target.x, y: target.y });
+            const entitiesToDamage = findEntitiesInBodyOfWater(new Vector2D(target.x, target.y));
             for (let i = 0; i < entitiesToDamage.length; i++) {
                 // TODO: Add special sound effect here
                 takeDamage(
@@ -499,7 +499,7 @@ export function castFireBall(
     ecs: World,
     map: GameMap,
     entityMap: EntityMap,
-    target: Point,
+    target: Vector2D,
     rotation: number
 ): boolean {
     if (item.value === null) { throw new Error("Item does not have a value for castDamageSpell"); }
@@ -542,7 +542,7 @@ export function castConfuse(
     ecs: World,
     map: GameMap,
     entityMap: EntityMap,
-    target: Point
+    target: Vector2D
 ): boolean {
     if (item.value === null) { throw new Error("Item does not have a value"); }
 
@@ -620,7 +620,7 @@ export function castSlow(
     ecs: World,
     map: GameMap,
     entityMap: EntityMap,
-    target: Point
+    target: Vector2D
 ): boolean {
     if (item.value === null) { throw new Error("Item does not have a value"); }
 
@@ -675,7 +675,7 @@ function castWall(
     ecs: World,
     map: GameMap,
     entityMap: EntityMap,
-    target: Point,
+    target: Vector2D,
     rotation: number,
     objectId: string
 ): boolean {
@@ -703,7 +703,7 @@ export function castIceWall(
     ecs: World,
     map: GameMap,
     entityMap: EntityMap,
-    target: Point,
+    target: Vector2D,
     rotation: number
 ): boolean {
     return castWall(
@@ -724,7 +724,7 @@ export function castFireWall(
     ecs: World,
     map: GameMap,
     entityMap: EntityMap,
-    target: Point,
+    target: Vector2D,
     rotation: number
 ): boolean {
     return castWall(
@@ -749,7 +749,7 @@ export function castCombust(
     ecs: World,
     map: GameMap,
     entityMap: EntityMap,
-    target: Point
+    target: Vector2D
 ): boolean {
     if (target.x >= map.width ||
         target.y >= map.height ||
@@ -831,7 +831,7 @@ export function castSilence(
     ecs: World,
     map: GameMap,
     entityMap: EntityMap,
-    target: Point
+    target: Vector2D
 ): boolean {
     if (item.value === null) { throw new Error("Item does not have a value for castDamageSpell"); }
 
@@ -895,7 +895,7 @@ export function castFreeze(
     ecs: World,
     map: GameMap,
     entityMap: EntityMap,
-    target: Point
+    target: Vector2D
 ): boolean {
     if (item.value === null) { throw new Error("Item does not have a value for castFreeze"); }
 
@@ -914,14 +914,17 @@ export function castFreeze(
 
     const targetPos = targetedEntity.getOne(PositionComponent)!.tilePosition();
 
-    const positions: Point[] = [targetPos];
+    const positions: Vector2D[] = [targetPos];
     for (const dir of DIRS[8]) {
-        positions.push({ x: targetPos.x + dir[0], y: targetPos.y + dir[1] });
+        positions.push(new Vector2D(targetPos.x + dir[0], targetPos.y + dir[1]));
         // Create a cool looking creeping ice effect
         if (Math.random() > 0.5) {
-            positions.push({ x: targetPos.x + (dir[0] * 2), y: targetPos.y + (dir[1] * 2) });
+            positions.push(new Vector2D(targetPos.x + (dir[0] * 2), targetPos.y + (dir[1] * 2)));
             if (Math.random() > 0.4) {
-                positions.push({ x: targetPos.x + (dir[0] * 3), y: targetPos.y + (dir[1] * 3) });
+                positions.push(new Vector2D(
+                    targetPos.x + (dir[0] * 3),
+                    targetPos.y + (dir[1] * 3)
+                ));
             }
         }
     }

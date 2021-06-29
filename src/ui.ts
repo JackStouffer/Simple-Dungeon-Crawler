@@ -222,6 +222,9 @@ export class StatusBar {
 
             if (globals.Game?.debugPathfinding === true && tile !== null) {
                 this.debugPathfindingText.text = `(${x}, ${y}): ${tile.pathfindingCost}`;
+                this.debugPathfindingText.visible = true;
+            } else {
+                this.debugPathfindingText.visible = false;
             }
         }
     }

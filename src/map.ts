@@ -1225,15 +1225,18 @@ export class ShadowBox {
         return false;
     }
 
-    center(): Point {
-        return { x: this.x + Math.round(this.width / 2), y: this.y + Math.round(this.height / 2) };
+    center(): Vector2D {
+        return new Vector2D(
+            this.x + Math.round(this.width / 2),
+            this.y + Math.round(this.height / 2)
+        );
     }
 
-    tiles(): Point[] {
+    tiles(): Vector2D[] {
         const ret = [];
         for (let x = this.x; x < this.x + this.width + 1; x++) {
             for (let y = this.y; y < this.y + this.height + 1; y++) {
-                ret.push({x, y});
+                ret.push(new Vector2D(x, y));
             }
         }
         return ret;
@@ -1661,18 +1664,57 @@ export function drawTile(
     }
 }
 
-export interface Point {
+interface Point {
     x: number;
     y: number;
 }
 
+export class Vector2D {
+    x: number;
+    y: number;
+
+    constructor(x: number, y: number) {
+        this.x = x;
+        this.y = y;
+    }
+
+    static fromVector(v: Point): Vector2D {
+        return new Vector2D(v.x, v.y);
+    }
+
+    isEqual(v: Point): boolean {
+        return this.x === v.x && this.y === v.y;
+    }
+
+    divide(n: number): void {
+        this.x /= n;
+        this.y /= n;
+    }
+
+    magnitude(): number {
+        return Math.sqrt((this.x * this.x) + (this.y * this.y));
+    }
+
+    normalize(): void {
+        this.divide(this.magnitude());
+    }
+
+    direction(origin: Vector2D): number {
+        let direction = Math.atan2(this.y - origin.y, this.x - origin.x) * (180 / Math.PI);
+        if (direction < 0) {
+            direction = 360 + direction;
+        }
+        return direction;
+    }
+}
+
 /**
  * Find the tile distance between two points
- * @param  {Point} a A point
- * @param  {Point} b A point
+ * @param  {Vector2D} a A Vector2D
+ * @param  {Vector2D} b A Vector2D
  * @return {number} The distance
  */
-export function tileDistanceBetweenPoints(a: Point, b: Point): number {
+export function tileDistanceBetweenPoints(a: Vector2D, b: Vector2D): number {
     const dx = b.x - a.x;
     const dy = b.y - a.y;
     return Math.sqrt(dx ** 2 + dy ** 2);
@@ -1681,11 +1723,11 @@ export function tileDistanceBetweenPoints(a: Point, b: Point): number {
 /**
  * Find the world distance between two tile positions. Does not find the
  * distance between two world positions.
- * @param  {Point} a A point
- * @param  {Point} b A point
+ * @param  {Vector2D} a A Vector2D
+ * @param  {Vector2D} b A Vector2D
  * @return {number} The distance
  */
-export function worldDistanceBetweenPoints(a: Point, b: Point, zoom: number): number {
+export function worldDistanceBetweenPoints(a: Vector2D, b: Vector2D, zoom: number): number {
     const dx = (b.x * 16 * zoom) - (a.x * 16 * zoom);
     const dy = (b.y * 16 * zoom) - (a.y * 16 * zoom);
     return Math.sqrt(dx ** 2 + dy ** 2);
@@ -1698,7 +1740,7 @@ export function worldDistanceBetweenPoints(a: Point, b: Point, zoom: number): nu
 export function getRandomFighterWithinRange(
     ecs: World,
     map: GameMap,
-    origin: Point,
+    origin: Vector2D,
     maxDistance: number
 ): Nullable<Entity> {
     const entities = ecs
@@ -1710,7 +1752,7 @@ export function getRandomFighterWithinRange(
     for (const e of entities) {
         const pos = e.getOne(PositionComponent)!;
         const d = tileDistanceBetweenPoints(origin, pos.tilePosition());
-        if (pos !== origin && d <= maxDistance) {
+        if (origin.isEqual(pos) && d <= maxDistance) {
             possible.push(e);
         }
     }
@@ -1718,7 +1760,7 @@ export function getRandomFighterWithinRange(
     return possible.length > 0 ? RNG.getItem(possible) : null;
 }
 
-export function getRandomOpenSpace(map: GameMap, entityMap: EntityMap): Point {
+export function getRandomOpenSpace(map: GameMap, entityMap: EntityMap): Vector2D {
     let blocks = false;
     let entity;
     let x = 0;
@@ -1736,7 +1778,7 @@ export function getRandomOpenSpace(map: GameMap, entityMap: EntityMap): Point {
         throw new Error("Infinite loop");
     }
 
-    return { x, y };
+    return new Vector2D(x, y);
 }
 
 /**

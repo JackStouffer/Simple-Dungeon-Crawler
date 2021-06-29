@@ -29,7 +29,7 @@ import {
     getRandomOpenSpace,
     GameMap,
     isBlocked,
-    Point,
+    Vector2D,
     getEntitiesAtLocation,
 } from "../map";
 import { displayMessage } from "../ui";
@@ -52,8 +52,8 @@ function getStepsTowardsTarget(
     map: GameMap,
     entityMap: EntityMap,
     actor: Entity,
-    origin: Point,
-    target: Point,
+    origin: Vector2D,
+    target: Vector2D,
     steps: number,
     popBack: boolean = true
 ): Nullable<number[][]> {
@@ -340,7 +340,7 @@ function healAllyAction(
 
     // SPEED this information is being calculated twice, once here
     // and once in the goals
-    let target: Nullable<Point> = null;
+    let target: Nullable<Vector2D> = null;
     let targetHPPercent: Nullable<number> = null;
     for (const e of entities) {
         const hpData = e.getOne(HitPointsComponent)!;
@@ -538,7 +538,7 @@ function repositionAction(
 
     const bfs = new Path.ReverseAStar(
         (x, y) => {
-            const d = tileDistanceBetweenPoints({ x, y }, targetPosData.tilePosition());
+            const d = tileDistanceBetweenPoints(new Vector2D(x, y), targetPosData.tilePosition());
             return Math.floor(d) === aiState.desiredDistanceToTarget;
         },
         createPassableCallback(tilePos),

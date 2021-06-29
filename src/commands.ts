@@ -17,7 +17,7 @@ import {
     GameMap,
     isBlocked,
     tileDistanceBetweenPoints,
-    Point,
+    Vector2D,
     getEntitiesAtLocation,
     getHighestZIndexWithTile,
     worldDistanceBetweenPoints,
@@ -52,7 +52,7 @@ import { Camera } from "./camera";
  * Creates a function which returns if an x and y coordinate
  * represents a passable spot on the map
  */
-export function createPassableCallback(origin: Point): PassableCallback {
+export function createPassableCallback(origin: Vector2D): PassableCallback {
     return function(x: number, y: number) {
         if (globals.Game === null) { throw new Error("Global game object is null"); }
 
@@ -69,7 +69,7 @@ export function createPassableCallback(origin: Point): PassableCallback {
 /**
  * Passable callback for water based entities which cannot go on land
  */
-export function createWaterBasedPassableCallback(origin: Point): PassableCallback {
+export function createWaterBasedPassableCallback(origin: Vector2D): PassableCallback {
     return function(x: number, y: number) {
         if (globals.Game === null) { throw new Error("Global game object is null"); }
 
@@ -103,7 +103,7 @@ export function generateWeightCallback(
     ecs: World,
     map: GameMap,
     entityMap: EntityMap,
-    origin: Point
+    origin: Vector2D
 ): WeightCallback {
     return function (x: number, y: number): number {
         if (globals.Game === null) { throw new Error("Global game object is null"); }
@@ -177,7 +177,7 @@ export function generateWeightCallback(
 /**
  * Simplified distance heuristic use for drawing the movement path
  */
-export function generatePlayerWeightCallback(origin: Point): WeightCallback {
+export function generatePlayerWeightCallback(origin: Vector2D): WeightCallback {
     return function (x: number, y: number): number {
         return Math.max(Math.abs(x - origin.x), Math.abs(y - origin.y));
     };
@@ -214,8 +214,8 @@ export interface Command {
 }
 
 export function getPlayerMovementPath(
-    origin: Point,
-    destination: Point,
+    origin: Vector2D,
+    destination: Vector2D,
     maxTilesPerMove: number,
     map: GameMap,
     entityMap: EntityMap
@@ -339,7 +339,7 @@ export class GoToLocationCommand implements Command {
 
         const distance = tileDistanceBetweenPoints(
             globals.Game!.gameCamera.tilePositionToWorld(tilePos.x, tilePos.y),
-            pos
+            Vector2D.fromVector(pos)
         );
 
         // we're done animating one tile movement, update the position and
@@ -526,7 +526,7 @@ export class PushBackCommand implements Command {
 
         const distance = tileDistanceBetweenPoints(
             globals.Game!.gameCamera.tilePositionToWorld(tilePos.x, tilePos.y),
-            pos
+            Vector2D.fromVector(pos)
         );
 
         if (distance >= startDistance) {
@@ -720,7 +720,7 @@ export class UseSkillCommand implements Command {
     private readonly entity: Entity;
     private readonly rotation: number | undefined;
     private readonly details: SpellDataDetails | ItemDataDetails;
-    private target: Point | undefined;
+    private target: Vector2D | undefined;
     private particleEmitter: Nullable<particles.Emitter> = null;
     private effectGraphics: Nullable<PIXI.Graphics> = null;
     private effectTween: Nullable<Tween> = null;
@@ -729,7 +729,7 @@ export class UseSkillCommand implements Command {
     constructor(
         entity: Entity,
         details: SpellDataDetails | ItemDataDetails,
-        target?: Point,
+        target?: Vector2D,
         rotation?: number,
         cb?: SkillCallback
     ) {
@@ -1053,7 +1053,7 @@ export class MoveCameraCommand implements Command {
     duration: number;
     private xTween: Nullable<Tween> = null;
     private yTween: Nullable<Tween> = null;
-    private readonly position: Point;
+    private readonly position: Vector2D;
 
     constructor(map: GameMap, camera: Camera, to: Entity, duration: Nullable<number> = null) {
         this.map = map;
@@ -1067,7 +1067,7 @@ export class MoveCameraCommand implements Command {
         this.duration = duration ?? Math.min(
             Math.max(
                 50,
-                tileDistanceBetweenPoints(this.position, camera) * 3.5
+                tileDistanceBetweenPoints(this.position, Vector2D.fromVector(camera)) * 3.5
             ),
             1500
         );

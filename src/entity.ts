@@ -26,7 +26,7 @@ import {
     RotateReticleCommand
 } from "./commands";
 import { ItemDataDetails, SpellDataDetails } from "./skills";
-import { Point } from "./map";
+import { Vector2D } from "./map";
 
 export type EntityMap = Map<string, Entity[]>;
 
@@ -74,11 +74,11 @@ export class PositionComponent extends Component {
         tileY: 0
     }
 
-    tilePosition(): Point {
-        return {
-            x: this.tileX,
-            y: this.tileY
-        };
+    tilePosition(): Vector2D {
+        return new Vector2D(
+            this.tileX,
+            this.tileY
+        );
     }
 }
 
@@ -349,7 +349,7 @@ export class LoseTargetAIComponent extends Component {
 export class FearAIComponent extends Component {
     fear: number;
     fearThreshold: number;
-    runAwayTarget: Nullable<Point>;
+    runAwayTarget: Nullable<Vector2D>;
     isCowering: boolean;
 
     static typeName = "FearAIComponent";

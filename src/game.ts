@@ -569,7 +569,7 @@ export class SimpleDungeonCrawler {
             "This is an experiment to test a bunch of gameplay ideas I have. \nIt doesn't represent a finished product, but I hope you'll enjoy it anyway!\n\n\nPress [enter] to start",
             { fontFamily : "monospace", fontSize: 14, fill : 0xFFFFFF, align : "center" }
         );
-        this.openingText.x = 150;
+        this.openingText.x = (this.pixiApp.screen.width / 2) - (this.openingText.width / 2);
         this.openingText.y = 200;
         this.openingText.visible = false;
         this.openingText.zIndex = 25;
@@ -579,7 +579,7 @@ export class SimpleDungeonCrawler {
             "You have died\n\n\nPress [enter] to restart",
             { fontFamily : "monospace", fontSize: 14, fill : 0xFFFFFF, align : "center" }
         );
-        this.losingText.x = 360;
+        this.losingText.x = (this.pixiApp.screen.width / 2) - (this.losingText.width / 2);
         this.losingText.y = 200;
         this.losingText.visible = false;
         this.losingText.zIndex = 25;
@@ -589,7 +589,7 @@ export class SimpleDungeonCrawler {
             "You won!\n\n\nPress [enter] to restart the game",
             { fontFamily : "monospace", fontSize: 14, fill : 0xFFFFFF, align : "center" }
         );
-        this.winningText.x = 300;
+        this.winningText.x = (this.pixiApp.screen.width / 2) - (this.winningText.width / 2);
         this.winningText.y = 200;
         this.winningText.visible = false;
         this.winningText.zIndex = 25;
@@ -599,7 +599,7 @@ export class SimpleDungeonCrawler {
             "Loading",
             { fontFamily : "monospace", fontSize: 14, fill : 0xFFFFFF, align : "center" }
         );
-        this.loadingText.x = 380;
+        this.loadingText.x = (this.pixiApp.screen.width / 2) - (this.loadingText.width / 2);
         this.loadingText.y = 200;
         this.loadingText.visible = true;
         this.loadingText.zIndex = 25;

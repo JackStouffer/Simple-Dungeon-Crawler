@@ -15,6 +15,7 @@ _In Development_
   * Gave the status effect messages their own styling to be more noticeable
   * Buff "exhale" spell by always stunning pushed back enemies
   * Fixed a bug where wandering enemies could set themselves on fire
+  * Game camera moves from entity to entity when a turn ends
 * Technical
   * Some entity ids are now deterministic for easier debugging
   * Game map is now a structure instead of just a multidimensional array so extra data can be saved
@@ -28,6 +29,7 @@ _In Development_
   * Added a "Play" button which must be pressed to start the game
     * This is to get around the auto-playing audio control rules in browsers
     * These rules stopped all game audio from starting
+  * Make the UI code resolution independent
 
 ## Version 11
 

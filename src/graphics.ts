@@ -12,7 +12,7 @@ import {
     WetableComponent
 } from "./entity";
 import input from "./input";
-import { tileDistanceBetweenPoints, getEntitiesAtLocation, getHighestZIndexWithTile, Point } from "./map";
+import { tileDistanceBetweenPoints, getEntitiesAtLocation, getHighestZIndexWithTile, Vector2D } from "./map";
 import { PlayerState } from "./input-handler";
 import { getPlayerMovementPath } from "./commands";
 import { getItems } from "./inventory";
@@ -182,7 +182,7 @@ export class DrawChestsSystem extends System {
  */
 export function getTargetingReticle(
     data: ItemDataDetails | SpellDataDetails | null,
-    pos: Nullable<Point>,
+    pos: Nullable<Vector2D>,
     rotation: number
 ): [number, number][] {
     const ret: [number, number][] = [];

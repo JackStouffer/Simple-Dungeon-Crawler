@@ -9,7 +9,7 @@ import {
     UseSkillCommand,
     InteractCommand
 } from "./commands";
-import { tileDistanceBetweenPoints, getEntitiesAtLocation, GameMap, Point } from "./map";
+import { tileDistanceBetweenPoints, getEntitiesAtLocation, GameMap, Vector2D } from "./map";
 import { Nullable } from "./util";
 import {
     EntityMap,
@@ -42,14 +42,14 @@ export enum PlayerState {
  * @param {World} ecs - The ecs world to use
  * @param {GameMap} map - The ecs world to use
  * @param {EntityMap} entityMap - The ecs world to use
- * @param {Point} mousePosition - the targeted point in map
+ * @param {Vector2D} mousePosition - the targeted point in map
  * @param {boolean} excludeUninteractable - should ignore entities that don't have hp or an interactable
  */
 export function mouseTarget(
     ecs: World,
     map: GameMap,
     entityMap: EntityMap,
-    mousePosition: Point,
+    mousePosition: Vector2D,
     excludeUninteractable = true
 ): Nullable<Entity> {
     if (mousePosition.x >= map.width ||
@@ -95,6 +95,7 @@ export function playerInput(
     entityMap: EntityMap,
     player: Entity
 ): Nullable<Command> {
+    // TODO, BUG: Able to call up menu during spell animation
     if (globals.gameEventEmitter === null) { throw new Error("Global gameEventEmitter cannot be null"); }
 
     const inputState = player.getOne(InputHandlingComponent);

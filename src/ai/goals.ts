@@ -18,7 +18,7 @@ import {
 import { getEffectiveDamageAffinity, getEffectiveHitPointData, getKnownSpells } from "../fighter";
 import globals from "../globals";
 import { getItems } from "../inventory";
-import { tileDistanceBetweenPoints, getEntitiesAtLocation, Point } from "../map";
+import { tileDistanceBetweenPoints, getEntitiesAtLocation, Vector2D } from "../map";
 import { DIRS } from "../rot";
 import { SpellData } from "../skills";
 import { Nullable } from "../util";
@@ -213,7 +213,7 @@ function resolveAllyLowHealth(ecs: World, entityMap: EntityMap, ai: Entity): boo
 
     // TODO, SPEED: this information is being calculated twice, once here
     // and once in the action
-    let target: Nullable<Point> = null;
+    let target: Nullable<Vector2D> = null;
     let targetHPData: Nullable<HitPointsComponent> = null;
     for (const e of entities) {
         // TODO: remove when we have target selection/factions
@@ -255,17 +255,17 @@ export function isPositionPotentiallyDangerous(
     x: number,
     y: number
 ): boolean {
-    const positions: Point[] = [];
+    const positions: Vector2D[] = [];
 
     const selfDamageTypes = getEffectiveDamageAffinity(self);
 
     // TODO, speed: Why are we looping twice here? Just loop over DIRS
-    positions.push({ x, y });
+    positions.push(new Vector2D(x, y));
     for (let i = 0; i < DIRS[8].length; i++) {
         const dir = DIRS[8][i];
         const cx = x + dir[0];
         const cy = y + dir[1];
-        positions.push({ x: cx, y: cy });
+        positions.push(new Vector2D(cx, cy));
     }
 
     for (const p of positions) {
