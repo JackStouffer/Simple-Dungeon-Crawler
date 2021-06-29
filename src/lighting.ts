@@ -34,6 +34,10 @@ export class LightingSystem extends System {
     }
 
     computePlayerLighting(pos: PositionComponent, light: LightingComponent) {
+        // TODO: Make the lighting look better by using the reflectivity lighting
+        // system and shade the tiles according to the level of light on the tile.
+        // Then use bilinear interpolation to make the values smooth between the
+        // tiles
         const playerTilePos = pos.tilePosition();
         const sightFov = new FOV.PreciseShadowcasting(
             createPassableSightCallback(playerTilePos)

@@ -1196,24 +1196,13 @@ export class GameMap {
     readonly data: Nullable<Tile>[][][];
     readonly visibilityData: VisibilityData[][];
 
-    constructor(name: string, data: Nullable<Tile>[][][]) {
+    constructor(name: string, data: Nullable<Tile>[][][], visibilityData: VisibilityData[][]) {
         this.name = name;
         this.data = data;
         this.depth = data.length;
         this.height = data[0].length;
         this.width = data[0][0].length;
-
-        this.visibilityData = new Array(this.height);
-        for (let h = 0; h < this.height; h++) {
-            this.visibilityData[h] = new Array(this.width);
-            for (let i = 0; i < this.visibilityData[h].length; i++) {
-                this.visibilityData[h][i] = {
-                    explored: false,
-                    visible: false,
-                    lightingColor: "white"
-                };
-            }
-        }
+        this.visibilityData = visibilityData;
     }
 }
 
@@ -1271,7 +1260,7 @@ export function loadTiledMap(
 
     const sourceData = LevelData[level];
     const tileSize: number = sourceData.tileheight;
-    const mapData = [];
+    const mapData: Nullable<Tile>[][][] = [];
     let playerLocation: [number, number] = [0, 0];
 
     const tileLayers = sourceData.layers.filter(
@@ -1311,6 +1300,20 @@ export function loadTiledMap(
         throw new Error(`No shadow box layer in map ${level}`);
     }
 
+    // Create the visibility data of the tiles
+    const visibilityData: VisibilityData[][] = new Array(sourceData.height);
+    for (let h = 0; h < sourceData.height; h++) {
+        visibilityData[h] = new Array(sourceData.width);
+        for (let i = 0; i < visibilityData[h].length; i++) {
+            visibilityData[h][i] = {
+                explored: false,
+                visible: false,
+                lightingColor: "white"
+            };
+        }
+    }
+
+    // Loading the tile data
     for (let z = 0; z < tileLayers.length; z++) {
         const layer = tileLayers[z].data as number[];
         const translated = [];
@@ -1335,6 +1338,11 @@ export function loadTiledMap(
             t.sprite.zIndex = z;
             stage.addChild(t.sprite);
             translated.push(t);
+
+            if (data.defaultToExplored === true) {
+                visibilityData[Math.floor(i / sourceData.width)][i % sourceData.width]
+                    .explored = true;
+            }
         }
 
         const layerResult = [];
@@ -1543,7 +1551,7 @@ export function loadTiledMap(
         );
     });
 
-    return { map: new GameMap(level, mapData), playerLocation, shadowBoxes, teams };
+    return { map: new GameMap(level, mapData, visibilityData), playerLocation, shadowBoxes, teams };
 }
 
 /**
@@ -1835,7 +1843,7 @@ export function drawTile(
             tile.sprite.tint = 0xFFFFFF;
             tile.sprite.visible = false;
         } else if (explored && !visible) {
-            tile.sprite.tint = 0x999999;
+            tile.sprite.tint = 0xBBBBBB;
             tile.sprite.visible = true;
         }
     } else {
@@ -1843,7 +1851,7 @@ export function drawTile(
             tile.sprite.tint = 0xFFFFFF;
             tile.sprite.visible = true;
         } else if (explored) {
-            tile.sprite.tint = 0x999999;
+            tile.sprite.tint = 0xBBBBBB;
             tile.sprite.visible = true;
         } else {
             tile.sprite.tint = 0x0;

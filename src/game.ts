@@ -528,7 +528,7 @@ export class SimpleDungeonCrawler {
         this.currentActor = null;
         this.commandQueue = [];
         this.scheduler = new EntityScheduler();
-        this.map = new GameMap("", [[[]]]);
+        this.map = new GameMap("", [[[]]], [[]]);
         this.entityMap = new Map();
         this.shadowBoxes = [];
         this.totalTurns = 1;
