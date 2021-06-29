@@ -23,7 +23,7 @@ import {
 } from "./entity";
 import { InventoryItemDetails } from "./inventory";
 import { getEffectiveHitPointData, getEffectiveStatData, KnownSpellDetails } from "./fighter";
-import { GameMap, getEntitiesAtLocation, getHighestZIndexWithTile } from "./map";
+import { GameMap, getEntitiesAtLocation, getHighestZIndexWithTile, isVisibleAndLit } from "./map";
 import { assertUnreachable, Nullable } from "./util";
 import { SpellData, SpellDataDetails } from "./skills";
 import { playUIClick, playUIRollover } from "./audio";
@@ -177,7 +177,7 @@ export class StatusBar {
 
         if (x >= 0 && y >= 0 && x < map.width && y < map.height) {
             const tile = map.data[getHighestZIndexWithTile(map, x, y)][y][x];
-            if (tile !== null && tile.isVisibleAndLit() === true) {
+            if (tile !== null && isVisibleAndLit(map, x, y)) {
                 const entities = getEntitiesAtLocation(entityMap, x, y);
                 if (entities.length === 0) {
                     this.targetText.text = `${tile.name}`;

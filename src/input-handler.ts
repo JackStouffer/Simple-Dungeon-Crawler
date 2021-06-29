@@ -54,7 +54,7 @@ export function mouseTarget(
 ): Nullable<Entity> {
     if (mousePosition.x >= map.width ||
         mousePosition.y >= map.height ||
-        map.data[0][mousePosition.y][mousePosition.x]!.visible === false) {
+        map.visibilityData[mousePosition.y][mousePosition.x].visible === false) {
         return null;
     }
 
@@ -133,8 +133,8 @@ export function playerInput(
                 }
             }
 
-            const tile = globals.Game!.map.data[0][mouseDownPosition.y][mouseDownPosition.x];
-            if (tile === null || tile.explored === false) { return null; }
+            if (!globals.Game!.map
+                .visibilityData[mouseDownPosition.y][mouseDownPosition.x].explored) { return null; }
 
             // Movement
             const path = getPlayerMovementPath(

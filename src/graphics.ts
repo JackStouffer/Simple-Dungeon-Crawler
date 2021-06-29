@@ -12,7 +12,7 @@ import {
     WetableComponent
 } from "./entity";
 import input from "./input";
-import { tileDistanceBetweenPoints, getEntitiesAtLocation, getHighestZIndexWithTile, Vector2D } from "./map";
+import { tileDistanceBetweenPoints, getEntitiesAtLocation, getHighestZIndexWithTile, Vector2D, isVisibleAndLit } from "./map";
 import { PlayerState } from "./input-handler";
 import { getPlayerMovementPath } from "./commands";
 import { getItems } from "./inventory";
@@ -51,7 +51,7 @@ export class DrawSystem extends System {
         }
 
         // assuming all tiles on the same position have the same visibility
-        if (globals.Game.map.data[0][tilePos.y][tilePos.x]!.isVisibleAndLit() &&
+        if (isVisibleAndLit(globals.Game.map, tilePos.x, tilePos.y) &&
             graphics.sprite !== null) {
             graphics.sprite.visible = true;
 
@@ -85,7 +85,8 @@ export class DrawSystem extends System {
             throw new Error(`Object ${pos.entity.id} exists outside the game world`);
         }
 
-        if (globals.Game.map.data[0][tilePos.y][tilePos.x]!.explored && graphics.sprite !== null) {
+        if (globals.Game.map.visibilityData[tilePos.y][tilePos.x]!.explored &&
+            graphics.sprite !== null) {
             graphics.sprite.visible = true;
 
             const { x, y } = globals.Game!.gameCamera.tilePositionToScreen(tilePos.x, tilePos.y);
@@ -95,7 +96,7 @@ export class DrawSystem extends System {
             graphics.sprite.alpha = graphics.opacity;
             graphics.sprite.zIndex = graphics.zIndex;
 
-            if (globals.Game.map.data[0][tilePos.y][tilePos.x]!.isVisibleAndLit()) {
+            if (isVisibleAndLit(globals.Game.map, tilePos.x, tilePos.y)) {
                 graphics.sprite.tint = 0xFFFFFF;
             } else {
                 graphics.sprite.tint = 0x999999;
@@ -152,7 +153,7 @@ export class DrawChestsSystem extends System {
 
             if (graphics === undefined || graphics.sprite === null) { throw new Error("Missing graphics data on chest"); }
 
-            if (globals.Game.map.data[0][tilePos.y][tilePos.x]!.explored) {
+            if (globals.Game.map.visibilityData[tilePos.y][tilePos.x].explored) {
                 const inventory = entity.getOne(InventoryComponent)!;
 
                 graphics.sprite.visible = true;
@@ -289,7 +290,7 @@ export class DrawPlayerSystem extends System {
                 throw new Error("Player missing speed or input data");
             }
 
-            if (globals.Game.map.data[0][tilePosition.y][tilePosition.x]!.isVisibleAndLit()) {
+            if (isVisibleAndLit(globals.Game.map, tilePosition.x, tilePosition.y)) {
                 graphics.sprite.visible = true;
 
                 const { x, y } = globals.Game!.gameCamera.worldPositionToScreen(pos.x, pos.y);
@@ -329,8 +330,8 @@ export class DrawPlayerSystem extends System {
                     globals.Game.commandQueue.length === 0) {
                     const mousePosition = input.getMousePosition();
                     if (mousePosition === null) { return; }
-                    const tile = globals.Game.map.data[0][mousePosition.y][mousePosition.x];
-                    if (tile !== null && !tile.explored) {
+                    if (!globals.Game.map
+                        .visibilityData[mousePosition.y][mousePosition.x].explored) {
                         return;
                     }
 
@@ -419,11 +420,13 @@ export class DrawPlayerSystem extends System {
                                 targetArea[i][1]
                             );
 
-                            if (targetArea[i][0] >= globals.Game.map.width ||
-                            targetArea[i][1] >= globals.Game.map.height ||
-                            globals.Game
+                            const visible = globals.Game
                                 .map
-                                .data[z][targetArea[i][1]][targetArea[i][0]]!.visible === false) {
+                                .visibilityData[targetArea[i][1]][targetArea[i][0]].visible;
+
+                            if (targetArea[i][0] >= globals.Game.map.width ||
+                                targetArea[i][1] >= globals.Game.map.height ||
+                                !visible) {
                                 return;
                             }
                             const sprite = globals.Game

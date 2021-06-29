@@ -84,6 +84,7 @@ export function createPassableSightCallback(origin: Vector2D): PassableCallback 
         if (origin.x === x && origin.y === y) {
             return true;
         }
+
         return isSightBlocked(globals.Game.map, globals.Game.entityMap, x, y) === false;
     };
 }

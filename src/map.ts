@@ -48,6 +48,7 @@ interface TileDataDetails {
     blocks: boolean;
     blocksSight: boolean;
     reflectivity: number;
+    defaultToExplored?: boolean;
 }
 
 const TileData: { [key: number]: TileDataDetails } = {
@@ -398,8 +399,9 @@ const TileData: { [key: number]: TileDataDetails } = {
         name: "Tree",
         textureKey: "sprite1812",
         blocks: true,
-        blocksSight: false,
-        reflectivity: 0.18
+        blocksSight: true,
+        reflectivity: 0.18,
+        defaultToExplored: true
     },
     1799: {
         name: "Tree",
@@ -475,8 +477,9 @@ const TileData: { [key: number]: TileDataDetails } = {
         name: "Tree",
         textureKey: "sprite1886",
         blocks: true,
-        blocksSight: false,
-        reflectivity: 0.18
+        blocksSight: true,
+        reflectivity: 0.18,
+        defaultToExplored: true
     },
     1977: {
         name: "Tree",
@@ -1128,15 +1131,18 @@ const TileToObject: Map<number, string> = new Map([
     [1805, "thick_underbrush"]
 ]);
 
+export interface VisibilityData {
+    explored: boolean;
+    visible: boolean;
+    lightingColor: string;
+}
+
 export class Tile {
     name: string;
     sprite: PIXI.Sprite;
     blocks: boolean;
     blocksSight: boolean;
-    visible: boolean;
-    explored: boolean;
     reflectivity: number;
-    lightingColor: string;
     pathfindingCost: string = "0";
 
     constructor(
@@ -1144,9 +1150,7 @@ export class Tile {
         textures: PIXI.ITextureDictionary,
         textureKey: string,
         blocks: boolean,
-        blocksSight: boolean,
-        visible: boolean = false,
-        explored: boolean = false
+        blocksSight: boolean
     ) {
         this.name = name;
         if (textures[textureKey] === undefined) { throw new Error(`No texture ${textureKey} in atlas`); }
@@ -1154,19 +1158,17 @@ export class Tile {
         this.sprite.zIndex = 0;
         this.blocks = blocks;
         this.blocksSight = blocksSight;
-        this.visible = visible;
-        this.explored = explored;
         this.reflectivity = 0.18;
-        this.lightingColor = "white";
     }
+}
 
-    /**
-     * Is the tile visible and is lit by non-ambient light
-     * @returns {Boolean} Is visible and lit
-     */
-    isVisibleAndLit(): boolean {
-        return this.visible && this.lightingColor !== COLOR_AMBIENT_LIGHT;
-    }
+/**
+ * Is the tile position and is lit by non-ambient light
+ * @returns {boolean} Is visible and lit
+ */
+export function isVisibleAndLit(map: GameMap, x: number, y: number): boolean {
+    const position = map.visibilityData[y][x];
+    return position.visible && position.lightingColor !== COLOR_AMBIENT_LIGHT;
 }
 
 /**
@@ -1192,6 +1194,7 @@ export class GameMap {
     readonly height: number;
     readonly depth: number;
     readonly data: Nullable<Tile>[][][];
+    readonly visibilityData: VisibilityData[][];
 
     constructor(name: string, data: Nullable<Tile>[][][]) {
         this.name = name;
@@ -1199,6 +1202,18 @@ export class GameMap {
         this.depth = data.length;
         this.height = data[0].length;
         this.width = data[0][0].length;
+
+        this.visibilityData = new Array(this.height);
+        for (let h = 0; h < this.height; h++) {
+            this.visibilityData[h] = new Array(this.width);
+            for (let i = 0; i < this.visibilityData[h].length; i++) {
+                this.visibilityData[h][i] = {
+                    explored: false,
+                    visible: false,
+                    lightingColor: "white"
+                };
+            }
+        }
     }
 }
 
@@ -1617,53 +1632,6 @@ export function isSightBlocked(map: GameMap, entityMap: EntityMap, x: number, y:
     return false;
 }
 
-/**
- * Draw a tile given the tile data and the coordinates
- */
-export function drawTile(
-    viewport: Rectangle,
-    tile: Tile,
-    x: number,
-    y: number,
-    scale: number
-): void {
-    const tileSize = TILE_SIZE * scale;
-    if (x > viewport.width + tileSize ||
-        x < 0 - tileSize ||
-        y > viewport.height + tileSize ||
-        y < 0 - tileSize) {
-        tile.sprite.visible = false;
-        return;
-    }
-
-    tile.sprite.position.set(x, y);
-    tile.sprite.scale.set(scale, scale);
-
-    if (tile.blocks) {
-        if (tile.isVisibleAndLit()) {
-            tile.sprite.tint = 0xFFFFFF;
-            tile.sprite.visible = true;
-        } else if (!tile.explored) {
-            tile.sprite.tint = 0xFFFFFF;
-            tile.sprite.visible = false;
-        } else if (tile.explored && !tile.isVisibleAndLit()) {
-            tile.sprite.tint = 0x999999;
-            tile.sprite.visible = true;
-        }
-    } else {
-        if (tile.isVisibleAndLit()) {
-            tile.sprite.tint = 0xFFFFFF;
-            tile.sprite.visible = true;
-        } else if (tile.explored) {
-            tile.sprite.tint = 0x999999;
-            tile.sprite.visible = true;
-        } else {
-            tile.sprite.tint = 0x0;
-            tile.sprite.visible = false;
-        }
-    }
-}
-
 interface Point {
     x: number;
     y: number;
@@ -1787,14 +1755,10 @@ export function getRandomOpenSpace(map: GameMap, entityMap: EntityMap): Vector2D
  * @return {void}
  */
 export function resetVisibility(map: GameMap, shadowBoxes: ShadowBox[]): void {
-    for (let z = 0; z < map.depth; z++) {
-        for (let y = 0; y < map.height; y++) {
-            for (let x = 0; x < map.width; x++) {
-                if (map.data[z][y][x] !== null) {
-                    map.data[z][y][x]!.visible = false;
-                    map.data[z][y][x]!.lightingColor = COLOR_AMBIENT_LIGHT;
-                }
-            }
+    for (let y = 0; y < map.height; y++) {
+        for (let x = 0; x < map.width; x++) {
+            map.visibilityData[y][x].visible = false;
+            map.visibilityData[y][x].lightingColor = COLOR_AMBIENT_LIGHT;
         }
     }
 
@@ -1823,19 +1787,67 @@ export function setAllToExplored(
     visible: boolean = false,
     lit: boolean = false
 ): void {
-    for (let z = 0; z < map.depth; z++) {
-        for (let y = 0; y < map.height; y++) {
-            for (let x = 0; x < map.width; x++) {
-                if (map.data[z][y][x] === null) { continue; }
-
-                map.data[z][y][x]!.explored = true;
-                if (visible) {
-                    map.data[z][y][x]!.visible = true;
-                }
-                if (lit) {
-                    map.data[z][y][x]!.lightingColor = "white";
-                }
+    for (let y = 0; y < map.height; y++) {
+        for (let x = 0; x < map.width; x++) {
+            map.visibilityData[y][x].explored = true;
+            if (visible) {
+                map.visibilityData[y][x].visible = true;
             }
+            if (lit) {
+                map.visibilityData[y][x].lightingColor = "white";
+            }
+        }
+    }
+}
+
+/**
+ * Draw a tile given the tile data and the coordinates
+ */
+export function drawTile(
+    map: GameMap,
+    viewport: Rectangle,
+    tile: Tile,
+    posX: number,
+    posY: number,
+    screenX: number,
+    screenY: number,
+    scale: number
+): void {
+    const tileSize = TILE_SIZE * scale;
+    if (screenX > viewport.width + tileSize ||
+        screenX < 0 - tileSize ||
+        screenY > viewport.height + tileSize ||
+        screenY < 0 - tileSize) {
+        tile.sprite.visible = false;
+        return;
+    }
+
+    tile.sprite.position.set(screenX, screenY);
+    tile.sprite.scale.set(scale, scale);
+
+    const explored = map.visibilityData[posY][posX].explored;
+    const visible = isVisibleAndLit(map, posX, posY);
+    if (tile.blocks) {
+        if (visible) {
+            tile.sprite.tint = 0xFFFFFF;
+            tile.sprite.visible = true;
+        } else if (!explored) {
+            tile.sprite.tint = 0xFFFFFF;
+            tile.sprite.visible = false;
+        } else if (explored && !visible) {
+            tile.sprite.tint = 0x999999;
+            tile.sprite.visible = true;
+        }
+    } else {
+        if (visible) {
+            tile.sprite.tint = 0xFFFFFF;
+            tile.sprite.visible = true;
+        } else if (explored) {
+            tile.sprite.tint = 0x999999;
+            tile.sprite.visible = true;
+        } else {
+            tile.sprite.tint = 0x0;
+            tile.sprite.visible = false;
         }
     }
 }
@@ -1853,7 +1865,16 @@ export function drawMap(camera: Camera, map: GameMap): void {
             for (let x = 0; x < map.width; x++) {
                 if (map.data[z][y][x] !== null) {
                     const { x: screenX, y: screenY } = camera.tilePositionToScreen(x, y);
-                    drawTile(camera.viewport, map.data[z][y][x]!, screenX, screenY, camera.zoom);
+                    drawTile(
+                        map,
+                        camera.viewport,
+                        map.data[z][y][x]!,
+                        x,
+                        y,
+                        screenX,
+                        screenY,
+                        camera.zoom
+                    );
                 }
             }
         }

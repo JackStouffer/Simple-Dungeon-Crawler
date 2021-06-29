@@ -753,7 +753,7 @@ export function castCombust(
 ): boolean {
     if (target.x >= map.width ||
         target.y >= map.height ||
-        map.data[0][target.y][target.x]!.visible === false) {
+        map.visibilityData[target.y][target.x].visible === false) {
         displayMessage("Canceled casting");
         return false;
     }
