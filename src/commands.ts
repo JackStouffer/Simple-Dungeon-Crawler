@@ -126,7 +126,7 @@ export function generateWeightCallback(
                 const trigger = e.getOne(TriggerTypeComponent);
 
                 if (trigger !== undefined) {
-                    switch (trigger.triggerType) {
+                    switch (trigger.currentTriggerType) {
                         case TriggerType.Fire:
                             weight += 20;
                             break;
@@ -148,7 +148,7 @@ export function generateWeightCallback(
                             weight += 7;
                             break;
                         default:
-                            assertUnreachable(trigger.triggerType);
+                            assertUnreachable(trigger.currentTriggerType);
                     }
                 }
             }
@@ -383,7 +383,7 @@ export class GoToLocationCommand implements Command {
                 // Check to see if the current tile is a trigger
                 // and activate it
                 if (triggerData !== undefined) {
-                    switch (triggerData.triggerType) {
+                    switch (triggerData.currentTriggerType) {
                         case TriggerType.Event:
                             eventTrigger(this.entity, e);
                             break;
@@ -416,7 +416,7 @@ export class GoToLocationCommand implements Command {
                             return;
                         }
                         default:
-                            assertUnreachable(triggerData.triggerType);
+                            assertUnreachable(triggerData.currentTriggerType);
                     }
                 }
             }
@@ -567,7 +567,7 @@ export class PushBackCommand implements Command {
                 // Check to see if the current tile is a trigger
                 // and activate it
                 if (triggerData !== undefined) {
-                    switch (triggerData.triggerType) {
+                    switch (triggerData.currentTriggerType) {
                         case TriggerType.Event:
                             eventTrigger(this.entity, e);
                             break;
@@ -590,7 +590,7 @@ export class PushBackCommand implements Command {
                             this.numTiles++;
                             break;
                         default:
-                            assertUnreachable(triggerData.triggerType);
+                            assertUnreachable(triggerData.currentTriggerType);
                     }
                 }
             }

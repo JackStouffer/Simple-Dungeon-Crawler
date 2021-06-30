@@ -246,6 +246,14 @@ export class FrozenSystem extends System {
                         ObjectData[typeInfo.entityType]
                             .staticallyKnownComponents.c!.GraphicsComponent.textureKey
                     ];
+                    graphics.update();
+                }
+
+                const triggerData = entity.getOne(TriggerTypeComponent);
+                if (triggerData !== undefined &&
+                    triggerData.currentTriggerType !== triggerData.initialTriggerType) {
+                    triggerData.currentTriggerType = triggerData.initialTriggerType;
+                    triggerData.update();
                 }
 
                 if (entity === globals.Game!.player) {

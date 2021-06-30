@@ -255,6 +255,11 @@ export function isPositionPotentiallyDangerous(
     x: number,
     y: number
 ): boolean {
+    // TODO, bug: goblins in tutorial 2 are currently standing still and not
+    // moving because all of the grass is marked as potentially dangerous.
+    // Make it so that the grass is only potentially dangerous iff there's a
+    // spreading fire ......... somehow
+
     const positions: Vector2D[] = [];
 
     const selfDamageTypes = getEffectiveDamageAffinity(self);
@@ -285,7 +290,7 @@ export function isPositionPotentiallyDangerous(
                 }
 
                 if (selfDamageTypes[DamageType.Water] !== Affinity.nullified &&
-                    steamData !== undefined && steamData.triggerType === TriggerType.Steam) {
+                    steamData !== undefined && steamData.currentTriggerType === TriggerType.Steam) {
                     return true;
                 }
             } else {
@@ -293,7 +298,7 @@ export function isPositionPotentiallyDangerous(
                     return true;
                 }
 
-                if (steamData !== undefined && steamData.triggerType === TriggerType.Steam) {
+                if (steamData !== undefined && steamData.currentTriggerType === TriggerType.Steam) {
                     return true;
                 }
             }
@@ -329,7 +334,7 @@ function resolveInDangerousArea(ecs: World, entityMap: EntityMap, ai: Entity): b
                 return true;
             }
 
-            if (steamData !== undefined && steamData.triggerType === TriggerType.Steam) {
+            if (steamData !== undefined && steamData.currentTriggerType === TriggerType.Steam) {
                 return true;
             }
         }

@@ -14,8 +14,10 @@ _In Development_
   * Rename "paralyzed" status effect to "stunned"
   * Gave the status effect messages their own styling to be more noticeable
   * Buff "exhale" spell by always stunning pushed back enemies
-  * Fixed a bug where wandering enemies could set themselves on fire
   * Game camera moves from entity to entity when a turn ends
+  * Fixed a bug where wandering enemies could set themselves on fire
+  * Fixed a bug where entities could be set on fire when frozen
+  * Fixed a bug where puddle which melted from ice would still be treated as ice when walking on it
 * Technical
   * Some entity ids are now deterministic for easier debugging
   * Game map is now a structure instead of just a multidimensional array so extra data can be saved

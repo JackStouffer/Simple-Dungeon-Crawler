@@ -352,7 +352,7 @@ export function setFrozen(target: Entity, turns: number): boolean {
             displayMessage(`Instead of ${name.name} being frozen, it is no longer on fire`);
         }
 
-        if (triggerData !== undefined && triggerData.triggerType === TriggerType.Fire) {
+        if (triggerData !== undefined && triggerData.currentTriggerType === TriggerType.Fire) {
             target.removeComponent("TriggerTypeComponent");
             target.removeComponent("FireTriggerComponent");
         }
@@ -372,13 +372,11 @@ export function setFrozen(target: Entity, turns: number): boolean {
             displayMessage(`${name.name} is now frozen`, MessageType.StatusEffect);
         }
 
-        // TODO, Bug: trigger type tile do not go back to their original trigger
-        // type when no longer frozen
         if (triggerData !== undefined &&
-            (triggerData.triggerType === TriggerType.DeepWater ||
-                triggerData.triggerType === TriggerType.ShallowWater ||
-                triggerData.triggerType === TriggerType.Mud)) {
-            triggerData.triggerType = TriggerType.Ice;
+            (triggerData.currentTriggerType === TriggerType.DeepWater ||
+                triggerData.currentTriggerType === TriggerType.ShallowWater ||
+                triggerData.currentTriggerType === TriggerType.Mud)) {
+            triggerData.currentTriggerType = TriggerType.Ice;
             triggerData.update();
         }
 

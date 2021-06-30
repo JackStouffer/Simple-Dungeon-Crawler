@@ -476,11 +476,13 @@ export class StunnableComponent extends Component {
 }
 
 export class TriggerTypeComponent extends Component {
-    triggerType: TriggerType;
+    currentTriggerType: TriggerType;
+    initialTriggerType: TriggerType;
 
     static typeName = "TriggerTypeComponent";
     static properties = {
-        triggerType: null
+        currentTriggerType: null,
+        initialTriggerType: null
     }
 }
 
@@ -807,7 +809,8 @@ export const ObjectData: { [key: string]: ObjectDataDetails } = {
                     lightingType: LightingType.TwoPass
                 },
                 TriggerTypeComponent: {
-                    triggerType: TriggerType.Fire
+                    currentTriggerType: TriggerType.Fire,
+                    initialTriggerType: TriggerType.Fire
                 },
                 FireTriggerComponent: {
                     effectTurns: 3,
@@ -864,7 +867,8 @@ export const ObjectData: { [key: string]: ObjectDataDetails } = {
                     turnsLeft: 5
                 },
                 TriggerTypeComponent: {
-                    triggerType: TriggerType.Fire
+                    currentTriggerType: TriggerType.Fire,
+                    initialTriggerType: TriggerType.Fire
                 },
                 FireTriggerComponent: {
                     effectTurns: 5,
@@ -963,7 +967,8 @@ export const ObjectData: { [key: string]: ObjectDataDetails } = {
                     classification: "trigger"
                 },
                 TriggerTypeComponent: {
-                    triggerType: TriggerType.Event
+                    currentTriggerType: TriggerType.Event,
+                    initialTriggerType: TriggerType.Event
                 }
             }
         }
@@ -986,7 +991,8 @@ export const ObjectData: { [key: string]: ObjectDataDetails } = {
                     zIndex: 5
                 },
                 TriggerTypeComponent: {
-                    triggerType: TriggerType.ShallowWater
+                    currentTriggerType: TriggerType.ShallowWater,
+                    initialTriggerType: TriggerType.ShallowWater
                 },
                 FreezableComponent: {
                     frozen: false,
@@ -1014,7 +1020,8 @@ export const ObjectData: { [key: string]: ObjectDataDetails } = {
                     zIndex: 3
                 },
                 TriggerTypeComponent: {
-                    triggerType: TriggerType.ShallowWater
+                    currentTriggerType: TriggerType.ShallowWater,
+                    initialTriggerType: TriggerType.ShallowWater
                 },
                 FreezableComponent: {
                     frozen: false,
@@ -1045,7 +1052,8 @@ export const ObjectData: { [key: string]: ObjectDataDetails } = {
                     zIndex: 5
                 },
                 TriggerTypeComponent: {
-                    triggerType: TriggerType.DeepWater
+                    currentTriggerType: TriggerType.DeepWater,
+                    initialTriggerType: TriggerType.DeepWater
                 },
                 FreezableComponent: {
                     frozen: false,
@@ -1072,8 +1080,11 @@ export const ObjectData: { [key: string]: ObjectDataDetails } = {
                     zIndex: 10,
                     opacity: 0.6
                 },
+                // TODO, bug: Steam does not currently hurt you if you're standing still
+                // in it
                 TriggerTypeComponent: {
-                    triggerType: TriggerType.Steam
+                    currentTriggerType: TriggerType.Steam,
+                    initialTriggerType: TriggerType.Steam
                 },
                 RemoveAfterNTurnsComponent: {
                     turnsLeft: 5
@@ -1099,7 +1110,8 @@ export const ObjectData: { [key: string]: ObjectDataDetails } = {
                     zIndex: 5
                 },
                 TriggerTypeComponent: {
-                    triggerType: TriggerType.Mud
+                    currentTriggerType: TriggerType.Mud,
+                    initialTriggerType: TriggerType.Mud
                 },
                 FreezableComponent: {
                     frozen: false,
