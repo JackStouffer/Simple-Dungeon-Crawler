@@ -180,6 +180,7 @@ export function setOnFire(target: Entity, damage?: number, turns?: number): bool
     const displayName = target.getOne(DisplayNameComponent);
     const flammableData = target.getOne(FlammableComponent);
     const wetData = target.getOne(WetableComponent);
+    const frozenData = target.getOne(FreezableComponent);
     const blocks = target.tags.has("blocks");
 
     if (flammableData === undefined) {
@@ -201,6 +202,28 @@ export function setOnFire(target: Entity, damage?: number, turns?: number): bool
             displayMessage("You were not set on fire because you were wet", MessageType.StatusEffect);
         } else if (displayName !== undefined) {
             displayMessage(`${displayName.name} was not set on fire because it was wet`, MessageType.StatusEffect);
+        }
+
+        return false;
+    }
+
+    // You can't be set on fire if you're frozen
+    if (frozenData !== undefined && frozenData.frozen) {
+        if (wetData !== undefined) {
+            wetData.wet = true;
+            wetData.turnsLeft = frozenData.turnsLeft;
+            wetData.update();
+        }
+
+        frozenData.frozen = false;
+        frozenData.turnsLeft = 0;
+        frozenData.update();
+
+
+        if (target === globals.Game?.player) {
+            displayMessage("You were not set on fire because you were frozen", MessageType.StatusEffect);
+        } else if (displayName !== undefined) {
+            displayMessage(`${displayName.name} was not set on fire because it was frozen`, MessageType.StatusEffect);
         }
 
         return false;
@@ -349,6 +372,8 @@ export function setFrozen(target: Entity, turns: number): boolean {
             displayMessage(`${name.name} is now frozen`, MessageType.StatusEffect);
         }
 
+        // TODO, Bug: trigger type tile do not go back to their original trigger
+        // type when no longer frozen
         if (triggerData !== undefined &&
             (triggerData.triggerType === TriggerType.DeepWater ||
                 triggerData.triggerType === TriggerType.ShallowWater ||
