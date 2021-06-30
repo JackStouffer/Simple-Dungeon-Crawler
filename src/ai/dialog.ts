@@ -2,7 +2,7 @@ import { Entity, World } from "ape-ecs";
 import { RNG } from "../rot";
 
 import globals from "../globals";
-import { DialogMemoryComponent, EntityMap, EntityTeamMap, HitPointsComponent, PlannerAIComponent, TypeComponent } from "../entity";
+import { DialogMemoryComponent, EntityMap, EntityTeamMap, HitPointsComponent, LoseTargetAIComponent, PlannerAIComponent, TypeComponent } from "../entity";
 import { GameMap } from "../map";
 import {
     resolveHasHealingItem,
@@ -111,6 +111,11 @@ export function buildDialogQuery(
         for (const iterator of dialogMemoryData.memory.entries()) {
             query[iterator[0]] = iterator[1];
         }
+    }
+
+    const loseTrackAfterNTurns = ai.getOne(LoseTargetAIComponent);
+    if (loseTrackAfterNTurns !== undefined) {
+        query["turns_with_target_out_of_sight"] = loseTrackAfterNTurns.turnsWithTargetOutOfSight;
     }
 
     query["map_name"] = map.name;

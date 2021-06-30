@@ -28,9 +28,10 @@
             "name": "bandit_loses_sight_of_player",
             "respondingTo": null,
             "rules": [
+                ["said_bandit_loses_sight_of_player", "=", false],
                 ["race", "=", "human"],
                 ["knows_target_position", "=", true],
-                ["has_target_in_sight", "=", false],
+                ["turns_with_target_out_of_sight", ">", 1],
                 ["on_fire", "=", false],
                 ["is_confused", "=", false],
                 ["is_afraid", "=", false]
@@ -42,7 +43,7 @@
             ],
             "aiStateChange": {},
             "dialogMemoryChange": {
-                "bandit_loses_sight_of_player": true
+                "said_bandit_loses_sight_of_player": true
             }
         },
         {

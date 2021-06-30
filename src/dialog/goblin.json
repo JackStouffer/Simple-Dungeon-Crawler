@@ -27,10 +27,10 @@
             "name": "goblin_loses_sight_of_player",
             "respondingTo": null,
             "rules": [
-                ["race", "=", "goblin"],
                 ["said_goblin_loses_sight_of_player", "=", false],
+                ["race", "=", "goblin"],
                 ["knows_target_position", "=", true],
-                ["has_target_in_sight", "=", false],
+                ["turns_with_target_out_of_sight", ">", 1],
                 ["on_fire", "=", false],
                 ["is_confused", "=", false],
                 ["is_afraid", "=", false]
