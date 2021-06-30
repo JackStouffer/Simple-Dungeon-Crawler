@@ -135,6 +135,7 @@ export class DeathSystem extends System {
             InteractableTypeComponent,
             FlammableComponent,
             WetableComponent,
+            FreezableComponent,
             TriggerTypeComponent,
             FireTriggerComponent,
             StunnableComponent
