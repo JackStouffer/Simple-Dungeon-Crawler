@@ -178,6 +178,27 @@ export class DrawChestsSystem extends System {
 }
 
 /**
+ * Get the x and y coords of a circle at cx, cy with the given radius
+ * @param radius The circle radius
+ * @param cx center x coord
+ * @param cy center y coord
+ * @returns Array of positions
+ */
+export function getCirclePositions(radius: number, cx: number, cy: number): Vector2D[] {
+    const ret: Vector2D[] = [];
+    for (let dx = -radius; dx < radius; dx++) {
+        const height = Math.round(Math.sqrt(
+            radius * radius - dx * dx
+        ));
+
+        for (let dy = -height; dy < height; dy++) {
+            ret.push(new Vector2D(cx + dx, cy + dy ));
+        }
+    }
+    return ret;
+}
+
+/**
  * Returns a list of Points that represent the area being targeted by
  * the player.
  */
@@ -185,15 +206,15 @@ export function getTargetingReticle(
     data: ItemDataDetails | SpellDataDetails | null,
     pos: Nullable<Vector2D>,
     rotation: number
-): [number, number][] {
-    const ret: [number, number][] = [];
+): Vector2D[] {
+    const ret: Vector2D[] = [];
 
     if (pos === null) {
         return [];
     }
 
     if (data === null) {
-        ret.push([ pos.x, pos.y ]);
+        ret.push(new Vector2D(pos.x, pos.y));
         return ret;
     }
 
@@ -203,46 +224,38 @@ export function getTargetingReticle(
                 for (let dy = 0; dy < data.areaOfEffect.height!; dy++) {
                     switch (rotation) {
                         case 0:
-                            ret.push([
+                            ret.push(new Vector2D(
                                 pos.x + dx,
                                 (pos.y - Math.floor(data.areaOfEffect.height! / 2)) + dy
-                            ]);
+                            ));
                             break;
                         case 90:
-                            ret.push([
+                            ret.push(new Vector2D(
                                 (pos.x - Math.floor(data.areaOfEffect.height! / 2)) + dy,
                                 pos.y + dx
-                            ]);
+                            ));
                             break;
                         case 180:
-                            ret.push([
+                            ret.push(new Vector2D(
                                 pos.x + dx,
                                 (pos.y + Math.floor(data.areaOfEffect.height! / 2)) - dy
-                            ]);
+                            ));
                             break;
                         case 270:
-                            ret.push([
+                            ret.push(new Vector2D(
                                 (pos.x + Math.floor(data.areaOfEffect.height! / 2)) - dy,
                                 pos.y + dx
-                            ]);
+                            ));
                             break;
                         default: break;
                     }
                 }
             }
         } else if (data.areaOfEffect.type === "circle") {
-            for (let dx = -data.areaOfEffect.radius!; dx < data.areaOfEffect.radius!; dx++) {
-                const height = Math.round(Math.sqrt(
-                    data.areaOfEffect.radius! * data.areaOfEffect.radius! - dx * dx
-                ));
-
-                for (let dy = -height; dy < height; dy++) {
-                    ret.push([ pos.x + dx, pos.y + dy ]);
-                }
-            }
+            return getCirclePositions(data.areaOfEffect.radius!, pos.x, pos.y);
         }
     } else {
-        ret.push([ pos.x, pos.y ]);
+        ret.push(new Vector2D(pos.x, pos.y));
     }
 
     return ret;
@@ -400,8 +413,8 @@ export class DrawPlayerSystem extends System {
                             // to put the reticle on that instead of the tile beneath it
                             const entities = getEntitiesAtLocation(
                                 globals.Game.entityMap,
-                                targetArea[i][0],
-                                targetArea[i][1]
+                                targetArea[i].x,
+                                targetArea[i].y
                             );
                             for (let i = 0; i < entities.length; i++) {
                                 if (entities[i].tags.has("environmentTile")) {
@@ -416,22 +429,22 @@ export class DrawPlayerSystem extends System {
 
                             const z = getHighestZIndexWithTile(
                                 globals.Game.map,
-                                targetArea[i][0],
-                                targetArea[i][1]
+                                targetArea[i].x,
+                                targetArea[i].y
                             );
 
                             const visible = globals.Game
                                 .map
-                                .visibilityData[targetArea[i][1]][targetArea[i][0]].visible;
+                                .visibilityData[targetArea[i].y][targetArea[i].x].visible;
 
-                            if (targetArea[i][0] >= globals.Game.map.width ||
-                                targetArea[i][1] >= globals.Game.map.height ||
+                            if (targetArea[i].x >= globals.Game.map.width ||
+                                targetArea[i].y >= globals.Game.map.height ||
                                 !visible) {
                                 return;
                             }
                             const sprite = globals.Game
                                 .map
-                                .data[z][targetArea[i][1]][targetArea[i][0]]!
+                                .data[z][targetArea[i].y][targetArea[i].x]!
                                 .sprite;
                             this.perviousPath.push(sprite);
                             sprite.filters = [this.targetFilter];

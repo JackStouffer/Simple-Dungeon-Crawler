@@ -38,7 +38,7 @@ import {
 import { randomIntFromInterval, Nullable, assertUnreachable } from "./util";
 import { mouseTarget } from "./input-handler";
 import { getEffectiveHitPointData, getEffectiveStatData, heal, takeDamage } from "./fighter";
-import { getTargetingReticle } from "./graphics";
+import { getCirclePositions, getTargetingReticle } from "./graphics";
 import { PushBackCommand } from "./commands";
 
 export interface Area {
@@ -512,7 +512,7 @@ export function castFireBall(
 
     const tiles = getTargetingReticle(item, target, rotation);
     for (let i = 0; i < tiles.length; i++) {
-        const { entity } = isBlocked(map, entityMap, tiles[i][0], tiles[i][1]);
+        const { entity } = isBlocked(map, entityMap, tiles[i].x, tiles[i].y);
         if (entity !== null) {
             const targetHPData = entity.getOne(HitPointsComponent);
             if (targetHPData !== undefined) {
@@ -685,13 +685,13 @@ function castWall(
     const tiles = getTargetingReticle(item, target, rotation);
 
     for (let i = 0; i < tiles.length; i++) {
-        const { blocks, entity } = isBlocked(map, entityMap, tiles[i][0], tiles[i][1]);
+        const { blocks, entity } = isBlocked(map, entityMap, tiles[i].x, tiles[i].y);
 
         if (blocks === true && entity === null) {
             continue;
         }
 
-        createEntity(ecs, globals.Game.textureAtlas, objectId, tiles[i][0], tiles[i][1]);
+        createEntity(ecs, globals.Game.textureAtlas, objectId, tiles[i].x, tiles[i].y);
     }
 
     return true;
@@ -890,14 +890,15 @@ export function castExhale(
 }
 
 export function castFreeze(
-    item: ItemDataDetails | SpellDataDetails,
+    skillData: ItemDataDetails | SpellDataDetails,
     user: Entity,
     ecs: World,
     map: GameMap,
     entityMap: EntityMap,
     target: Vector2D
 ): boolean {
-    if (item.value === null) { throw new Error("Item does not have a value for castFreeze"); }
+    if (skillData.value === null) { throw new Error("Item does not have a value for castFreeze"); }
+    if (skillData.areaOfEffect === undefined) { throw new Error("Item does not have an area of effect for castFreeze"); }
 
     const targetedEntity = mouseTarget(ecs, map, entityMap, target, false);
     if (targetedEntity === null) {
@@ -913,35 +914,21 @@ export function castFreeze(
     }
 
     const targetPos = targetedEntity.getOne(PositionComponent)!.tilePosition();
-
-    const positions: Vector2D[] = [targetPos];
-    for (const dir of DIRS[8]) {
-        positions.push(new Vector2D(targetPos.x + dir[0], targetPos.y + dir[1]));
-        // Create a cool looking creeping ice effect
-        if (Math.random() > 0.5) {
-            positions.push(new Vector2D(targetPos.x + (dir[0] * 2), targetPos.y + (dir[1] * 2)));
-            if (Math.random() > 0.4) {
-                positions.push(new Vector2D(
-                    targetPos.x + (dir[0] * 3),
-                    targetPos.y + (dir[1] * 3)
-                ));
-            }
-        }
-    }
+    const positions: Vector2D[] = getCirclePositions(
+        skillData.areaOfEffect.radius!, targetPos.x, targetPos.y
+    );
 
     for (const pos of positions) {
         if (pos.x < map.width &&
             pos.y < map.height) {
             const z = getHighestZIndexWithTile(map, pos.x, pos.y);
-            if (map.data[z][pos.y][pos.x]!.blocks === false) {
-                const entities = getEntitiesAtLocation(entityMap, pos.x, pos.y);
-                if (entities.length === 0) {
-                    const puddle = createEntity(ecs, globals.Game!.textureAtlas, "puddle", pos.x, pos.y);
-                    setFrozen(puddle, item.value * 3);
-                } else {
-                    for (const e of entities) {
-                        setFrozen(e, e.tags.has("sentient") ? item.value : item.value * 3);
-                    }
+            const entities = getEntitiesAtLocation(entityMap, pos.x, pos.y);
+            if (map.data[z][pos.y][pos.x]!.blocks === false || entities.length > 0) {
+                const puddle = createEntity(ecs, globals.Game!.textureAtlas, "puddle", pos.x, pos.y);
+                setFrozen(puddle, skillData.value * 3);
+
+                for (const e of entities) {
+                    setFrozen(e, skillData.value);
                 }
             }
         }
@@ -1975,6 +1962,10 @@ export const SpellData: { [key: string]: SpellDataDetails } = {
         value: 4,
         type: SpellType.DamageOther,
         range: 9,
-        useFunc: castFreeze
+        useFunc: castFreeze,
+        areaOfEffect: {
+            type: "circle",
+            radius: 3
+        }
     }
 };

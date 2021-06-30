@@ -29,7 +29,8 @@ _In Development_
   * Added a "Play" button which must be pressed to start the game
     * This is to get around the auto-playing audio control rules in browsers
     * These rules stopped all game audio from starting
-  * Make the UI code resolution independent
+  * Made the UI code resolution independent
+  * Lighting and fog of war data is now stored independently of the tile data for easier look ups and manipulation
 
 ## Version 11
 

@@ -1011,7 +1011,7 @@ export const ObjectData: { [key: string]: ObjectDataDetails } = {
                 GraphicsComponent: {
                     textureKey: "water_1",
                     sprite: null,
-                    zIndex: 5
+                    zIndex: 3
                 },
                 TriggerTypeComponent: {
                     triggerType: TriggerType.ShallowWater

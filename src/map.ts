@@ -407,8 +407,9 @@ const TileData: { [key: number]: TileDataDetails } = {
         name: "Tree",
         textureKey: "sprite1814",
         blocks: true,
-        blocksSight: false,
-        reflectivity: 0.18
+        blocksSight: true,
+        reflectivity: 0.18,
+        defaultToExplored: true
     },
     1827: {
         name: "Tent",
@@ -485,8 +486,9 @@ const TileData: { [key: number]: TileDataDetails } = {
         name: "Tree",
         textureKey: "sprite1888",
         blocks: true,
-        blocksSight: false,
-        reflectivity: 0.18
+        blocksSight: true,
+        reflectivity: 0.18,
+        defaultToExplored: true
     },
     2005: {
         name: "Tent",
@@ -1194,6 +1196,7 @@ export class GameMap {
     readonly height: number;
     readonly depth: number;
     readonly data: Nullable<Tile>[][][];
+    /** Each position on the map's visibility. 2D because we deal positions and not tiles here */
     readonly visibilityData: VisibilityData[][];
 
     constructor(name: string, data: Nullable<Tile>[][][], visibilityData: VisibilityData[][]) {
