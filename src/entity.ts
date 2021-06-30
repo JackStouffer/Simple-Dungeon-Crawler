@@ -1968,6 +1968,8 @@ export type EntityTeamMap = Map<number, EntityTeam>;
 export class EntityTeam {
     state: "passive" | "attacking" | "retreating" = "passive";
     memberIds: string[] = [];
+    /** Useful for checking if the team's commander was killed vs if they ever had one at all */
+    createdWithCommander: boolean = false;
     commanderId: Nullable<string> = null;
 
     /**

@@ -82,6 +82,7 @@ export function buildDialogQuery(
     const team = entityTeams.get(aiState.teamId ?? Infinity);
     if (team !== undefined) {
         query["is_team_commander"] = team.commanderId === ai.id;
+        query["did_team_commander_exist"] = team.createdWithCommander;
         query["team_commander_alive"] = team.commanderId !== null;
         query["team_state"] = team.state;
         query["has_alive_allies"] = resolveAliveAllies(ecs, entityMap, ai);

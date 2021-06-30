@@ -1530,6 +1530,7 @@ export function loadTiledMap(
                         const team = teams.get(teamId)!;
                         team.memberIds.push(entity.id);
                         if (isTeamCommander) {
+                            team.createdWithCommander = true;
                             team.commanderId = entity.id;
                         }
 

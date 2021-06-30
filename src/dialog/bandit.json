@@ -53,9 +53,10 @@
                 ["race", "=", "human"],
                 ["said_bandit_commander_killed", "=", false],
                 ["team_commander_alive", "=", false],
-                ["has_target_in_sight", "=", false],
+                ["did_team_commander_exist", "=", true],
                 ["has_alive_allies", "=", true],
-                ["is_confused", "=", false]
+                ["is_confused", "=", false],
+                ["on_fire", "=", false]
             ],
             "dialog": [
                 "They killed the chieftain!"
