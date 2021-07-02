@@ -30,7 +30,7 @@ import { Camera, Rectangle } from "./camera";
 import { Nullable, randomIntFromInterval } from "./util";
 import { createPlanner } from "./ai/commands";
 import { ItemData } from "./skills";
-import { TILE_SIZE } from "./constants";
+import { TILE_SIZE, TriggerType } from "./constants";
 
 const COLOR_AMBIENT_LIGHT = "rgb(50, 50, 50)";
 
@@ -1514,7 +1514,8 @@ export function loadTiledMap(
                     if (type === "event_trigger" && event !== null) {
                         entity.addComponent({
                             type: "TriggerTypeComponent",
-                            triggerType: "event"
+                            initialTriggerType: TriggerType.Event,
+                            currentTriggerType: TriggerType.Event
                         });
                         entity.addComponent({
                             type: "EventTriggerComponent",

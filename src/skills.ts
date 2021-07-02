@@ -235,7 +235,8 @@ export function setOnFire(target: Entity, damage?: number, turns?: number): bool
     if (flammableData.onFire === false && !blocks) {
         target.addComponent({
             type: "TriggerTypeComponent",
-            triggerType: TriggerType.Fire
+            currentTriggerType: TriggerType.Fire,
+            initialTriggerType: TriggerType.Fire
         });
         target.addComponent({
             type: "FireTriggerComponent",
@@ -525,7 +526,7 @@ export function castFireBall(
     target: Vector2D,
     rotation: number
 ): boolean {
-    if (item.value === null) { throw new Error("Item does not have a value for castDamageSpell"); }
+    if (item.value === null) { throw new Error("Item does not have a value for castFireBall"); }
 
     const targetedEntity = mouseTarget(ecs, map, entityMap, target);
     if (targetedEntity === null) {
@@ -856,7 +857,7 @@ export function castSilence(
     entityMap: EntityMap,
     target: Vector2D
 ): boolean {
-    if (item.value === null) { throw new Error("Item does not have a value for castDamageSpell"); }
+    if (item.value === null) { throw new Error("Item does not have a value for castSilence"); }
 
     const targetedEntity = mouseTarget(ecs, map, entityMap, target);
     if (targetedEntity === null) {
@@ -893,7 +894,7 @@ export function castExhale(
     if (item.value === null) { throw new Error("Item has missing data"); }
 
     const pos = user.getOne(PositionComponent);
-    if (pos === undefined) { throw new Error("can't call castWildDamageSpell with a user without a position"); }
+    if (pos === undefined) { throw new Error("can't call castExhale with a user without a position"); }
     const tilePos = pos.tilePosition();
 
     for (let i = 0; i < DIRS[8].length; i++) {

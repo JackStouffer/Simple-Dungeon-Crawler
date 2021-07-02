@@ -86,13 +86,17 @@ export class OnFireSystem extends System {
                                 firePos.x + dir[0],
                                 firePos.y + dir[1]
                             );
-                            for (let j = 0; j < entities.length; j++) {
-                                const e = entities[j];
-                                if (Math.random() >= .80) {
-                                    // TODO Find some way to defer the setting on fire until
+
+                            if (Math.random() >= .65) {
+                                for (const e of entities) {
+                                    // TODO: Find some way to defer the setting on fire until
                                     // the next turn
                                     setOnFire(e);
                                 }
+
+                                // if (Math.random() >= 0.6) {
+
+                                // }
                             }
                         }
                     }
@@ -100,7 +104,7 @@ export class OnFireSystem extends System {
 
                 flammableData.update();
 
-                // TODO two messages are generated here, one for the fire
+                // TODO, cleanup: two messages are generated here, one for the fire
                 // damage and one in the takeDamage function
                 if (globals.Game === null) { continue; }
                 if (entity === globals.Game.player) {

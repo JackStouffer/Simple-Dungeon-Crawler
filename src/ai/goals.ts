@@ -236,111 +236,117 @@ function resolveAllyLowHealth(ecs: World, entityMap: EntityMap, ai: Entity): boo
 }
 
 /**
- * We want to know if the entity should avoid this tile
+ * Get all of the potentially dangerous tiles around a given
+ * entity in a square with a width and height of squareSize.
+ *
+ * We want to know if the entity should avoid a given tile
  * when running away from a dangerous area. even if it
- * isn't dangerous itself
+ * isn't dangerous itself.
  *
  * E.g. a tile may be fine but it could catch on fire, or
  * it's in the radius of a bomb which is about to explode
- *
- * This is in contrast to the resolveInDangerousArea which
- * only looks at the current tile and does not take into
- * account things like potential fire spread. This gives
- * more interesting enemy behavior.
  */
-export function isPositionPotentiallyDangerous(
+export function getPotentiallyDangerousPositions(
     ecs: World,
     entityMap: EntityMap,
-    self: Entity,
-    x: number,
-    y: number
-): boolean {
-    // TODO, bug: goblins in tutorial 2 are currently standing still and not
-    // moving because all of the grass is marked as potentially dangerous.
-    // Make it so that the grass is only potentially dangerous iff there's a
-    // spreading fire ......... somehow
+    entity: Entity,
+    sightRange: number,
+    includeNeighbors: boolean = true
+): Set<string> {
+    // TODO, speed: Using hashset of strings here because js hashsets don't work
+    // well with objects. Should be a set of vector2d
+    const positions: Set<string> = new Set();
+    const entityTilePos = entity.getOne(PositionComponent)!.tilePosition();
+    const selfDamageTypes = getEffectiveDamageAffinity(entity);
+    const SQUARE_RADIUS = Math.floor(sightRange / 2);
 
-    const positions: Vector2D[] = [];
+    const flammableEntitiesQuery = ecs
+        .createQuery()
+        .fromAll(FlammableComponent, PositionComponent)
+        .execute();
 
-    const selfDamageTypes = getEffectiveDamageAffinity(self);
-
-    // TODO, speed: Why are we looping twice here? Just loop over DIRS
-    positions.push(new Vector2D(x, y));
-    for (let i = 0; i < DIRS[8].length; i++) {
-        const dir = DIRS[8][i];
-        const cx = x + dir[0];
-        const cy = y + dir[1];
-        positions.push(new Vector2D(cx, cy));
+    let closeTileOnFire: boolean = false;
+    for (const e of flammableEntitiesQuery.values()) {
+        const tilePos = e.getOne(PositionComponent)!.tilePosition();
+        const fireData = e.getOne(FlammableComponent)!;
+        if (fireData.onFire && tileDistanceBetweenPoints(tilePos, entityTilePos) < sightRange) {
+            closeTileOnFire = true;
+            break;
+        }
     }
 
-    for (const p of positions) {
-        const entities = getEntitiesAtLocation(entityMap, p.x, p.y);
-        for (const e of entities) {
-            if (e === self) { continue; }
+    for (let y = entityTilePos.y - SQUARE_RADIUS; y < entityTilePos.y + SQUARE_RADIUS; y++) {
+        for (let x = entityTilePos.x - SQUARE_RADIUS; x < entityTilePos.x + SQUARE_RADIUS; x++) {
 
-            const flameData = e.getOne(FlammableComponent);
-            const triggerData = e.getOne(FireTriggerComponent);
-            const steamData = e.getOne(TriggerTypeComponent);
+            if (positions.has(`${x},${y}`)) { continue; }
 
-            // If the entity has damage affinity then we can be a bit more intelligent
-            if (selfDamageTypes !== null) {
-                if (selfDamageTypes[DamageType.Fire] !== Affinity.nullified &&
-                    (triggerData !== undefined || flameData !== undefined)) {
-                    return true;
-                }
+            const entitiesAtLocation = getEntitiesAtLocation(entityMap, x, y);
+            for (const e of entitiesAtLocation) {
+                if (e === entity) { continue; }
 
-                if (selfDamageTypes[DamageType.Water] !== Affinity.nullified &&
-                    steamData !== undefined && steamData.currentTriggerType === TriggerType.Steam) {
-                    return true;
-                }
-            } else {
-                if (triggerData !== undefined || flameData !== undefined) {
-                    return true;
-                }
+                const flammableData = e.getOne(FlammableComponent);
+                const fireTriggerData = e.getOne(FireTriggerComponent);
+                const steamData = e.getOne(TriggerTypeComponent);
 
-                if (steamData !== undefined && steamData.currentTriggerType === TriggerType.Steam) {
-                    return true;
+                // If the entity has damage affinity then we can be a bit more intelligent
+                // about avoiding or not avoiding tiles. E.g. a lava snake can move through
+                // on fire tiles
+                if (selfDamageTypes !== null) {
+                    if (selfDamageTypes[DamageType.Fire] !== Affinity.nullified &&
+                        flammableData !== undefined &&
+                        flammableData.onFire) {
+                        positions.add(`${x},${y}`);
+                        if (includeNeighbors) {
+                            // if something is on fire in this tile, we also want to avoid
+                            // the neighbors so that we don't get fire spread
+                            for (let i = 0; i < DIRS[8].length; i++) {
+                                const dir = DIRS[8][i];
+                                positions.add(`${x + dir[0]},${y + dir[1]}`);
+                            }
+                        }
+                    }
+
+                    if (selfDamageTypes[DamageType.Fire] !== Affinity.nullified &&
+                        flammableData !== undefined
+                        && closeTileOnFire) {
+                        positions.add(`${x},${y}`);
+                    }
+
+                    if (selfDamageTypes[DamageType.Water] !== Affinity.nullified &&
+                        steamData !== undefined &&
+                        steamData.currentTriggerType === TriggerType.Steam) {
+                        positions.add(`${x},${y}`);
+                    }
+                } else {
+                    if (flammableData !== undefined && flammableData.onFire) {
+                        positions.add(`${x},${y}`);
+                    }
+
+                    if (fireTriggerData !== undefined) {
+                        positions.add(`${x},${y}`);
+                    }
+
+                    if (steamData !== undefined &&
+                        steamData.currentTriggerType === TriggerType.Steam) {
+                        positions.add(`${x},${y}`);
+                    }
                 }
             }
         }
     }
 
-    return false;
+    return positions;
 }
 
 function resolveInDangerousArea(ecs: World, entityMap: EntityMap, ai: Entity): boolean {
-    const pos = ai.getOne(PositionComponent)!.tilePosition();
-
-    const positions: [number, number][] = [[pos.x, pos.y]];
-    for (let i=0; i < DIRS[8].length; i++) {
-        const dir = DIRS[8][i];
-        const dx = pos.x + dir[0];
-        const dy = pos.y + dir[1];
-        positions.push([dx, dy]);
-    }
-
-    // Check if own tile or any neighbors have on fire entities
-    for (let i = 0; i < positions.length; i++) {
-        const p = positions[i];
-        const entities = getEntitiesAtLocation(entityMap, p[0], p[1]);
-
-        for (let j = 0; j < entities.length; j++) {
-            const e = entities[j];
-            const flameData = e.getOne(FlammableComponent);
-            const triggerData = e.getOne(FireTriggerComponent);
-            const steamData = e.getOne(TriggerTypeComponent);
-
-            if (triggerData !== undefined || (flameData !== undefined && flameData.onFire && !e.tags.has("sentient"))) {
-                return true;
-            }
-
-            if (steamData !== undefined && steamData.currentTriggerType === TriggerType.Steam) {
-                return true;
-            }
-        }
-    }
-
-    return false;
+    const tilePos = ai.getOne(PositionComponent)!.tilePosition();
+    // Sight range of the dangerous position is a game play decision.
+    // Want to balance making the enemy appear intelligent with allowing
+    // the player to successfully set traps.
+    const dangerousPositions = getPotentiallyDangerousPositions(
+        ecs, entityMap, ai, 5, true
+    );
+    return dangerousPositions.has(`${tilePos.x},${tilePos.y}`);
 }
 
 function resolveTargetKilled(ecs: World, entityMap: EntityMap, ai: Entity) {

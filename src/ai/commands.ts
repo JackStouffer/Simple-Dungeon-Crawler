@@ -193,6 +193,8 @@ export function getPlan(
     if (isEqual(aiState.previousWorldState, worldState)) {
         if (debug) {
             // eslint-disable-next-line no-console
+            console.log(`World state has not changed from previous turn. currentAction: ${aiState.currentAction}`);
+            // eslint-disable-next-line no-console
             console.groupEnd();
         }
         return aiState.currentAction;
@@ -235,7 +237,7 @@ export function getPlan(
         stateStack.push({ targetKilled: true });
     } else if (aiState.currentOrder === "alert_allies") {
         stateStack.push({ alliesAlerted: true });
-    } else if (aiState.currentOrder === "fallback") {
+    } else if (aiState.currentOrder === "fallback" && aiState.goals.has("atFallbackPosition")) {
         stateStack.push({ atFallbackPosition: true });
     }
 
@@ -247,9 +249,6 @@ export function getPlan(
     }
     if (aiState.goals.has("inDangerousArea") && worldState.inDangerousArea === true) {
         stateStack.push({ inDangerousArea: false });
-    }
-    if (aiState.currentOrder === "fallback" && aiState.goals.has("atFallbackPosition")) {
-        stateStack.push({ atFallbackPosition: true });
     }
     if (aiState.goals.has("afraid") && worldState.afraid === true) {
         stateStack.push({ cowering: true });

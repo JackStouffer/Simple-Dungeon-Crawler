@@ -53,6 +53,7 @@ export function giveItemsInteract(actor: Entity, interactable: Entity) {
  * Give the actor all of the spells in the interactable's known spells
  */
 export function giveSpellsInteract(entity: Entity, interactable: Entity): void {
+    // TODO, bug: clicking on the magic shrine is really wonky and hard to do.
     const interactableSpellData = interactable.getOne(SpellsComponent);
     if (interactableSpellData === undefined) {
         throw new Error(`Entity ${interactable.id} is missing a SpellsComponent`);

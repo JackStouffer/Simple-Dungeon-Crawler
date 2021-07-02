@@ -156,6 +156,8 @@ export function generateWeightCallback(
             // Should avoid tiles with neighboring fire triggers to avoid being set on fire
             for (let i = 0; i < neighbors.length; i++) {
                 const n = neighbors[i];
+                // TODO, speed: take another look at this, getting entities twice for a lot
+                // of locations
                 const entities = getEntitiesAtLocation(entityMap, n[0], n[1]);
 
                 for (let j = 0; j < entities.length; j++) {
@@ -287,12 +289,17 @@ export class NoOpCommand implements Command {
 export class GoToLocationCommand implements Command {
     blocks: boolean = true;
     isSetUp: boolean = false;
-    private readonly entity: Entity;
-    private readonly path: number[][];
-    private tilesMoved: number = 0;
-    private done: boolean = false;
+    readonly entity: Entity;
+    readonly path: number[][];
+    tilesMoved: number = 0;
+    done: boolean = false;
 
+    // TODO, cleanup: Commands need some sort of mechanism whereby its origin
+    // point is saved in the command so it's possible to tell where a wayward
+    // command came from. Possible to save some sort of stacktrace? Maybe overkill.
+    // Maybe just a function name?
     constructor(entity: Entity, path: number[][]) {
+        if (path.length === 0) { throw new Error("Zero length path for GoToLocationCommand"); }
         this.entity = entity;
         this.path = path;
     }
@@ -759,6 +766,7 @@ export class UseSkillCommand implements Command {
     }
 
     setUp() {
+        // TODO, bug: this does not work right now
         // Wild spell target selection
         if (this.details.type === SpellType.WildDamage ||
             this.details.type === ItemType.WildDamageScroll) {

@@ -39,7 +39,7 @@ import { Entity, World } from "ape-ecs";
 import { getItems, useItem } from "../inventory";
 import { getEffectiveStatData, getKnownSpells, useSpell } from "../fighter";
 import { ItemData, SpellData } from "../skills";
-import { isPositionPotentiallyDangerous } from "./goals";
+import { getPotentiallyDangerousPositions } from "./goals";
 import { PassableCallback, WeightCallback } from "../rot/path/path";
 
 /**
@@ -106,21 +106,23 @@ function wanderAction(
 ): Command {
     const pos = aiState.entity.getOne(PositionComponent)!.tilePosition();
     const validPositions: [number, number][] = [];
+    const dangerousPositions = getPotentiallyDangerousPositions(
+        ecs, entityMap, aiState.entity, aiState.sightRange
+    );
 
     if (Math.random() > 0.8) {
         return new NoOpCommand(true);
     }
 
     for (const dir of DIRS[8]) {
-        const newX = pos.x + dir[0];
-        const newY = pos.y + dir[1];
-        const { blocks, entity } = isBlocked(map, entityMap, newX, newY);
+        const newPosition = new Vector2D(pos.x + dir[0], pos.y + dir[1]);
+        const isAquatic = aiState.entity.tags.has("aquatic");
+        const { blocks, entity } = isBlocked(map, entityMap, newPosition.x, newPosition.y);
 
-        if ((aiState.entity.tags.has("aquatic") && blocks === false && entity !== null && entity.tags.has("waterTile")) ||
-            (!aiState.entity.tags.has("aquatic") && blocks === false && entity === null)) {
-            // expensive, only want to do this check if all others pass
-            if (!isPositionPotentiallyDangerous(ecs, entityMap, aiState.entity, newX, newY)) {
-                validPositions.push([newX, newY]);
+        if ((isAquatic && blocks === false && entity !== null && entity.tags.has("waterTile")) ||
+            (!isAquatic && blocks === false)) {
+            if (!dangerousPositions.has(`${newPosition.x},${newPosition.y}`)) {
+                validPositions.push([newPosition.x, newPosition.y]);
             }
         }
     }
@@ -497,9 +499,14 @@ function goToSafePositionAction(
         throw new Error("Missing data when trying to run away");
     }
     const tilePos = pos.tilePosition();
+    // TODO, speed: Calculating the dangerous positions twice here. Once
+    // in the goal resolver and once here.
+    const dangerousPositions = getPotentiallyDangerousPositions(
+        ecs, entityMap, aiState.entity, 20, false
+    );
 
     const bfs = new Path.ReverseAStar(
-        (x, y) => !isPositionPotentiallyDangerous(ecs, entityMap, aiState.entity, x, y),
+        (x, y) => !dangerousPositions.has(`${x},${y}`),
         createPassableCallback(tilePos),
         generateWeightCallback(ecs, map, entityMap, tilePos)
     );
@@ -511,11 +518,19 @@ function goToSafePositionAction(
     bfs.compute(tilePos.x, tilePos.y, pathCallback);
 
     if (path.length === 0) {
+        // eslint-disable-next-line no-console
+        console.log("Could not find a path to a safe position");
         return new NoOpCommand(true);
     }
 
     // remove our own position
     path.shift();
+    if (path.length === 0) {
+        // eslint-disable-next-line no-console
+        console.log("Could not find a path to a safe position");
+        return new NoOpCommand(true);
+    }
+
     path = path.slice(0, speedData.maxTilesPerMove);
     return new GoToLocationCommand(aiState.entity, path);
 }
@@ -686,7 +701,7 @@ export const ActionData: { [key: string]: Action } = {
         weight: () => 1
     },
     // TODO, BUG: White mage currently will stand by even when they can't see the target
-    // They should case if they lose sight
+    // They should chase if they lose sight
     "standby": {
         preconditions: {
             targetPositionKnown: true,
