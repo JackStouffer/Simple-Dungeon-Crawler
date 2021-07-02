@@ -38,11 +38,10 @@ export class LightingSystem extends System {
         // system and shade the tiles according to the level of light on the tile.
         // Then use bilinear interpolation to make the values smooth between the
         // tiles
-        const playerTilePos = pos.tilePosition();
         const sightFov = new FOV.PreciseShadowcasting(
-            createPassableSightCallback(playerTilePos)
+            createPassableSightCallback(pos.tilePosition)
         );
-        sightFov.compute(playerTilePos.x, playerTilePos.y, 30, function(x, y, r, visibility) {
+        sightFov.compute(pos.tilePosition.x, pos.tilePosition.y, 30, function(x, y, r, visibility) {
             if (globals.Game === null ||
                 x < 0 ||
                 y < 0 ||
@@ -81,8 +80,6 @@ export class LightingSystem extends System {
     }
 
     computeReflectivityLighting(pos: PositionComponent, light: LightingComponent) {
-        const tilePos = pos.tilePosition();
-
         function lightingCallback(x: number, y: number, color: Color) {
             if (x < 0 ||
                 y < 0 ||
@@ -99,17 +96,19 @@ export class LightingSystem extends System {
         }
 
         const fov = new FOV.PreciseShadowcasting(
-            createPassableSightCallback(tilePos)
+            createPassableSightCallback(pos.tilePosition)
         );
         const lighting = new Lighting(
             createReflectivityCallback(globals.Game!.map),
             { range: light.range, passes: 2 }
         );
         lighting.setFOV(fov);
-        lighting.setLight(tilePos.x, tilePos.y, light.color);
+        lighting.setLight(pos.tilePosition.x, pos.tilePosition.y, light.color);
         lighting.compute(lightingCallback);
         // For some reason the tile you're on doesn't get lit
-        globals.Game!.map.visibilityData[tilePos.y][tilePos.x]!.lightingColor = light.color;
+        globals.Game!
+            .map
+            .visibilityData[pos.tilePosition.y][pos.tilePosition.x]!.lightingColor = light.color;
     }
 
     update() {

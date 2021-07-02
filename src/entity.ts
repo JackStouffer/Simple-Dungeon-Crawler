@@ -58,27 +58,12 @@ const waterTypeDamageValues: DamageAffinityMap = {
 };
 
 export class PositionComponent extends Component {
-    // World coords
-    x: number;
-    y: number;
-
-    // Tile coords
-    tileX: number;
-    tileY: number;
-
+    worldPosition: Vector2D;
+    tilePosition: Vector2D;
     static typeName = "PositionComponent";
     static properties = {
-        x: 0,
-        y: 0,
-        tileX: 0,
-        tileY: 0
-    }
-
-    tilePosition(): Vector2D {
-        return new Vector2D(
-            this.tileX,
-            this.tileY
-        );
+        worldPosition: new Vector2D(0, 0),
+        tilePosition: new Vector2D(0, 0)
     }
 }
 
@@ -2049,7 +2034,7 @@ export class UpdateEntityMapSystem extends System {
         for (const e of entities) {
             // TODO, Speed: JS doesn't have a hash set so you can't do a set of objects.
             // Write one so we don't have to use string keys
-            const pos = e.getOne(PositionComponent)!.tilePosition();
+            const pos = e.getOne(PositionComponent)!.tilePosition;
             const key = `${pos.x},${pos.y}`;
             const val = globals.Game.entityMap.get(key) ?? [];
             val.push(e);
@@ -2103,8 +2088,7 @@ export function createEntity(
     ecs: World,
     textures: PIXI.ITextureDictionary,
     type: string,
-    x: Nullable<number>,
-    y: Nullable<number>,
+    tilePosition?: Vector2D,
     id?: string
 ): Entity {
     if (globals.Game === null) { throw new Error("Global game is null"); }
@@ -2117,14 +2101,12 @@ export function createEntity(
     const data = ObjectData[type];
     const entity = ecs.createEntity(assignIn({}, { id: entityId }, data.staticallyKnownComponents));
 
-    if (x !== null && y !== null && entity.has(PositionComponent) === false) {
-        const { x: wx, y: wy } = globals.Game.gameCamera.tilePositionToWorld(x, y);
+    if (tilePosition !== undefined && entity.has(PositionComponent) === false) {
+        const worldPosition = globals.Game.gameCamera.tilePositionToWorld(tilePosition);
         entity.addComponent({
             type: "PositionComponent",
-            x: wx,
-            y: wy,
-            tileX: x,
-            tileY: y
+            worldPosition,
+            tilePosition
         });
     }
 

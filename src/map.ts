@@ -1168,8 +1168,8 @@ export class Tile {
  * Is the tile position and is lit by non-ambient light
  * @returns {boolean} Is visible and lit
  */
-export function isVisibleAndLit(map: GameMap, x: number, y: number): boolean {
-    const position = map.visibilityData[y][x];
+export function isVisibleAndLit(map: GameMap, tilePos: Vector2D): boolean {
+    const position = map.visibilityData[tilePos.y][tilePos.x];
     return position.visible && position.lightingColor !== COLOR_AMBIENT_LIGHT;
 }
 
@@ -1264,7 +1264,7 @@ export function loadTiledMap(
     const sourceData = LevelData[level];
     const tileSize: number = sourceData.tileheight;
     const mapData: Nullable<Tile>[][][] = [];
-    let playerLocation: [number, number] = [0, 0];
+    const playerLocation: Vector2D = new Vector2D(0, 0);
 
     const tileLayers = sourceData.layers.filter(
         l => get(l, "properties[0].value", null) === "tile"
@@ -1397,8 +1397,7 @@ export function loadTiledMap(
             ecs,
             textures,
             type,
-            Math.floor(i % sourceData.width),
-            Math.floor(i / sourceData.width),
+            new Vector2D(Math.floor(i % sourceData.width), Math.floor(i / sourceData.width)),
         );
     });
 
@@ -1424,17 +1423,14 @@ export function loadTiledMap(
                 }
 
                 if (type === "player") {
-                    playerLocation = [
-                        Math.floor(o.x / tileSize) * tileSize,
-                        Math.floor(o.y / tileSize) * tileSize
-                    ];
+                    playerLocation.x = Math.floor(o.x / tileSize) * tileSize;
+                    playerLocation.y = Math.floor(o.y / tileSize) * tileSize;
                 } else {
                     const entity: Entity = createEntity(
                         ecs,
                         textures,
                         type,
-                        Math.floor(o.x / tileSize),
-                        Math.floor(o.y / tileSize),
+                        new Vector2D(Math.floor(o.x / tileSize), Math.floor(o.y / tileSize)),
                         `${type}-${o.id}`
                     );
 
@@ -1564,10 +1560,9 @@ export function loadTiledMap(
  */
 export function getEntitiesAtLocation(
     entityMap: EntityMap,
-    x: number,
-    y: number
+    tilePos: Vector2D
 ): Entity[] {
-    return entityMap.get(`${x},${y}`)?.sort((a, b) => {
+    return entityMap.get(`${tilePos.x},${tilePos.y}`)?.sort((a, b) => {
         const g1 = a.getOne(GraphicsComponent)?.sprite?.zIndex ?? 0;
         const g2 = b.getOne(GraphicsComponent)?.sprite?.zIndex ?? 0;
         return g2 - g1;
@@ -1588,21 +1583,20 @@ interface BlocksResult {
 export function isBlocked(
     map: GameMap,
     entityMap: EntityMap,
-    x: number,
-    y: number
+    tilePos: Vector2D
 ): BlocksResult {
     // Assumes all layers are same size
-    if (x < 0 || y < 0 || x >= map.width || y >= map.height) {
+    if (tilePos.x < 0 || tilePos.y < 0 || tilePos.x >= map.width || tilePos.y >= map.height) {
         return { entity: null, blocks: true };
     }
 
     for (let z = 0; z < map.depth; z++) {
-        if (map.data[z][y][x]?.blocks === true) {
+        if (map.data[z][tilePos.y][tilePos.x]?.blocks === true) {
             return { entity: null, blocks: true };
         }
     }
 
-    const entities = entityMap.get(`${x},${y}`);
+    const entities = entityMap.get(`${tilePos.x},${tilePos.y}`);
     if (entities === undefined) {
         return { entity: null, blocks: false };
     }
@@ -1624,19 +1618,20 @@ export function isBlocked(
 /**
  * Returns true if space blocks sight, false otherwise
  */
-export function isSightBlocked(map: GameMap, entityMap: EntityMap, x: number, y: number): boolean {
+export function isSightBlocked(map: GameMap, entityMap: EntityMap, tilePos: Vector2D): boolean {
     // Assumes all layers are same size
-    if (x < 0 || y < 0 || x >= map.width || y >= map.height) {
+    if (tilePos.x < 0 || tilePos.y < 0 || tilePos.x >= map.width || tilePos.y >= map.height) {
         return true;
     }
 
     for (let z = 0; z < map.depth; z++) {
-        if (map.data[z][y][x] !== null && map.data[z][y][x]!.blocksSight === true) {
+        if (map.data[z][tilePos.y][tilePos.x] !== null &&
+            map.data[z][tilePos.y][tilePos.x]!.blocksSight === true) {
             return true;
         }
     }
 
-    const entities = getEntitiesAtLocation(entityMap, x, y);
+    const entities = getEntitiesAtLocation(entityMap, tilePos);
     for (let i = 0; i < entities.length; i++) {
         const e = entities[i];
         if (e.tags.has("blocksSight")) { return true; }
@@ -1732,8 +1727,8 @@ export function getRandomFighterWithinRange(
     const possible = [];
     for (const e of entities) {
         const pos = e.getOne(PositionComponent)!;
-        const d = tileDistanceBetweenPoints(origin, pos.tilePosition());
-        if (origin.isEqual(pos) && d <= maxDistance) {
+        const d = tileDistanceBetweenPoints(origin, pos.tilePosition);
+        if (origin.isEqual(pos.tilePosition) && d <= maxDistance) {
             possible.push(e);
         }
     }
@@ -1744,14 +1739,15 @@ export function getRandomFighterWithinRange(
 export function getRandomOpenSpace(map: GameMap, entityMap: EntityMap): Vector2D {
     let blocks = false;
     let entity;
-    let x = 0;
-    let y = 0;
+    let pos: Vector2D;
     let failsafe = 0;
 
     do {
-        x = randomIntFromInterval(0, map.width);
-        y = randomIntFromInterval(0, map.height);
-        ({ entity, blocks } = isBlocked(map, entityMap, x, y));
+        pos = new Vector2D(
+            randomIntFromInterval(0, map.width),
+            randomIntFromInterval(0, map.height)
+        );
+        ({ entity, blocks } = isBlocked(map, entityMap, pos));
         ++failsafe;
     } while ((entity !== null || blocks === true) && failsafe < 2000);
 
@@ -1759,7 +1755,7 @@ export function getRandomOpenSpace(map: GameMap, entityMap: EntityMap): Vector2D
         throw new Error("Infinite loop");
     }
 
-    return new Vector2D(x, y);
+    return pos;
 }
 
 /**
@@ -1839,7 +1835,7 @@ export function drawTile(
     tile.sprite.scale.set(scale, scale);
 
     const explored = map.visibilityData[posY][posX].explored;
-    const visible = isVisibleAndLit(map, posX, posY);
+    const visible = isVisibleAndLit(map, new Vector2D(posX, posY));
     if (tile.blocks) {
         if (visible) {
             tile.sprite.tint = 0xFFFFFF;
@@ -1877,15 +1873,17 @@ export function drawMap(camera: Camera, map: GameMap): void {
         for (let y = 0; y < map.height; y++) {
             for (let x = 0; x < map.width; x++) {
                 if (map.data[z][y][x] !== null) {
-                    const { x: screenX, y: screenY } = camera.tilePositionToScreen(x, y);
+                    const screenPos = camera.tilePositionToScreen(
+                        new Vector2D(x, y)
+                    );
                     drawTile(
                         map,
                         camera.viewport,
                         map.data[z][y][x]!,
                         x,
                         y,
-                        screenX,
-                        screenY,
+                        screenPos.x,
+                        screenPos.y,
                         camera.zoom
                     );
                 }
@@ -1898,10 +1896,10 @@ export function drawMap(camera: Camera, map: GameMap): void {
  * Given an x, y position, give the highest z index in the map that has a non-null
  * tile
  */
-export function getHighestZIndexWithTile(map: GameMap, x: number, y: number): number {
+export function getHighestZIndexWithTile(map: GameMap, tilePos: Vector2D): number {
     let ret = 0;
     for (let z = 0; z < map.depth; z++) {
-        const tile = map.data[z][y][x];
+        const tile = map.data[z][tilePos.y][tilePos.x];
         if (tile !== null) { ret = z; }
     }
 

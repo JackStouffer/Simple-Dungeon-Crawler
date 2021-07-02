@@ -24,7 +24,7 @@ import {
 import { takeDamage } from "./fighter";
 import { setOnFire } from "./skills";
 import { DIRS } from "./rot";
-import { getEntitiesAtLocation } from "./map";
+import { getEntitiesAtLocation, Vector2D } from "./map";
 
 /**
  * Gives damage to those entities with a flammable comp that is
@@ -78,13 +78,14 @@ export class OnFireSystem extends System {
                     // be set to on fire
                     const pos = entity.getOne(PositionComponent);
                     if (pos !== undefined) {
-                        const firePos = pos.tilePosition();
                         for (let i = 0; i < DIRS[8].length; i++) {
                             const dir = DIRS[8][i];
                             const entities = getEntitiesAtLocation(
                                 globals.Game!.entityMap,
-                                firePos.x + dir[0],
-                                firePos.y + dir[1]
+                                new Vector2D(
+                                    pos.tilePosition.x + dir[0],
+                                    pos.tilePosition.y + dir[1]
+                                )
                             );
 
                             if (Math.random() >= .65) {

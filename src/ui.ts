@@ -173,12 +173,17 @@ export class StatusBar {
 
         const mousePosition = input.getMousePosition();
         if (mousePosition === null) { return; }
-        const { x, y } = mousePosition;
 
-        if (x >= 0 && y >= 0 && x < map.width && y < map.height) {
-            const tile = map.data[getHighestZIndexWithTile(map, x, y)][y][x];
-            if (tile !== null && isVisibleAndLit(map, x, y)) {
-                const entities = getEntitiesAtLocation(entityMap, x, y);
+        if (mousePosition.x >= 0 &&
+            mousePosition.y >= 0 &&
+            mousePosition.x < map.width &&
+            mousePosition.y < map.height) {
+            const tile = map
+                .data[
+                    getHighestZIndexWithTile(map, mousePosition)
+                ][mousePosition.y][mousePosition.x];
+            if (tile !== null && isVisibleAndLit(map, mousePosition)) {
+                const entities = getEntitiesAtLocation(entityMap, mousePosition);
                 if (entities.length === 0) {
                     this.targetText.text = `${tile.name}`;
                 } else {
@@ -221,7 +226,7 @@ export class StatusBar {
             }
 
             if (globals.Game?.debugPathfinding === true && tile !== null) {
-                this.debugPathfindingText.text = `(${x}, ${y}): ${tile.pathfindingCost}`;
+                this.debugPathfindingText.text = `(${mousePosition.x}, ${mousePosition.y}): ${tile.pathfindingCost}`;
                 this.debugPathfindingText.visible = true;
             } else {
                 this.debugPathfindingText.visible = false;

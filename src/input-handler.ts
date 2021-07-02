@@ -58,7 +58,7 @@ export function mouseTarget(
         return null;
     }
 
-    const entities = getEntitiesAtLocation(entityMap, mousePosition.x, mousePosition.y);
+    const entities = getEntitiesAtLocation(entityMap, mousePosition);
 
     let res;
     if (excludeUninteractable) {
@@ -121,7 +121,7 @@ export function playerInput(
         const mouseDownPosition = input.getLeftMouseDown();
         if (mouseDownPosition !== null) {
             // Attacking
-            if (tileDistanceBetweenPoints(mouseDownPosition, playerPosition.tilePosition()) < 1.5) {
+            if (tileDistanceBetweenPoints(mouseDownPosition, playerPosition.tilePosition) < 1.5) {
                 const target = mouseTarget(
                     ecs,
                     map,
@@ -138,7 +138,7 @@ export function playerInput(
 
             // Movement
             const path = getPlayerMovementPath(
-                playerPosition.tilePosition(),
+                playerPosition.tilePosition,
                 mouseDownPosition,
                 speedData.maxTilesPerMove,
                 map,
@@ -169,7 +169,7 @@ export function playerInput(
             return null;
         }
 
-        const entityPos = player.getOne(PositionComponent)!.tilePosition();
+        const entityPos = player.getOne(PositionComponent)!.tilePosition;
         const range = inputState.spellForTarget?.range ??
             inputState.itemForTarget?.range ??
             Infinity;

@@ -77,7 +77,8 @@ import {
     drawMap,
     loadTiledMap,
     resetTilePathCosts,
-    ShadowBox
+    ShadowBox,
+    Vector2D
 } from "./map";
 import {
     KeyBindingMenu,
@@ -140,7 +141,7 @@ const OpeningCinematicState: GameState = {
 
     handleInput(game: SimpleDungeonCrawler) {
         if (input.isDown("Enter")) {
-            game.player = createEntity(game.ecs, game.textureAtlas, "player", 1, 1);
+            game.player = createEntity(game.ecs, game.textureAtlas, "player", new Vector2D(1, 1));
             game.scheduler.add(game.player.id, true);
 
             game.openingText.visible = false;
@@ -733,7 +734,7 @@ export class SimpleDungeonCrawler {
         });
 
         this.currentActor = null;
-        this.player = createEntity(this.ecs, this.textureAtlas, "player", 1, 1);
+        this.player = createEntity(this.ecs, this.textureAtlas, "player", new Vector2D(1, 1));
         this.totalTurns = 1;
 
         this.loadLevel("tutorial_001");
@@ -802,11 +803,8 @@ export class SimpleDungeonCrawler {
 
         const playerPos = this.player.getOne(PositionComponent);
         if (playerPos === undefined) { throw new Error("Player doesn't have a PositionComponent"); }
-        playerPos.x = playerLocation[0];
-        playerPos.y = playerLocation[1];
-        const tile = this.gameCamera.worldPositionToTile(playerPos.x, playerPos.y);
-        playerPos.tileX = tile.x;
-        playerPos.tileY = tile.y;
+        playerPos.worldPosition = playerLocation;
+        playerPos.tilePosition = this.gameCamera.worldPositionToTile(playerPos.worldPosition);
         playerPos.update();
 
         for (const query of this.ecs.queries) {

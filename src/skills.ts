@@ -441,7 +441,7 @@ export function castDamageSpell(
             done.add(`${tile.x},${tile.y}`);
             todo.delete(`${tile.x},${tile.y}`);
 
-            const entities = getEntitiesAtLocation(entityMap, tile.x, tile.y);
+            const entities = getEntitiesAtLocation(entityMap, tile);
             // TODO, SPEED: iterating twice here
             const waterTiles = entities.filter(e => e.tags.has("waterTile"));
             const hpEntities = entities.filter(e => {
@@ -455,15 +455,15 @@ export function castDamageSpell(
             // jumping diagonally with no cardinal tiles looks wrong
             for (let i = 0; i < DIRS[4].length; i++) {
                 const dir = DIRS[4][i];
-                const x = tile.x + dir[0];
-                const y = tile.y + dir[1];
+                const newTilePos = new Vector2D(tile.x + dir[0], tile.y + dir[1]);
+                const newTilePosString = `${newTilePos.x},${newTilePos.y}`;
 
-                if (done.has(`${x},${y}`)) { continue; }
+                if (done.has(newTilePosString)) { continue; }
 
-                const entities = getEntitiesAtLocation(entityMap, x, y);
+                const entities = getEntitiesAtLocation(entityMap, newTilePos);
                 const hasWater = entities.filter(e => e.tags.has("waterTile")).length > 0;
                 if (hasWater) {
-                    todo.set(`${x},${y}`, new Vector2D(x, y));
+                    todo.set(newTilePosString, newTilePos);
                 }
             }
         }
@@ -490,10 +490,10 @@ export function castDamageSpell(
     // have the electricity spread throughout the water body
     // and damage everything standing in it
     if (item.damageType === DamageType.Electric) {
-        const entities = getEntitiesAtLocation(entityMap, target.x, target.y);
+        const entities = getEntitiesAtLocation(entityMap, target);
         const isOnWater = entities.filter(e => e.tags.has("waterTile")).length > 0;
         if (isOnWater) {
-            const entitiesToDamage = findEntitiesInBodyOfWater(new Vector2D(target.x, target.y));
+            const entitiesToDamage = findEntitiesInBodyOfWater(target);
             for (let i = 0; i < entitiesToDamage.length; i++) {
                 // TODO: Add special sound effect here
                 takeDamage(
@@ -536,7 +536,7 @@ export function castFireBall(
 
     const tiles = getTargetingReticle(item, target, rotation);
     for (let i = 0; i < tiles.length; i++) {
-        const { entity } = isBlocked(map, entityMap, tiles[i].x, tiles[i].y);
+        const { entity } = isBlocked(map, entityMap, tiles[i]);
         if (entity !== null) {
             const targetHPData = entity.getOne(HitPointsComponent);
             if (targetHPData !== undefined) {
@@ -709,13 +709,13 @@ function castWall(
     const tiles = getTargetingReticle(item, target, rotation);
 
     for (let i = 0; i < tiles.length; i++) {
-        const { blocks, entity } = isBlocked(map, entityMap, tiles[i].x, tiles[i].y);
+        const { blocks, entity } = isBlocked(map, entityMap, tiles[i]);
 
         if (blocks === true && entity === null) {
             continue;
         }
 
-        createEntity(ecs, globals.Game.textureAtlas, objectId, tiles[i].x, tiles[i].y);
+        createEntity(ecs, globals.Game.textureAtlas, objectId, tiles[i]);
     }
 
     return true;
@@ -782,7 +782,7 @@ export function castCombust(
         return false;
     }
 
-    const targetedEntity = getEntitiesAtLocation(entityMap, target.x, target.y)
+    const targetedEntity = getEntitiesAtLocation(entityMap, target)
         .sort((a, b) => {
             const plannerA = a.getOne(PlannerAIComponent);
             const plannerB = b.getOne(PlannerAIComponent);
@@ -806,7 +806,7 @@ export function castCombust(
             ));
 
             for (let dy = -height; dy < height; dy++) {
-                createEntity(ecs, globals.Game!.textureAtlas, "steam", target.x + dx, target.y + dy);
+                createEntity(ecs, globals.Game!.textureAtlas, "steam", new Vector2D(target.x + dx, target.y + dy));
             }
         }
 
@@ -841,8 +841,8 @@ export function castRain(
 
     // Spawn puddles in random places on the map
     for (let i = 0; i < 30; i++) {
-        const { x, y } = getRandomOpenSpace(map, entityMap);
-        createEntity(ecs, globals.Game.textureAtlas, "puddle", x, y);
+        const tilePos = getRandomOpenSpace(map, entityMap);
+        createEntity(ecs, globals.Game.textureAtlas, "puddle", tilePos);
     }
 
     return true;
@@ -895,14 +895,13 @@ export function castExhale(
 
     const pos = user.getOne(PositionComponent);
     if (pos === undefined) { throw new Error("can't call castExhale with a user without a position"); }
-    const tilePos = pos.tilePosition();
 
     for (let i = 0; i < DIRS[8].length; i++) {
         const dir = DIRS[8][i];
-        const dx = tilePos.x + dir[0];
-        const dy = tilePos.y + dir[1];
 
-        const { entity } = isBlocked(map, entityMap, dx, dy);
+        const { entity } = isBlocked(
+            map, entityMap, new Vector2D(pos.tilePosition.x + dir[0], pos.tilePosition.y + dir[1])
+        );
         if (entity !== null) {
             if (entity.tags.has("moveable")) {
                 globals.Game!.commandQueue.push(new PushBackCommand(entity, i, 3, 1));
@@ -937,7 +936,7 @@ export function castFreeze(
         return false;
     }
 
-    const targetPos = targetedEntity.getOne(PositionComponent)!.tilePosition();
+    const targetPos = targetedEntity.getOne(PositionComponent)!.tilePosition;
     const positions: Vector2D[] = getCirclePositions(
         skillData.areaOfEffect.radius!, targetPos.x, targetPos.y
     );
@@ -945,10 +944,10 @@ export function castFreeze(
     for (const pos of positions) {
         if (pos.x < map.width &&
             pos.y < map.height) {
-            const z = getHighestZIndexWithTile(map, pos.x, pos.y);
-            const entities = getEntitiesAtLocation(entityMap, pos.x, pos.y);
+            const z = getHighestZIndexWithTile(map, pos);
+            const entities = getEntitiesAtLocation(entityMap, pos);
             if (map.data[z][pos.y][pos.x]!.blocks === false || entities.length > 0) {
-                const puddle = createEntity(ecs, globals.Game!.textureAtlas, "puddle", pos.x, pos.y);
+                const puddle = createEntity(ecs, globals.Game!.textureAtlas, "puddle", pos);
                 setFrozen(puddle, skillData.value * 3);
 
                 for (const e of entities) {

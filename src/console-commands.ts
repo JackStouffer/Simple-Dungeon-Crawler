@@ -4,7 +4,7 @@ import { addItem } from "./inventory";
 import { addSpellById } from "./fighter";
 import { Entity } from "ape-ecs";
 import { ItemData, SpellData } from "./skills";
-import { getEntitiesAtLocation } from "./map";
+import { getEntitiesAtLocation, Vector2D } from "./map";
 
 /**
  * Start the game loop
@@ -102,7 +102,7 @@ export function getEntities(x: number, y: number): Entity[] {
         return [...globals.Game.ecs.entities.values()];
     }
 
-    return getEntitiesAtLocation(globals.Game.entityMap, x, y);
+    return getEntitiesAtLocation(globals.Game.entityMap, new Vector2D(x, y));
 }
 
 export function step(): void {

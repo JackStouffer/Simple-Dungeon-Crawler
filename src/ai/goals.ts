@@ -44,7 +44,7 @@ function resolveNextToTarget(ecs: World, entityMap: EntityMap, ai: Entity): bool
     if (pos === undefined || targetPos === undefined) {
         throw new Error(`Entity ${ai.id} is missing data for resolveNextToTarget`);
     }
-    return tileDistanceBetweenPoints(pos.tilePosition(), targetPos.tilePosition()) < 1.5;
+    return tileDistanceBetweenPoints(pos.tilePosition, targetPos.tilePosition) < 1.5;
 }
 
 function resolveAtDesiredDistance(ecs: World, entityMap: EntityMap, ai: Entity): boolean {
@@ -59,7 +59,7 @@ function resolveAtDesiredDistance(ecs: World, entityMap: EntityMap, ai: Entity):
         throw new Error(`Entity ${ai.id} is missing data for resolveNextToTarget`);
     }
 
-    const distance = tileDistanceBetweenPoints(pos.tilePosition(), targetPos.tilePosition());
+    const distance = tileDistanceBetweenPoints(pos.tilePosition, targetPos.tilePosition);
     return Math.floor(distance) === aiState.desiredDistanceToTarget;
 }
 
@@ -224,10 +224,10 @@ function resolveAllyLowHealth(ecs: World, entityMap: EntityMap, ai: Entity): boo
         const aiState = e.getOne(PlannerAIComponent)!;
         const isLowHealth = (hpData.hp / hpData.maxHp) <= aiState.lowHealthThreshold;
 
-        if (tileDistanceBetweenPoints(pos.tilePosition(), ePos.tilePosition()) < 10 &&
+        if (tileDistanceBetweenPoints(pos.tilePosition, ePos.tilePosition) < 10 &&
             isLowHealth &&
             (target === null || hpData.hp < targetHPData!.hp)) {
-            target = ePos.tilePosition();
+            target = ePos.tilePosition;
             targetHPData = hpData;
         }
     }
@@ -256,7 +256,7 @@ export function getPotentiallyDangerousPositions(
     // TODO, speed: Using hashset of strings here because js hashsets don't work
     // well with objects. Should be a set of vector2d
     const positions: Set<string> = new Set();
-    const entityTilePos = entity.getOne(PositionComponent)!.tilePosition();
+    const entityTilePos = entity.getOne(PositionComponent)!.tilePosition;
     const selfDamageTypes = getEffectiveDamageAffinity(entity);
     const SQUARE_RADIUS = Math.floor(sightRange / 2);
 
@@ -267,7 +267,7 @@ export function getPotentiallyDangerousPositions(
 
     let closeTileOnFire: boolean = false;
     for (const e of flammableEntitiesQuery.values()) {
-        const tilePos = e.getOne(PositionComponent)!.tilePosition();
+        const tilePos = e.getOne(PositionComponent)!.tilePosition;
         const fireData = e.getOne(FlammableComponent)!;
         if (fireData.onFire && tileDistanceBetweenPoints(tilePos, entityTilePos) < sightRange) {
             closeTileOnFire = true;
@@ -280,7 +280,7 @@ export function getPotentiallyDangerousPositions(
 
             if (positions.has(`${x},${y}`)) { continue; }
 
-            const entitiesAtLocation = getEntitiesAtLocation(entityMap, x, y);
+            const entitiesAtLocation = getEntitiesAtLocation(entityMap, new Vector2D(x, y));
             for (const e of entitiesAtLocation) {
                 if (e === entity) { continue; }
 
@@ -339,7 +339,7 @@ export function getPotentiallyDangerousPositions(
 }
 
 function resolveInDangerousArea(ecs: World, entityMap: EntityMap, ai: Entity): boolean {
-    const tilePos = ai.getOne(PositionComponent)!.tilePosition();
+    const tilePos = ai.getOne(PositionComponent)!.tilePosition;
     // Sight range of the dangerous position is a game play decision.
     // Want to balance making the enemy appear intelligent with allowing
     // the player to successfully set traps.
@@ -394,7 +394,7 @@ export function resolveAliveAllies(ecs: World, entityMap: EntityMap, ai: Entity)
 
         const ePos = e.getOne(PositionComponent)!;
         const hpData = e.getOne(HitPointsComponent)!;
-        if (tileDistanceBetweenPoints(ePos.tilePosition(), pos.tilePosition()) < 12 &&
+        if (tileDistanceBetweenPoints(ePos.tilePosition, pos.tilePosition) < 12 &&
             hpData.hp > 0) {
             return true;
         }
@@ -430,7 +430,7 @@ export function resolveOnFire(ecs: World, entityMap: EntityMap, ai: Entity): boo
  * @returns {boolean}
  */
 function resolveNearWater(ecs: World, entityMap: EntityMap, ai: Entity): boolean {
-    const pos = ai.getOne(PositionComponent)!.tilePosition();
+    const pos = ai.getOne(PositionComponent)!.tilePosition;
     const entities = ecs
         .createQuery()
         .fromAll(PositionComponent, "waterTile")
@@ -440,7 +440,7 @@ function resolveNearWater(ecs: World, entityMap: EntityMap, ai: Entity): boolean
         if (e.id === ai.id) { continue; }
 
         const ePos = e.getOne(PositionComponent)!;
-        if (tileDistanceBetweenPoints(ePos.tilePosition(), pos) < 15) {
+        if (tileDistanceBetweenPoints(ePos.tilePosition, pos) < 15) {
             return true;
         }
     }

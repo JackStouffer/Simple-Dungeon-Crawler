@@ -46,7 +46,7 @@ import { displayMessage, MessageType } from "./ui";
 import { assertUnreachable, Nullable, randomIntFromInterval } from "./util";
 import { SpellData, Area } from "./skills";
 import { createPassableSightCallback } from "./ai/commands";
-import { getEntitiesAtLocation } from "./map";
+import { getEntitiesAtLocation, Vector2D } from "./map";
 import { playBoxBreak } from "./audio";
 
 /**
@@ -68,7 +68,7 @@ export class DeathSystem extends System {
         return function (x: number, y: number) {
             if (targetLevelData === undefined) { return; }
 
-            const entities = getEntitiesAtLocation(globals.Game!.entityMap, x, y);
+            const entities = getEntitiesAtLocation(globals.Game!.entityMap, new Vector2D(x, y));
             for (const e of entities) {
                 if (e === target) { continue; }
 
@@ -116,7 +116,7 @@ export class DeathSystem extends System {
         // Calculate the added fear for all of the entities
         // with fear components within an FOV of the current
         // location
-        const pos = target.getOne(PositionComponent)!.tilePosition();
+        const pos = target.getOne(PositionComponent)!.tilePosition;
         const fov = new FOV.PreciseShadowcasting(createPassableSightCallback(pos));
         fov.compute(
             pos.x,
@@ -155,14 +155,12 @@ export class DeathSystem extends System {
             positionData !== undefined &&
             inventoryData.inventory.size > 0) {
             globals.gameEventEmitter.emit("tutorial.pickUpItem");
-            const tilePos = positionData.tilePosition();
 
             const item = createEntity(
                 this.world,
                 globals.Game.textureAtlas,
                 "dropped_item",
-                tilePos.x,
-                tilePos.y
+                positionData.tilePosition
             );
             const itemInventory = item.getOne(InventoryComponent);
             itemInventory!.inventory = inventoryData.inventory;
@@ -185,14 +183,12 @@ export class DeathSystem extends System {
             positionData !== undefined &&
             inventoryData.inventory.size > 0) {
             globals.gameEventEmitter.emit("tutorial.pickUpItem");
-            const tilePos = positionData.tilePosition();
 
             const item = createEntity(
                 this.world,
                 globals.Game.textureAtlas,
                 "dropped_item",
-                tilePos.x,
-                tilePos.y
+                positionData.tilePosition
             );
             const itemInventory = item.getOne(InventoryComponent);
             itemInventory!.inventory = inventoryData.inventory;
@@ -398,9 +394,11 @@ export function getEffectiveStatData(entityMap: EntityMap, entity: Entity) {
     // Punish the player for being surrounded by enemies
     if (entity.id === "player") {
         let numberOfEnemies = 0;
-        const pos = entity.getOne(PositionComponent)!.tilePosition();
+        const pos = entity.getOne(PositionComponent)!.tilePosition;
         for (const dir of DIRS[8]) {
-            const entities = getEntitiesAtLocation(entityMap, pos.x + dir[0], pos.y + dir[1]);
+            const entities = getEntitiesAtLocation(
+                entityMap, new Vector2D(pos.x + dir[0], pos.y + dir[1])
+            );
             for (const e of entities) {
                 // TODO: Target selection. Should only consider hostiles
                 if (e.tags.has("sentient") && e.id !== "player") {
@@ -441,9 +439,11 @@ export function getEffectiveSpeedData(entityMap: EntityMap, entity: Entity) {
     // Punish the player for being surrounded by enemies
     if (entity.id === "player") {
         let numberOfEnemies = 0;
-        const pos = entity.getOne(PositionComponent)!.tilePosition();
+        const pos = entity.getOne(PositionComponent)!.tilePosition;
         for (const dir of DIRS[8]) {
-            const entities = getEntitiesAtLocation(entityMap, pos.x + dir[0], pos.y + dir[1]);
+            const entities = getEntitiesAtLocation(
+                entityMap, new Vector2D(pos.x + dir[0], pos.y + dir[1])
+            );
             for (const e of entities) {
                 // TODO: Target selection. Should only consider hostiles
                 if (e.tags.has("sentient") && e.id !== "player") {

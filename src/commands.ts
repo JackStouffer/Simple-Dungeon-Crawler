@@ -60,7 +60,7 @@ export function createPassableCallback(origin: Vector2D): PassableCallback {
         if (origin.x === x && origin.y === y) {
             return true;
         }
-        const { blocks } = isBlocked(globals.Game.map, globals.Game.entityMap, x, y);
+        const { blocks } = isBlocked(globals.Game.map, globals.Game.entityMap, new Vector2D(x, y));
 
         return !blocks;
     };
@@ -77,7 +77,9 @@ export function createWaterBasedPassableCallback(origin: Vector2D): PassableCall
         if (origin.x === x && origin.y === y) {
             return true;
         }
-        const { blocks, entity } = isBlocked(globals.Game.map, globals.Game.entityMap, x, y);
+        const { blocks, entity } = isBlocked(
+            globals.Game.map, globals.Game.entityMap, new Vector2D(x, y)
+        );
 
         if (blocks) { return false; }
 
@@ -108,19 +110,19 @@ export function generateWeightCallback(
     return function (x: number, y: number): number {
         if (globals.Game === null) { throw new Error("Global game object is null"); }
 
-        const neighbors: [number, number][] = [];
+        const neighbors: Vector2D[] = [];
         for (let i = 0; i < DIRS[8].length; i++) {
             const dir = DIRS[8][i];
-            const dx = x + dir[0];
-            const dy = y + dir[1];
+            const delta = new Vector2D(x + dir[0], y + dir[1]);
 
-            if (isBlocked(map, entityMap, dx, dy).blocks) { continue; }
-            neighbors.push([dx, dy]);
+            if (!isBlocked(map, entityMap, delta).blocks) {
+                neighbors.push(delta);
+            }
         }
 
         let weight = Math.max(Math.abs(x - origin.x), Math.abs(y - origin.y));
         if (x !== origin.x || y !== origin.y) {
-            const entities = getEntitiesAtLocation(entityMap, x, y);
+            const entities = getEntitiesAtLocation(entityMap, new Vector2D(x, y));
             for (let i = 0; i < entities.length; i++) {
                 const e = entities[i];
                 const trigger = e.getOne(TriggerTypeComponent);
@@ -158,7 +160,7 @@ export function generateWeightCallback(
                 const n = neighbors[i];
                 // TODO, speed: take another look at this, getting entities twice for a lot
                 // of locations
-                const entities = getEntitiesAtLocation(entityMap, n[0], n[1]);
+                const entities = getEntitiesAtLocation(entityMap, n);
 
                 for (let j = 0; j < entities.length; j++) {
                     const e = entities[j];
@@ -221,7 +223,7 @@ export function getPlayerMovementPath(
     maxTilesPerMove: number,
     map: GameMap,
     entityMap: EntityMap
-): [number, number][] {
+): Vector2D[] {
     // quick distance check to cut down the number of
     // AStar calcs
     if (tileDistanceBetweenPoints(destination, origin) < maxTilesPerMove * 2) {
@@ -237,13 +239,13 @@ export function getPlayerMovementPath(
             return [];
         }
 
-        if (isBlocked(map, entityMap, destination.x, destination.y).blocks === true) {
+        if (isBlocked(map, entityMap, destination).blocks === true) {
             return [];
         }
 
-        const path: [number, number][] = [];
+        const path: Vector2D[] = [];
         function pathCallback(x: number, y: number) {
-            path.push([x, y]);
+            path.push(new Vector2D(x, y));
         }
         aStar.compute(origin.x, origin.y, pathCallback);
 
@@ -290,7 +292,7 @@ export class GoToLocationCommand implements Command {
     blocks: boolean = true;
     isSetUp: boolean = false;
     readonly entity: Entity;
-    readonly path: number[][];
+    readonly path: Vector2D[];
     tilesMoved: number = 0;
     done: boolean = false;
 
@@ -298,7 +300,7 @@ export class GoToLocationCommand implements Command {
     // point is saved in the command so it's possible to tell where a wayward
     // command came from. Possible to save some sort of stacktrace? Maybe overkill.
     // Maybe just a function name?
-    constructor(entity: Entity, path: number[][]) {
+    constructor(entity: Entity, path: Vector2D[]) {
         if (path.length === 0) { throw new Error("Zero length path for GoToLocationCommand"); }
         this.entity = entity;
         this.path = path;
@@ -317,8 +319,7 @@ export class GoToLocationCommand implements Command {
         const { blocks } = isBlocked(
             globals.Game!.map,
             globals.Game!.entityMap,
-            destination[0],
-            destination[1]
+            destination
         );
         if (blocks === true) {
             this.done = true;
@@ -332,33 +333,31 @@ export class GoToLocationCommand implements Command {
         if (pos === undefined) { throw new Error(`Entity ${this.entity.id} does not have a position for GoToLocationCommand`); }
 
         const speed = .25;
-        const tilePos = pos.tilePosition();
         const startDistance = tileDistanceBetweenPoints(
-            globals.Game!.gameCamera.tilePositionToWorld(tilePos.x, tilePos.y),
-            globals.Game!.gameCamera.tilePositionToWorld(destination[0], destination[1])
+            globals.Game!.gameCamera.tilePositionToWorld(pos.tilePosition),
+            globals.Game!.gameCamera.tilePositionToWorld(destination)
         );
 
-        const dir: [number, number] = [ destination[0] - tilePos.x, destination[1] - tilePos.y ];
+        const dir = new Vector2D(
+            destination.x - pos.tilePosition.x,
+            destination.y - pos.tilePosition.y
+        );
 
-        pos.x += dir[0] * speed * deltaTime;
-        pos.y += dir[1] * speed * deltaTime;
+        pos.worldPosition.x += dir.x * speed * deltaTime;
+        pos.worldPosition.y += dir.y * speed * deltaTime;
         pos.update();
 
         const distance = tileDistanceBetweenPoints(
-            globals.Game!.gameCamera.tilePositionToWorld(tilePos.x, tilePos.y),
-            Vector2D.fromVector(pos)
+            globals.Game!.gameCamera.tilePositionToWorld(pos.tilePosition),
+            Vector2D.fromVector(pos.worldPosition)
         );
 
         // we're done animating one tile movement, update the position and
         // do the movement logic
         if (distance >= startDistance) {
-            const end = globals.Game!.gameCamera.tilePositionToWorld(
-                destination[0], destination[1]
-            );
-            pos.x = end.x;
-            pos.y = end.y;
-            pos.tileX = destination[0];
-            pos.tileY = destination[1];
+            const end = globals.Game!.gameCamera.tilePositionToWorld(destination);
+            pos.worldPosition = end;
+            pos.tilePosition = destination;
             pos.update();
 
             this.tilesMoved++;
@@ -366,7 +365,7 @@ export class GoToLocationCommand implements Command {
 
             // Triggers and spreading fire
             const actorFlammableData = this.entity.getOne(FlammableComponent);
-            const entities = globals.Game!.entityMap.get(`${destination[0]},${destination[1]}`) ?? [];
+            const entities = globals.Game!.entityMap.get(`${destination.x},${destination.y}`) ?? [];
             for (let i = 0; i < entities.length; i++) {
                 const e = entities[i];
                 const triggerData = e.getOne(TriggerTypeComponent);
@@ -410,13 +409,13 @@ export class GoToLocationCommand implements Command {
                             steamTrigger(this.entity);
                             break;
                         case TriggerType.Ice: {
-                            const vecX = destination[0] - tilePos.x;
-                            const vecY = destination[1] - tilePos.y;
+                            const vecX = destination.x - pos.tilePosition.x;
+                            const vecY = destination.y - pos.tilePosition.y;
                             // TODO: pushing directly onto the command queue sort of sucks
                             globals.Game!.commandQueue.push(
                                 new GoToLocationCommand(
                                     this.entity,
-                                    [[destination[0] + vecX, destination[1] + vecY]]
+                                    [new Vector2D(destination.x + vecX, destination.y + vecY)]
                                 )
                             );
                             this.done = true;
@@ -479,16 +478,16 @@ export class PushBackCommand implements Command {
     update(deltaTime: DOMHighResTimeStamp): void {
         const pos = this.entity.getOne(PositionComponent);
         if (pos === undefined) { throw new Error(`Entity ${this.entity.id} does not have a position for PushBackCommand`); }
-        const tilePos = pos.tilePosition();
 
         const step = DIRS[8][this.dir];
-        const destinationX = tilePos.x + step[0];
-        const destinationY = tilePos.y + step[1];
+        const destination = new Vector2D(
+            pos.tilePosition.x + step[0],
+            pos.tilePosition.y + step[1]
+        );
         const { blocks, entity: blocker } = isBlocked(
             globals.Game!.map,
             globals.Game!.entityMap,
-            destinationX,
-            destinationY
+            destination
         );
         if (blocks === true) {
             const tilesLeft = this.numTiles - this.tilesMoved;
@@ -523,34 +522,30 @@ export class PushBackCommand implements Command {
 
         const speed = .5;
         const startDistance = tileDistanceBetweenPoints(
-            globals.Game!.gameCamera.tilePositionToWorld(tilePos.x, tilePos.y),
-            globals.Game!.gameCamera.tilePositionToWorld(destinationX, destinationY)
+            globals.Game!.gameCamera.tilePositionToWorld(pos.tilePosition),
+            globals.Game!.gameCamera.tilePositionToWorld(destination)
         );
 
-        pos.x += step[0] * speed * deltaTime;
-        pos.y += step[1] * speed * deltaTime;
+        pos.worldPosition.x += step[0] * speed * deltaTime;
+        pos.worldPosition.y += step[1] * speed * deltaTime;
         pos.update();
 
         const distance = tileDistanceBetweenPoints(
-            globals.Game!.gameCamera.tilePositionToWorld(tilePos.x, tilePos.y),
-            Vector2D.fromVector(pos)
+            globals.Game!.gameCamera.tilePositionToWorld(pos.tilePosition),
+            Vector2D.fromVector(pos.worldPosition)
         );
 
         if (distance >= startDistance) {
-            const end = globals.Game!.gameCamera.tilePositionToWorld(
-                destinationX, destinationY
-            );
-            pos.x = end.x;
-            pos.y = end.y;
-            pos.tileX = destinationX;
-            pos.tileY = destinationY;
+            const end = globals.Game!.gameCamera.tilePositionToWorld(destination);
+            pos.worldPosition = end;
+            pos.tilePosition = destination;
             pos.update();
 
             this.tilesMoved++;
 
             // Triggers and spreading fire
             const actorFlammableData = this.entity.getOne(FlammableComponent);
-            const entities = globals.Game!.entityMap.get(`${destinationX},${destinationY}`) ?? [];
+            const entities = globals.Game!.entityMap.get(`${destination.x},${destination.y}`) ?? [];
             for (let i = 0; i < entities.length; i++) {
                 const e = entities[i];
                 const triggerData = e.getOne(TriggerTypeComponent);
@@ -773,7 +768,7 @@ export class UseSkillCommand implements Command {
             const targetedEntity = getRandomFighterWithinRange(
                 globals.Game!.ecs,
                 globals.Game!.map,
-                this.entity.getOne(PositionComponent)!.tilePosition(),
+                this.entity.getOne(PositionComponent)!.tilePosition,
                 16
             );
 
@@ -786,7 +781,7 @@ export class UseSkillCommand implements Command {
                 return;
             }
 
-            this.target = targetedEntity.getOne(PositionComponent)!.tilePosition();
+            this.target = targetedEntity.getOne(PositionComponent)!.tilePosition;
         }
 
         this.didUseTurn = this.details.useFunc(
@@ -815,8 +810,7 @@ export class UseSkillCommand implements Command {
                     // tile sprite.
                     const entity = getEntitiesAtLocation(
                         globals.Game!.entityMap,
-                        this.target.x,
-                        this.target.y
+                        this.target
                     )[0];
 
                     if (entity !== undefined) {
@@ -825,7 +819,7 @@ export class UseSkillCommand implements Command {
 
                     // Fallback
                     let z = getHighestZIndexWithTile(
-                        globals.Game!.map, this.target.x, this.target.y
+                        globals.Game!.map, this.target
                     );
                     while (sprite === undefined) {
                         const tile = globals.Game!.map.data[z][this.target.y][this.target.x];
@@ -852,11 +846,8 @@ export class UseSkillCommand implements Command {
             if (this.details.effect === "lightning" &&
                 this.details.lightning !== undefined &&
                 this.target !== undefined) {
-                const tilePos = this.entity.getOne(PositionComponent)!.tilePosition();
-                const screenPos = globals.Game!.gameCamera.tilePositionToScreen(
-                    tilePos.x,
-                    tilePos.y
-                );
+                const tilePos = this.entity.getOne(PositionComponent)!.tilePosition;
+                const screenPos = globals.Game!.gameCamera.tilePositionToScreen(tilePos);
                 this.effectGraphics = createLightningTexture(
                     screenPos.x,
                     screenPos.y,
@@ -976,11 +967,8 @@ export class ShowSpeechBubbleCommand implements Command {
     }
 
     setUp(): void {
-        const tilePos = this.entity.getOne(PositionComponent)!.tilePosition();
-        const screenPos = globals.Game!.gameCamera.tilePositionToScreen(
-            tilePos.x,
-            tilePos.y
-        );
+        const tilePos = this.entity.getOne(PositionComponent)!.tilePosition;
+        const screenPos = globals.Game!.gameCamera.tilePositionToScreen(tilePos);
 
         // Only show if we're on screen
         if (screenPos.x < globals.Game!.gameCamera.viewport.width &&
@@ -1069,8 +1057,10 @@ export class MoveCameraCommand implements Command {
         this.camera.following = null;
 
         this.to = to;
-        const positionComp = this.to.getOne(PositionComponent)!;
-        this.position = camera.clamp(positionComp.x, positionComp.y, map.width, map.height);
+        const pos = this.to.getOne(PositionComponent)!;
+        this.position = camera.clamp(
+            pos.worldPosition.x, pos.worldPosition.y, map.width, map.height
+        );
 
         this.duration = duration ?? Math.min(
             Math.max(

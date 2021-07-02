@@ -56,7 +56,7 @@ function getStepsTowardsTarget(
     target: Vector2D,
     steps: number,
     popBack: boolean = true
-): Nullable<number[][]> {
+): Vector2D[] {
     let passableCB: PassableCallback, weightCB: WeightCallback;
 
     if (actor.tags.has("aquatic")) {
@@ -75,9 +75,9 @@ function getStepsTowardsTarget(
         { topology: 8 }
     );
 
-    const path: number[][] = [];
+    const path: Vector2D[] = [];
     function pathCallback(x: number, y: number) {
-        path.push([x, y]);
+        path.push(new Vector2D(x, y));
     }
     aStar.compute(origin.x, origin.y, pathCallback);
 
@@ -91,7 +91,7 @@ function getStepsTowardsTarget(
     if (path.length > 0) {
         return path.slice(0, steps);
     }
-    return null;
+    return [];
 }
 
 /**
@@ -104,8 +104,8 @@ function wanderAction(
     entityMap: EntityMap,
     aiState: PlannerAIComponent
 ): Command {
-    const pos = aiState.entity.getOne(PositionComponent)!.tilePosition();
-    const validPositions: [number, number][] = [];
+    const pos = aiState.entity.getOne(PositionComponent)!.tilePosition;
+    const validPositions: Vector2D[] = [];
     const dangerousPositions = getPotentiallyDangerousPositions(
         ecs, entityMap, aiState.entity, aiState.sightRange
     );
@@ -117,12 +117,12 @@ function wanderAction(
     for (const dir of DIRS[8]) {
         const newPosition = new Vector2D(pos.x + dir[0], pos.y + dir[1]);
         const isAquatic = aiState.entity.tags.has("aquatic");
-        const { blocks, entity } = isBlocked(map, entityMap, newPosition.x, newPosition.y);
+        const { blocks, entity } = isBlocked(map, entityMap, newPosition);
 
         if ((isAquatic && blocks === false && entity !== null && entity.tags.has("waterTile")) ||
             (!isAquatic && blocks === false)) {
             if (!dangerousPositions.has(`${newPosition.x},${newPosition.y}`)) {
-                validPositions.push([newPosition.x, newPosition.y]);
+                validPositions.push(newPosition);
             }
         }
     }
@@ -156,17 +156,17 @@ function patrolAction(
     let targetPos = patrolState.patrolTarget.getOne(PositionComponent);
     if (targetPos === undefined) { throw new Error("Patrol target doesn't have a position"); }
 
-    let path: Nullable<number[][]> = getStepsTowardsTarget(
+    let path: Vector2D[] = getStepsTowardsTarget(
         ecs,
         map,
         entityMap,
         aiState.entity,
-        pos.tilePosition(),
-        targetPos.tilePosition(),
+        pos.tilePosition,
+        targetPos.tilePosition,
         2
     );
     // try the next node
-    if (path === null) {
+    if (path.length === 0) {
         const next = patrolState.patrolTarget.getOne(PatrolPathComponent);
         if (next === undefined) { throw new Error(`Missing patrol link on node ${patrolState.patrolTarget.id}`); }
 
@@ -182,13 +182,13 @@ function patrolAction(
             map,
             entityMap,
             aiState.entity,
-            pos.tilePosition(),
-            targetPos.tilePosition(),
+            pos.tilePosition,
+            targetPos.tilePosition,
             2
         );
     }
     // give up
-    if (path === null) {
+    if (path.length === 0) {
         return new NoOpCommand(true);
     }
 
@@ -216,16 +216,16 @@ function chaseAction(
         throw new Error(`Missing data for ${aiState.target.id}`);
     }
 
-    const path: Nullable<number[][]> = getStepsTowardsTarget(
+    const path: Vector2D[] = getStepsTowardsTarget(
         ecs,
         map,
         entityMap,
         aiState.entity,
-        posData.tilePosition(),
-        targetPosData.tilePosition(),
+        posData.tilePosition,
+        targetPosData.tilePosition,
         speedData.maxTilesPerMove
     );
-    if (path === null) {
+    if (path.length === 0) {
         return new NoOpCommand(true);
     }
 
@@ -240,7 +240,7 @@ function chaseWeight(ecs: World, entityMap: EntityMap, aiState: PlannerAICompone
     const posData = aiState.entity.getOne(PositionComponent);
     const targetPosData = aiState.target.getOne(PositionComponent);
     if (posData === undefined || targetPosData === undefined) { throw new Error("no position data for ai"); }
-    return tileDistanceBetweenPoints(posData.tilePosition(), targetPosData.tilePosition());
+    return tileDistanceBetweenPoints(posData.tilePosition, targetPosData.tilePosition);
 }
 
 /**
@@ -349,9 +349,9 @@ function healAllyAction(
         const ePos = e.getOne(PositionComponent)!;
         const hpPercent = hpData.hp / hpData.maxHp;
 
-        if (tileDistanceBetweenPoints(pos.tilePosition(), ePos.tilePosition()) < 10 &&
+        if (tileDistanceBetweenPoints(pos.tilePosition, ePos.tilePosition) < 10 &&
             (target === null || hpPercent < targetHPPercent!)) {
-            target = ePos.tilePosition();
+            target = ePos.tilePosition;
             targetHPPercent = hpPercent;
         }
     }
@@ -393,7 +393,7 @@ function castSpellAction(spellID: string): ActionUpdateFunction {
         return new UseSkillCommand(
             aiState.entity,
             SpellData[spellID],
-            targetPos.tilePosition(),
+            targetPos.tilePosition,
             undefined,
             useSpell
         );
@@ -440,7 +440,7 @@ function runAwayAction(
         throw new Error("Missing data when trying to run away");
     }
 
-    let path: Nullable<number[][]> = [];
+    let path: Vector2D[] = [];
 
     if (fearState.runAwayTarget === null) {
         // Give up after 5 tries as you might be boxed in
@@ -455,19 +455,19 @@ function runAwayAction(
                 map,
                 entityMap,
                 aiState.entity,
-                pos.tilePosition(),
+                pos.tilePosition,
                 fearState.runAwayTarget,
                 speedData.maxTilesPerMove
             );
             tries++;
-        } while (path === null || tries < 5);
+        } while (path.length === 0 || tries < 5);
     } else {
         path = getStepsTowardsTarget(
             ecs,
             map,
             entityMap,
             aiState.entity,
-            pos.tilePosition(),
+            pos.tilePosition,
             fearState.runAwayTarget,
             speedData.maxTilesPerMove,
             false
@@ -478,8 +478,8 @@ function runAwayAction(
         return new NoOpCommand(true);
     }
 
-    if (path[path.length - 1][0] === fearState.runAwayTarget.x &&
-        path[path.length - 1][1] === fearState.runAwayTarget.y) {
+    if (path[path.length - 1].x === fearState.runAwayTarget.x &&
+        path[path.length - 1].y === fearState.runAwayTarget.y) {
         fearState.fear = Math.round(fearState.fearThreshold * 0.6);
         fearState.runAwayTarget = null;
     }
@@ -498,7 +498,7 @@ function goToSafePositionAction(
     if (pos === undefined || speedData === undefined) {
         throw new Error("Missing data when trying to run away");
     }
-    const tilePos = pos.tilePosition();
+    const tilePos = pos.tilePosition;
     // TODO, speed: Calculating the dangerous positions twice here. Once
     // in the goal resolver and once here.
     const dangerousPositions = getPotentiallyDangerousPositions(
@@ -511,9 +511,9 @@ function goToSafePositionAction(
         generateWeightCallback(ecs, map, entityMap, tilePos)
     );
 
-    let path: number[][] = [];
+    let path: Vector2D[] = [];
     function pathCallback(x: number, y: number) {
-        path.splice(0, 0, [x, y]);
+        path.splice(0, 0, new Vector2D(x, y));
     }
     bfs.compute(tilePos.x, tilePos.y, pathCallback);
 
@@ -549,22 +549,21 @@ function repositionAction(
     if (pos === undefined || speedData === undefined || targetPosData === undefined) {
         throw new Error("Missing data when trying to reposition");
     }
-    const tilePos = pos.tilePosition();
 
     const bfs = new Path.ReverseAStar(
         (x, y) => {
-            const d = tileDistanceBetweenPoints(new Vector2D(x, y), targetPosData.tilePosition());
+            const d = tileDistanceBetweenPoints(new Vector2D(x, y), targetPosData.tilePosition);
             return Math.floor(d) === aiState.desiredDistanceToTarget;
         },
-        createPassableCallback(tilePos),
-        generateWeightCallback(ecs, map, entityMap, tilePos)
+        createPassableCallback(pos.tilePosition),
+        generateWeightCallback(ecs, map, entityMap, pos.tilePosition)
     );
 
-    let path: number[][] = [];
+    let path: Vector2D[] = [];
     function pathCallback(x: number, y: number) {
-        path.splice(0, 0, [x, y]);
+        path.splice(0, 0, new Vector2D(x, y));
     }
-    bfs.compute(tilePos.x, tilePos.y, pathCallback);
+    bfs.compute(pos.tilePosition.x, pos.tilePosition.y, pathCallback);
 
     if (path.length === 0) {
         return new NoOpCommand(true);
@@ -612,11 +611,10 @@ function douseFireOnSelfAction(
     if (pos === undefined || speedData === undefined) {
         throw new Error("Missing data when trying to run away");
     }
-    const tilePos = pos.tilePosition();
 
     const bfs = new Path.ReverseAStar(
         (x, y) => {
-            const entities = getEntitiesAtLocation(entityMap, x, y);
+            const entities = getEntitiesAtLocation(entityMap, new Vector2D(x, y));
             for (const e of entities) {
                 if (e.tags.has("waterTile")) {
                     return true;
@@ -624,15 +622,15 @@ function douseFireOnSelfAction(
             }
             return false;
         },
-        createPassableCallback(tilePos),
-        generateWeightCallback(ecs, map, entityMap, tilePos)
+        createPassableCallback(pos.tilePosition),
+        generateWeightCallback(ecs, map, entityMap, pos.tilePosition)
     );
 
-    let path: number[][] = [];
+    let path: Vector2D[] = [];
     function pathCallback(x: number, y: number) {
-        path.splice(0, 0, [x, y]);
+        path.splice(0, 0, new Vector2D(x, y));
     }
-    bfs.compute(tilePos.x, tilePos.y, pathCallback);
+    bfs.compute(pos.tilePosition.x, pos.tilePosition.y, pathCallback);
 
     if (path.length === 0) {
         return new NoOpCommand(true);

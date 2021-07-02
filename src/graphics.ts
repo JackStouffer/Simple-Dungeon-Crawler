@@ -44,18 +44,18 @@ export class DrawSystem extends System {
      */
     draw(entity: Entity, pos: PositionComponent, graphics: GraphicsComponent): void {
         if (globals.Game === null) { throw new Error("global Game object is null"); }
-        const tilePos = pos.tilePosition();
 
-        if (tilePos.y > globals.Game.map.height || tilePos.x > globals.Game.map.width) {
+        if (pos.tilePosition.y >= globals.Game.map.height ||
+            pos.tilePosition.x >= globals.Game.map.width) {
             throw new Error(`Object ${pos.entity.id} exists outside the game world`);
         }
 
         // assuming all tiles on the same position have the same visibility
-        if (isVisibleAndLit(globals.Game.map, tilePos.x, tilePos.y) &&
+        if (isVisibleAndLit(globals.Game.map, pos.tilePosition) &&
             graphics.sprite !== null) {
             graphics.sprite.visible = true;
 
-            const { x, y } = globals.Game.gameCamera.worldPositionToScreen(pos.x, pos.y);
+            const { x, y } = globals.Game.gameCamera.worldPositionToScreen(pos.worldPosition);
             graphics.sprite.position.set(x, y);
             graphics.sprite.scale.set(globals.Game!.gameCamera.zoom, globals.Game!.gameCamera.zoom);
 
@@ -79,24 +79,24 @@ export class DrawSystem extends System {
 
     drawAfterSeen(pos: PositionComponent, graphics: GraphicsComponent): void {
         if (globals.Game === null) { throw new Error("global Game object is null"); }
-        const tilePos = pos.tilePosition();
 
-        if (tilePos.y > globals.Game.map.height || tilePos.x > globals.Game.map.width) {
+        if (pos.tilePosition.y > globals.Game.map.height ||
+            pos.tilePosition.x > globals.Game.map.width) {
             throw new Error(`Object ${pos.entity.id} exists outside the game world`);
         }
 
-        if (globals.Game.map.visibilityData[tilePos.y][tilePos.x]!.explored &&
+        if (globals.Game.map.visibilityData[pos.tilePosition.y][pos.tilePosition.x]!.explored &&
             graphics.sprite !== null) {
             graphics.sprite.visible = true;
 
-            const { x, y } = globals.Game!.gameCamera.tilePositionToScreen(tilePos.x, tilePos.y);
+            const { x, y } = globals.Game!.gameCamera.tilePositionToScreen(pos.tilePosition);
             graphics.sprite.position.set(x, y);
             graphics.sprite.scale.set(globals.Game!.gameCamera.zoom, globals.Game!.gameCamera.zoom);
 
             graphics.sprite.alpha = graphics.opacity;
             graphics.sprite.zIndex = graphics.zIndex;
 
-            if (isVisibleAndLit(globals.Game.map, tilePos.x, tilePos.y)) {
+            if (isVisibleAndLit(globals.Game.map, pos.tilePosition)) {
                 graphics.sprite.tint = 0xFFFFFF;
             } else {
                 graphics.sprite.tint = 0x999999;
@@ -148,12 +148,11 @@ export class DrawChestsSystem extends System {
         const entities = this.chestGraphics.execute();
         for (const entity of entities) {
             const pos = entity.getOne(PositionComponent)!;
-            const tilePos = pos.tilePosition();
             const graphics = entity.getOne(ChestGraphicsComponent);
 
             if (graphics === undefined || graphics.sprite === null) { throw new Error("Missing graphics data on chest"); }
 
-            if (globals.Game.map.visibilityData[tilePos.y][tilePos.x].explored) {
+            if (globals.Game.map.visibilityData[pos.tilePosition.y][pos.tilePosition.x].explored) {
                 const inventory = entity.getOne(InventoryComponent)!;
 
                 graphics.sprite.visible = true;
@@ -162,7 +161,7 @@ export class DrawChestsSystem extends System {
                     graphics.sprite.texture = globals.Game.textureAtlas[graphics.openTextureKey];
                 }
 
-                const { x, y } = globals.Game.gameCamera.tilePositionToScreen(tilePos.x, tilePos.y);
+                const { x, y } = globals.Game.gameCamera.tilePositionToScreen(pos.tilePosition);
                 graphics.sprite.position.set(x, y);
                 graphics.sprite.scale.set(
                     globals.Game!.gameCamera.zoom,
@@ -291,7 +290,6 @@ export class DrawPlayerSystem extends System {
         const entities = this.query.execute();
         for (const entity of entities) {
             const pos = entity.getOne(PositionComponent)!;
-            const tilePosition = pos.tilePosition();
             const inputStateData = entity.getOne(InputHandlingComponent);
             const speedData = getEffectiveSpeedData(globals.Game!.entityMap, entity);
             const graphics = entity.getOne(GraphicsComponent);
@@ -303,10 +301,10 @@ export class DrawPlayerSystem extends System {
                 throw new Error("Player missing speed or input data");
             }
 
-            if (isVisibleAndLit(globals.Game.map, tilePosition.x, tilePosition.y)) {
+            if (isVisibleAndLit(globals.Game.map, pos.tilePosition)) {
                 graphics.sprite.visible = true;
 
-                const { x, y } = globals.Game!.gameCamera.worldPositionToScreen(pos.x, pos.y);
+                const { x, y } = globals.Game!.gameCamera.worldPositionToScreen(pos.worldPosition);
                 graphics.sprite.position.set(x, y);
                 graphics.sprite.scale.set(
                     globals.Game!.gameCamera.zoom,
@@ -351,9 +349,9 @@ export class DrawPlayerSystem extends System {
                     // quick distance check to cut down the number of
                     // AStar calcs
                     const max = speedData.maxTilesPerMove * 2;
-                    if (tileDistanceBetweenPoints(pos.tilePosition(), mousePosition) < max) {
+                    if (tileDistanceBetweenPoints(pos.tilePosition, mousePosition) < max) {
                         const path = getPlayerMovementPath(
-                            pos.tilePosition(),
+                            pos.tilePosition,
                             mousePosition,
                             speedData.maxTilesPerMove,
                             globals.Game!.map,
@@ -368,8 +366,7 @@ export class DrawPlayerSystem extends System {
                             // to put the reticle on that instead of the tile beneath it
                             const entities = getEntitiesAtLocation(
                                 globals.Game.entityMap,
-                                step[0],
-                                step[1]
+                                step
                             );
                             for (let i = 0; i < entities.length; i++) {
                                 if (entities[i].tags.has("environmentTile")) {
@@ -382,10 +379,10 @@ export class DrawPlayerSystem extends System {
                                 }
                             }
 
-                            const z = getHighestZIndexWithTile(globals.Game.map, step[0], step[1]);
+                            const z = getHighestZIndexWithTile(globals.Game.map, step);
                             const sprite = globals.Game
                                 .map
-                                .data[z][step[1]][step[0]]!
+                                .data[z][step.y][step.x]!
                                 .sprite;
                             this.perviousPath.push(sprite);
                             sprite.filters = [this.pathFilter];
@@ -395,7 +392,7 @@ export class DrawPlayerSystem extends System {
                     globals.Game.currentActor === entity &&
                     globals.Game.commandQueue.length === 0) {
                     const mousePosition = input.getMousePosition();
-                    const entityPos = entity.getOne(PositionComponent)!.tilePosition();
+                    const entityPos = entity.getOne(PositionComponent)!.tilePosition;
                     const range = inputStateData.spellForTarget?.range ??
                         inputStateData.itemForTarget?.range ??
                         Infinity;
@@ -413,8 +410,7 @@ export class DrawPlayerSystem extends System {
                             // to put the reticle on that instead of the tile beneath it
                             const entities = getEntitiesAtLocation(
                                 globals.Game.entityMap,
-                                targetArea[i].x,
-                                targetArea[i].y
+                                targetArea[i]
                             );
                             for (let i = 0; i < entities.length; i++) {
                                 if (entities[i].tags.has("environmentTile")) {
@@ -429,8 +425,7 @@ export class DrawPlayerSystem extends System {
 
                             const z = getHighestZIndexWithTile(
                                 globals.Game.map,
-                                targetArea[i].x,
-                                targetArea[i].y
+                                targetArea[i]
                             );
 
                             const visible = globals.Game

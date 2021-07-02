@@ -55,7 +55,7 @@ function calcFearOnSight(ai: Entity): number {
 function createVisibilityCallback(ai: Entity): VisibilityCallback {
     const aiState = ai.getOne(PlannerAIComponent)!;
     const fearState = ai.getOne(FearAIComponent)!;
-    const targetPos = aiState.target?.getOne(PositionComponent)?.tilePosition();
+    const targetPos = aiState.target?.getOne(PositionComponent)?.tilePosition;
 
     return function(x: number, y: number, r: number, visibility: number) {
         if (targetPos === undefined) { return; }
@@ -85,7 +85,9 @@ export function createPassableSightCallback(origin: Vector2D): PassableCallback 
             return true;
         }
 
-        return isSightBlocked(globals.Game.map, globals.Game.entityMap, x, y) === false;
+        return isSightBlocked(
+            globals.Game.map, globals.Game.entityMap, new Vector2D(x, y)
+        ) === false;
     };
 }
 
@@ -319,23 +321,27 @@ function confusedAIGenerateCommand(
     confusedState.turnsLeft--;
 
     if (confusedState.turnsLeft > 0) {
-        const tilePos = pos.tilePosition();
         let blocks: boolean = true;
-        let newX: number = 0;
-        let newY: number = 0;
+        let newTilePos: Vector2D;
         let dir: number = RNG.getItem([0, 1, 2, 3, 4, 5, 6, 7]) ?? 0;
 
         do {
             dir = RNG.getItem([0, 1, 2, 3, 4, 5, 6, 7]) ?? 0;
-            newX = tilePos.x + DIRS[8][dir][0];
-            newY = tilePos.y + DIRS[8][dir][1];
-            ({ blocks } = isBlocked(map, entityMap, newX, newY));
+            newTilePos = new Vector2D(
+                pos.tilePosition.x + DIRS[8][dir][0],
+                pos.tilePosition.y + DIRS[8][dir][1]
+            );
+            ({ blocks } = isBlocked(
+                map,
+                entityMap,
+                newTilePos
+            ));
         } while (blocks === true);
 
         confusedState.update();
         return new GoToLocationCommand(
             entity,
-            [[newX, newY]]
+            [newTilePos]
         );
     } else {
         confusedState.destroy();
@@ -371,7 +377,7 @@ export function generateAICommands(
     entityTeams: EntityTeamMap,
     ai: Entity
 ): Command[] {
-    const pos = ai.getOne(PositionComponent)?.tilePosition();
+    const pos = ai.getOne(PositionComponent)?.tilePosition;
     if (pos === undefined) {
         throw new Error(`Entity ${ai.id} is missing a position component`);
     }

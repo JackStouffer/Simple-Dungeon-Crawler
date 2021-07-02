@@ -37,7 +37,7 @@ export class Camera {
         if (pos === undefined) { return; }
 
         // make the camera follow the sprite
-        const point = this.clamp(pos.x, pos.y, map.width, map.height);
+        const point = this.clamp(pos.worldPosition.x, pos.worldPosition.y, map.width, map.height);
         this.x = point.x;
         this.y = point.y;
     }
@@ -64,24 +64,24 @@ export class Camera {
         return new Vector2D(dx, dy);
     }
 
-    tilePositionToScreen(x: number, y: number): Vector2D {
-        const dx = (x * this.tileSize * this.zoom) - (this.x * this.zoom);
-        const dy = (y * this.tileSize * this.zoom) - (this.y * this.zoom);
+    tilePositionToScreen(pos: Vector2D): Vector2D {
+        const dx = (pos.x * this.tileSize * this.zoom) - (this.x * this.zoom);
+        const dy = (pos.y * this.tileSize * this.zoom) - (this.y * this.zoom);
         return new Vector2D(dx, dy);
     }
 
-    worldPositionToScreen(x: number, y: number): Vector2D {
-        const dx = (x * this.zoom) - (this.x * this.zoom);
-        const dy = (y * this.zoom) - (this.y * this.zoom);
+    worldPositionToScreen(pos: Vector2D): Vector2D {
+        const dx = (pos.x * this.zoom) - (this.x * this.zoom);
+        const dy = (pos.y * this.zoom) - (this.y * this.zoom);
         return new Vector2D(dx, dy);
     }
 
-    tilePositionToWorld(x: number, y: number): Vector2D {
-        return new Vector2D(x * this.tileSize, y * this.tileSize);
+    tilePositionToWorld(pos: Vector2D): Vector2D {
+        return new Vector2D(pos.x * this.tileSize, pos.y * this.tileSize);
     }
 
-    worldPositionToTile(x: number, y: number): Vector2D {
-        return new Vector2D(Math.floor(x / this.tileSize), Math.floor(y / this.tileSize));
+    worldPositionToTile(pos: Vector2D): Vector2D {
+        return new Vector2D(Math.floor(pos.x / this.tileSize), Math.floor(pos.y / this.tileSize));
     }
 
     screenToTilePosition(x: number, y: number): Vector2D {
