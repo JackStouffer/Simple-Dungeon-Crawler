@@ -8,14 +8,15 @@ _In Development_
   * Enemies now have "barks" and dialog
     * Based on the state of themselves and the world around them
     * Allies can give specific responses to the line said
-  * Targeted spells and items now have a max range
+  * Enemies can now be grouped into teams which controls dialog and if they give alerts when spotting their enemy
+  * Targeted spells and items now have a max range for the player
   * The player is now penalized for being surrounded by more than one enemy with lower movement speed and defense
   * Added fast moving dog enemy
   * Rename "paralyzed" status effect to "stunned"
   * Gave the status effect messages their own styling to be more noticeable
   * Buff "exhale" spell by always stunning pushed back enemies
   * Game camera moves from entity to entity when a turn ends
-  * Fixed a bug where wandering enemies could set themselves on fire
+  * Fixed a bug where wandering enemies could set themselves on fire by walking into a fire
   * Fixed a bug where entities could be set on fire when frozen
   * Fixed a bug where puddle which melted from ice would still be treated as ice when walking on it
 * Technical
@@ -25,6 +26,7 @@ _In Development_
     * Makes it easier to work with the dialog system
     * Makes it clearer and therefore harder to forget in the action definitions
   * Commands can now be run in parallel in the command queue in a single turn
+    * Makes things like the exhale spell look much more natural
   * Game states are now grouped into their own static objects
     * Enter and exit functions make it much easier to manage moving from one state to another
     * Each state object has its own rendering, update, and input handling implementations
@@ -32,7 +34,13 @@ _In Development_
     * This is to get around the auto-playing audio control rules in browsers
     * These rules stopped all game audio from starting
   * Made the UI code resolution independent
-  * Lighting and fog of war data is now stored independently of the tile data for easier look ups and manipulation
+  * Lighting and fog of war data was refactored out of tile data
+    * Now stored in its own array on the game map data
+    * 2D array to more accurately represent the fog data per tile and for easier lookup
+  * Most position data now stored as vector objects which makes passing data around and manipulating it later easier
+  * Removed all instances where Entity references were kept across frames
+    * Inherently bug prone, as the Entity could disappear from the world since the last frame
+    * Use the ID strings to look up the entity in the ECS
 
 ## Version 11
 

@@ -46,7 +46,14 @@ export class OnFireSystem extends System {
         for (const entity of entities) {
             const flammableData = entity.getOne(FlammableComponent)!;
             if (flammableData.onFire === true) {
-                takeDamage(entity, flammableData.fireDamage, false, DamageType.Fire);
+                takeDamage(
+                    this.world,
+                    globals.Game!.entityMap,
+                    entity,
+                    flammableData.fireDamage,
+                    false,
+                    DamageType.Fire
+                );
                 flammableData.turnsLeft--;
 
                 if (flammableData.turnsLeft <= 0) {
@@ -63,7 +70,7 @@ export class OnFireSystem extends System {
                     }
 
 
-                    if (entity === globals.Game!.player) {
+                    if (entity.id === globals.Game!.playerId) {
                         displayMessage("You are no longer on fire", MessageType.StatusEffect);
                     } else if (entity.tags.has("sentient")) {
                         const displayName = entity.getOne(DisplayNameComponent);
@@ -81,6 +88,7 @@ export class OnFireSystem extends System {
                         for (let i = 0; i < DIRS[8].length; i++) {
                             const dir = DIRS[8][i];
                             const entities = getEntitiesAtLocation(
+                                this.world,
                                 globals.Game!.entityMap,
                                 new Vector2D(
                                     pos.tilePosition.x + dir[0],
@@ -108,7 +116,7 @@ export class OnFireSystem extends System {
                 // TODO, cleanup: two messages are generated here, one for the fire
                 // damage and one in the takeDamage function
                 if (globals.Game === null) { continue; }
-                if (entity === globals.Game.player) {
+                if (entity.id === globals.Game.playerId) {
                     displayMessage(`You took ${flammableData.fireDamage} damage from being on fire`);
                 } else if (entity.tags.has("sentient")) {
                     const displayName = entity.getOne(DisplayNameComponent);
@@ -142,7 +150,7 @@ export class WetSystem extends System {
                 effect.wet = false;
                 effect.update();
 
-                if (entity === globals.Game!.player) {
+                if (entity.id === globals.Game!.playerId) {
                     displayMessage("You are no longer wet", MessageType.StatusEffect);
                 } else {
                     const displayName = entity.getOne(DisplayNameComponent);
@@ -176,7 +184,7 @@ export class SilenceSystem extends System {
                 effect.silenced = false;
                 effect.update();
 
-                if (entity === globals.Game!.player) {
+                if (entity.id === globals.Game!.playerId) {
                     displayMessage("You are no longer silenced", MessageType.StatusEffect);
                 } else {
                     const displayName = entity.getOne(DisplayNameComponent);
@@ -210,7 +218,7 @@ export class StunSystem extends System {
                 effect.stunned = false;
                 effect.update();
 
-                if (entity === globals.Game!.player) {
+                if (entity.id === globals.Game!.playerId) {
                     displayMessage("You are no longer stunned", MessageType.StatusEffect);
                 } else {
                     const displayName = entity.getOne(DisplayNameComponent);
@@ -261,7 +269,7 @@ export class FrozenSystem extends System {
                     triggerData.update();
                 }
 
-                if (entity === globals.Game!.player) {
+                if (entity.id === globals.Game!.playerId) {
                     displayMessage("You are no longer frozen", MessageType.StatusEffect);
                 } else {
                     const displayName = entity.getOne(DisplayNameComponent);

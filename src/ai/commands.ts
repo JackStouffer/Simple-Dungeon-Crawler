@@ -33,12 +33,19 @@ import { buildDialogQuery, queryAlliesForResponses, queryDialogTable, sayDialogD
 /**
  * Add fear to an entity when it sees an enemy
  */
-function calcFearOnSight(ai: Entity): number {
+function calcFearOnSight(ecs: World, ai: Entity): number {
     const aiState = ai.getOne(PlannerAIComponent)!;
     const levelData = ai.getOne(LevelComponent);
 
-    if (aiState.target === null) { throw new Error("Should set target here"); }
-    const targetLevelData = aiState.target.getOne(LevelComponent);
+    const target = ecs.getEntity(aiState.targetId);
+    if (target === undefined) {
+        if (globals.Game?.debugAI === true) {
+            // eslint-disable-next-line no-console
+            console.log(`calcFearOnSight for ${aiState.entity.id} has a non-existent target ${aiState.targetId}`);
+        }
+        return 1;
+    }
+    const targetLevelData = target.getOne(LevelComponent);
 
     if (levelData === undefined || targetLevelData === undefined) {
         return 1;
@@ -52,16 +59,18 @@ function calcFearOnSight(ai: Entity): number {
  * is visible or not and sets the AI hasTargetInSight bool to
  * true.
  */
-function createVisibilityCallback(ai: Entity): VisibilityCallback {
+function createVisibilityCallback(ecs: World, ai: Entity): VisibilityCallback {
     const aiState = ai.getOne(PlannerAIComponent)!;
     const fearState = ai.getOne(FearAIComponent)!;
-    const targetPos = aiState.target?.getOne(PositionComponent)?.tilePosition;
+
+    const target = ecs.getEntity(aiState.targetId);
+    const targetPos = target?.getOne(PositionComponent)?.tilePosition;
 
     return function(x: number, y: number, r: number, visibility: number) {
         if (targetPos === undefined) { return; }
         if (x === targetPos.x && y === targetPos.y && visibility > 0) {
             if (fearState !== undefined && aiState.knowsTargetPosition === false) {
-                fearState.fear += calcFearOnSight(ai);
+                fearState.fear += calcFearOnSight(ecs, ai);
                 fearState.update();
             }
 
@@ -86,7 +95,10 @@ export function createPassableSightCallback(origin: Vector2D): PassableCallback 
         }
 
         return isSightBlocked(
-            globals.Game.map, globals.Game.entityMap, new Vector2D(x, y)
+            globals.Game.ecs,
+            globals.Game.map,
+            globals.Game.entityMap,
+            new Vector2D(x, y)
         ) === false;
     };
 }
@@ -332,6 +344,7 @@ function confusedAIGenerateCommand(
                 pos.tilePosition.y + DIRS[8][dir][1]
             );
             ({ blocks } = isBlocked(
+                ecs,
                 map,
                 entityMap,
                 newTilePos
@@ -340,13 +353,13 @@ function confusedAIGenerateCommand(
 
         confusedState.update();
         return new GoToLocationCommand(
-            entity,
+            entity.id,
             [newTilePos]
         );
     } else {
         confusedState.destroy();
 
-        if (entity === globals.Game!.player) {
+        if (entity.id === globals.Game!.playerId) {
             displayMessage("You are no longer confused");
         } else {
             displayMessage(`${displayName.name} is no longer confused`);
@@ -375,8 +388,17 @@ export function generateAICommands(
     map: GameMap,
     entityMap: EntityMap,
     entityTeams: EntityTeamMap,
-    ai: Entity
+    entityId: string
 ): Command[] {
+    const ai = ecs.getEntity(entityId);
+    if (ai === undefined) {
+        if (globals.Game?.debugAI === true) {
+            // eslint-disable-next-line no-console
+            console.log(`generateAICommands for ${entityId}, entityId does not exist`);
+        }
+        return [new NoOpCommand(true)];
+    }
+
     const pos = ai.getOne(PositionComponent)?.tilePosition;
     if (pos === undefined) {
         throw new Error(`Entity ${ai.id} is missing a position component`);
@@ -408,10 +430,19 @@ export function generateAICommands(
             pos.x,
             pos.y,
             aiState.sightRange,
-            createVisibilityCallback(ai)
+            createVisibilityCallback(ecs, ai)
         );
 
-        if (aiState.knowsTargetPosition && aiState.target === globals.Game!.player) {
+        const target = ecs.getEntity(aiState.targetId);
+        if (target === undefined) {
+            if (globals.Game?.debugAI === true) {
+                // eslint-disable-next-line no-console
+                console.log(`generateAICommands for ${aiState.entity.id} has a non-existent target ${aiState.targetId}`);
+            }
+            return [new NoOpCommand(true)];
+        }
+
+        if (aiState.knowsTargetPosition && target.id === globals.Game!.playerId) {
             commands.push(new MoveCameraCommand(map, globals.Game!.gameCamera, ai));
         }
 

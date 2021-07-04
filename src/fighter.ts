@@ -1,4 +1,4 @@
-import { System, Query, Entity } from "ape-ecs";
+import { System, Query, Entity, World } from "ape-ecs";
 import { cloneDeep, pick } from "lodash";
 
 import { DIRS, FOV, RNG } from "./rot/index";
@@ -64,11 +64,14 @@ export class DeathSystem extends System {
 
     generateUpdateFearVisibilityCallback(target: Entity) {
         const targetLevelData = target.getOne(LevelComponent);
+        const parent = this;
 
         return function (x: number, y: number) {
             if (targetLevelData === undefined) { return; }
 
-            const entities = getEntitiesAtLocation(globals.Game!.entityMap, new Vector2D(x, y));
+            const entities = getEntitiesAtLocation(
+                parent.world, globals.Game!.entityMap, new Vector2D(x, y)
+            );
             for (const e of entities) {
                 if (e === target) { continue; }
 
@@ -147,6 +150,8 @@ export class DeathSystem extends System {
                 target.removeComponent(c);
             }
         }
+
+        target.tags.delete("sentient");
 
         // Create dropped item entity
         const inventoryData = target.getOne(InventoryComponent);
@@ -249,7 +254,7 @@ export class UpdateSchedulerSystem extends System {
                 case "add":
                     // We want to add the player manually so that the player is
                     // always first to act in a level load
-                    if (entity === globals.Game?.player) { continue; }
+                    if (entity?.id === globals.Game?.playerId) { continue; }
                     globals.Game.scheduler.add(change.entity, true);
                     break;
                 case "destroy":
@@ -289,7 +294,9 @@ export class LevelUpSystem extends System {
                 const hpData = entity.getOne(HitPointsComponent);
                 const statsData = entity.getOne(StatsComponent);
                 const effectiveHp = getEffectiveHitPointData(entity);
-                const effectiveStats = getEffectiveStatData(globals.Game!.entityMap, entity);
+                const effectiveStats = getEffectiveStatData(
+                    this.world, globals.Game!.entityMap, entity
+                );
 
                 if (hpData !== undefined && effectiveHp !== null) {
                     hpData.hp = effectiveHp.maxHp;
@@ -302,7 +309,7 @@ export class LevelUpSystem extends System {
                     statsData.update();
                 }
 
-                if (globals.Game !== null && entity === globals.Game.player) {
+                if (globals.Game !== null && entity.id === globals.Game.playerId) {
                     displayMessage(`You reached level ${levelData.level}!`);
                 }
             }
@@ -374,7 +381,7 @@ export function getEffectiveHitPointData(entity: Entity) {
  * Find the fighter's current stats after the effects of all
  * of the statistic effects are taken into account.
  */
-export function getEffectiveStatData(entityMap: EntityMap, entity: Entity) {
+export function getEffectiveStatData(ecs: World, entityMap: EntityMap, entity: Entity) {
     const effects = entity.getComponents(StatsEffectComponent);
     const stats = entity.getOne(StatsComponent);
     if (stats === undefined) { return null; }
@@ -397,7 +404,9 @@ export function getEffectiveStatData(entityMap: EntityMap, entity: Entity) {
         const pos = entity.getOne(PositionComponent)!.tilePosition;
         for (const dir of DIRS[8]) {
             const entities = getEntitiesAtLocation(
-                entityMap, new Vector2D(pos.x + dir[0], pos.y + dir[1])
+                ecs,
+                entityMap,
+                new Vector2D(pos.x + dir[0], pos.y + dir[1])
             );
             for (const e of entities) {
                 // TODO: Target selection. Should only consider hostiles
@@ -426,7 +435,7 @@ export function getEffectiveStatData(entityMap: EntityMap, entity: Entity) {
  * Find the fighter's current stats after the effects of all
  * of the statistic effects are taken into account.
  */
-export function getEffectiveSpeedData(entityMap: EntityMap, entity: Entity) {
+export function getEffectiveSpeedData(ecs: World, entityMap: EntityMap, entity: Entity) {
     const effects = entity.getComponents(SpeedEffectComponent);
     const speed = entity.getOne(SpeedComponent);
     if (speed === undefined) { return null; }
@@ -442,7 +451,9 @@ export function getEffectiveSpeedData(entityMap: EntityMap, entity: Entity) {
         const pos = entity.getOne(PositionComponent)!.tilePosition;
         for (const dir of DIRS[8]) {
             const entities = getEntitiesAtLocation(
-                entityMap, new Vector2D(pos.x + dir[0], pos.y + dir[1])
+                ecs,
+                entityMap,
+                new Vector2D(pos.x + dir[0], pos.y + dir[1])
             );
             for (const e of entities) {
                 // TODO: Target selection. Should only consider hostiles
@@ -499,6 +510,8 @@ export function getEffectiveDamageAffinity(entity: Entity) {
  * into account
  */
 export function takeDamage(
+    ecs: World,
+    entityMap: EntityMap,
     target: Entity,
     damage: number,
     critical: boolean,
@@ -509,7 +522,11 @@ export function takeDamage(
     const hpData = target.getOne(HitPointsComponent);
     if (hpData === undefined) { return false; }
 
-    const targetStats = getEffectiveStatData(globals.Game!.entityMap, target);
+    const targetStats = getEffectiveStatData(
+        ecs,
+        entityMap,
+        target
+    );
     const damageAffinity = getEffectiveDamageAffinity(target);
 
     if (targetStats !== null && damageAffinity !== null) {
@@ -564,9 +581,14 @@ export function takeDamage(
  * Have this fighter attack another game object. Adds experience
  * if the target was killed
  */
-export function attack(attacker: Entity, target: Entity): void {
+export function attack(
+    ecs: World,
+    entityMap: EntityMap,
+    attacker: Entity,
+    target: Entity
+): void {
     const attackerLevelData = attacker.getOne(LevelComponent);
-    const attackerEffectiveStats = getEffectiveStatData(globals.Game!.entityMap, attacker);
+    const attackerEffectiveStats = getEffectiveStatData(ecs, entityMap, attacker);
     const attackerDisplayName = attacker.getOne(DisplayNameComponent);
     const targetLevelData = target.getOne(LevelComponent);
     const targetDisplayName = target.getOne(DisplayNameComponent);
@@ -583,7 +605,7 @@ export function attack(attacker: Entity, target: Entity): void {
 
     if (damage > 0) {
         const experience = targetLevelData?.experienceGiven ?? 0;
-        const killed = takeDamage(target, damage, critical, DamageType.Physical);
+        const killed = takeDamage(ecs, entityMap, target, damage, critical, DamageType.Physical);
         if (killed && attackerLevelData !== undefined) {
             attackerLevelData.experience += experience;
             attackerLevelData.update();
@@ -640,7 +662,7 @@ export function addSpellById(entity: Entity, id: string, count: number, maxCount
     const spellData = entity.getOne(SpellsComponent);
     if (spellData === undefined || id in spellData.knownSpells) { return false; }
 
-    if (entity === globals.Game.player) {
+    if (entity.id === globals.Game.playerId) {
         globals.gameEventEmitter.emit("tutorial.spellMenu");
 
         if (SpellData[id].type === SpellType.WildDamage) {

@@ -1,4 +1,4 @@
-import { Entity } from "ape-ecs";
+import { World } from "ape-ecs";
 
 import { TILE_SIZE } from "./constants";
 import { PositionComponent } from "./entity";
@@ -19,7 +19,7 @@ export class Camera {
 
     readonly tileSize: number = TILE_SIZE;
     viewport: Rectangle;
-    following: Nullable<Entity>;
+    following: Nullable<string>;
     // TODO: does pixi.js have a projection thing with WebGL? Can we use that to zoom?
     zoom: number;
 
@@ -31,9 +31,11 @@ export class Camera {
         this.following = null;
     }
 
-    update(map: GameMap): void {
+    update(ecs: World, map: GameMap): void {
         if (this.following === null) { return; }
-        const pos = this.following.getOne(PositionComponent);
+        const entity = ecs.getEntity(this.following);
+        if (entity === undefined) { return; }
+        const pos = entity.getOne(PositionComponent);
         if (pos === undefined) { return; }
 
         // make the camera follow the sprite

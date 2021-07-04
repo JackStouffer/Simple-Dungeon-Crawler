@@ -1,9 +1,10 @@
-import { Entity } from "ape-ecs";
+import { Entity, World } from "ape-ecs";
 
 import globals from "./globals";
 import { DamageType } from "./constants";
 import {
     DisplayNameComponent,
+    EntityMap,
     EventTriggerComponent,
     FireTriggerComponent,
     FlammableComponent,
@@ -19,7 +20,12 @@ import { displayMessage } from "./ui";
  * Checks if the actor is flammable, and then damages them, and then sets
  * them on fire using the data from the trigger's FireTriggerComponent
  */
-export function fireTrigger(actor: Entity, trigger: Entity): void {
+export function fireTrigger(
+    ecs: World,
+    entityMap: EntityMap,
+    actor: Entity,
+    trigger: Entity
+): void {
     const flammableData = actor.getOne(FlammableComponent);
 
     if (flammableData !== undefined) {
@@ -32,7 +38,14 @@ export function fireTrigger(actor: Entity, trigger: Entity): void {
         );
 
         if (!wasSetOnFire) { return; }
-        takeDamage(actor, fireTriggerData.damage, false, DamageType.Fire);
+        takeDamage(
+            ecs,
+            entityMap,
+            actor,
+            fireTriggerData.damage,
+            false,
+            DamageType.Fire
+        );
     }
 }
 
@@ -73,7 +86,7 @@ export function mudTrigger(actor: Entity): void {
 export function shallowWaterTrigger(actor: Entity): void {
     setWet(actor, 10);
     const wetData = actor.getOne(WetableComponent);
-    if (wetData !== undefined && wetData.wet === false && actor === globals.Game?.player) {
+    if (wetData !== undefined && wetData.wet === false && actor.id === globals.Game?.playerId) {
         displayMessage("You are now wet from stepping in the water");
     }
 }
@@ -81,7 +94,7 @@ export function shallowWaterTrigger(actor: Entity): void {
 export function deepWaterTrigger(actor: Entity): void {
     setWet(actor, 20);
     const wetData = actor.getOne(WetableComponent);
-    if (wetData !== undefined && wetData.wet === false && actor === globals.Game?.player) {
+    if (wetData !== undefined && wetData.wet === false && actor.id === globals.Game?.playerId) {
         displayMessage("You are now wet from stepping in the water");
     }
 
@@ -102,8 +115,12 @@ export function deepWaterTrigger(actor: Entity): void {
     }
 }
 
-export function steamTrigger(actor: Entity): void {
-    if (actor === globals.Game?.player) {
+export function steamTrigger(
+    ecs: World,
+    entityMap: EntityMap,
+    actor: Entity
+): void {
+    if (actor.id === globals.Game?.playerId) {
         displayMessage("You take damage from the steam");
     } else {
         const d = actor.getOne(DisplayNameComponent);
@@ -112,5 +129,12 @@ export function steamTrigger(actor: Entity): void {
         }
     }
 
-    takeDamage(actor, 7, false, DamageType.Water);
+    takeDamage(
+        ecs,
+        entityMap,
+        actor,
+        7,
+        false,
+        DamageType.Water
+    );
 }

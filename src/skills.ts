@@ -184,7 +184,7 @@ export function setOnFire(target: Entity, damage?: number, turns?: number): bool
     const blocks = target.tags.has("blocks");
 
     if (flammableData === undefined) {
-        if (target === globals.Game?.player) {
+        if (target.id === globals.Game?.playerId) {
             displayMessage("You were not set on fire because you're immune", MessageType.StatusEffect);
         } else if (displayName !== undefined) {
             displayMessage(`${displayName.name} was not set on fire because it is immune`, MessageType.StatusEffect);
@@ -198,7 +198,7 @@ export function setOnFire(target: Entity, damage?: number, turns?: number): bool
         wetData.turnsLeft = 0;
         wetData.update();
 
-        if (target === globals.Game?.player) {
+        if (target.id === globals.Game?.playerId) {
             displayMessage("You were not set on fire because you were wet", MessageType.StatusEffect);
         } else if (displayName !== undefined) {
             displayMessage(`${displayName.name} was not set on fire because it was wet`, MessageType.StatusEffect);
@@ -220,7 +220,7 @@ export function setOnFire(target: Entity, damage?: number, turns?: number): bool
         frozenData.update();
 
 
-        if (target === globals.Game?.player) {
+        if (target.id === globals.Game?.playerId) {
             displayMessage("You were not set on fire because you were frozen", MessageType.StatusEffect);
         } else if (displayName !== undefined) {
             displayMessage(`${displayName.name} was not set on fire because it was frozen`, MessageType.StatusEffect);
@@ -269,7 +269,7 @@ export function setOnFire(target: Entity, damage?: number, turns?: number): bool
     flammableData.onFire = true;
     flammableData.update();
 
-    if (target === globals.Game!.player) {
+    if (target.id === globals.Game!.playerId) {
         displayMessage("You are now on fire", MessageType.StatusEffect);
     } else if (target.tags.has("sentient")) {
         const displayName = target.getOne(DisplayNameComponent);
@@ -289,7 +289,7 @@ export function setWet(target: Entity, turns?: number): boolean {
         flammableData.fireDamage = 0;
         flammableData.update();
 
-        if (target === globals.Game?.player) {
+        if (target.id === globals.Game?.playerId) {
             displayMessage("The water doused you", MessageType.StatusEffect);
         }
     }
@@ -324,7 +324,7 @@ export function setStunned(target: Entity, turns?: number): boolean {
     stunnableData.turnsLeft = turns;
     stunnableData.update();
 
-    if (target === globals.Game?.player) {
+    if (target.id === globals.Game?.playerId) {
         displayMessage("You are stunned!", MessageType.StatusEffect);
     } else {
         const displayName = target.getOne(DisplayNameComponent);
@@ -347,7 +347,7 @@ export function setFrozen(target: Entity, turns: number): boolean {
         flammableData.fireDamage = 0;
         flammableData.update();
 
-        if (target === globals.Game?.player) {
+        if (target.id === globals.Game?.playerId) {
             displayMessage("Instead of being frozen, the fire was extinguished");
         } else if (name !== undefined) {
             displayMessage(`Instead of ${name.name} being frozen, it is no longer on fire`);
@@ -367,7 +367,7 @@ export function setFrozen(target: Entity, turns: number): boolean {
         frozenData.turnsLeft = turns;
         frozenData.update();
 
-        if (target === globals.Game?.player) {
+        if (target.id === globals.Game?.playerId) {
             displayMessage("You are frozen", MessageType.StatusEffect);
         } else if (name !== undefined && target.tags.has("sentient")) {
             displayMessage(`${name.name} is now frozen`, MessageType.StatusEffect);
@@ -441,7 +441,7 @@ export function castDamageSpell(
             done.add(`${tile.x},${tile.y}`);
             todo.delete(`${tile.x},${tile.y}`);
 
-            const entities = getEntitiesAtLocation(entityMap, tile);
+            const entities = getEntitiesAtLocation(ecs, entityMap, tile);
             // TODO, SPEED: iterating twice here
             const waterTiles = entities.filter(e => e.tags.has("waterTile"));
             const hpEntities = entities.filter(e => {
@@ -460,7 +460,7 @@ export function castDamageSpell(
 
                 if (done.has(newTilePosString)) { continue; }
 
-                const entities = getEntitiesAtLocation(entityMap, newTilePos);
+                const entities = getEntitiesAtLocation(ecs, entityMap, newTilePos);
                 const hasWater = entities.filter(e => e.tags.has("waterTile")).length > 0;
                 if (hasWater) {
                     todo.set(newTilePosString, newTilePos);
@@ -490,13 +490,15 @@ export function castDamageSpell(
     // have the electricity spread throughout the water body
     // and damage everything standing in it
     if (item.damageType === DamageType.Electric) {
-        const entities = getEntitiesAtLocation(entityMap, target);
+        const entities = getEntitiesAtLocation(ecs, entityMap, target);
         const isOnWater = entities.filter(e => e.tags.has("waterTile")).length > 0;
         if (isOnWater) {
             const entitiesToDamage = findEntitiesInBodyOfWater(target);
             for (let i = 0; i < entitiesToDamage.length; i++) {
                 // TODO: Add special sound effect here
                 takeDamage(
+                    ecs,
+                    entityMap,
                     entitiesToDamage[i],
                     item.value,
                     false,
@@ -504,13 +506,27 @@ export function castDamageSpell(
                 );
             }
         } else {
-            takeDamage(targetedEntity, item.value, false, item.damageType ?? DamageType.Physical);
+            takeDamage(
+                ecs,
+                entityMap,
+                targetedEntity,
+                item.value,
+                false,
+                item.damageType ?? DamageType.Physical
+            );
         }
     } else {
-        takeDamage(targetedEntity, item.value, false, item.damageType ?? DamageType.Physical);
+        takeDamage(
+            ecs,
+            entityMap,
+            targetedEntity,
+            item.value,
+            false,
+            item.damageType ?? DamageType.Physical
+        );
     }
 
-    const stats = getEffectiveStatData(entityMap, targetedEntity);
+    const stats = getEffectiveStatData(ecs, entityMap, targetedEntity);
     const hp = getEffectiveHitPointData(targetedEntity);
     if (stats === null || hp === null) { return true; }
     rollForStatusEffect(item, targetedEntity, stats, hp);
@@ -536,7 +552,7 @@ export function castFireBall(
 
     const tiles = getTargetingReticle(item, target, rotation);
     for (let i = 0; i < tiles.length; i++) {
-        const { entity } = isBlocked(map, entityMap, tiles[i]);
+        const { entity } = isBlocked(ecs, map, entityMap, tiles[i]);
         if (entity !== null) {
             const targetHPData = entity.getOne(HitPointsComponent);
             if (targetHPData !== undefined) {
@@ -545,9 +561,16 @@ export function castFireBall(
                 if (item.statusEffect === StatusEffectType.OnFire && !entity.tags.has("sentient")) {
                     setOnFire(entity);
                 } else {
-                    takeDamage(entity, item.value, false, item.damageType ?? DamageType.Physical);
+                    takeDamage(
+                        ecs,
+                        entityMap,
+                        entity,
+                        item.value,
+                        false,
+                        item.damageType ?? DamageType.Physical
+                    );
 
-                    const stats = getEffectiveStatData(entityMap, entity);
+                    const stats = getEffectiveStatData(ecs, entityMap, entity);
                     const hp = getEffectiveHitPointData(entity);
                     if (stats !== null && hp !== null) {
                         rollForStatusEffect(item, entity, stats, hp);
@@ -709,7 +732,7 @@ function castWall(
     const tiles = getTargetingReticle(item, target, rotation);
 
     for (let i = 0; i < tiles.length; i++) {
-        const { blocks, entity } = isBlocked(map, entityMap, tiles[i]);
+        const { blocks, entity } = isBlocked(ecs, map, entityMap, tiles[i]);
 
         if (blocks === true && entity === null) {
             continue;
@@ -782,7 +805,7 @@ export function castCombust(
         return false;
     }
 
-    const targetedEntity = getEntitiesAtLocation(entityMap, target)
+    const targetedEntity = getEntitiesAtLocation(ecs, entityMap, target)
         .sort((a, b) => {
             const plannerA = a.getOne(PlannerAIComponent);
             const plannerB = b.getOne(PlannerAIComponent);
@@ -841,7 +864,7 @@ export function castRain(
 
     // Spawn puddles in random places on the map
     for (let i = 0; i < 30; i++) {
-        const tilePos = getRandomOpenSpace(map, entityMap);
+        const tilePos = getRandomOpenSpace(ecs, map, entityMap);
         createEntity(ecs, globals.Game.textureAtlas, "puddle", tilePos);
     }
 
@@ -900,11 +923,14 @@ export function castExhale(
         const dir = DIRS[8][i];
 
         const { entity } = isBlocked(
-            map, entityMap, new Vector2D(pos.tilePosition.x + dir[0], pos.tilePosition.y + dir[1])
+            ecs,
+            map,
+            entityMap,
+            new Vector2D(pos.tilePosition.x + dir[0], pos.tilePosition.y + dir[1])
         );
         if (entity !== null) {
             if (entity.tags.has("moveable")) {
-                globals.Game!.commandQueue.push(new PushBackCommand(entity, i, 3, 1));
+                globals.Game!.commandQueue.push(new PushBackCommand(entity.id, i, 3, 1));
             }
         }
     }
@@ -945,7 +971,7 @@ export function castFreeze(
         if (pos.x < map.width &&
             pos.y < map.height) {
             const z = getHighestZIndexWithTile(map, pos);
-            const entities = getEntitiesAtLocation(entityMap, pos);
+            const entities = getEntitiesAtLocation(ecs, entityMap, pos);
             if (map.data[z][pos.y][pos.x]!.blocks === false || entities.length > 0) {
                 const puddle = createEntity(ecs, globals.Game!.textureAtlas, "puddle", pos);
                 setFrozen(puddle, skillData.value * 3);

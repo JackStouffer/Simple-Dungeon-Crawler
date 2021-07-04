@@ -41,6 +41,7 @@ import { getEffectiveStatData, getKnownSpells, useSpell } from "../fighter";
 import { ItemData, SpellData } from "../skills";
 import { getPotentiallyDangerousPositions } from "./goals";
 import { PassableCallback, WeightCallback } from "../rot/path/path";
+import globals from "../globals";
 
 /**
  * Calculate a path from a game object to the give x and y
@@ -117,7 +118,7 @@ function wanderAction(
     for (const dir of DIRS[8]) {
         const newPosition = new Vector2D(pos.x + dir[0], pos.y + dir[1]);
         const isAquatic = aiState.entity.tags.has("aquatic");
-        const { blocks, entity } = isBlocked(map, entityMap, newPosition);
+        const { blocks, entity } = isBlocked(ecs, map, entityMap, newPosition);
 
         if ((isAquatic && blocks === false && entity !== null && entity.tags.has("waterTile")) ||
             (!isAquatic && blocks === false)) {
@@ -131,7 +132,7 @@ function wanderAction(
     if (newPos === null) {
         return new NoOpCommand(true);
     } else {
-        return new GoToLocationCommand(aiState.entity, [newPos]);
+        return new GoToLocationCommand(aiState.entity.id, [newPos]);
     }
 }
 
@@ -146,6 +147,8 @@ function patrolAction(
     entityMap: EntityMap,
     aiState: PlannerAIComponent
 ): Command {
+    // TODO, bug: bandits in forrest_001 are not patrolling correctly
+
     const pos = aiState.entity.getOne(PositionComponent);
     const patrolState = aiState.entity.getOne(PatrolAIComponent);
     if (patrolState === undefined || pos === undefined) {
@@ -153,7 +156,8 @@ function patrolAction(
     }
     if (patrolState.patrolTarget === null) { throw new Error(`Null patrol target for entity ${aiState.entity.id}`); }
 
-    let targetPos = patrolState.patrolTarget.getOne(PositionComponent);
+    let patrolTarget = ecs.getEntity(patrolState.patrolTarget);
+    let targetPos = patrolTarget?.getOne(PositionComponent);
     if (targetPos === undefined) { throw new Error("Patrol target doesn't have a position"); }
 
     let path: Vector2D[] = getStepsTowardsTarget(
@@ -167,15 +171,15 @@ function patrolAction(
     );
     // try the next node
     if (path.length === 0) {
-        const next = patrolState.patrolTarget.getOne(PatrolPathComponent);
-        if (next === undefined) { throw new Error(`Missing patrol link on node ${patrolState.patrolTarget.id}`); }
+        const next = patrolTarget?.getOne(PatrolPathComponent);
+        if (next === undefined) { throw new Error(`Missing patrol link on node ${patrolState.patrolTarget}`); }
 
         if (next.next === null) {
             return new NoOpCommand(true);
         }
         patrolState.patrolTarget = next.next;
-
-        targetPos = patrolState.patrolTarget.getOne(PositionComponent);
+        patrolTarget = ecs.getEntity(patrolState.patrolTarget);
+        targetPos = patrolTarget?.getOne(PositionComponent);
         if (targetPos === undefined) { throw new Error("Patrol target doesn't have a position"); }
         path = getStepsTowardsTarget(
             ecs,
@@ -192,7 +196,7 @@ function patrolAction(
         return new NoOpCommand(true);
     }
 
-    return new GoToLocationCommand(aiState.entity, path);
+    return new GoToLocationCommand(aiState.entity.id, path);
 }
 
 /**
@@ -204,16 +208,24 @@ function chaseAction(
     entityMap: EntityMap,
     aiState: PlannerAIComponent
 ): Command {
-    if (aiState.target === null) { throw new Error("Cannot perform chaseAction without a target"); }
-
     const speedData = aiState.entity.getOne(SpeedComponent);
     const posData = aiState.entity.getOne(PositionComponent);
-    const targetPosData = aiState.target.getOne(PositionComponent);
+
+    const target = ecs.getEntity(aiState.targetId);
+    if (target === undefined) {
+        if (globals.Game?.debugAI === true) {
+            // eslint-disable-next-line no-console
+            console.log(`chase action for ${aiState.entity.id} is chasing a non-existent entity ${aiState.targetId}`);
+        }
+        return new NoOpCommand(true);
+    }
+
+    const targetPosData = target.getOne(PositionComponent);
     if (speedData === undefined || posData === undefined) {
         throw new Error(`Missing data for ${aiState.entity.id}`);
     }
     if (targetPosData === undefined) {
-        throw new Error(`Missing data for ${aiState.target.id}`);
+        throw new Error(`Missing data for ${aiState.targetId}`);
     }
 
     const path: Vector2D[] = getStepsTowardsTarget(
@@ -229,16 +241,25 @@ function chaseAction(
         return new NoOpCommand(true);
     }
 
-    return new GoToLocationCommand(aiState.entity, path);
+    return new GoToLocationCommand(aiState.entity.id, path);
 }
 
 /**
  * Find the weight of chasing the AI's target
  */
 function chaseWeight(ecs: World, entityMap: EntityMap, aiState: PlannerAIComponent): number {
-    if (aiState.target === null) { return 1; }
     const posData = aiState.entity.getOne(PositionComponent);
-    const targetPosData = aiState.target.getOne(PositionComponent);
+
+    const target = ecs.getEntity(aiState.targetId);
+    if (target === undefined) {
+        if (globals.Game?.debugAI === true) {
+            // eslint-disable-next-line no-console
+            console.log(`chase weight for ${aiState.entity.id} is chasing a non-existent entity ${aiState.targetId}`);
+        }
+        return 1;
+    }
+
+    const targetPosData = target.getOne(PositionComponent);
     if (posData === undefined || targetPosData === undefined) { throw new Error("no position data for ai"); }
     return tileDistanceBetweenPoints(posData.tilePosition, targetPosData.tilePosition);
 }
@@ -253,8 +274,8 @@ function meleeAttackAction(
     entityMap: EntityMap,
     aiState: PlannerAIComponent
 ): Command {
-    if (aiState.target === null) { throw new Error("Cannot perform meleeAttackAction without a target"); }
-    return new InteractCommand(aiState.entity, aiState.target);
+    if (aiState.targetId === null) { throw new Error("Cannot perform meleeAttackAction without a target"); }
+    return new InteractCommand(aiState.entity.id, aiState.targetId);
 }
 
 /**
@@ -264,9 +285,17 @@ function meleeAttackAction(
  * effective attack
  */
 function meleeAttackWeight(ecs: World, entityMap: EntityMap, aiState: PlannerAIComponent): number {
-    if (aiState.target === null) { return 1; }
-    const targetHPData = aiState.target.getOne(HitPointsComponent)!;
-    const stats = getEffectiveStatData(entityMap, aiState.entity)!;
+    const target = ecs.getEntity(aiState.targetId);
+    if (target === undefined) {
+        if (globals.Game?.debugAI === true) {
+            // eslint-disable-next-line no-console
+            console.log(`meleeAttackWeight for ${aiState.entity.id} has a non-existent target ${aiState.targetId}`);
+        }
+        return 1;
+    }
+
+    const targetHPData = target.getOne(HitPointsComponent)!;
+    const stats = getEffectiveStatData(ecs, entityMap, aiState.entity)!;
 
     return Math.max(
         1,
@@ -295,7 +324,7 @@ function useHealingItemAction(
 
     displayMessage(`${displayName.name} used a ${item.displayName}`);
 
-    return new UseSkillCommand(aiState.entity, ItemData[item.id], undefined, undefined, useItem);
+    return new UseSkillCommand(aiState.entity.id, ItemData[item.id], undefined, undefined, useItem);
 }
 
 function useHealingSpellAction(
@@ -315,7 +344,9 @@ function useHealingSpellAction(
 
     displayMessage(`${displayName.name} casted ${spell.displayName}`);
 
-    return new UseSkillCommand(aiState.entity, SpellData[spell.id], undefined, undefined, useSpell);
+    return new UseSkillCommand(
+        aiState.entity.id, SpellData[spell.id], undefined, undefined, useSpell
+    );
 }
 
 function healAllyAction(
@@ -362,7 +393,7 @@ function healAllyAction(
 
     displayMessage(`${displayName.name} casted ${spell.displayName}`);
 
-    return new UseSkillCommand(aiState.entity, SpellData[spell.id], target, undefined, useSpell);
+    return new UseSkillCommand(aiState.entity.id, SpellData[spell.id], target, undefined, useSpell);
 }
 
 /**
@@ -376,7 +407,14 @@ function castSpellAction(spellID: string): ActionUpdateFunction {
         entityMap: EntityMap,
         aiState: PlannerAIComponent
     ): Command {
-        if (aiState.target === null) { throw new Error("Cannot cast spell without a target"); }
+        const target = ecs.getEntity(aiState.targetId);
+        if (target === undefined) {
+            if (globals.Game?.debugAI === true) {
+                // eslint-disable-next-line no-console
+                console.log(`castSpellAction for ${aiState.entity.id} has a non-existent target ${aiState.targetId}`);
+            }
+            return new NoOpCommand(true);
+        }
 
         const spellData = aiState.entity.getOne(SpellsComponent);
         const displayName = aiState.entity.getOne(DisplayNameComponent);
@@ -387,11 +425,11 @@ function castSpellAction(spellID: string): ActionUpdateFunction {
         if (spells.indexOf(spellID) === -1) {
             throw new Error(`${displayName.name} does not know spell ${spellID}`);
         }
-        const targetPos = aiState.target.getOne(PositionComponent);
-        if (targetPos === undefined) { throw new Error(`Target entity ${aiState.target.id} is missing PositionComponent`); }
+        const targetPos = target.getOne(PositionComponent);
+        if (targetPos === undefined) { throw new Error(`Target entity ${aiState.targetId} is missing PositionComponent`); }
 
         return new UseSkillCommand(
-            aiState.entity,
+            aiState.entity.id,
             SpellData[spellID],
             targetPos.tilePosition,
             undefined,
@@ -408,8 +446,16 @@ function castSpellAction(spellID: string): ActionUpdateFunction {
  */
 function castSpellWeight(spellID: string) {
     return function (ecs: World, entityMap: EntityMap, aiState: PlannerAIComponent): number {
-        if (aiState.target === null) { return 1; }
-        const targetHPData = aiState.target.getOne(HitPointsComponent)!;
+        const target = ecs.getEntity(aiState.targetId);
+        if (target === undefined) {
+            if (globals.Game?.debugAI === true) {
+                // eslint-disable-next-line no-console
+                console.log(`castSpellWeight for ${aiState.entity.id} has a non-existent target ${aiState.targetId}`);
+            }
+            return 1;
+        }
+
+        const targetHPData = target.getOne(HitPointsComponent)!;
         const damage = SpellData[spellID].value ?? 1;
 
         return Math.max(
@@ -448,7 +494,7 @@ function runAwayAction(
         do {
             // TODO should also fix this to make it so the target is at least
             // n tiles away from the target we're afraid of
-            fearState.runAwayTarget = getRandomOpenSpace(map, entityMap);
+            fearState.runAwayTarget = getRandomOpenSpace(ecs, map, entityMap);
 
             path = getStepsTowardsTarget(
                 ecs,
@@ -484,7 +530,7 @@ function runAwayAction(
         fearState.runAwayTarget = null;
     }
 
-    return new GoToLocationCommand(aiState.entity, path);
+    return new GoToLocationCommand(aiState.entity.id, path);
 }
 
 function goToSafePositionAction(
@@ -532,7 +578,7 @@ function goToSafePositionAction(
     }
 
     path = path.slice(0, speedData.maxTilesPerMove);
-    return new GoToLocationCommand(aiState.entity, path);
+    return new GoToLocationCommand(aiState.entity.id, path);
 }
 
 function repositionAction(
@@ -541,10 +587,17 @@ function repositionAction(
     entityMap: EntityMap,
     aiState: PlannerAIComponent
 ): Command {
-    if (aiState.target === null) { throw new Error("Cannot perform chaseAction without a target"); }
+    const target = ecs.getEntity(aiState.targetId);
+    if (target === undefined) {
+        if (globals.Game?.debugAI === true) {
+            // eslint-disable-next-line no-console
+            console.log(`repositionAction for ${aiState.entity.id} has a non-existent target ${aiState.targetId}`);
+        }
+        return new NoOpCommand(true);
+    }
 
     const pos = aiState.entity.getOne(PositionComponent);
-    const targetPosData = aiState.target.getOne(PositionComponent);
+    const targetPosData = target.getOne(PositionComponent);
     const speedData = aiState.entity.getOne(SpeedComponent);
     if (pos === undefined || speedData === undefined || targetPosData === undefined) {
         throw new Error("Missing data when trying to reposition");
@@ -572,7 +625,7 @@ function repositionAction(
     // remove our own position
     path.shift();
     path = path.slice(0, speedData.maxTilesPerMove);
-    return new GoToLocationCommand(aiState.entity, path);
+    return new GoToLocationCommand(aiState.entity.id, path);
 }
 
 /**
@@ -580,8 +633,16 @@ function repositionAction(
  * (or run away, but that's not handled here)
  */
 function standbyWeight(ecs: World, entityMap: EntityMap, aiState: PlannerAIComponent): number {
-    if (aiState.target === null) { throw new Error("Cannot find standbyWeight without a target"); }
-    const hpData = aiState.target.getOne(HitPointsComponent);
+    const target = ecs.getEntity(aiState.targetId);
+    if (target === undefined) {
+        if (globals.Game?.debugAI === true) {
+            // eslint-disable-next-line no-console
+            console.log(`standbyWeight for ${aiState.entity.id} has a non-existent target ${aiState.targetId}`);
+        }
+        return 1;
+    }
+
+    const hpData = target.getOne(HitPointsComponent);
     if (hpData === undefined) {
         throw new Error("target is missing a HitPointsComponent");
     }
@@ -614,7 +675,7 @@ function douseFireOnSelfAction(
 
     const bfs = new Path.ReverseAStar(
         (x, y) => {
-            const entities = getEntitiesAtLocation(entityMap, new Vector2D(x, y));
+            const entities = getEntitiesAtLocation(ecs, entityMap, new Vector2D(x, y));
             for (const e of entities) {
                 if (e.tags.has("waterTile")) {
                     return true;
@@ -639,7 +700,7 @@ function douseFireOnSelfAction(
     // remove our own position
     path.shift();
     path = path.slice(0, speedData.maxTilesPerMove);
-    return new GoToLocationCommand(aiState.entity, path);
+    return new GoToLocationCommand(aiState.entity.id, path);
 }
 
 function alertAlliesAction(
@@ -650,7 +711,7 @@ function alertAlliesAction(
 ): Command {
     aiState.currentOrder = "attack";
     aiState.update();
-    return new AlertAlliesCommand(aiState.entity);
+    return new AlertAlliesCommand(aiState.entity.id);
 }
 
 type ActionUpdateFunction = (

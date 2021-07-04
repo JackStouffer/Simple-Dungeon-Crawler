@@ -1381,7 +1381,7 @@ export function loadTiledMap(
             const comp = entity.addComponent({
                 type: "PatrolPathComponent"
             }) as PatrolPathComponent;
-            comp!.next = next;
+            comp!.next = next.id;
         }
     });
 
@@ -1473,7 +1473,7 @@ export function loadTiledMap(
                         if (target === undefined) { throw new Error(`Patrol target ${patrolTarget} is not initialized`); }
                         entity.addComponent({
                             type: "PatrolAIComponent",
-                            patrolTarget: target
+                            patrolTarget: target.id
                         });
 
                         // recreate the planner
@@ -1559,14 +1559,19 @@ export function loadTiledMap(
  * Return all the objects at a given spot on the map
  */
 export function getEntitiesAtLocation(
+    ecs: World,
     entityMap: EntityMap,
     tilePos: Vector2D
 ): Entity[] {
-    return entityMap.get(`${tilePos.x},${tilePos.y}`)?.sort((a, b) => {
-        const g1 = a.getOne(GraphicsComponent)?.sprite?.zIndex ?? 0;
-        const g2 = b.getOne(GraphicsComponent)?.sprite?.zIndex ?? 0;
-        return g2 - g1;
-    }) ?? [];
+    const eIds = entityMap.get(`${tilePos.x},${tilePos.y}`) ?? [];
+    const ret: Entity[] = [];
+    for (const eId of eIds) {
+        const e = ecs.getEntity(eId);
+        if (e !== undefined) {
+            ret.push(e);
+        }
+    }
+    return ret;
 }
 
 interface BlocksResult {
@@ -1581,6 +1586,7 @@ interface BlocksResult {
  * the tile blocks, false otherwise.
  */
 export function isBlocked(
+    ecs: World,
     map: GameMap,
     entityMap: EntityMap,
     tilePos: Vector2D
@@ -1596,8 +1602,14 @@ export function isBlocked(
         }
     }
 
-    const entities = entityMap.get(`${tilePos.x},${tilePos.y}`);
-    if (entities === undefined) {
+    const entities = getEntitiesAtLocation(ecs, entityMap, tilePos);
+    entities.sort((a, b) => {
+        const g1 = a.getOne(GraphicsComponent)?.sprite?.zIndex ?? 0;
+        const g2 = b.getOne(GraphicsComponent)?.sprite?.zIndex ?? 0;
+        return g2 - g1;
+    });
+
+    if (entities.length === 0) {
         return { entity: null, blocks: false };
     }
 
@@ -1618,7 +1630,12 @@ export function isBlocked(
 /**
  * Returns true if space blocks sight, false otherwise
  */
-export function isSightBlocked(map: GameMap, entityMap: EntityMap, tilePos: Vector2D): boolean {
+export function isSightBlocked(
+    ecs: World,
+    map: GameMap,
+    entityMap: EntityMap,
+    tilePos: Vector2D
+): boolean {
     // Assumes all layers are same size
     if (tilePos.x < 0 || tilePos.y < 0 || tilePos.x >= map.width || tilePos.y >= map.height) {
         return true;
@@ -1631,10 +1648,9 @@ export function isSightBlocked(map: GameMap, entityMap: EntityMap, tilePos: Vect
         }
     }
 
-    const entities = getEntitiesAtLocation(entityMap, tilePos);
-    for (let i = 0; i < entities.length; i++) {
-        const e = entities[i];
-        if (e.tags.has("blocksSight")) { return true; }
+    const entities = getEntitiesAtLocation(ecs, entityMap, tilePos);
+    for (const e of entities) {
+        if (e.tags.has("blocksSight") === true) { return true; }
     }
 
     return false;
@@ -1736,7 +1752,7 @@ export function getRandomFighterWithinRange(
     return possible.length > 0 ? RNG.getItem(possible) : null;
 }
 
-export function getRandomOpenSpace(map: GameMap, entityMap: EntityMap): Vector2D {
+export function getRandomOpenSpace(ecs: World, map: GameMap, entityMap: EntityMap): Vector2D {
     let blocks = false;
     let entity;
     let pos: Vector2D;
@@ -1747,7 +1763,7 @@ export function getRandomOpenSpace(map: GameMap, entityMap: EntityMap): Vector2D
             randomIntFromInterval(0, map.width),
             randomIntFromInterval(0, map.height)
         );
-        ({ entity, blocks } = isBlocked(map, entityMap, pos));
+        ({ entity, blocks } = isBlocked(ecs, map, entityMap, pos));
         ++failsafe;
     } while ((entity !== null || blocks === true) && failsafe < 2000);
 

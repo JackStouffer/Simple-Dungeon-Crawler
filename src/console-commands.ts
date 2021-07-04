@@ -29,7 +29,8 @@ export function loopOnce(): void {
  */
 export function giveAllItems(): void {
     if (globals.Game === null) { throw new Error("Global game object is null"); }
-    const inventoryData = globals.Game.player.getOne(InventoryComponent);
+    const player = globals.Game.ecs.getEntity(globals.Game.playerId)!;
+    const inventoryData = player.getOne(InventoryComponent);
     if (inventoryData === undefined) { throw new Error("Global player does not have an inventory"); }
 
     for (const key in ItemData) {
@@ -42,11 +43,12 @@ export function giveAllItems(): void {
  */
 export function giveAllSpells(): void {
     if (globals.Game === null) { throw new Error("Global game object is null"); }
-    const spellData = globals.Game.player.getOne(SpellsComponent);
+    const player = globals.Game.ecs.getEntity(globals.Game.playerId)!;
+    const spellData = player.getOne(SpellsComponent);
     if (spellData === undefined) { throw new Error("Global player cannot learn spells"); }
 
     for (const key in SpellData) {
-        addSpellById(globals.Game.player, key, 10, 10);
+        addSpellById(player, key, 10, 10);
     }
 }
 
@@ -102,7 +104,7 @@ export function getEntities(x: number, y: number): Entity[] {
         return [...globals.Game.ecs.entities.values()];
     }
 
-    return getEntitiesAtLocation(globals.Game.entityMap, new Vector2D(x, y));
+    return getEntitiesAtLocation(globals.Game.ecs, globals.Game.entityMap, new Vector2D(x, y));
 }
 
 export function step(): void {

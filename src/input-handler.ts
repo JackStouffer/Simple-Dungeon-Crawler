@@ -58,7 +58,7 @@ export function mouseTarget(
         return null;
     }
 
-    const entities = getEntitiesAtLocation(entityMap, mousePosition);
+    const entities = getEntitiesAtLocation(ecs, entityMap, mousePosition);
 
     let res;
     if (excludeUninteractable) {
@@ -129,7 +129,7 @@ export function playerInput(
                     mouseDownPosition
                 );
                 if (target !== null && target !== inputState.entity) {
-                    return new InteractCommand(player, target);
+                    return new InteractCommand(player.id, target.id);
                 }
             }
 
@@ -138,15 +138,16 @@ export function playerInput(
 
             // Movement
             const path = getPlayerMovementPath(
+                ecs,
+                map,
+                entityMap,
                 playerPosition.tilePosition,
                 mouseDownPosition,
-                speedData.maxTilesPerMove,
-                map,
-                entityMap
+                speedData.maxTilesPerMove
             );
             if (path.length !== 0) {
                 return new GoToLocationCommand(
-                    player,
+                    player.id,
                     path
                 );
             }
@@ -178,7 +179,7 @@ export function playerInput(
             let command: Nullable<Command> = null;
             if (inputState.itemForTarget !== null) {
                 command = new UseSkillCommand(
-                    player,
+                    player.id,
                     ItemData[inputState.itemForTarget.id],
                     mousePosition,
                     inputState.reticleRotation,
@@ -186,7 +187,7 @@ export function playerInput(
                 );
             } else if (inputState.spellForTarget !== null) {
                 command = new UseSkillCommand(
-                    player,
+                    player.id,
                     SpellData[inputState.spellForTarget.id],
                     mousePosition,
                     inputState.reticleRotation,

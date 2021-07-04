@@ -28,7 +28,7 @@ import {
 import { ItemDataDetails, SpellDataDetails } from "./skills";
 import { Vector2D } from "./map";
 
-export type EntityMap = Map<string, Entity[]>;
+export type EntityMap = Map<string, string[]>;
 
 interface DamageAffinityMap {
     [DamageType.Physical]: Affinity;
@@ -287,8 +287,7 @@ export class SpellsComponent extends Component {
 }
 
 export class PlannerAIComponent extends Component {
-    // TODO: This should be the target's id, no entity refs across frames
-    target: Nullable<Entity>;
+    targetId: string;
     teamId: Nullable<number>;
     sightRange: number;
     planner: Planner;
@@ -304,7 +303,7 @@ export class PlannerAIComponent extends Component {
 
     static typeName = "PlannerAIComponent";
     static properties = {
-        target: EntityRef,
+        targetId: "",
         teamId: null,
         sightRange: 7,
         planner: null,
@@ -358,20 +357,20 @@ export class FallbackAIComponent extends Component {
 }
 
 export class PatrolAIComponent extends Component {
-    patrolTarget: Nullable<Entity>;
+    patrolTarget: string;
 
     static typeName = "PatrolAIComponent";
     static properties = {
-        patrolTarget: EntityRef
+        patrolTarget: ""
     }
 }
 
 export class PatrolPathComponent extends Component {
-    next: Nullable<Entity>;
+    next: string;
 
     static typeName = "PatrolPathComponent";
     static properties = {
-        next: EntityRef
+        next: ""
     }
 }
 
@@ -2037,7 +2036,7 @@ export class UpdateEntityMapSystem extends System {
             const pos = e.getOne(PositionComponent)!.tilePosition;
             const key = `${pos.x},${pos.y}`;
             const val = globals.Game.entityMap.get(key) ?? [];
-            val.push(e);
+            val.push(e.id);
             globals.Game.entityMap.set(key, val);
         }
     }
@@ -2158,7 +2157,7 @@ export function createEntity(
         const keyCommands: KeyCommand[] = [
             { key: "i", description: "Inventory", command: () => new OpenInventoryCommand() },
             { key: "m", description: "Spell Menu", command: () => new OpenSpellsCommand() },
-            { key: "r", description: "Rotate Target Reticle", command: () => new RotateReticleCommand(entity) },
+            { key: "r", description: "Rotate Target Reticle", command: () => new RotateReticleCommand(entity.id) },
             { key: "x", description: "Pass Turn", command: () => new NoOpCommand(true) }
         ];
 
@@ -2181,7 +2180,7 @@ export function createEntity(
             sightRange: data?.sightRange ?? 5,
             desiredDistanceToTarget: data?.desiredDistanceToTarget ?? 1,
             planner,
-            target: ecs.getEntity("player"), // TODO: generic target selection
+            targetId: "player", // TODO: generic target selection
             teamId: null,
             previousWorldState: {},
             currentAction: null,

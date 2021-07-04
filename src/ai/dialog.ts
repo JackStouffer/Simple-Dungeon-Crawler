@@ -23,6 +23,8 @@ import { Nullable } from "../util";
 import * as BanditDialogJSON from "../dialog/bandit.json";
 import * as GoblinDialogJSON from "../dialog/goblin.json";
 
+// TODO: Add chase state over dialog lines
+
 type DialogRule = [string, "=" | ">" | "<" | "<=" | ">=", string | number | boolean];
 
 interface DialogDefinition {
@@ -289,7 +291,7 @@ export function sayDialogDefinition(
         aiState[key] = dialog.aiStateChange[key];
     }
 
-    return new ShowSpeechBubbleCommand(ai, line);
+    return new ShowSpeechBubbleCommand(ai.id, line);
 }
 
 type QueryAlliesReturn = {

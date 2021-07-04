@@ -291,7 +291,7 @@ export class DrawPlayerSystem extends System {
         for (const entity of entities) {
             const pos = entity.getOne(PositionComponent)!;
             const inputStateData = entity.getOne(InputHandlingComponent);
-            const speedData = getEffectiveSpeedData(globals.Game!.entityMap, entity);
+            const speedData = getEffectiveSpeedData(this.world, globals.Game!.entityMap, entity);
             const graphics = entity.getOne(GraphicsComponent);
 
             if (speedData === null ||
@@ -337,7 +337,7 @@ export class DrawPlayerSystem extends System {
                 }
 
                 if (inputStateData.state === PlayerState.Combat &&
-                    globals.Game.currentActor === entity &&
+                    globals.Game.currentActor === entity.id &&
                     globals.Game.commandQueue.length === 0) {
                     const mousePosition = input.getMousePosition();
                     if (mousePosition === null) { return; }
@@ -351,11 +351,12 @@ export class DrawPlayerSystem extends System {
                     const max = speedData.maxTilesPerMove * 2;
                     if (tileDistanceBetweenPoints(pos.tilePosition, mousePosition) < max) {
                         const path = getPlayerMovementPath(
+                            this.world,
+                            globals.Game!.map,
+                            globals.Game!.entityMap,
                             pos.tilePosition,
                             mousePosition,
-                            speedData.maxTilesPerMove,
-                            globals.Game!.map,
-                            globals.Game!.entityMap
+                            speedData.maxTilesPerMove
                         );
                         if (path.length === 0) { return; }
 
@@ -365,6 +366,7 @@ export class DrawPlayerSystem extends System {
                             // If there's an entity tile like water or mud, we want
                             // to put the reticle on that instead of the tile beneath it
                             const entities = getEntitiesAtLocation(
+                                this.world,
                                 globals.Game.entityMap,
                                 step
                             );
@@ -389,7 +391,7 @@ export class DrawPlayerSystem extends System {
                         }
                     }
                 } else if (inputStateData.state === PlayerState.Target &&
-                    globals.Game.currentActor === entity &&
+                    globals.Game.currentActor === entity.id &&
                     globals.Game.commandQueue.length === 0) {
                     const mousePosition = input.getMousePosition();
                     const entityPos = entity.getOne(PositionComponent)!.tilePosition;
@@ -409,6 +411,7 @@ export class DrawPlayerSystem extends System {
                             // If there's an entity tile like water or mud, we want
                             // to put the reticle on that instead of the tile beneath it
                             const entities = getEntitiesAtLocation(
+                                this.world,
                                 globals.Game.entityMap,
                                 targetArea[i]
                             );

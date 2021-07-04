@@ -136,7 +136,7 @@ export class StatusBar {
         if (player === undefined) { throw new Error("No player entity found"); }
 
         const hpData = getEffectiveHitPointData(player);
-        const statData = getEffectiveStatData(entityMap, player);
+        const statData = getEffectiveStatData(ecs, entityMap, player);
         const levelData = player.getOne(LevelComponent);
         const inputHandlerData = player.getOne(InputHandlingComponent);
         const flammableData = player.getOne(FlammableComponent);
@@ -155,7 +155,7 @@ export class StatusBar {
         this.defenseText.text = `DEF: ${statData.defense}`;
         this.experienceText.text = `EXP: ${levelData.experience}/${(LEVEL_UP_BASE + levelData.level * LEVEL_UP_FACTOR)}`;
 
-        if (globals.Game?.player === globals.Game?.currentActor) {
+        if (globals.Game?.playerId === globals.Game?.currentActor) {
             this.stateText.text = `State: ${PlayerState[inputHandlerData.state]}`;
         } else {
             this.stateText.text = "Enemy Turn";
@@ -183,7 +183,7 @@ export class StatusBar {
                     getHighestZIndexWithTile(map, mousePosition)
                 ][mousePosition.y][mousePosition.x];
             if (tile !== null && isVisibleAndLit(map, mousePosition)) {
-                const entities = getEntitiesAtLocation(entityMap, mousePosition);
+                const entities = getEntitiesAtLocation(ecs, entityMap, mousePosition);
                 if (entities.length === 0) {
                     this.targetText.text = `${tile.name}`;
                 } else {

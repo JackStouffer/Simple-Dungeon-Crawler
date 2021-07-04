@@ -35,7 +35,7 @@ export function giveItemsInteract(actor: Entity, interactable: Entity) {
             }
 
             const interactableEntityType = interactable.getOne(TypeComponent);
-            if (actor === globals.Game.player && interactableEntityType?.entityType === "chest") {
+            if (actor.id === globals.Game.playerId && interactableEntityType?.entityType === "chest") {
                 playChestOpen();
             }
             if (interactableEntityType?.entityType === "dropped_item") {
@@ -62,7 +62,7 @@ export function giveSpellsInteract(entity: Entity, interactable: Entity): void {
     const spells = getKnownSpells(interactableSpellData);
     for (const spell of spells) {
         const res = addSpellById(entity, spell.id, spell.count, spell.maxCount);
-        if (entity === globals.Game?.player) {
+        if (entity.id === globals.Game?.playerId) {
             if (res) {
                 displayMessage(`You learned a new spell: ${spell.displayName}`);
             } else {

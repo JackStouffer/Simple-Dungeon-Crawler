@@ -1,5 +1,5 @@
 import { EventEmitter } from "events";
-import { Entity, World } from "ape-ecs";
+import { World } from "ape-ecs";
 import * as PIXI from "pixi.js";
 
 import EntityScheduler from "./rot/scheduler/ecs";
@@ -141,8 +141,9 @@ const OpeningCinematicState: GameState = {
 
     handleInput(game: SimpleDungeonCrawler) {
         if (input.isDown("Enter")) {
-            game.player = createEntity(game.ecs, game.textureAtlas, "player", new Vector2D(1, 1));
-            game.scheduler.add(game.player.id, true);
+            const e = createEntity(game.ecs, game.textureAtlas, "player", new Vector2D(1, 1));
+            game.playerId = e.id;
+            game.scheduler.add(game.playerId, true);
 
             game.openingText.visible = false;
             game.loadLevel("tutorial_001");
@@ -214,21 +215,26 @@ const GameplayState: GameState = {
     update(game: SimpleDungeonCrawler) {
         // Turn order
         if (game.currentActor === null) {
-            game.currentActor = game.ecs.getEntity(
-                game.scheduler.next()!
-            )!;
+            game.currentActor = game.scheduler.next()!;
             // Camera update
-            if (game.currentActor === game.player &&
-                game.gameCamera.following !== game.player) {
-                game.commandQueue.unshift(
-                    new MoveCameraCommand(game.map, game.gameCamera, game.currentActor)
-                );
+            if (game.currentActor === game.playerId &&
+                game.gameCamera.following !== game.playerId) {
+                const moveToEntity = game.ecs.getEntity(game.currentActor);
+                if (moveToEntity !== undefined) {
+                    game.commandQueue.unshift(
+                        new MoveCameraCommand(
+                            game.map,
+                            game.gameCamera,
+                            moveToEntity
+                        )
+                    );
+                }
             }
         }
 
         // Command generation
         if (game.currentActor !== null &&
-            game.currentActor !== game.player &&
+            game.currentActor !== game.playerId &&
             game.commandQueue.length === 0) {
             if (game.processAI) {
                 game.commandQueue.push(...generateAICommands(
@@ -247,16 +253,26 @@ const GameplayState: GameState = {
             game.processCommands();
         }
 
-        const hpData = getEffectiveHitPointData(game.player);
-        if (hpData === null || hpData.hp <= 0) {
-            game.setState(game.losingCinematicState);
+        const player = game.ecs.getEntity(game.playerId);
+        if (player !== undefined) {
+            const hpData = getEffectiveHitPointData(player);
+            if (hpData === null || hpData.hp <= 0) {
+                game.setState(game.losingCinematicState);
+            } else {
+                game.statusBar.update(game.ecs, game.map, game.entityMap);
+            }
         } else {
-            game.statusBar.update(game.ecs, game.map, game.entityMap);
+            game.setState(game.losingCinematicState);
         }
     },
 
     handleInput(game: SimpleDungeonCrawler) {
-        const inputHandlerState = game.player.getOne(InputHandlingComponent);
+        const player = game.ecs.getEntity(game.playerId);
+        if (player === undefined) {
+            return;
+        }
+
+        const inputHandlerState = player.getOne(InputHandlingComponent);
         if (inputHandlerState === undefined) {
             return;
         }
@@ -274,8 +290,8 @@ const GameplayState: GameState = {
             return;
         }
 
-        if (game.currentActor === game.player) {
-            const command = playerInput(game.ecs, game.map, game.entityMap, game.player);
+        if (game.currentActor === game.playerId) {
+            const command = playerInput(game.ecs, game.map, game.entityMap, player);
             if (command !== null) {
                 game.commandQueue.push(command);
             }
@@ -283,7 +299,7 @@ const GameplayState: GameState = {
     },
 
     render(game: SimpleDungeonCrawler): void {
-        game.gameCamera.update(game.map);
+        game.gameCamera.update(game.ecs, game.map);
         drawMap(game.gameCamera, game.map);
         game.ecs.runSystems("frame");
     }
@@ -294,7 +310,12 @@ const PauseMenuState: GameState = {
         pauseMusic();
         playUIClick();
 
-        const inputHandlerState = game.player.getOne(InputHandlingComponent);
+        const player = game.ecs.getEntity(game.playerId);
+        if (player === undefined) {
+            throw new Error("player is undefined");
+        }
+
+        const inputHandlerState = player.getOne(InputHandlingComponent);
         if (inputHandlerState === undefined) { throw new Error("player needs an input"); }
         game.keyBindingMenu.open(inputHandlerState.keyCommands);
     },
@@ -306,7 +327,12 @@ const PauseMenuState: GameState = {
     },
 
     handleInput(game: SimpleDungeonCrawler) {
-        const inputHandlerState = game.player.getOne(InputHandlingComponent);
+        const player = game.ecs.getEntity(game.playerId);
+        if (player === undefined) {
+            return;
+        }
+
+        const inputHandlerState = player.getOne(InputHandlingComponent);
         if (inputHandlerState === undefined) {
             return;
         }
@@ -326,7 +352,13 @@ const PauseMenuState: GameState = {
 const InventoryMenuState: GameState = {
     enter(game: SimpleDungeonCrawler) {
         playOpenInventory();
-        const invData = game.player.getOne(InventoryComponent)!;
+
+        const player = game.ecs.getEntity(game.playerId);
+        if (player === undefined) {
+            throw new Error("player is undefined");
+        }
+
+        const invData = player.getOne(InventoryComponent)!;
         game.inventoryMenu.open(getItems(invData));
     },
 
@@ -336,8 +368,13 @@ const InventoryMenuState: GameState = {
     },
 
     handleInput(game: SimpleDungeonCrawler) {
-        const inputHandlerState = game.player.getOne(InputHandlingComponent);
-        const playerInventory = game.player.getOne(InventoryComponent);
+        const player = game.ecs.getEntity(game.playerId);
+        if (player === undefined) {
+            return;
+        }
+
+        const inputHandlerState = player.getOne(InputHandlingComponent);
+        const playerInventory = player.getOne(InventoryComponent);
         if (playerInventory === undefined ||
             inputHandlerState === undefined) {
             return;
@@ -367,7 +404,7 @@ const InventoryMenuState: GameState = {
                     game.setState(game.gameplayState);
 
                     game.commandQueue.push(new UseSkillCommand(
-                        game.player,
+                        game.playerId,
                         ItemData[item.id],
                         undefined,
                         undefined,
@@ -396,7 +433,13 @@ const InventoryMenuState: GameState = {
 const SpellMenuState: GameState = {
     enter(game: SimpleDungeonCrawler) {
         playOpenSpells();
-        const spellsData = game.player.getOne(SpellsComponent)!;
+
+        const player = game.ecs.getEntity(game.playerId);
+        if (player === undefined) {
+            throw new Error("player is undefined");
+        }
+
+        const spellsData = player.getOne(SpellsComponent)!;
         game.spellSelectionMenu.open(getKnownSpells(spellsData));
     },
 
@@ -406,9 +449,14 @@ const SpellMenuState: GameState = {
     },
 
     handleInput(game: SimpleDungeonCrawler) {
-        const inputHandlerState = game.player.getOne(InputHandlingComponent);
-        const playerSpells = game.player.getOne(SpellsComponent);
-        const playerSilence = game.player.getOne(SilenceableComponent);
+        const player = game.ecs.getEntity(game.playerId);
+        if (player === undefined) {
+            return;
+        }
+
+        const inputHandlerState = player.getOne(InputHandlingComponent);
+        const playerSpells = player.getOne(SpellsComponent);
+        const playerSilence = player.getOne(SilenceableComponent);
         if (playerSpells === undefined ||
             inputHandlerState === undefined) {
             return;
@@ -446,7 +494,7 @@ const SpellMenuState: GameState = {
                 case SpellType.WildDamage:
                 case SpellType.Push:
                     game.commandQueue.push(new UseSkillCommand(
-                        game.player,
+                        game.playerId,
                         SpellData[spell.id],
                         undefined,
                         undefined,
@@ -501,8 +549,8 @@ export class SimpleDungeonCrawler {
     deltaTime: DOMHighResTimeStamp;
 
     scheduler: EntityScheduler;
-    player: Entity;
-    currentActor: Nullable<Entity>;
+    playerId: string;
+    currentActor: Nullable<string>;
     commandQueue: Command[];
     map: GameMap;
     entityMap: EntityMap;
@@ -734,12 +782,13 @@ export class SimpleDungeonCrawler {
         });
 
         this.currentActor = null;
-        this.player = createEntity(this.ecs, this.textureAtlas, "player", new Vector2D(1, 1));
+        const p = createEntity(this.ecs, this.textureAtlas, "player", new Vector2D(1, 1));
+        this.playerId = p.id;
         this.totalTurns = 1;
 
         this.loadLevel("tutorial_001");
-        this.scheduler.add(this.player.id, true);
-        this.gameCamera.following = this.player;
+        this.scheduler.add(this.playerId, true);
+        this.gameCamera.following = this.playerId;
 
         const log = globals.document.getElementById("log");
         if (log === null) { return; }
@@ -770,7 +819,7 @@ export class SimpleDungeonCrawler {
         if (globals.gameEventEmitter === null) { throw new Error("Global gameEventEmitter cannot be null"); }
 
         for (const e of this.ecs.entities.values()) {
-            if (e.id !== this.player.id) {
+            if (e.id !== this.playerId) {
                 removeEntity(this.ecs, e);
             }
         }
@@ -789,7 +838,7 @@ export class SimpleDungeonCrawler {
         }
 
         this.scheduler.clear();
-        this.scheduler.add(this.player.id, true);
+        this.scheduler.add(this.playerId, true);
 
         const { map, playerLocation, shadowBoxes, teams } = loadTiledMap(
             this.ecs,
@@ -801,7 +850,12 @@ export class SimpleDungeonCrawler {
         this.shadowBoxes = shadowBoxes;
         this.entityTeams = teams;
 
-        const playerPos = this.player.getOne(PositionComponent);
+        const player = this.ecs.getEntity(this.playerId);
+        if (player === undefined) {
+            throw new Error("player is undefined");
+        }
+
+        const playerPos = player.getOne(PositionComponent);
         if (playerPos === undefined) { throw new Error("Player doesn't have a PositionComponent"); }
         playerPos.worldPosition = playerLocation;
         playerPos.tilePosition = this.gameCamera.worldPositionToTile(playerPos.worldPosition);
@@ -811,7 +865,7 @@ export class SimpleDungeonCrawler {
             query.refresh();
         }
         this.ecs.runSystems("postTurn");
-        this.gameCamera.update(this.map);
+        this.gameCamera.update(this.ecs, this.map);
 
         playLevelTheme(name);
     }
@@ -821,15 +875,15 @@ export class SimpleDungeonCrawler {
             const command = this.commandQueue[i];
 
             if (command.setUp !== undefined && !command.isSetUp) {
-                command.setUp();
+                command.setUp(this.ecs);
                 command.isSetUp = true;
             }
 
-            command.update(this.deltaTime);
+            command.update(this.ecs, this.deltaTime);
 
             if (command.isFinished()) {
                 if (command.usedTurn()) {
-                    if (this.currentActor === this.player) {
+                    if (this.currentActor === this.playerId) {
                         this.ecs.runSystems("postOneTurnCycle");
                         this.totalTurns++;
                     }
@@ -840,7 +894,7 @@ export class SimpleDungeonCrawler {
 
 
                 if (command.tearDown !== undefined) {
-                    command.tearDown();
+                    command.tearDown(this.ecs);
                 }
                 this.commandQueue.splice(i, 1);
                 --i;

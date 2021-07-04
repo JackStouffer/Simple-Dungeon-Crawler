@@ -60,7 +60,12 @@ export function createPassableCallback(origin: Vector2D): PassableCallback {
         if (origin.x === x && origin.y === y) {
             return true;
         }
-        const { blocks } = isBlocked(globals.Game.map, globals.Game.entityMap, new Vector2D(x, y));
+        const { blocks } = isBlocked(
+            globals.Game.ecs,
+            globals.Game.map,
+            globals.Game.entityMap,
+            new Vector2D(x, y)
+        );
 
         return !blocks;
     };
@@ -78,7 +83,10 @@ export function createWaterBasedPassableCallback(origin: Vector2D): PassableCall
             return true;
         }
         const { blocks, entity } = isBlocked(
-            globals.Game.map, globals.Game.entityMap, new Vector2D(x, y)
+            globals.Game.ecs,
+            globals.Game.map,
+            globals.Game.entityMap,
+            new Vector2D(x, y)
         );
 
         if (blocks) { return false; }
@@ -115,14 +123,14 @@ export function generateWeightCallback(
             const dir = DIRS[8][i];
             const delta = new Vector2D(x + dir[0], y + dir[1]);
 
-            if (!isBlocked(map, entityMap, delta).blocks) {
+            if (!isBlocked(ecs, map, entityMap, delta).blocks) {
                 neighbors.push(delta);
             }
         }
 
         let weight = Math.max(Math.abs(x - origin.x), Math.abs(y - origin.y));
         if (x !== origin.x || y !== origin.y) {
-            const entities = getEntitiesAtLocation(entityMap, new Vector2D(x, y));
+            const entities = getEntitiesAtLocation(ecs, entityMap, new Vector2D(x, y));
             for (let i = 0; i < entities.length; i++) {
                 const e = entities[i];
                 const trigger = e.getOne(TriggerTypeComponent);
@@ -160,7 +168,7 @@ export function generateWeightCallback(
                 const n = neighbors[i];
                 // TODO, speed: take another look at this, getting entities twice for a lot
                 // of locations
-                const entities = getEntitiesAtLocation(entityMap, n);
+                const entities = getEntitiesAtLocation(ecs, entityMap, n);
 
                 for (let j = 0; j < entities.length; j++) {
                     const e = entities[j];
@@ -212,17 +220,18 @@ export interface Command {
      * be run. Which is why the set up instructions are not in
      * the constructor.
      */
-    setUp?: () => void;
-    tearDown?: () => void;
-    update: (dt: DOMHighResTimeStamp) => void;
+    setUp?: (ecs: World) => void;
+    tearDown?: (ecs: World) => void;
+    update: (ecs: World, dt: DOMHighResTimeStamp) => void;
 }
 
 export function getPlayerMovementPath(
+    ecs: World,
+    map: GameMap,
+    entityMap: EntityMap,
     origin: Vector2D,
     destination: Vector2D,
     maxTilesPerMove: number,
-    map: GameMap,
-    entityMap: EntityMap
 ): Vector2D[] {
     // quick distance check to cut down the number of
     // AStar calcs
@@ -239,7 +248,7 @@ export function getPlayerMovementPath(
             return [];
         }
 
-        if (isBlocked(map, entityMap, destination).blocks === true) {
+        if (isBlocked(ecs, map, entityMap, destination).blocks === true) {
             return [];
         }
 
@@ -291,7 +300,7 @@ export class NoOpCommand implements Command {
 export class GoToLocationCommand implements Command {
     blocks: boolean = true;
     isSetUp: boolean = false;
-    readonly entity: Entity;
+    readonly entityId: string;
     readonly path: Vector2D[];
     tilesMoved: number = 0;
     done: boolean = false;
@@ -300,9 +309,9 @@ export class GoToLocationCommand implements Command {
     // point is saved in the command so it's possible to tell where a wayward
     // command came from. Possible to save some sort of stacktrace? Maybe overkill.
     // Maybe just a function name?
-    constructor(entity: Entity, path: Vector2D[]) {
+    constructor(entityId: string, path: Vector2D[]) {
         if (path.length === 0) { throw new Error("Zero length path for GoToLocationCommand"); }
-        this.entity = entity;
+        this.entityId = entityId;
         this.path = path;
     }
 
@@ -314,9 +323,10 @@ export class GoToLocationCommand implements Command {
         return this.done;
     }
 
-    update(deltaTime: DOMHighResTimeStamp): void {
+    update(ecs: World, deltaTime: DOMHighResTimeStamp): void {
         const destination = this.path[0];
         const { blocks } = isBlocked(
+            globals.Game!.ecs,
             globals.Game!.map,
             globals.Game!.entityMap,
             destination
@@ -326,11 +336,17 @@ export class GoToLocationCommand implements Command {
             return;
         }
 
-        const graphics = this.entity.getOne(GraphicsComponent);
+        const entity = ecs.getEntity(this.entityId);
+        if (entity === undefined) {
+            this.done = true;
+            return;
+        }
+
+        const graphics = entity.getOne(GraphicsComponent);
         if (graphics === undefined || graphics.sprite === null) { throw new Error("No graphics for entity"); }
 
-        const pos = this.entity.getOne(PositionComponent);
-        if (pos === undefined) { throw new Error(`Entity ${this.entity.id} does not have a position for GoToLocationCommand`); }
+        const pos = entity.getOne(PositionComponent);
+        if (pos === undefined) { throw new Error(`Entity ${this.entityId} does not have a position for GoToLocationCommand`); }
 
         const speed = .25;
         const startDistance = tileDistanceBetweenPoints(
@@ -364,8 +380,12 @@ export class GoToLocationCommand implements Command {
             this.path.shift();
 
             // Triggers and spreading fire
-            const actorFlammableData = this.entity.getOne(FlammableComponent);
-            const entities = globals.Game!.entityMap.get(`${destination.x},${destination.y}`) ?? [];
+            const actorFlammableData = entity.getOne(FlammableComponent);
+            const entities = getEntitiesAtLocation(
+                ecs,
+                globals.Game!.entityMap,
+                destination
+            );
             for (let i = 0; i < entities.length; i++) {
                 const e = entities[i];
                 const triggerData = e.getOne(TriggerTypeComponent);
@@ -391,22 +411,22 @@ export class GoToLocationCommand implements Command {
                 if (triggerData !== undefined) {
                     switch (triggerData.currentTriggerType) {
                         case TriggerType.Event:
-                            eventTrigger(this.entity, e);
+                            eventTrigger(entity, e);
                             break;
                         case TriggerType.Fire:
-                            fireTrigger(this.entity, e);
+                            fireTrigger(ecs, globals.Game!.entityMap, entity, e);
                             break;
                         case TriggerType.ShallowWater:
-                            shallowWaterTrigger(this.entity);
+                            shallowWaterTrigger(entity);
                             break;
                         case TriggerType.DeepWater:
-                            deepWaterTrigger(this.entity);
+                            deepWaterTrigger(entity);
                             break;
                         case TriggerType.Mud:
-                            mudTrigger(this.entity);
+                            mudTrigger(entity);
                             break;
                         case TriggerType.Steam:
-                            steamTrigger(this.entity);
+                            steamTrigger(ecs, globals.Game!.entityMap, entity);
                             break;
                         case TriggerType.Ice: {
                             const vecX = destination.x - pos.tilePosition.x;
@@ -414,7 +434,7 @@ export class GoToLocationCommand implements Command {
                             // TODO: pushing directly onto the command queue sort of sucks
                             globals.Game!.commandQueue.push(
                                 new GoToLocationCommand(
-                                    this.entity,
+                                    this.entityId,
                                     [new Vector2D(destination.x + vecX, destination.y + vecY)]
                                 )
                             );
@@ -429,7 +449,11 @@ export class GoToLocationCommand implements Command {
 
             // check for max movement differences in case one of the
             // triggers changed it
-            const speedData = getEffectiveSpeedData(globals.Game!.entityMap, this.entity);
+            const speedData = getEffectiveSpeedData(
+                globals.Game!.ecs,
+                globals.Game!.entityMap,
+                entity
+            );
             if (speedData !== null && speedData.maxTilesPerMove <= this.tilesMoved) {
                 this.done = true;
                 return;
@@ -448,14 +472,14 @@ export class GoToLocationCommand implements Command {
 export class PushBackCommand implements Command {
     blocks = false;
     isSetUp: boolean = false;
-    readonly entity: Entity;
+    readonly entityId: string;
     readonly dir: number;
     numTiles: number;
     tilesMoved: number = 0;
     readonly stunProbability: number;
 
-    constructor(entity: Entity, dir: number, numTiles: number, stunProbability: number = 0.3) {
-        this.entity = entity;
+    constructor(entityId: string, dir: number, numTiles: number, stunProbability: number = 0.3) {
+        this.entityId = entityId;
         this.dir = dir;
         this.numTiles = numTiles;
         this.stunProbability = stunProbability;
@@ -469,15 +493,24 @@ export class PushBackCommand implements Command {
         return this.tilesMoved === this.numTiles;
     }
 
-    tearDown() {
+    tearDown(ecs: World) {
+        const entity = ecs.getEntity(this.entityId);
+        if (entity === undefined) { return; }
+
         if (Math.random() <= this.stunProbability) {
-            setStunned(this.entity, 1);
+            setStunned(entity, 1);
         }
     }
 
-    update(deltaTime: DOMHighResTimeStamp): void {
-        const pos = this.entity.getOne(PositionComponent);
-        if (pos === undefined) { throw new Error(`Entity ${this.entity.id} does not have a position for PushBackCommand`); }
+    update(ecs: World, deltaTime: DOMHighResTimeStamp): void {
+        const entity = ecs.getEntity(this.entityId);
+        if (entity === undefined) {
+            this.tilesMoved = this.numTiles;
+            return;
+        }
+
+        const pos = entity.getOne(PositionComponent);
+        if (pos === undefined) { throw new Error(`Entity ${this.entityId} does not have a position for PushBackCommand`); }
 
         const step = DIRS[8][this.dir];
         const destination = new Vector2D(
@@ -485,6 +518,7 @@ export class PushBackCommand implements Command {
             pos.tilePosition.y + step[1]
         );
         const { blocks, entity: blocker } = isBlocked(
+            globals.Game!.ecs,
             globals.Game!.map,
             globals.Game!.entityMap,
             destination
@@ -492,17 +526,24 @@ export class PushBackCommand implements Command {
         if (blocks === true) {
             const tilesLeft = this.numTiles - this.tilesMoved;
             const damage = (this.numTiles * 3) + (tilesLeft * 2);
-            takeDamage(this.entity, damage, false, DamageType.Physical);
+            takeDamage(ecs, globals.Game!.entityMap, entity, damage, false, DamageType.Physical);
             if (Math.random() > 0.3) {
-                const stunned = setStunned(this.entity, 3);
+                const stunned = setStunned(entity, 3);
                 if (stunned) {
-                    const displayName = this.entity.getOne(DisplayNameComponent)!;
+                    const displayName = entity.getOne(DisplayNameComponent)!;
                     displayMessage(`${displayName.name} is now stunned`, MessageType.StatusEffect);
                 }
             }
 
             if (blocker !== null) {
-                takeDamage(blocker, damage, false, DamageType.Physical);
+                takeDamage(
+                    ecs,
+                    globals.Game!.entityMap,
+                    blocker,
+                    damage,
+                    false,
+                    DamageType.Physical
+                );
 
                 if (Math.random() <= this.stunProbability) {
                     setStunned(blocker, 1);
@@ -511,7 +552,7 @@ export class PushBackCommand implements Command {
                     // TODO, cleanup: Pushing directly onto the command queue sort of sucks.
                     // Have some way for commands to cleanly spawn other commands
                     globals.Game?.commandQueue.push(
-                        new PushBackCommand(blocker, this.dir, tilesLeft)
+                        new PushBackCommand(blocker.id, this.dir, tilesLeft)
                     );
                 }
             }
@@ -544,8 +585,12 @@ export class PushBackCommand implements Command {
             this.tilesMoved++;
 
             // Triggers and spreading fire
-            const actorFlammableData = this.entity.getOne(FlammableComponent);
-            const entities = globals.Game!.entityMap.get(`${destination.x},${destination.y}`) ?? [];
+            const actorFlammableData = entity.getOne(FlammableComponent);
+            const entities = getEntitiesAtLocation(
+                ecs,
+                globals.Game!.entityMap,
+                destination
+            );
             for (let i = 0; i < entities.length; i++) {
                 const e = entities[i];
                 const triggerData = e.getOne(TriggerTypeComponent);
@@ -571,22 +616,22 @@ export class PushBackCommand implements Command {
                 if (triggerData !== undefined) {
                     switch (triggerData.currentTriggerType) {
                         case TriggerType.Event:
-                            eventTrigger(this.entity, e);
+                            eventTrigger(entity, e);
                             break;
                         case TriggerType.Fire:
-                            fireTrigger(this.entity, e);
+                            fireTrigger(ecs, globals.Game!.entityMap, entity, e);
                             break;
                         case TriggerType.ShallowWater:
-                            shallowWaterTrigger(this.entity);
+                            shallowWaterTrigger(entity);
                             break;
                         case TriggerType.DeepWater:
-                            deepWaterTrigger(this.entity);
+                            deepWaterTrigger(entity);
                             break;
                         case TriggerType.Mud:
-                            mudTrigger(this.entity);
+                            mudTrigger(entity);
                             break;
                         case TriggerType.Steam:
-                            steamTrigger(this.entity);
+                            steamTrigger(ecs, globals.Game!.entityMap, entity);
                             break;
                         case TriggerType.Ice:
                             this.numTiles++;
@@ -607,13 +652,13 @@ export class PushBackCommand implements Command {
 export class InteractCommand implements Command {
     blocks = true;
     isSetUp: boolean = false;
-    private readonly entity: Entity;
-    private interacted: boolean = true;
-    private readonly target: Entity;
+    readonly entityId: string;
+    interacted: boolean = true;
+    readonly targetId: string;
 
-    constructor(entity: Entity, target: Entity) {
-        this.entity = entity;
-        this.target = target;
+    constructor(entityId: string, targetId: string) {
+        this.entityId = entityId;
+        this.targetId = targetId;
     }
 
     usedTurn(): boolean {
@@ -624,27 +669,33 @@ export class InteractCommand implements Command {
         return true;
     }
 
-    update(): void {
-        const actorStats = this.entity.getOne(StatsComponent);
-        const interactableData = this.target.getOne(InteractableTypeComponent);
-        const hpData = this.target.getOne(HitPointsComponent);
+    update(ecs: World): void {
+        const entity = ecs.getEntity(this.entityId);
+        const target = ecs.getEntity(this.targetId);
+        if (entity === undefined || target === undefined) {
+            return;
+        }
+
+        const actorStats = entity.getOne(StatsComponent);
+        const interactableData = target.getOne(InteractableTypeComponent);
+        const hpData = target.getOne(HitPointsComponent);
 
         if (interactableData !== undefined) {
             switch (interactableData.interactableType) {
                 case InteractableType.Door:
-                    doorInteract(this.entity, this.target);
+                    doorInteract(entity, target);
                     break;
                 case InteractableType.GiveItems:
-                    giveItemsInteract(this.entity, this.target);
+                    giveItemsInteract(entity, target);
                     break;
                 case InteractableType.GiveSpells:
-                    giveSpellsInteract(this.entity, this.target);
+                    giveSpellsInteract(entity, target);
                     break;
                 case InteractableType.LoadLevel:
-                    levelLoadInteract(this.entity, this.target);
+                    levelLoadInteract(entity, target);
                     break;
                 case InteractableType.Rest:
-                    restPointInteract(this.entity);
+                    restPointInteract(entity);
                     break;
                 default:
                     assertUnreachable(interactableData.interactableType);
@@ -655,7 +706,7 @@ export class InteractCommand implements Command {
         }
 
         if (hpData !== undefined && actorStats !== undefined) {
-            attack(this.entity, this.target);
+            attack(ecs, globals.Game!.entityMap, entity, target);
             this.interacted = true;
             return;
         }
@@ -718,24 +769,24 @@ type SkillCallback = (e: Entity, id: string) => void;
 export class UseSkillCommand implements Command {
     blocks: boolean = true;
     isSetUp: boolean = false;
-    private didUseTurn: boolean = false;
-    private readonly entity: Entity;
-    private readonly rotation: number | undefined;
-    private readonly details: SpellDataDetails | ItemDataDetails;
-    private target: Vector2D | undefined;
-    private particleEmitter: Nullable<particles.Emitter> = null;
-    private effectGraphics: Nullable<PIXI.Graphics> = null;
-    private effectTween: Nullable<Tween> = null;
-    private readonly skillCallback: SkillCallback | undefined;
+    didUseTurn: boolean = false;
+    readonly entityId: string;
+    readonly rotation: number | undefined;
+    readonly details: SpellDataDetails | ItemDataDetails;
+    target: Vector2D | undefined;
+    particleEmitter: Nullable<particles.Emitter> = null;
+    effectGraphics: Nullable<PIXI.Graphics> = null;
+    effectTween: Nullable<Tween> = null;
+    readonly skillCallback: SkillCallback | undefined;
 
     constructor(
-        entity: Entity,
+        entityId: string,
         details: SpellDataDetails | ItemDataDetails,
         target?: Vector2D,
         rotation?: number,
         cb?: SkillCallback
     ) {
-        this.entity = entity;
+        this.entityId = entityId;
         this.target = target;
         this.rotation = rotation;
         this.details = details;
@@ -760,7 +811,10 @@ export class UseSkillCommand implements Command {
         return true;
     }
 
-    setUp() {
+    setUp(ecs: World) {
+        const entity = ecs.getEntity(this.entityId);
+        if (entity === undefined) { return; }
+
         // TODO, bug: this does not work right now
         // Wild spell target selection
         if (this.details.type === SpellType.WildDamage ||
@@ -768,12 +822,12 @@ export class UseSkillCommand implements Command {
             const targetedEntity = getRandomFighterWithinRange(
                 globals.Game!.ecs,
                 globals.Game!.map,
-                this.entity.getOne(PositionComponent)!.tilePosition,
+                entity.getOne(PositionComponent)!.tilePosition,
                 16
             );
 
             if (targetedEntity === null) {
-                if (this.entity.id === "player") {
+                if (entity.id === "player") {
                     displayMessage("No target is close enough to use the scroll");
                 }
 
@@ -786,7 +840,7 @@ export class UseSkillCommand implements Command {
 
         this.didUseTurn = this.details.useFunc(
             this.details,
-            this.entity,
+            entity,
             globals.Game!.ecs,
             globals.Game!.map,
             globals.Game!.entityMap,
@@ -796,7 +850,7 @@ export class UseSkillCommand implements Command {
 
         if (this.didUseTurn) {
             if (this.skillCallback !== undefined) {
-                this.skillCallback(this.entity, this.details.id);
+                this.skillCallback(entity, this.details.id);
             }
 
             if (this.details.effect === "particles" &&
@@ -808,10 +862,17 @@ export class UseSkillCommand implements Command {
                     // the API requires a container at the location rather than the
                     // location. So get either the entity sprite there or the highest
                     // tile sprite.
-                    const entity = getEntitiesAtLocation(
+                    const entities = getEntitiesAtLocation(
+                        ecs,
                         globals.Game!.entityMap,
                         this.target
-                    )[0];
+                    );
+                    entities.sort((a, b) => {
+                        const g1 = a.getOne(GraphicsComponent)?.sprite?.zIndex ?? 0;
+                        const g2 = b.getOne(GraphicsComponent)?.sprite?.zIndex ?? 0;
+                        return g2 - g1;
+                    });
+                    const entity = entities[0];
 
                     if (entity !== undefined) {
                         sprite = entity.getOne(GraphicsComponent)?.sprite ?? undefined;
@@ -830,7 +891,7 @@ export class UseSkillCommand implements Command {
                         sprite = tile.sprite;
                     }
                 } else if (this.details.particles.particleLocation === "self") {
-                    sprite = this.entity.getOne(GraphicsComponent)?.sprite ?? undefined;
+                    sprite = entity.getOne(GraphicsComponent)?.sprite ?? undefined;
                 }
 
                 this.particleEmitter = new particles.Emitter(
@@ -846,7 +907,7 @@ export class UseSkillCommand implements Command {
             if (this.details.effect === "lightning" &&
                 this.details.lightning !== undefined &&
                 this.target !== undefined) {
-                const tilePos = this.entity.getOne(PositionComponent)!.tilePosition;
+                const tilePos = entity.getOne(PositionComponent)!.tilePosition;
                 const screenPos = globals.Game!.gameCamera.tilePositionToScreen(tilePos);
                 this.effectGraphics = createLightningTexture(
                     screenPos.x,
@@ -877,7 +938,7 @@ export class UseSkillCommand implements Command {
         }
     }
 
-    update(deltaTime: DOMHighResTimeStamp): void {
+    update(ecs: World, deltaTime: DOMHighResTimeStamp): void {
         if (this.didUseTurn && this.particleEmitter !== null && this.particleEmitter.emit) {
             this.particleEmitter.update(deltaTime * .001);
         }
@@ -900,10 +961,10 @@ export class UseSkillCommand implements Command {
 export class RotateReticleCommand implements Command {
     blocks: boolean = true;
     isSetUp: boolean = false;
-    readonly entity: Entity;
+    readonly entityId: string;
 
-    constructor(entity: Entity) {
-        this.entity = entity;
+    constructor(entityId: string) {
+        this.entityId = entityId;
     }
 
     usedTurn(): boolean {
@@ -914,8 +975,11 @@ export class RotateReticleCommand implements Command {
         return true;
     }
 
-    update(): void {
-        const inputHandlerState = this.entity.getOne(InputHandlingComponent);
+    update(ecs: World): void {
+        const entity = ecs.getEntity(this.entityId);
+        if (entity === undefined) { return; }
+
+        const inputHandlerState = entity.getOne(InputHandlingComponent);
         if (inputHandlerState === undefined) { return; }
 
         switch(inputHandlerState.reticleRotation) {
@@ -946,14 +1010,14 @@ export class RotateReticleCommand implements Command {
 export class ShowSpeechBubbleCommand implements Command {
     blocks: boolean = true;
     isSetUp: boolean = false;
-    entity: Entity;
+    entityId: string;
     dialog: string;
     duration: number;
     private effectGraphics: Nullable<PIXI.Graphics> = null;
     private effectTween: Nullable<Tween> = null;
 
-    constructor(entity: Entity, dialog: string, duration: number = 1000) {
-        this.entity = entity;
+    constructor(entityId: string, dialog: string, duration: number = 1000) {
+        this.entityId = entityId;
         this.dialog = dialog;
         this.duration = duration;
     }
@@ -966,8 +1030,11 @@ export class ShowSpeechBubbleCommand implements Command {
         return this.effectTween !== null ? this.effectTween.finished : true;
     }
 
-    setUp(): void {
-        const tilePos = this.entity.getOne(PositionComponent)!.tilePosition;
+    setUp(ecs: World): void {
+        const entity = ecs.getEntity(this.entityId);
+        if (entity === undefined) { return; }
+
+        const tilePos = entity.getOne(PositionComponent)!.tilePosition;
         const screenPos = globals.Game!.gameCamera.tilePositionToScreen(tilePos);
 
         // Only show if we're on screen
@@ -992,7 +1059,7 @@ export class ShowSpeechBubbleCommand implements Command {
         }
     }
 
-    update(deltaTime: DOMHighResTimeStamp): void {
+    update(ecs: World, deltaTime: DOMHighResTimeStamp): void {
         if (this.effectTween !== null) {
             this.effectTween.update(deltaTime);
         }
@@ -1011,10 +1078,10 @@ export class ShowSpeechBubbleCommand implements Command {
 export class AlertAlliesCommand implements Command {
     blocks: boolean = true;
     isSetUp: boolean = false;
-    readonly entity: Entity;
+    readonly entityId: string;
 
-    constructor(entity: Entity) {
-        this.entity = entity;
+    constructor(entityId: string) {
+        this.entityId = entityId;
     }
 
     usedTurn(): boolean {
@@ -1025,8 +1092,11 @@ export class AlertAlliesCommand implements Command {
         return true;
     }
 
-    update(): void {
-        const ai = this.entity.getOne(PlannerAIComponent);
+    update(ecs: World): void {
+        const entity = ecs.getEntity(this.entityId);
+        if (entity === undefined) { return; }
+
+        const ai = entity.getOne(PlannerAIComponent);
         if (ai !== undefined && ai.teamId !== null) {
             const team = globals.Game!.entityTeams.get(ai.teamId);
             if (team !== undefined) {
@@ -1045,19 +1115,19 @@ export class MoveCameraCommand implements Command {
     isSetUp: boolean = false;
     map: GameMap;
     camera: Camera;
-    to: Entity;
     duration: number;
+    entityId: string;
     private xTween: Nullable<Tween> = null;
     private yTween: Nullable<Tween> = null;
-    private readonly position: Vector2D;
+    readonly position: Vector2D;
 
     constructor(map: GameMap, camera: Camera, to: Entity, duration: Nullable<number> = null) {
         this.map = map;
         this.camera = camera;
         this.camera.following = null;
+        this.entityId = to.id;
 
-        this.to = to;
-        const pos = this.to.getOne(PositionComponent)!;
+        const pos = to.getOne(PositionComponent)!;
         this.position = camera.clamp(
             pos.worldPosition.x, pos.worldPosition.y, map.width, map.height
         );
@@ -1079,7 +1149,7 @@ export class MoveCameraCommand implements Command {
         const finished = this.xTween !== null ? this.xTween.finished : true;
 
         if (finished) {
-            this.camera.following = this.to;
+            this.camera.following = this.entityId;
         }
 
         return finished;
@@ -1106,7 +1176,7 @@ export class MoveCameraCommand implements Command {
         });
     }
 
-    update(deltaTime: DOMHighResTimeStamp): void {
+    update(ecs: World, deltaTime: DOMHighResTimeStamp): void {
         if (this.xTween !== null && this.yTween !== null) {
             this.xTween.update(deltaTime);
             this.yTween.update(deltaTime);

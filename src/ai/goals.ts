@@ -35,12 +35,21 @@ function resolveTargetInLOS(ecs: World, entityMap: EntityMap, ai: Entity): boole
 
 function resolveNextToTarget(ecs: World, entityMap: EntityMap, ai: Entity): boolean {
     const aiState = ai.getOne(PlannerAIComponent);
-    if (aiState === undefined || aiState.target === null) {
+    if (aiState === undefined || aiState.targetId === null) {
         throw new Error(`Entity ${ai.id} is missing a target`);
     }
 
+    const target = ecs.getEntity(aiState.targetId);
+    if (target === undefined) {
+        if (globals.Game?.debugAI === true) {
+            // eslint-disable-next-line no-console
+            console.log(`resolveNextToTarget for ${aiState.entity.id} has a non-existent target ${aiState.targetId}`);
+        }
+        return false;
+    }
+
     const pos = ai.getOne(PositionComponent);
-    const targetPos = aiState.target.getOne(PositionComponent);
+    const targetPos = target.getOne(PositionComponent);
     if (pos === undefined || targetPos === undefined) {
         throw new Error(`Entity ${ai.id} is missing data for resolveNextToTarget`);
     }
@@ -49,12 +58,21 @@ function resolveNextToTarget(ecs: World, entityMap: EntityMap, ai: Entity): bool
 
 function resolveAtDesiredDistance(ecs: World, entityMap: EntityMap, ai: Entity): boolean {
     const aiState = ai.getOne(PlannerAIComponent);
-    if (aiState === undefined || aiState.target === null) {
+    if (aiState === undefined || aiState.targetId === null) {
         throw new Error(`Entity ${ai.id} is missing a target`);
     }
 
     const pos = ai.getOne(PositionComponent);
-    const targetPos = aiState.target.getOne(PositionComponent);
+
+    const target = ecs.getEntity(aiState.targetId);
+    if (target === undefined) {
+        if (globals.Game?.debugAI === true) {
+            // eslint-disable-next-line no-console
+            console.log(`resolveAtDesiredDistance for ${aiState.entity.id} has a non-existent target ${aiState.targetId}`);
+        }
+        return false;
+    }
+    const targetPos = target.getOne(PositionComponent);
     if (pos === undefined || targetPos === undefined) {
         throw new Error(`Entity ${ai.id} is missing data for resolveNextToTarget`);
     }
@@ -217,7 +235,7 @@ function resolveAllyLowHealth(ecs: World, entityMap: EntityMap, ai: Entity): boo
     let targetHPData: Nullable<HitPointsComponent> = null;
     for (const e of entities) {
         // TODO: remove when we have target selection/factions
-        if (e === aiData.target || e === ai) { continue; }
+        if (e.id === aiData.targetId || e === ai) { continue; }
 
         const hpData = e.getOne(HitPointsComponent)!;
         const ePos = e.getOne(PositionComponent)!;
@@ -280,7 +298,7 @@ export function getPotentiallyDangerousPositions(
 
             if (positions.has(`${x},${y}`)) { continue; }
 
-            const entitiesAtLocation = getEntitiesAtLocation(entityMap, new Vector2D(x, y));
+            const entitiesAtLocation = getEntitiesAtLocation(ecs, entityMap, new Vector2D(x, y));
             for (const e of entitiesAtLocation) {
                 if (e === entity) { continue; }
 
@@ -351,7 +369,7 @@ function resolveInDangerousArea(ecs: World, entityMap: EntityMap, ai: Entity): b
 
 function resolveTargetKilled(ecs: World, entityMap: EntityMap, ai: Entity) {
     const aiState = ai.getOne(PlannerAIComponent);
-    return aiState !== undefined && aiState.target === null;
+    return aiState !== undefined && aiState.targetId === null;
 }
 
 export function resolveAfraid(ecs: World, entityMap: EntityMap, ai: Entity) {
@@ -389,13 +407,16 @@ export function resolveAliveAllies(ecs: World, entityMap: EntityMap, ai: Entity)
     const pos = ai.getOne(PositionComponent)!;
     for (const id of team.memberIds) {
         if (ai.id === id) { continue; }
-        const e = ecs.getEntity(id);
-        if (e === undefined) { continue; }
+        const teamMember = ecs.getEntity(id);
+        if (teamMember === undefined) { continue; }
 
-        const ePos = e.getOne(PositionComponent)!;
-        const hpData = e.getOne(HitPointsComponent)!;
-        if (tileDistanceBetweenPoints(ePos.tilePosition, pos.tilePosition) < 12 &&
-            hpData.hp > 0) {
+        const teamMemberPos = teamMember.getOne(PositionComponent);
+        const teamMemberHP = teamMember.getOne(HitPointsComponent);
+
+        if (teamMemberPos !== undefined &&
+            teamMemberHP !== undefined &&
+            tileDistanceBetweenPoints(teamMemberPos.tilePosition, pos.tilePosition) < 12 &&
+            teamMemberHP.hp > 0) {
             return true;
         }
     }
