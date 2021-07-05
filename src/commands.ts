@@ -815,7 +815,6 @@ export class UseSkillCommand implements Command {
         const entity = ecs.getEntity(this.entityId);
         if (entity === undefined) { return; }
 
-        // TODO, bug: this does not work right now
         // Wild spell target selection
         if (this.details.type === SpellType.WildDamage ||
             this.details.type === ItemType.WildDamageScroll) {

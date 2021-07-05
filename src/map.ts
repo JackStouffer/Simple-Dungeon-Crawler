@@ -1744,7 +1744,7 @@ export function getRandomFighterWithinRange(
     for (const e of entities) {
         const pos = e.getOne(PositionComponent)!;
         const d = tileDistanceBetweenPoints(origin, pos.tilePosition);
-        if (origin.isEqual(pos.tilePosition) && d <= maxDistance) {
+        if (!origin.isEqual(pos.tilePosition) && d <= maxDistance) {
             possible.push(e);
         }
     }
