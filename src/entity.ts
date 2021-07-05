@@ -272,7 +272,7 @@ export class DamageAffinityComponent extends Component {
     };
 }
 
-interface KnownSpellData {
+export interface KnownSpellData {
     count: number;
     maxCount: number;
 }

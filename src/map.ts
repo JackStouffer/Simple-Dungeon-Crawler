@@ -22,6 +22,7 @@ import {
     GraphicsComponent,
     HitPointsComponent,
     InventoryComponent,
+    KnownSpellData,
     PatrolPathComponent,
     PlannerAIComponent,
     PositionComponent
@@ -29,7 +30,7 @@ import {
 import { Camera, Rectangle } from "./camera";
 import { Nullable, randomIntFromInterval } from "./util";
 import { createPlanner } from "./ai/commands";
-import { ItemData } from "./skills";
+import { ItemData, SpellData } from "./skills";
 import { TILE_SIZE, TriggerType } from "./constants";
 
 const COLOR_AMBIENT_LIGHT = "rgb(50, 50, 50)";
@@ -1460,12 +1461,16 @@ export function loadTiledMap(
                     }
 
                     if (spellId !== null) {
-                        entity.addComponent({
-                            type: "SpellsComponent",
-                            knownSpells: new Map<string, number>([
-                                [spellId, 5]
-                            ])
-                        });
+                        const spellData = SpellData[spellId];
+                        if (spellData === undefined) { throw new Error(`${spellId} is not a valid spell`); }
+
+                        const spells: { [key: string]: KnownSpellData } = {
+                            [spellId]: {
+                                count: spellData.baseCastCount,
+                                maxCount: spellData.baseCastCount
+                            }
+                        };
+                        entity.addComponent({ type: "SpellsComponent", knownSpells: spells });
                     }
 
                     if (patrolTarget !== null) {
