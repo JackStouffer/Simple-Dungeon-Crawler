@@ -690,36 +690,44 @@ interface KeyCommandMenuRow {
 }
 
 export class KeyBindingMenu {
-    private state: "selection" | "change";
-    private currentSelection: number;
-    private readonly currentStage: PIXI.Container;
+    state: "selection" | "change";
+    currentSelection: number;
+    readonly viewport: PIXI.Rectangle;
+    readonly currentStage: PIXI.Container;
 
-    private readonly background: PIXI.Graphics;
-    private readonly titleText: PIXI.Text;
+    readonly background: PIXI.Graphics;
+    readonly titleText: PIXI.Text;
 
-    private menuItems: KeyCommandMenuRow[];
+    menuItems: KeyCommandMenuRow[];
 
-    private readonly unselectedStyle = { fontFamily : "monospace", fontSize: 14, fill : 0xFFFFFF };
-    private readonly selectedStyle = { fontFamily : "monospace", fontSize: 14, fill : 0x0 };
+    readonly unselectedStyle = { fontFamily : "monospace", fontSize: 14, fill : 0xFFFFFF };
+    readonly selectedStyle = { fontFamily : "monospace", fontSize: 14, fill : 0x0 };
 
-    constructor(stage: PIXI.Container) {
+    constructor(viewport: PIXI.Rectangle, stage: PIXI.Container) {
         this.state = "selection";
         this.currentSelection = 0;
         this.currentStage = stage;
+        this.viewport = viewport;
 
+        const backgroundLineWidth = 4;
         this.background = new PIXI.Graphics();
-        this.background.lineStyle(4, 0x999999, 1);
+        this.background.lineStyle(backgroundLineWidth, 0x999999, 1, 1);
         this.background.beginFill(0x000000);
-        this.background.drawRect(0, 0, 928, 608);
+        this.background.drawRect(
+            0,
+            0,
+            viewport.width - (backgroundLineWidth * 2),
+            viewport.height - (backgroundLineWidth * 2)
+        );
         this.background.endFill();
-        this.background.x = 0;
-        this.background.y = 0;
+        this.background.x = backgroundLineWidth;
+        this.background.y = backgroundLineWidth;
         this.background.zIndex = 20;
         this.background.visible = false;
 
         this.titleText = new PIXI.Text("Keybindings", { fontFamily : "monospace", fontSize: 24, fill : 0xFFFFFF, align : "center" });
-        this.titleText.x = 380;
-        this.titleText.y = 0;
+        this.titleText.x = (viewport.width / 2) - (this.titleText.width / 2);
+        this.titleText.y = 5 + backgroundLineWidth;
         this.titleText.zIndex = 21;
         this.titleText.visible = false;
 
@@ -740,21 +748,21 @@ export class KeyBindingMenu {
             const y = 20 * (i + 2);
 
             const bg = new PIXI.Sprite(PIXI.Texture.WHITE);
-            bg.width = 900;
+            bg.width = this.viewport.width * 0.98;
             bg.height = 20;
-            bg.x = 12;
+            bg.x = this.viewport.width * 0.01;
             bg.y = y - 3;
             bg.zIndex = 21;
             bg.visible = false;
 
             const description = new PIXI.Text(command.description, this.unselectedStyle);
-            description.x = 20;
+            description.x = this.viewport.width * 0.05;
             description.y = y;
             description.zIndex = 22;
             description.visible = true;
 
             const key = new PIXI.Text(command.key, this.unselectedStyle);
-            key.x = 600;
+            key.x = this.viewport.width * 0.80;
             key.y = y;
             key.zIndex = 22;
             key.visible = true;
