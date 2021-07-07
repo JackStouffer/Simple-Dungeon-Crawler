@@ -1362,8 +1362,11 @@ export function loadTiledMap(
             id: o.id.toString(10),
             c: {
                 PositionComponent: {
-                    x: Math.floor(o.x / tileSize),
-                    y: Math.floor(o.y / tileSize)
+                    worldPosition: new Vector2D(o.x, o.y),
+                    tilePosition: new Vector2D(
+                        Math.floor(o.x / tileSize),
+                        Math.floor(o.y / tileSize)
+                    )
                 }
             }
         });

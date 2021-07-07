@@ -238,11 +238,6 @@
                          "value":"bandit_mage"
                         }, 
                         {
-                         "name":"patrolTarget",
-                         "type":"object",
-                         "value":18
-                        }, 
-                        {
                          "name":"teamId",
                          "type":"int",
                          "value":1
@@ -251,8 +246,8 @@
                  "type":"object",
                  "visible":true,
                  "width":0,
-                 "x":588.342211434972,
-                 "y":1216.85433216775
+                 "x":614.41783073093,
+                 "y":1192.40843907779
                 }, 
                 {
                  "height":0,
@@ -327,6 +322,11 @@
                          "value":"bandit"
                         }, 
                         {
+                         "name":"patrolTarget",
+                         "type":"object",
+                         "value":15
+                        }, 
+                        {
                          "name":"teamId",
                          "type":"int",
                          "value":1
@@ -335,8 +335,8 @@
                  "type":"object",
                  "visible":true,
                  "width":0,
-                 "x":696.9067774051,
-                 "y":1215.99318532716
+                 "x":758.021510130002,
+                 "y":1083.98536264137
                 }, 
                 {
                  "height":0,
@@ -469,6 +469,49 @@
                  "width":0,
                  "x":634.778357235984,
                  "y":647.816166883964
+                }, 
+                {
+                 "height":0,
+                 "id":48,
+                 "name":"Bandit",
+                 "point":true,
+                 "properties":[
+                        {
+                         "name":"commander",
+                         "type":"bool",
+                         "value":false
+                        }, 
+                        {
+                         "name":"fallbackPosition",
+                         "type":"object",
+                         "value":14
+                        }, 
+                        {
+                         "name":"inventory",
+                         "type":"string",
+                         "value":""
+                        }, 
+                        {
+                         "name":"objectType",
+                         "type":"string",
+                         "value":"bandit"
+                        }, 
+                        {
+                         "name":"patrolTarget",
+                         "type":"object",
+                         "value":17
+                        }, 
+                        {
+                         "name":"teamId",
+                         "type":"int",
+                         "value":1
+                        }],
+                 "rotation":0,
+                 "type":"object",
+                 "visible":true,
+                 "width":0,
+                 "x":575.293350717079,
+                 "y":1190.51499348109
                 }],
          "opacity":1,
          "type":"objectgroup",
@@ -636,7 +679,7 @@
          "y":0
         }],
  "nextlayerid":10,
- "nextobjectid":48,
+ "nextobjectid":49,
  "orientation":"orthogonal",
  "renderorder":"right-down",
  "tiledversion":"1.4.3",
