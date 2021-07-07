@@ -19,6 +19,8 @@ const musicChannel: SoundChannel = {
     sound: null
 };
 
+// TODO, cleanup: Load sounds async with the game code
+
 export async function loadSounds() {
     await Promise.all([
         new Promise(function(resolve, reject) {

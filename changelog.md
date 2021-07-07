@@ -2,7 +2,7 @@
 
 ## Version 12
 
-_In Development_
+_July 7, 2021_
 
 * Gameplay
   * Enemies now have "barks" and dialog

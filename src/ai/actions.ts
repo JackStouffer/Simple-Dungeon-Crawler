@@ -147,8 +147,6 @@ function patrolAction(
     entityMap: EntityMap,
     aiState: PlannerAIComponent
 ): Command {
-    // TODO, bug: bandits in forrest_001 are not patrolling correctly
-
     const pos = aiState.entity.getOne(PositionComponent);
     const patrolState = aiState.entity.getOne(PatrolAIComponent);
     if (patrolState === undefined || pos === undefined) {
@@ -355,6 +353,7 @@ function healAllyAction(
     entityMap: EntityMap,
     aiState: PlannerAIComponent
 ): Command {
+    // TODO: this should generate a move camera command to the entity being healed
     const pos = aiState.entity.getOne(PositionComponent);
     const spells = aiState.entity.getOne(SpellsComponent);
     const displayName = aiState.entity.getOne(DisplayNameComponent);
@@ -371,7 +370,7 @@ function healAllyAction(
         .fromAll(PositionComponent, PlannerAIComponent, HitPointsComponent)
         .execute();
 
-    // SPEED this information is being calculated twice, once here
+    // TODO, SPEED: this information is being calculated twice, once here
     // and once in the goals
     let target: Nullable<Vector2D> = null;
     let targetHPPercent: Nullable<number> = null;
@@ -759,8 +758,6 @@ export const ActionData: { [key: string]: Action } = {
         updateFunction: chaseAction,
         weight: () => 1
     },
-    // TODO, BUG: White mage currently will stand by even when they can't see the target
-    // They should chase if they lose sight
     "standby": {
         preconditions: {
             targetPositionKnown: true,

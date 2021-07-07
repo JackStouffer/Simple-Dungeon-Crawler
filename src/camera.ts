@@ -45,6 +45,8 @@ export class Camera {
     }
 
     clamp(x: number, y: number, width: number, height: number): Vector2D {
+        // TODO, bug: The camera prevents itself from going past the top of the map
+        // but not the bottom
         let dx = Math.floor(x - (this.viewport.width / 4));
         let dy = Math.floor(y - (this.viewport.height / 4));
 

@@ -650,6 +650,11 @@ export class PushBackCommand implements Command {
  * attacking the fighter
  */
 export class InteractCommand implements Command {
+    // TODO, cleanup: This needs to be completely rethought. Too much
+    // logic is happening in the update function here. Really we should
+    // have different commands for each interactable type and attacking
+    // should really be its own thing.
+
     blocks = true;
     isSetUp: boolean = false;
     readonly entityId: string;

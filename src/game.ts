@@ -592,7 +592,7 @@ export class SimpleDungeonCrawler {
         this.debugAI = false;
         this.debugAIDialog = false;
 
-        this.pixiApp = new PIXI.Application({ width: 1024, height: 608 });
+        this.pixiApp = new PIXI.Application({ width: 1216, height: 640 });
 
         const canvasContainer: Nullable<HTMLElement> = globals.document.getElementById("canvas");
         if (canvasContainer === null) { throw new Error("this.canvas cannot be null"); }
