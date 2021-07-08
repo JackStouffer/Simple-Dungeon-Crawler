@@ -4,8 +4,9 @@ import { Nullable, randomFromInterval } from "./util";
 const sounds: { [key: string]: Howl } = {};
 
 const levelThemes: { [key: string]: string } = {
-    "forrest_001": "forrestTheme",
-    "durdwin_001": "caveTheme"
+    "tutorial_001": "forrestTheme",
+    "tutorial_002": "forrestTheme",
+    "forrest_001": "forrestTheme"
 };
 
 interface SoundChannel {

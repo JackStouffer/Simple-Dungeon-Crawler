@@ -1,5 +1,12 @@
 # Changelog
 
+## Version 13
+
+_In Development_
+
+* Technical
+  * Refactored chest updating to less over engineered. Just flip the texture key and then follow the normal code path
+
 ## Version 12
 
 _July 7, 2021_

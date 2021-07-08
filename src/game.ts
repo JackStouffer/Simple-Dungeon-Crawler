@@ -52,7 +52,7 @@ import {
     RemoveAfterNTurnsComponent,
     RemoveAfterNTurnsSystem,
     LoadLevelComponent,
-    ChestGraphicsComponent,
+    ChestComponent,
     WetableComponent,
     SilenceableComponent,
     UpdateEntityMapSystem,
@@ -103,7 +103,7 @@ import {
 import { getItems, hasItem, InventoryItemDetails, useItem } from "./inventory";
 import { assertUnreachable, Nullable } from "./util";
 import { DeathSystem, getEffectiveHitPointData, getKnownSpells, LevelUpSystem, UpdateSchedulerSystem, useSpell } from "./fighter";
-import { DrawChestsSystem, DrawPlayerSystem, DrawSystem } from "./graphics";
+import { UpdateChestsSystem, DrawPlayerSystem, DrawSystem } from "./graphics";
 import { LightingSystem } from "./lighting";
 import {
     OnFireSystem,
@@ -675,7 +675,7 @@ export class SimpleDungeonCrawler {
         this.ecs.registerComponent(TypeComponent, 100);
         this.ecs.registerComponent(DisplayNameComponent, 100);
         this.ecs.registerComponent(GraphicsComponent, 100);
-        this.ecs.registerComponent(ChestGraphicsComponent, 10);
+        this.ecs.registerComponent(ChestComponent, 10);
         this.ecs.registerComponent(LightingComponent, 20);
         this.ecs.registerComponent(InventoryComponent, 20);
         this.ecs.registerComponent(HitPointsComponent, 50);
@@ -710,13 +710,13 @@ export class SimpleDungeonCrawler {
 
         this.ecs.registerSystem("frame", LightingSystem);
         this.ecs.registerSystem("frame", DrawSystem);
-        this.ecs.registerSystem("frame", DrawChestsSystem);
         this.ecs.registerSystem("frame", DrawPlayerSystem);
 
         this.ecs.registerSystem("postTurn", DeathSystem);
         this.ecs.registerSystem("postTurn", UpdateSchedulerSystem);
         this.ecs.registerSystem("postTurn", UpdateEntityMapSystem);
         this.ecs.registerSystem("postTurn", UpdateEntityTeamsSystem);
+        this.ecs.registerSystem("postTurn", UpdateChestsSystem);
 
         this.ecs.registerSystem("postOneTurnCycle", RemoveAfterNTurnsSystem);
         this.ecs.registerSystem("postOneTurnCycle", UpdateHitPointsEffectsSystem);

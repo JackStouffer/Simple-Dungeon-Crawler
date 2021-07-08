@@ -104,20 +104,14 @@ export class GraphicsComponent extends Component {
     }
 }
 
-export class ChestGraphicsComponent extends Component {
-    textureKey: string;
+export class ChestComponent extends Component {
     openTextureKey: string;
-    sprite: Nullable<PIXI.Sprite>;
-    opacity: number;
-    zIndex: number;
+    closedTextureKey: string;
 
-    static typeName = "ChestGraphicsComponent";
+    static typeName = "ChestComponent";
     static properties = {
-        textureKey: "",
         openTextureKey: "",
-        sprite: null,
-        opacity: 1,
-        zIndex: 10
+        closedTextureKey: ""
     }
 }
 
@@ -632,11 +626,14 @@ export const ObjectData: { [key: string]: ObjectDataDetails } = {
                     race: null,
                     classification: "object"
                 },
-                ChestGraphicsComponent: {
+                GraphicsComponent: {
                     textureKey: "chest_1_closed",
-                    openTextureKey: "chest_1_open",
                     sprite: null,
                     zIndex: 5
+                },
+                ChestComponent: {
+                    closedTextureKey: "chest_1_closed",
+                    openTextureKey: "chest_1_open"
                 },
                 InteractableTypeComponent: {
                     interactableType: InteractableType.GiveItems
@@ -2109,7 +2106,7 @@ export function createEntity(
         });
     }
 
-    const graphics = entity.getOne(GraphicsComponent) ?? entity.getOne(ChestGraphicsComponent);
+    const graphics = entity.getOne(GraphicsComponent);
     if (graphics !== undefined) {
         graphics.sprite = new PIXI.Sprite(textures[graphics.textureKey]);
         globals.Game.pixiApp.stage.addChild(graphics.sprite);
@@ -2199,7 +2196,7 @@ export function createEntity(
 export function removeEntity(ecs: World, entity: Entity) {
     if (globals.Game === null) { throw new Error("Global game is null"); }
 
-    const graphicData = entity.getOne(GraphicsComponent) ?? entity.getOne(ChestGraphicsComponent);
+    const graphicData = entity.getOne(GraphicsComponent);
     if (graphicData !== undefined && graphicData.sprite !== null) {
         globals.Game.pixiApp.stage.removeChild(graphicData.sprite);
         graphicData.sprite.visible = false;

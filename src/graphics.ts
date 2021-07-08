@@ -2,8 +2,9 @@ import { Entity, Query, System } from "ape-ecs";
 import * as PIXI from "pixi.js";
 import { GlowFilter } from "pixi-filters";
 
+import globals from "./globals";
 import {
-    ChestGraphicsComponent,
+    ChestComponent,
     FlammableComponent,
     GraphicsComponent,
     InputHandlingComponent,
@@ -15,8 +16,6 @@ import input from "./input";
 import { tileDistanceBetweenPoints, getEntitiesAtLocation, getHighestZIndexWithTile, Vector2D, isVisibleAndLit } from "./map";
 import { PlayerState } from "./input-handler";
 import { getPlayerMovementPath } from "./commands";
-import { getItems } from "./inventory";
-import globals from "./globals";
 import { getEffectiveSpeedData } from "./fighter";
 import { ItemDataDetails, SpellDataDetails } from "./skills";
 import { Nullable, randomIntFromInterval } from "./util";
@@ -128,49 +127,34 @@ export class DrawSystem extends System {
 }
 
 /**
- * Draw all chests which have a ChestGraphicsComponent, a PositionComponent,
- * and an InventoryComponent. Looks in the inventory and changes the sprite
- * if it's empty.
+ * Update chest's graphics by looking in the inventory and changing the sprite
+ * if it's empty
  */
-export class DrawChestsSystem extends System {
-    private chestGraphics: Query;
+export class UpdateChestsSystem extends System {
+    chestGraphics: Query;
 
     init() {
         this.chestGraphics = this
             .createQuery()
-            .fromAll(ChestGraphicsComponent, PositionComponent, InventoryComponent)
+            .fromAll(GraphicsComponent, ChestComponent, InventoryComponent)
             .persist();
     }
 
     update() {
-        if (globals.Game === null) { throw new Error("Global game is null"); }
-
         const entities = this.chestGraphics.execute();
         for (const entity of entities) {
-            const pos = entity.getOne(PositionComponent)!;
-            const graphics = entity.getOne(ChestGraphicsComponent);
+            const graphics = entity.getOne(GraphicsComponent);
+            const chestData = entity.getOne(ChestComponent);
 
-            if (graphics === undefined || graphics.sprite === null) { throw new Error("Missing graphics data on chest"); }
+            if (graphics === undefined ||
+                graphics.sprite === null ||
+                chestData === undefined) { throw new Error("Missing graphics data on chest"); }
 
-            if (globals.Game.map.visibilityData[pos.tilePosition.y][pos.tilePosition.x].explored) {
-                const inventory = entity.getOne(InventoryComponent)!;
-
-                graphics.sprite.visible = true;
-
-                if (getItems(inventory).length === 0) {
-                    graphics.sprite.texture = globals.Game.textureAtlas[graphics.openTextureKey];
-                }
-
-                const { x, y } = globals.Game.gameCamera.tilePositionToScreen(pos.tilePosition);
-                graphics.sprite.position.set(x, y);
-                graphics.sprite.scale.set(
-                    globals.Game!.gameCamera.zoom,
-                    globals.Game!.gameCamera.zoom
-                );
-                graphics.sprite.alpha = graphics.opacity;
-                graphics.sprite.zIndex = graphics.zIndex;
+            const inventory = entity.getOne(InventoryComponent)!;
+            if (inventory.inventory.size === 0) {
+                graphics.sprite.texture = globals.Game!.textureAtlas[chestData.openTextureKey];
             } else {
-                graphics.sprite.visible = false;
+                graphics.sprite.texture = globals.Game!.textureAtlas[chestData.closedTextureKey];
             }
         }
     }
