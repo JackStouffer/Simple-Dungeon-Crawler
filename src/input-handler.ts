@@ -26,6 +26,8 @@ import { useSpell } from "./fighter";
 
 export interface KeyCommand {
     key: string;
+    /** nice display for meta keys like Control -> Ctrl */
+    keyDisplay: string;
     description: string;
     command: () => Command;
 }

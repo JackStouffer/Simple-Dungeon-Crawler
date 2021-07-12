@@ -721,8 +721,7 @@ export class InteractCommand implements Command {
 }
 
 /**
- * Generates a function to put the game into the inventory_menu state.
- * @return {Function} A function which always returns false
+ * Put the game into the inventory_menu state
  */
 export class OpenInventoryCommand implements Command {
     blocks: boolean = true;
@@ -1184,6 +1183,50 @@ export class MoveCameraCommand implements Command {
         if (this.xTween !== null && this.yTween !== null) {
             this.xTween.update(deltaTime);
             this.yTween.update(deltaTime);
+        }
+    }
+}
+
+export class ZoomInCameraCommand implements Command {
+    blocks: boolean = true;
+    isSetUp: boolean = false;
+
+    usedTurn(): boolean {
+        return false;
+    }
+
+    isFinished(): boolean {
+        return true;
+    }
+
+    update(): void {
+        const g = globals.Game;
+        if (g === null) { throw new Error("Global Game object is null"); }
+
+        if (g.gameCamera.zoom !== 4) {
+            g.gameCamera.zoom += 1;
+        }
+    }
+}
+
+export class ZoomOutCameraCommand implements Command {
+    blocks: boolean = true;
+    isSetUp: boolean = false;
+
+    usedTurn(): boolean {
+        return false;
+    }
+
+    isFinished(): boolean {
+        return true;
+    }
+
+    update(): void {
+        const g = globals.Game;
+        if (g === null) { throw new Error("Global Game object is null"); }
+
+        if (g.gameCamera.zoom !== 1) {
+            g.gameCamera.zoom -= 1;
         }
     }
 }

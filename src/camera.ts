@@ -40,6 +40,8 @@ export class Camera {
 
         // make the camera follow the sprite
         const point = this.clamp(pos.worldPosition.x, pos.worldPosition.y, map.width, map.height);
+        // const screenPos = this.worldPositionToScreen(pos.worldPosition);
+        // const point = this.clamp(screenPos.x, screenPos.y, map.width, map.height);
         this.x = point.x;
         this.y = point.y;
     }
@@ -47,22 +49,22 @@ export class Camera {
     clamp(x: number, y: number, width: number, height: number): Vector2D {
         // TODO, bug: The camera prevents itself from going past the top of the map
         // but not the bottom
-        let dx = Math.floor(x - (this.viewport.width / 4));
-        let dy = Math.floor(y - (this.viewport.height / 4));
+        let dx = Math.floor(x - (this.viewport.width / (this.zoom * 2)));
+        let dy = Math.floor(y - (this.viewport.height / (this.zoom * 2)));
 
         // clamp values
         dx = Math.max(
             0,
             Math.min(
                 dx,
-                (width * this.tileSize)
+                (width * this.tileSize * this.zoom)
             )
         );
         dy = Math.max(
             0,
             Math.min(
                 dy,
-                (height * this.tileSize)
+                (height * this.tileSize * this.zoom)
             )
         );
         return new Vector2D(dx, dy);

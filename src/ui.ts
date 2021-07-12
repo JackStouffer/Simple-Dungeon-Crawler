@@ -761,7 +761,7 @@ export class KeyBindingMenu {
             description.zIndex = 22;
             description.visible = true;
 
-            const key = new PIXI.Text(command.key, this.unselectedStyle);
+            const key = new PIXI.Text(command.keyDisplay, this.unselectedStyle);
             key.x = this.viewport.width * 0.80;
             key.y = y;
             key.zIndex = 22;
@@ -819,10 +819,23 @@ export class KeyBindingMenu {
         } else if (this.state === "change") {
             playUIClick();
 
-            const key: Nullable<string> = input.getFirstKeyPressed();
-            if (key !== null) {
-                keyCommands[this.currentSelection].key = key;
-                this.menuItems[this.currentSelection].key.text = key;
+            const formatTable: { [key: string]: string } = {
+                "Control": "Ctrl",
+                "Shift": "Shift",
+                "Command": "Cmd",
+                "Alt": "Alt"
+            };
+
+            const keys = input.getPressedKeys();
+            if (keys.length === 2 && keys[0] in formatTable) {
+                keyCommands[this.currentSelection].key = `${keys[0]} ${keys[1]}`;
+                keyCommands[this.currentSelection].keyDisplay = `${formatTable[keys[0]]} ${keys[1].toUpperCase()}`;
+                this.menuItems[this.currentSelection].key.text = `${formatTable[keys[0]]} ${keys[1].toUpperCase()}`;
+                this.state = "selection";
+            } else if (keys.length === 1 && !(keys[0] in formatTable)) {
+                keyCommands[this.currentSelection].key = keys[0];
+                keyCommands[this.currentSelection].keyDisplay = keys[0].toUpperCase();
+                this.menuItems[this.currentSelection].key.text = keys[0].toUpperCase();
                 this.state = "selection";
             }
         }

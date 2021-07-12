@@ -1,4 +1,3 @@
-import { get } from "lodash";
 import globals from "./globals";
 import { Vector2D } from "./map";
 import { Nullable } from "./util";
@@ -17,7 +16,24 @@ function init(): void {
 
     globals.window.addEventListener("keydown", function (e: KeyboardEvent) {
         e.preventDefault();
-        pressed.add(e.key);
+
+        if (e.ctrlKey) {
+            pressed.add("Control");
+        }
+        if (e.shiftKey) {
+            pressed.add("Shift");
+        }
+        if (e.altKey) {
+            pressed.add("Alt");
+        }
+        // TODO, speed: this should be a regex but I was getting really odd spurious failures
+        // with them
+        if (e.metaKey && window.navigator.platform.indexOf("Mac") > -1) {
+            pressed.add("Command");
+        }
+        if (e.key !== "Meta" && e.key !== "Command" && e.key !== "Alt" && e.key !== "Shift") {
+            pressed.add(e.key);
+        }
     });
 
     globals.Game.canvas.addEventListener("mousedown", function (e: MouseEvent) {
@@ -51,16 +67,19 @@ function pressMouse(): void {
  * Check if a key is down
  */
 function isDown(key: string): boolean {
-    return pressed.has(key);
+    // TODO, speed, cleanup: The meta/shift key situation should be stored
+    // as a boolean on the key command so we don't have to do string parsing
+    const keys = key.split(" ");
+    for (const k of keys) {
+        if (!pressed.has(k)) {
+            return false;
+        }
+    }
+    return true;
 }
 
-/**
- * Of all the keys pressed, get the first one. Relies
- * on JS Sets preserving insertion order.
- * @returns {string} the name of the key
- */
-function getFirstKeyPressed(): Nullable<string> {
-    return get([...pressed.values()], "[0]", null);
+function getPressedKeys(): string[] {
+    return [...pressed.values()];
 }
 
 /**
@@ -134,7 +153,7 @@ export default {
     isDown,
     pressKey,
     pressMouse,
-    getFirstKeyPressed,
+    getPressedKeys,
     getLeftMouseDown,
     getMousePosition,
     clearInputs
