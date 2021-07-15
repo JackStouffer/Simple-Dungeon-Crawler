@@ -4,6 +4,8 @@
 
 _In Development_
 
+* Gameplay
+  * Keybind system now allows you to use modifier keys (shift, ctrl) in your bindings
 * Technical
   * Refactored chest updating to less over engineered. Just flip the texture key and then follow the normal code path
 

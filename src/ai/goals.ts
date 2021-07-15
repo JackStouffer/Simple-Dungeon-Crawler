@@ -285,6 +285,8 @@ export function getPotentiallyDangerousPositions(
 
     let closeTileOnFire: boolean = false;
     for (const e of flammableEntitiesQuery.values()) {
+        if (e.id === entity.id) { continue; }
+
         const tilePos = e.getOne(PositionComponent)!.tilePosition;
         const fireData = e.getOne(FlammableComponent)!;
         if (fireData.onFire && tileDistanceBetweenPoints(tilePos, entityTilePos) < sightRange) {
@@ -300,7 +302,7 @@ export function getPotentiallyDangerousPositions(
 
             const entitiesAtLocation = getEntitiesAtLocation(ecs, entityMap, new Vector2D(x, y));
             for (const e of entitiesAtLocation) {
-                if (e === entity) { continue; }
+                if (e.id === entity.id) { continue; }
 
                 const flammableData = e.getOne(FlammableComponent);
                 const fireTriggerData = e.getOne(FireTriggerComponent);
