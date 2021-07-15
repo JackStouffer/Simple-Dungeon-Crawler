@@ -20,7 +20,6 @@ export class Camera {
     readonly tileSize: number = TILE_SIZE;
     viewport: Rectangle;
     following: Nullable<string>;
-    // TODO: does pixi.js have a projection thing with WebGL? Can we use that to zoom?
     zoom: number;
 
     constructor(viewport: Rectangle) {

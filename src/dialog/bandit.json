@@ -31,6 +31,7 @@
                 ["said_bandit_loses_sight_of_player", "=", false],
                 ["race", "=", "human"],
                 ["knows_target_position", "=", true],
+                ["has_alive_allies", "=", true],
                 ["turns_with_target_out_of_sight", ">", 1],
                 ["on_fire", "=", false],
                 ["is_confused", "=", false],
@@ -44,6 +45,29 @@
             "aiStateChange": {},
             "dialogMemoryChange": {
                 "said_bandit_loses_sight_of_player": true
+            }
+        },
+        {
+            "name": "bandit_chase_end",
+            "respondingTo": null,
+            "rules": [
+                ["said_bandit_chase_end", "=", false],
+                ["race", "=", "human"],
+                ["turns_with_target_out_of_sight", "=", "{{lose_track_after_n_turns}}"],
+                ["has_alive_allies", "=", true],
+                ["on_fire", "=", false],
+                ["is_confused", "=", false],
+                ["is_afraid", "=", false]
+            ],
+            "dialog": [
+                "He got away!",
+                "We'll never catch him now."
+            ],
+            "aiStateChange": {
+                "knowsTargetPosition": false
+            },
+            "dialogMemoryChange": {
+                "said_bandit_chase_end": true
             }
         },
         {
@@ -121,6 +145,24 @@
             "aiStateChange": {},
             "dialogMemoryChange": {
                 "said_bandit_afraid": true
+            }
+        },
+        {
+            "name": "bandit_confused",
+            "respondingTo": null,
+            "rules": [
+                ["race", "=", "human"],
+                ["said_bandit_confused", "=", false],
+                ["is_confused", "=", true],
+                ["on_fire", "=", false]
+            ],
+            "dialog": [
+                "Wha ... where am I?",
+                "What the ... where'd you go?"
+            ],
+            "aiStateChange": {},
+            "dialogMemoryChange": {
+                "said_bandit_confused": true
             }
         },
         {

@@ -61,7 +61,8 @@ import {
     removeEntity,
     EntityTeamMap,
     DialogMemoryComponent,
-    UpdateEntityTeamsSystem
+    UpdateEntityTeamsSystem,
+    LoseTargetSystem
 } from "./entity";
 import {
     Command,
@@ -718,6 +719,7 @@ export class SimpleDungeonCrawler {
         this.ecs.registerSystem("postTurn", UpdateEntityTeamsSystem);
         this.ecs.registerSystem("postTurn", UpdateChestsSystem);
 
+        this.ecs.registerSystem("postOneTurnCycle", LoseTargetSystem);
         this.ecs.registerSystem("postOneTurnCycle", RemoveAfterNTurnsSystem);
         this.ecs.registerSystem("postOneTurnCycle", UpdateHitPointsEffectsSystem);
         this.ecs.registerSystem("postOneTurnCycle", UpdateStatsEffectsSystem);

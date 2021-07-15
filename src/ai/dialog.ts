@@ -23,7 +23,7 @@ import { Nullable } from "../util";
 import * as BanditDialogJSON from "../dialog/bandit.json";
 import * as GoblinDialogJSON from "../dialog/goblin.json";
 
-// TODO: Add chase state over dialog lines
+// TODO: Add confused state end dialog lines
 
 type DialogRule = [string, "=" | ">" | "<" | "<=" | ">=", string | number | boolean];
 
@@ -119,6 +119,7 @@ export function buildDialogQuery(
     const loseTrackAfterNTurns = ai.getOne(LoseTargetAIComponent);
     if (loseTrackAfterNTurns !== undefined) {
         query["turns_with_target_out_of_sight"] = loseTrackAfterNTurns.turnsWithTargetOutOfSight;
+        query["lose_track_after_n_turns"] = loseTrackAfterNTurns.loseTrackAfterNTurns;
     }
 
     query["map_name"] = map.name;
@@ -138,6 +139,8 @@ export function buildDialogQuery(
 
     return query;
 }
+
+const templateRegex = /{{([a-z,_,-]*)}}/g;
 
 /**
  * Given a query, find the dialog definition that best matches.
@@ -177,7 +180,31 @@ export function queryDialogTable(
         }
 
         for (const rule of dialogDefinition.rules) {
-            if (rule[1] === "=" && query[rule[0]] !== rule[2]) {
+            let value: any;
+            // Dynamic template replacement
+            if (typeof rule[2] === "string") {
+                const templateMatch = templateRegex.exec(rule[2]);
+                if (templateMatch !== null &&
+                    templateMatch.length > 1 &&
+                    templateMatch[1] in query) {
+                    value = query[templateMatch[1]];
+                } else if (templateMatch !== null &&
+                    templateMatch.length > 1 &&
+                    !(templateMatch[1] in query)) {
+                    if (debugDialog) {
+                        // eslint-disable-next-line no-console
+                        console.log(`Dialog template ${rule[2]} does not exist in query. Skipping`);
+                    }
+
+                    continue definitions;
+                } else {
+                    value = rule[2];
+                }
+            } else {
+                value = rule[2];
+            }
+
+            if (rule[1] === "=" && query[rule[0]] !== value) {
 
                 if (debugDialog) {
                     // eslint-disable-next-line no-console
@@ -185,7 +212,7 @@ export function queryDialogTable(
                 }
 
                 continue definitions;
-            } else if (rule[1] === "<" && query[rule[0]] >= rule[2]) {
+            } else if (rule[1] === "<" && query[rule[0]] >= value) {
 
                 if (debugDialog) {
                     // eslint-disable-next-line no-console
@@ -193,7 +220,7 @@ export function queryDialogTable(
                 }
 
                 continue definitions;
-            } else if (rule[1] === ">" && query[rule[0]] <= rule[2]) {
+            } else if (rule[1] === ">" && query[rule[0]] <= value) {
 
                 if (debugDialog) {
                     // eslint-disable-next-line no-console
@@ -201,7 +228,7 @@ export function queryDialogTable(
                 }
 
                 continue definitions;
-            } else if (rule[1] === "<=" && query[rule[0]] > rule[2]) {
+            } else if (rule[1] === "<=" && query[rule[0]] > value) {
 
                 if (debugDialog) {
                     // eslint-disable-next-line no-console
@@ -209,7 +236,7 @@ export function queryDialogTable(
                 }
 
                 continue definitions;
-            } else if (rule[1] === ">=" && query[rule[0]] < rule[2]) {
+            } else if (rule[1] === ">=" && query[rule[0]] < value) {
 
                 if (debugDialog) {
                     // eslint-disable-next-line no-console
@@ -221,7 +248,7 @@ export function queryDialogTable(
 
             if (debugDialog) {
                 // eslint-disable-next-line no-console
-                console.log("definition pass");
+                console.log(`rule pass: ${JSON.stringify(rule)}`);
             }
         }
 

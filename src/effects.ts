@@ -102,10 +102,6 @@ export class OnFireSystem extends System {
                                     // the next turn
                                     setOnFire(e);
                                 }
-
-                                // if (Math.random() >= 0.6) {
-
-                                // }
                             }
                         }
                     }

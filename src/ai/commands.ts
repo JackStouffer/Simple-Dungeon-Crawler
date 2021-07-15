@@ -185,25 +185,6 @@ export function getPlan(
         console.log("worldState", worldState);
     }
 
-    const loseTrackData = aiState.entity.getOne(LoseTargetAIComponent);
-    // Lose knowledge of the target's position if the target
-    // is out of sight for seven turns
-    if (loseTrackData !== undefined &&
-        worldState.targetInLineOfSight === false &&
-        aiState.knowsTargetPosition
-    ) {
-        loseTrackData.turnsWithTargetOutOfSight++;
-
-        if (loseTrackData.turnsWithTargetOutOfSight === loseTrackData.loseTrackAfterNTurns) {
-            aiState.knowsTargetPosition = false;
-            loseTrackData.turnsWithTargetOutOfSight = 0;
-            worldState.targetPositionKnown = false;
-            displayMessage(`${displayName.name} lost track of you`);
-        }
-
-        loseTrackData.update();
-    }
-
     if (isEqual(aiState.previousWorldState, worldState)) {
         if (debug) {
             // eslint-disable-next-line no-console
