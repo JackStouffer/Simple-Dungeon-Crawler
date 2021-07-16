@@ -1,27 +1,25 @@
 import { isEqual, get } from "lodash";
 import { Entity, World } from "ape-ecs";
 
-import { DIRS, RNG, FOV } from "../rot/index";
+import { FOV } from "../rot/index";
 import { VisibilityCallback } from "../rot/fov/fov";
 import { PassableCallback } from "../rot/path/path";
 
 import globals from "../globals";
 import { Planner, ActionList, PlannerWorldState } from "./planner";
-import { Command, GoToLocationCommand, MoveCameraCommand, NoOpCommand } from "../commands";
+import { Command, MoveCameraCommand, NoOpCommand } from "../commands";
 import {
     GoalData
 } from "./goals";
 import { ActionData } from "./actions";
-import { GameMap, isBlocked, isSightBlocked, Vector2D } from "../map";
+import { GameMap, isSightBlocked, Vector2D } from "../map";
 import {
-    ConfusedAIComponent,
     DisplayNameComponent,
     EntityMap,
     EntityTeamMap,
     FearAIComponent,
     FreezableComponent,
     LevelComponent,
-    LoseTargetAIComponent,
     StunnableComponent,
     PlannerAIComponent,
     PositionComponent,
@@ -297,59 +295,6 @@ function plannerAIGenerateCommand(
     }
 }
 
-function confusedAIGenerateCommand(
-    ecs: World,
-    entity: Entity,
-    map: GameMap,
-    entityMap: EntityMap
-): Command {
-    const confusedState = entity.getOne(ConfusedAIComponent);
-    if (confusedState === undefined) { throw new Error(`Entity ${entity.id} is missing a ConfusedAIComponent`); }
-    const pos = entity.getOne(PositionComponent);
-    const displayName = entity.getOne(DisplayNameComponent);
-    if (pos === undefined || displayName === undefined) {
-        throw new Error(`Entity ${entity.id} is missing data`);
-    }
-
-    confusedState.turnsLeft--;
-
-    if (confusedState.turnsLeft > 0) {
-        let blocks: boolean = true;
-        let newTilePos: Vector2D;
-        let dir: number = RNG.getItem([0, 1, 2, 3, 4, 5, 6, 7]) ?? 0;
-
-        do {
-            dir = RNG.getItem([0, 1, 2, 3, 4, 5, 6, 7]) ?? 0;
-            newTilePos = new Vector2D(
-                pos.tilePosition.x + DIRS[8][dir][0],
-                pos.tilePosition.y + DIRS[8][dir][1]
-            );
-            ({ blocks } = isBlocked(
-                ecs,
-                map,
-                entityMap,
-                newTilePos
-            ));
-        } while (blocks === true);
-
-        confusedState.update();
-        return new GoToLocationCommand(
-            entity.id,
-            [newTilePos]
-        );
-    } else {
-        confusedState.destroy();
-
-        if (entity.id === globals.Game!.playerId) {
-            displayMessage("You are no longer confused");
-        } else {
-            displayMessage(`${displayName.name} is no longer confused`);
-        }
-
-        return new NoOpCommand(true);
-    }
-}
-
 /**
  * Given an AI and the state of the game world, generate a list of commands
  * for AIs to perform.
@@ -394,11 +339,6 @@ export function generateAICommands(
     const freezableData = ai.getOne(FreezableComponent);
     if (freezableData !== undefined && freezableData.frozen) {
         return [new NoOpCommand(true)];
-    }
-
-    const confusedState = ai.getOne(ConfusedAIComponent);
-    if (confusedState !== undefined) {
-        return [confusedAIGenerateCommand(ecs, ai, map, entityMap)];
     }
 
     const aiState = ai.getOne(PlannerAIComponent);

@@ -371,11 +371,13 @@ export class PatrolPathComponent extends Component {
     }
 }
 
-export class ConfusedAIComponent extends Component {
+export class ConfusableAIComponent extends Component {
+    confused: boolean;
     turnsLeft: number;
 
-    static typeName = "ConfusedAIComponent";
+    static typeName = "ConfusableAIComponent";
     static properties = {
+        confused: false,
         turnsLeft: 0
     }
 }
@@ -1200,6 +1202,10 @@ export const ObjectData: { [key: string]: ObjectDataDetails } = {
                     range: 7,
                     lightingType: LightingType.Player
                 },
+                ConfusableAIComponent: {
+                    confused: false,
+                    turnsLeft: 0
+                },
                 HitPointsComponent: {
                     hp: 100,
                     maxHp: 100,
@@ -1257,7 +1263,8 @@ export const ObjectData: { [key: string]: ObjectDataDetails } = {
             "meleeAttack",
             "goToSafePosition",
             "douseFireOnSelf",
-            "alertAllies"
+            "alertAllies",
+            "confusedWander"
         ],
         inventoryPool: [
             {
@@ -1284,6 +1291,10 @@ export const ObjectData: { [key: string]: ObjectDataDetails } = {
                 LoseTargetAIComponent: {
                     turnsWithTargetOutOfSight: 0,
                     loseTrackAfterNTurns: 6
+                },
+                ConfusableAIComponent: {
+                    confused: false,
+                    turnsLeft: 0
                 },
                 SpeedComponent: {
                     speed: BASE_SPEED,
@@ -1342,7 +1353,8 @@ export const ObjectData: { [key: string]: ObjectDataDetails } = {
             "goToSafePosition",
             "meleeAttack",
             "douseFireOnSelf",
-            "alertAllies"
+            "alertAllies",
+            "confusedWander"
         ],
         inventoryPool: [
             {
@@ -1373,6 +1385,10 @@ export const ObjectData: { [key: string]: ObjectDataDetails } = {
                 LoseTargetAIComponent: {
                     turnsWithTargetOutOfSight: 0,
                     loseTrackAfterNTurns: 6
+                },
+                ConfusableAIComponent: {
+                    confused: false,
+                    turnsLeft: 0
                 },
                 SpeedComponent: {
                     speed: BASE_SPEED,
@@ -1429,7 +1445,8 @@ export const ObjectData: { [key: string]: ObjectDataDetails } = {
             "meleeAttack",
             "goToSafePosition",
             "runAway",
-            "douseFireOnSelf"
+            "douseFireOnSelf",
+            "confusedWander"
         ],
         staticallyKnownComponents: {
             tags: ["blocks", "sentient", "moveable"],
@@ -1455,6 +1472,10 @@ export const ObjectData: { [key: string]: ObjectDataDetails } = {
                     fear: 0,
                     isAfraidThreshold: 5,
                     isCowering: false
+                },
+                ConfusableAIComponent: {
+                    confused: false,
+                    turnsLeft: 0
                 },
                 SpeedComponent: {
                     speed: BASE_SPEED,
@@ -1509,7 +1530,8 @@ export const ObjectData: { [key: string]: ObjectDataDetails } = {
             "chase",
             "goToEnemy",
             "goToSafePosition",
-            "meleeAttack"
+            "meleeAttack",
+            "confusedWander"
         ],
         staticallyKnownComponents: {
             tags: ["blocks", "sentient", "moveable", "aquatic"],
@@ -1535,6 +1557,10 @@ export const ObjectData: { [key: string]: ObjectDataDetails } = {
                     fear: 0,
                     isAfraidThreshold: 10,
                     isCowering: false
+                },
+                ConfusableAIComponent: {
+                    confused: false,
+                    turnsLeft: 0
                 },
                 SpeedComponent: {
                     speed: BASE_SPEED,
@@ -1586,7 +1612,8 @@ export const ObjectData: { [key: string]: ObjectDataDetails } = {
             "runAway",
             "meleeAttack",
             "douseFireOnSelf",
-            "alertAllies"
+            "alertAllies",
+            "confusedWander"
         ],
         inventoryPool: [
             {
@@ -1618,6 +1645,10 @@ export const ObjectData: { [key: string]: ObjectDataDetails } = {
                     fear: 0,
                     isAfraidThreshold: 10,
                     isCowering: false
+                },
+                ConfusableAIComponent: {
+                    confused: false,
+                    turnsLeft: 0
                 },
                 SpeedComponent: {
                     speed: BASE_SPEED,
@@ -1685,7 +1716,8 @@ export const ObjectData: { [key: string]: ObjectDataDetails } = {
             "runAway",
             "meleeAttack",
             "douseFireOnSelf",
-            "alertAllies"
+            "alertAllies",
+            "confusedWander"
         ],
         inventoryPool: [
             {
@@ -1717,6 +1749,10 @@ export const ObjectData: { [key: string]: ObjectDataDetails } = {
                     fear: 0,
                     isAfraidThreshold: 30,
                     isCowering: false
+                },
+                ConfusableAIComponent: {
+                    confused: false,
+                    turnsLeft: 0
                 },
                 SpeedComponent: {
                     speed: BASE_SPEED,
@@ -1788,7 +1824,8 @@ export const ObjectData: { [key: string]: ObjectDataDetails } = {
             "runAway",
             "meleeAttack",
             "douseFireOnSelf",
-            "alertAllies"
+            "alertAllies",
+            "confusedWander"
         ],
         staticallyKnownComponents: {
             tags: ["blocks", "sentient", "moveable"],
@@ -1814,6 +1851,10 @@ export const ObjectData: { [key: string]: ObjectDataDetails } = {
                     fear: 0,
                     isAfraidThreshold: 30,
                     isCowering: false
+                },
+                ConfusableAIComponent: {
+                    confused: false,
+                    turnsLeft: 0
                 },
                 SpeedComponent: {
                     speed: BASE_SPEED,
@@ -1872,7 +1913,8 @@ export const ObjectData: { [key: string]: ObjectDataDetails } = {
             "chase",
             "goToEnemy",
             "meleeAttack",
-            "runAway"
+            "runAway",
+            "confusedWander"
         ],
         staticallyKnownComponents: {
             tags: ["blocks", "sentient", "moveable"],
@@ -1898,6 +1940,10 @@ export const ObjectData: { [key: string]: ObjectDataDetails } = {
                     fear: 0,
                     isAfraidThreshold: 10,
                     isCowering: false
+                },
+                ConfusableAIComponent: {
+                    confused: false,
+                    turnsLeft: 0
                 },
                 SpeedComponent: {
                     speed: BASE_SPEED,
@@ -2115,6 +2161,42 @@ export class UpdateEntityTeamsSystem extends System {
         // TODO, cleanup: Iterator "each" function
         for (const team of globals.Game!.entityTeams.values()) {
             team.update();
+        }
+    }
+}
+
+/**
+ * Update all of the confused entities by reducing their remaining turn count
+ */
+export class ConfusableAISystem extends System {
+    query: Query;
+
+    init() {
+        this.query = this
+            .createQuery()
+            .fromAll(ConfusableAIComponent)
+            .persist();
+    }
+
+    update() {
+        const entities = this.query.execute();
+        for (const entity of entities) {
+            const confusedState = entity.getOne(ConfusableAIComponent)!;
+
+            --confusedState.turnsLeft;
+
+            if (confusedState.turnsLeft === 0) {
+                confusedState.confused = false;
+
+                const displayName = entity.getOne(DisplayNameComponent);
+                if (entity.id === globals.Game!.playerId) {
+                    displayMessage("You are no longer confused");
+                } else if (displayName !== undefined) {
+                    displayMessage(`${displayName.name} is no longer confused`);
+                }
+            }
+
+            confusedState.update();
         }
     }
 }

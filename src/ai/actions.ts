@@ -713,6 +713,40 @@ function alertAlliesAction(
     return new AlertAlliesCommand(aiState.entity.id);
 }
 
+function confusedWander(
+    ecs: World,
+    map: GameMap,
+    entityMap: EntityMap,
+    aiState: PlannerAIComponent
+): Command {
+    let blocks: boolean = true;
+    let newTilePos: Vector2D;
+    let dir: number = RNG.getItem([0, 1, 2, 3, 4, 5, 6, 7]) ?? 0;
+    const pos = aiState.entity.getOne(PositionComponent);
+    if (pos === undefined) {
+        throw new Error(`Entity ${aiState.entity.id} is missing data`);
+    }
+
+    do {
+        dir = RNG.getItem([0, 1, 2, 3, 4, 5, 6, 7]) ?? 0;
+        newTilePos = new Vector2D(
+            pos.tilePosition.x + DIRS[8][dir][0],
+            pos.tilePosition.y + DIRS[8][dir][1]
+        );
+        ({ blocks } = isBlocked(
+            ecs,
+            map,
+            entityMap,
+            newTilePos
+        ));
+    } while (blocks === true);
+
+    return new GoToLocationCommand(
+        aiState.entity.id,
+        [newTilePos]
+    );
+}
+
 type ActionUpdateFunction = (
     ecs: World,
     map: GameMap,
@@ -735,25 +769,29 @@ interface Action {
  */
 export const ActionData: { [key: string]: Action } = {
     "wander": {
-        preconditions: { targetPositionKnown: false },
+        preconditions: { targetPositionKnown: false, confused: false },
         postconditions: { targetPositionKnown: true },
         updateFunction: wanderAction,
         weight: () => 1
     },
     "guard": {
-        preconditions: { targetPositionKnown: false },
+        preconditions: { targetPositionKnown: false, confused: false },
         postconditions: { targetPositionKnown: true },
         updateFunction: () => { return new NoOpCommand(true); },
         weight: () => 1
     },
     "patrol": {
-        preconditions: { targetPositionKnown: false },
+        preconditions: { targetPositionKnown: false, confused: false },
         postconditions: { targetPositionKnown: true },
         updateFunction: patrolAction,
         weight: () => 1
     },
     "chase": {
-        preconditions: { targetPositionKnown: true, targetInLineOfSight: false },
+        preconditions: {
+            targetPositionKnown: true,
+            targetInLineOfSight: false,
+            confused: false
+        },
         postconditions: { targetInLineOfSight: true },
         updateFunction: chaseAction,
         weight: () => 1
@@ -763,7 +801,8 @@ export const ActionData: { [key: string]: Action } = {
             targetPositionKnown: true,
             atDesiredDistance: true,
             hasAliveAllies: true,
-            targetKilled: false
+            targetKilled: false,
+            confused: false
         },
         postconditions: { targetKilled: true },
         updateFunction: () => { return new NoOpCommand(true); },
@@ -774,70 +813,111 @@ export const ActionData: { [key: string]: Action } = {
             targetPositionKnown: true,
             atDesiredDistance: false,
             hasAliveAllies: true,
-            targetKilled: false
+            targetKilled: false,
+            confused: false
         },
         postconditions: { atDesiredDistance: true },
         updateFunction: repositionAction,
         weight: () => 1
     },
     "useHealingItem": {
-        preconditions: { lowHealth: true, hasHealingItem: true },
+        preconditions: {
+            lowHealth: true,
+            hasHealingItem: true,
+            confused: false
+        },
         postconditions: { lowHealth: false },
         updateFunction: useHealingItemAction,
         weight: () => 1
     },
     "useHealingSpell": {
-        preconditions: { lowHealth: true, hasSelfHealingSpell: true, silenced: false },
+        preconditions: {
+            lowHealth: true,
+            hasSelfHealingSpell: true,
+            silenced: false,
+            confused: false
+        },
         postconditions: { lowHealth: false },
         updateFunction: useHealingSpellAction,
         weight: () => 1
     },
     "healAlly": {
-        preconditions: { allyLowHealth: true, hasHealOtherSpell: true, silenced: false },
+        preconditions: {
+            allyLowHealth: true,
+            hasHealOtherSpell: true,
+            silenced: false,
+            confused: false
+        },
         postconditions: { allyLowHealth: false },
         updateFunction: healAllyAction,
         weight: () => 1
     },
     "goToEnemy": {
-        preconditions: { targetPositionKnown: true, nextToTarget: false },
+        preconditions: {
+            targetPositionKnown: true,
+            nextToTarget: false,
+            confused: false
+        },
         postconditions: { nextToTarget: true },
         updateFunction: chaseAction,
         weight: chaseWeight
     },
     "meleeAttack": {
-        preconditions: { nextToTarget: true, targetKilled: false },
+        preconditions: {
+            nextToTarget: true,
+            targetKilled: false,
+            confused: false
+        },
         postconditions: { targetKilled: true },
         updateFunction: meleeAttackAction,
         weight: meleeAttackWeight
     },
     "goToSafePosition": {
-        preconditions: { inDangerousArea: true },
+        preconditions: { inDangerousArea: true, confused: false },
         postconditions: { inDangerousArea: false },
         updateFunction: goToSafePositionAction,
         weight: () => 1
     },
     "runAway": {
-        preconditions: { afraid: true, cowering: false },
+        preconditions: {
+            afraid: true,
+            cowering: false,
+            confused: false
+        },
         postconditions: { afraid: false, cowering: true },
         updateFunction: runAwayAction,
         weight: () => 1
     },
     "goToFallbackPosition": {
-        preconditions: { atFallbackPosition: false },
+        preconditions: { atFallbackPosition: false, confused: false },
         postconditions: { atFallbackPosition: true },
         updateFunction: () => { return new NoOpCommand(true); },
         weight: () => 1
     },
     "douseFireOnSelf": {
-        preconditions: { onFire: true, nearWater: true },
+        preconditions: {
+            onFire: true,
+            nearWater: true,
+            confused: false
+        },
         postconditions: { onFire: false },
         updateFunction: douseFireOnSelfAction,
         weight: () => 1
     },
     "alertAllies": {
-        preconditions: { hasAliveAllies: true, alliesAlerted: false },
+        preconditions: {
+            hasAliveAllies: true,
+            alliesAlerted: false,
+            confused: false
+        },
         postconditions: { alliesAlerted: true },
         updateFunction: alertAlliesAction,
+        weight: () => 1
+    },
+    "confusedWander": {
+        preconditions: { confused: true },
+        postconditions: { confused: false },
+        updateFunction: confusedWander,
         weight: () => 1
     }
 };
@@ -854,7 +934,8 @@ for (const key in SpellData) {
                 [goal]: true,
                 silenced: false,
                 targetInLineOfSight: true,
-                targetKilled: false
+                targetKilled: false,
+                confused: false
             },
             postconditions: { targetKilled: true },
             updateFunction: castSpellAction(key),
@@ -865,7 +946,8 @@ for (const key in SpellData) {
             preconditions: {
                 lowHealth: true,
                 silenced: false,
-                [goal]: true
+                [goal]: true,
+                confused: false
             },
             postconditions: { lowHealth: false },
             updateFunction: castSpellAction(key),
@@ -876,7 +958,8 @@ for (const key in SpellData) {
             preconditions: {
                 allyLowHealth: true,
                 [goal]: true,
-                silenced: false
+                silenced: false,
+                confused: false
             },
             postconditions: { allyLowHealth: false },
             updateFunction: healAllyAction,

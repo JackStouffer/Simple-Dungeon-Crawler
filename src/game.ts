@@ -47,7 +47,7 @@ import {
     LevelComponent,
     DamageAffinityComponent,
     FireTriggerComponent,
-    ConfusedAIComponent,
+    ConfusableAIComponent,
     EventTriggerComponent,
     RemoveAfterNTurnsComponent,
     RemoveAfterNTurnsSystem,
@@ -62,7 +62,8 @@ import {
     EntityTeamMap,
     DialogMemoryComponent,
     UpdateEntityTeamsSystem,
-    LoseTargetSystem
+    LoseTargetSystem,
+    ConfusableAISystem
 } from "./entity";
 import {
     Command,
@@ -695,7 +696,7 @@ export class SimpleDungeonCrawler {
         this.ecs.registerComponent(FallbackAIComponent, 50);
         this.ecs.registerComponent(PatrolAIComponent, 50);
         this.ecs.registerComponent(PatrolPathComponent, 50);
-        this.ecs.registerComponent(ConfusedAIComponent, 10);
+        this.ecs.registerComponent(ConfusableAIComponent, 50);
         this.ecs.registerComponent(InputHandlingComponent, 1);
         this.ecs.registerComponent(FreezableComponent, 50);
         this.ecs.registerComponent(FlammableComponent, 50);
@@ -729,6 +730,7 @@ export class SimpleDungeonCrawler {
         this.ecs.registerSystem("postOneTurnCycle", SilenceSystem);
         this.ecs.registerSystem("postOneTurnCycle", StunSystem);
         this.ecs.registerSystem("postOneTurnCycle", FrozenSystem);
+        this.ecs.registerSystem("postOneTurnCycle", ConfusableAISystem);
         this.ecs.registerSystem("postOneTurnCycle", LevelUpSystem);
 
         if (globals.gameEventEmitter === null) { throw new Error("Global gameEventEmitter cannot be null"); }
@@ -886,6 +888,7 @@ export class SimpleDungeonCrawler {
             if (command.isFinished()) {
                 if (command.usedTurn()) {
                     if (this.currentActor === this.playerId) {
+                        // TODO, bug: This is wrong when the player is hasted or slowed
                         this.ecs.runSystems("postOneTurnCycle");
                         this.totalTurns++;
                     }

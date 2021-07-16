@@ -32,7 +32,7 @@
                 ["race", "=", "human"],
                 ["knows_target_position", "=", true],
                 ["has_alive_allies", "=", true],
-                ["turns_with_target_out_of_sight", ">", 1],
+                ["turns_with_target_out_of_sight", ">", 2],
                 ["on_fire", "=", false],
                 ["is_confused", "=", false],
                 ["is_afraid", "=", false]
@@ -158,7 +158,7 @@
             ],
             "dialog": [
                 "Wha ... where am I?",
-                "What the ... where'd you go?"
+                "W-Where'd you go?"
             ],
             "aiStateChange": {},
             "dialogMemoryChange": {

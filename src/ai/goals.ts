@@ -1,7 +1,7 @@
 import { Entity, World } from "ape-ecs";
 import { Affinity, DamageType, ItemType, SpellType, TriggerType } from "../constants";
 import {
-    ConfusedAIComponent,
+    ConfusableAIComponent,
     EntityMap,
     FallbackAIComponent,
     FearAIComponent,
@@ -502,7 +502,7 @@ export function resolveSilenced(ecs: World, entityMap: EntityMap, ai: Entity): b
  * @returns {boolean}
  */
 export function resolveConfused(ecs: World, entityMap: EntityMap, ai: Entity): boolean {
-    const confusedData = ai.getOne(ConfusedAIComponent);
+    const confusedData = ai.getOne(ConfusableAIComponent);
     return confusedData !== undefined && confusedData.turnsLeft > 0;
 }
 
@@ -573,6 +573,9 @@ export const GoalData: { [key: string]: GoalDataDetails } = {
     },
     "silenced": {
         resolver: resolveSilenced
+    },
+    "confused": {
+        resolver: resolveConfused
     }
 };
 

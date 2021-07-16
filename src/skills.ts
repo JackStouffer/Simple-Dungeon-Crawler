@@ -33,7 +33,8 @@ import {
     SpellsComponent,
     TriggerTypeComponent,
     TypeComponent,
-    WetableComponent
+    WetableComponent,
+    ConfusableAIComponent
 } from "./entity";
 import { randomIntFromInterval, Nullable, assertUnreachable } from "./util";
 import { mouseTarget } from "./input-handler";
@@ -600,22 +601,19 @@ export function castConfuse(
         displayMessage("Canceled casting");
         return false;
     }
-    const aiState = entity.getOne(PlannerAIComponent);
-    if (aiState === undefined) {
-        displayMessage("Canceled casting");
+
+    const displayName = entity.getOne(DisplayNameComponent);
+    if (displayName === undefined) { throw new Error("entity does not have a display name"); }
+
+    const confusedState = entity.getOne(ConfusableAIComponent);
+    if (confusedState === undefined) {
+        displayMessage(`${displayName.name} is immune to confusion`);
         return false;
     }
 
-    // TODO: Make confused an already existing component like Flammable
-    // so that not every AI is confusable
-    entity.addComponent({
-        type: "ConfusedAIComponent",
-        turnsLeft: item.value
-    });
-
-    const name = entity.getOne(DisplayNameComponent);
-    if (name === undefined) { throw new Error(`Undefined display name on ${entity.id}`); }
-    displayMessage(`${name.name} is now confused`);
+    confusedState.confused = true;
+    confusedState.turnsLeft = item.value;
+    displayMessage(`${displayName.name} is now confused`);
 
     return true;
 }
