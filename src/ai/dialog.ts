@@ -23,7 +23,8 @@ import { Nullable } from "../util";
 import * as BanditDialogJSON from "../dialog/bandit.json";
 import * as GoblinDialogJSON from "../dialog/goblin.json";
 
-// TODO: Add confused state end dialog lines
+// TODO: Add confused state end dialog line.
+// TODO: Add dispariaging line when an ally flees
 
 type DialogRule = [string, "=" | ">" | "<" | "<=" | ">=", string | number | boolean];
 

@@ -29,7 +29,6 @@ import {
 } from "./commands";
 import { ItemDataDetails, SpellDataDetails } from "./skills";
 import { Vector2D } from "./map";
-import { displayMessage } from "./ui";
 
 export type EntityMap = Map<string, string[]>;
 
@@ -2113,90 +2112,6 @@ export class RemoveAfterNTurnsSystem extends System {
             } else {
                 turnData.update();
             }
-        }
-    }
-}
-
-/**
- * Lose known target position after a defined number of turns
- */
-export class LoseTargetSystem extends System {
-    query: Query;
-
-    init() {
-        this.query = this
-            .createQuery()
-            .fromAll(LoseTargetAIComponent, PlannerAIComponent)
-            .persist();
-    }
-
-    update() {
-        const entities = this.query.execute();
-        for (const e of entities) {
-            const loseTrackData = e.getOne(LoseTargetAIComponent)!;
-            const aiState = e.getOne(PlannerAIComponent)!;
-            if (!aiState.hasTargetInSight && aiState.knowsTargetPosition) {
-                ++loseTrackData.turnsWithTargetOutOfSight;
-
-                if (loseTrackData.turnsWithTargetOutOfSight > loseTrackData.loseTrackAfterNTurns
-                ) {
-                    aiState.knowsTargetPosition = false;
-                    loseTrackData.turnsWithTargetOutOfSight = 0;
-                    aiState.update();
-
-                    const displayName = e.getOne(DisplayNameComponent);
-                    if (displayName !== undefined) {
-                        displayMessage(`${displayName.name} lost track of you`);
-                    }
-                }
-
-                loseTrackData.update();
-            }
-        }
-    }
-}
-
-export class UpdateEntityTeamsSystem extends System {
-    update() {
-        // TODO, cleanup: Iterator "each" function
-        for (const team of globals.Game!.entityTeams.values()) {
-            team.update();
-        }
-    }
-}
-
-/**
- * Update all of the confused entities by reducing their remaining turn count
- */
-export class ConfusableAISystem extends System {
-    query: Query;
-
-    init() {
-        this.query = this
-            .createQuery()
-            .fromAll(ConfusableAIComponent)
-            .persist();
-    }
-
-    update() {
-        const entities = this.query.execute();
-        for (const entity of entities) {
-            const confusedState = entity.getOne(ConfusableAIComponent)!;
-
-            --confusedState.turnsLeft;
-
-            if (confusedState.turnsLeft === 0) {
-                confusedState.confused = false;
-
-                const displayName = entity.getOne(DisplayNameComponent);
-                if (entity.id === globals.Game!.playerId) {
-                    displayMessage("You are no longer confused");
-                } else if (displayName !== undefined) {
-                    displayMessage(`${displayName.name} is no longer confused`);
-                }
-            }
-
-            confusedState.update();
         }
     }
 }

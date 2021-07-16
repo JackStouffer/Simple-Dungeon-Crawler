@@ -60,10 +60,7 @@ import {
     StunnableComponent,
     removeEntity,
     EntityTeamMap,
-    DialogMemoryComponent,
-    UpdateEntityTeamsSystem,
-    LoseTargetSystem,
-    ConfusableAISystem
+    DialogMemoryComponent
 } from "./entity";
 import {
     Command,
@@ -119,6 +116,7 @@ import {
 } from "./effects";
 import { generateAICommands } from "./ai/commands";
 import { ItemData, SpellData } from "./skills";
+import { ConfusableAISystem, LoseTargetSystem, UpdateAISightData, UpdateEntityTeamsSystem } from "./ai/systems";
 
 globals.gameEventEmitter = new EventEmitter();
 
@@ -252,6 +250,7 @@ const GameplayState: GameState = {
         }
 
         if (game.shouldProcessCommands && game.currentActor !== null) {
+            game.ecs.runSystems("preTurn");
             game.processCommands();
         }
 
@@ -713,6 +712,8 @@ export class SimpleDungeonCrawler {
         this.ecs.registerSystem("frame", LightingSystem);
         this.ecs.registerSystem("frame", DrawSystem);
         this.ecs.registerSystem("frame", DrawPlayerSystem);
+
+        this.ecs.registerSystem("preTurn", UpdateAISightData);
 
         this.ecs.registerSystem("postTurn", DeathSystem);
         this.ecs.registerSystem("postTurn", UpdateSchedulerSystem);

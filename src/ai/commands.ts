@@ -1,8 +1,6 @@
 import { isEqual, get } from "lodash";
-import { Entity, World } from "ape-ecs";
+import { World } from "ape-ecs";
 
-import { FOV } from "../rot/index";
-import { VisibilityCallback } from "../rot/fov/fov";
 import { PassableCallback } from "../rot/path/path";
 
 import globals from "../globals";
@@ -17,9 +15,7 @@ import {
     DisplayNameComponent,
     EntityMap,
     EntityTeamMap,
-    FearAIComponent,
     FreezableComponent,
-    LevelComponent,
     StunnableComponent,
     PlannerAIComponent,
     PositionComponent,
@@ -27,57 +23,6 @@ import {
 import { displayMessage } from "../ui";
 import { Nullable } from "../util";
 import { buildDialogQuery, queryAlliesForResponses, queryDialogTable, sayDialogDefinition } from "./dialog";
-
-/**
- * Add fear to an entity when it sees an enemy
- */
-function calcFearOnSight(ecs: World, ai: Entity): number {
-    const aiState = ai.getOne(PlannerAIComponent)!;
-    const levelData = ai.getOne(LevelComponent);
-
-    const target = ecs.getEntity(aiState.targetId);
-    if (target === undefined) {
-        if (globals.Game?.debugAI === true) {
-            // eslint-disable-next-line no-console
-            console.log(`calcFearOnSight for ${aiState.entity.id} has a non-existent target ${aiState.targetId}`);
-        }
-        return 1;
-    }
-    const targetLevelData = target.getOne(LevelComponent);
-
-    if (levelData === undefined || targetLevelData === undefined) {
-        return 1;
-    }
-
-    return Math.max(targetLevelData.level - levelData.level, 0);
-}
-
-/**
- * Creates a function which checks if the Game player object
- * is visible or not and sets the AI hasTargetInSight bool to
- * true.
- */
-function createVisibilityCallback(ecs: World, ai: Entity): VisibilityCallback {
-    const aiState = ai.getOne(PlannerAIComponent)!;
-    const fearState = ai.getOne(FearAIComponent)!;
-
-    const target = ecs.getEntity(aiState.targetId);
-    const targetPos = target?.getOne(PositionComponent)?.tilePosition;
-
-    return function(x: number, y: number, r: number, visibility: number) {
-        if (targetPos === undefined) { return; }
-        if (x === targetPos.x && y === targetPos.y && visibility > 0) {
-            if (fearState !== undefined && aiState.knowsTargetPosition === false) {
-                fearState.fear += calcFearOnSight(ecs, ai);
-                fearState.update();
-            }
-
-            aiState.knowsTargetPosition = true;
-            aiState.hasTargetInSight = true;
-            aiState.update();
-        }
-    };
-}
 
 /**
  * Creates a function which returns if an x and y coordinate
@@ -344,16 +289,6 @@ export function generateAICommands(
     const aiState = ai.getOne(PlannerAIComponent);
     if (aiState !== undefined) {
         const commands: Command[] = [];
-
-        // compute the FOV to see if the player is sighted
-        const fov = new FOV.PreciseShadowcasting(createPassableSightCallback(pos));
-        fov.compute(
-            pos.x,
-            pos.y,
-            aiState.sightRange,
-            createVisibilityCallback(ecs, ai)
-        );
-
         const target = ecs.getEntity(aiState.targetId);
         if (target === undefined) {
             if (globals.Game?.debugAI === true) {
