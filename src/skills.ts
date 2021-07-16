@@ -34,7 +34,8 @@ import {
     TriggerTypeComponent,
     TypeComponent,
     WetableComponent,
-    ConfusableAIComponent
+    ConfusableAIComponent,
+    FearAIComponent
 } from "./entity";
 import { randomIntFromInterval, Nullable, assertUnreachable } from "./util";
 import { mouseTarget } from "./input-handler";
@@ -247,6 +248,13 @@ export function setOnFire(target: Entity, damage?: number, turns?: number): bool
             effectDamage: 5,
             damage: 15
         });
+    }
+
+    // Being on fire adds a lot of fear
+    const fearData = target.getOne(FearAIComponent);
+    if (fearData !== undefined && !flammableData.onFire) {
+        fearData.fear += 7;
+        fearData.update();
     }
 
     // Inanimate objects should burn until they

@@ -383,7 +383,8 @@ function resolveCowering(ecs: World, entityMap: EntityMap, ai: Entity) {
     const aiState = ai.getOne(FearAIComponent);
     const pos = ai.getOne(PositionComponent);
     if (aiState === undefined || pos === undefined) { return false; }
-    return pos.x === aiState.runAwayTarget?.x && pos.y === aiState.runAwayTarget?.y;
+    if (aiState.runAwayTarget === null) { return false; }
+    return pos.x === aiState.runAwayTarget.x && pos.y === aiState.runAwayTarget.y;
 }
 
 function resolveAtFallbackPosition(ecs: World, entityMap: EntityMap, ai: Entity): boolean {

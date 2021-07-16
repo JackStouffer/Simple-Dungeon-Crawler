@@ -491,7 +491,7 @@ function runAwayAction(
         // Give up after 5 tries as you might be boxed in
         let tries = 0;
         do {
-            // TODO should also fix this to make it so the target is at least
+            // TODO: should also fix this to make it so the target is at least
             // n tiles away from the target we're afraid of
             fearState.runAwayTarget = getRandomOpenSpace(ecs, map, entityMap);
 
@@ -788,6 +788,7 @@ export const ActionData: { [key: string]: Action } = {
     },
     "chase": {
         preconditions: {
+            afraid: false,
             targetPositionKnown: true,
             targetInLineOfSight: false,
             confused: false
@@ -854,6 +855,7 @@ export const ActionData: { [key: string]: Action } = {
     },
     "goToEnemy": {
         preconditions: {
+            afraid: false,
             targetPositionKnown: true,
             nextToTarget: false,
             confused: false
@@ -864,6 +866,7 @@ export const ActionData: { [key: string]: Action } = {
     },
     "meleeAttack": {
         preconditions: {
+            afraid: false,
             nextToTarget: true,
             targetKilled: false,
             confused: false

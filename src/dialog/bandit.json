@@ -133,7 +133,6 @@
             "rules": [
                 ["race", "=", "human"],
                 ["said_bandit_afraid", "=", false],
-                ["on_fire", "=", false],
                 ["is_confused", "=", false],
                 ["is_afraid", "=", true]
             ],

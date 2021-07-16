@@ -62,7 +62,6 @@ export class LoseTargetSystem extends System {
  * Add fear to an entity when it sees an enemy
  */
 function calcFearOnSight(ecs: World, ai: Entity): number {
-    // TODO: add more fear when you're set on fire
     const aiState = ai.getOne(PlannerAIComponent)!;
     const levelData = ai.getOne(LevelComponent);
 

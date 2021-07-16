@@ -19,6 +19,8 @@ import {
     StunnableComponent,
     PlannerAIComponent,
     PositionComponent,
+    FearAIComponent,
+    ConfusableAIComponent,
 } from "../entity";
 import { displayMessage } from "../ui";
 import { Nullable } from "../util";
@@ -207,6 +209,11 @@ export function getPlan(
         aiState.planner.setGoalState(goal);
         const plan = aiState.planner.calculate();
         aiState.currentAction = get(plan, "['0'].name", null);
+
+        if (debug && aiState.currentAction === null) {
+            // eslint-disable-next-line no-console
+            console.log(`No possible path to goal ${JSON.stringify(goal)}, skipping`);
+        }
     } while (stateStack.length > 0 && aiState.currentAction === null);
 
     if (debug) {
@@ -298,7 +305,14 @@ export function generateAICommands(
             return [new NoOpCommand(true)];
         }
 
-        if (aiState.knowsTargetPosition && target.id === globals.Game!.playerId) {
+        // Move the camera to the entity, but only if we're not running away
+        // or confused
+        const fearData = ai.getOne(FearAIComponent);
+        const confusedData = ai.getOne(ConfusableAIComponent);
+        if (aiState.knowsTargetPosition &&
+            target.id === globals.Game!.playerId &&
+            (fearData === undefined || fearData.fear < fearData.fearThreshold) &&
+            (confusedData === undefined || !confusedData.confused)) {
             commands.push(new MoveCameraCommand(map, globals.Game!.gameCamera, ai));
         }
 
