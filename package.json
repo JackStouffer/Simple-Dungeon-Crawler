@@ -5,6 +5,7 @@
   "private": true,
   "scripts": {
     "eslint": "eslint src/*.ts",
+    "check_build": "webpack --config webpack.dev.js",
     "build": "webpack --config webpack.dev.js && cp -r bin/ dev/bin/",
     "dist": "webpack --config webpack.prod.js && cp -r bin/ dev/bin/",
     "start": "webpack-dev-server --config webpack.dev.js --open",
