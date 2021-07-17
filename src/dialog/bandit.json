@@ -120,12 +120,30 @@
                 ["on_fire", "=", true]
             ],
             "dialog": [
+                "AAARRRRRRGGGGGGGHHHHHHHHHHHH!"
+            ],
+            "aiStateChange": {},
+            "dialogMemoryChange": {
+                "said_bandit_on_fire": true
+            }
+        },
+        {
+            "name": "bandit_afraid_and_on_fire",
+            "respondingTo": null,
+            "rules": [
+                ["race", "=", "human"],
+                ["said_bandit_afraid_and_on_fire", "=", false],
+                ["on_fire", "=", true],
+                ["is_confused", "=", false],
+                ["is_afraid", "=", true]
+            ],
+            "dialog": [
                 "AAAAAAAAAAAHHHHHHHHHHHH!",
                 "PUT IT OUT! PUT IT OUT!"
             ],
             "aiStateChange": {},
             "dialogMemoryChange": {
-                "said_bandit_on_fire": true
+                "said_bandit_afraid_and_on_fire": true
             }
         },
         {
@@ -134,13 +152,15 @@
             "rules": [
                 ["race", "=", "human"],
                 ["said_bandit_afraid", "=", false],
+                ["on_fire", "=", false],
                 ["is_confused", "=", false],
                 ["is_afraid", "=", true]
             ],
             "dialog": [
                 "Run for your lives!",
                 "I'm getting out of here!",
-                "It's no use!"
+                "It's no use!",
+                "He's too strong!"
             ],
             "aiStateChange": {},
             "dialogMemoryChange": {

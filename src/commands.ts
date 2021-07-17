@@ -1019,7 +1019,7 @@ export class ShowSpeechBubbleCommand implements Command {
     private effectGraphics: Nullable<PIXI.Graphics> = null;
     private effectTween: Nullable<Tween> = null;
 
-    constructor(entityId: string, dialog: string, duration: number = 1000) {
+    constructor(entityId: string, dialog: string, duration: number = 1250) {
         this.entityId = entityId;
         this.dialog = dialog;
         this.duration = duration;
