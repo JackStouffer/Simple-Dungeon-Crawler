@@ -376,7 +376,7 @@ function resolveTargetKilled(ecs: World, entityMap: EntityMap, ai: Entity) {
 
 export function resolveAfraid(ecs: World, entityMap: EntityMap, ai: Entity) {
     const aiState = ai.getOne(FearAIComponent);
-    return aiState !== undefined && aiState.fear >= aiState.fearThreshold;
+    return aiState !== undefined && aiState.fear >= aiState.isAfraidThreshold;
 }
 
 function resolveCowering(ecs: World, entityMap: EntityMap, ai: Entity) {

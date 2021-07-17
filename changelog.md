@@ -5,9 +5,15 @@
 _In Development_
 
 * Gameplay
-  * Keybind system now allows you to use modifier keys (shift, ctrl) in your bindings
+  * Keybind system now allows you to use modifier keys (shift, ctrl, cmd) in your bindings
+  * Setting enemies on fire makes them more likely to run away in fear
+  * More dialog responses
+    * Added lines when confused
+    * Added lines when a bandit gives up on chasing the player
 * Technical
   * Refactored chest updating to less over engineered. Just flip the texture key and then follow the normal code path
+  * Added simple template system to dialog definitions to allow for dynamic rules
+  * Enemies can be immune to confusion due to confusion refactor
 
 ## Version 12
 

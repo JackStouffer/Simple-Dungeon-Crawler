@@ -525,7 +525,7 @@ function runAwayAction(
 
     if (path[path.length - 1].x === fearState.runAwayTarget.x &&
         path[path.length - 1].y === fearState.runAwayTarget.y) {
-        fearState.fear = Math.round(fearState.fearThreshold * 0.6);
+        fearState.fear = Math.round(fearState.isAfraidThreshold * 0.6);
         fearState.runAwayTarget = null;
     }
 
@@ -538,6 +538,7 @@ function goToSafePositionAction(
     entityMap: EntityMap,
     aiState: PlannerAIComponent
 ): Command {
+    // TODO, bug: This is broken when two entities are on fire next to each other
     const pos = aiState.entity.getOne(PositionComponent);
     const speedData = aiState.entity.getOne(SpeedComponent);
     if (pos === undefined || speedData === undefined) {

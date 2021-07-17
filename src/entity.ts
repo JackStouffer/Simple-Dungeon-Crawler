@@ -328,14 +328,14 @@ export class LoseTargetAIComponent extends Component {
 
 export class FearAIComponent extends Component {
     fear: number;
-    fearThreshold: number;
+    isAfraidThreshold: number;
     runAwayTarget: Nullable<Vector2D>;
     isCowering: boolean;
 
     static typeName = "FearAIComponent";
     static properties = {
         fear: 0,
-        fearThreshold: 10,
+        isAfraidThreshold: 10,
         runAwayTarget: null,
         isCowering: false
     }
@@ -1746,7 +1746,7 @@ export const ObjectData: { [key: string]: ObjectDataDetails } = {
                 },
                 FearAIComponent: {
                     fear: 0,
-                    isAfraidThreshold: 30,
+                    isAfraidThreshold: 10,
                     isCowering: false
                 },
                 ConfusableAIComponent: {

@@ -311,7 +311,7 @@ export function generateAICommands(
         const confusedData = ai.getOne(ConfusableAIComponent);
         if (aiState.knowsTargetPosition &&
             target.id === globals.Game!.playerId &&
-            (fearData === undefined || fearData.fear < fearData.fearThreshold) &&
+            (fearData === undefined || fearData.fear < fearData.isAfraidThreshold) &&
             (confusedData === undefined || !confusedData.confused)) {
             commands.push(new MoveCameraCommand(map, globals.Game!.gameCamera, ai));
         }

@@ -23,8 +23,11 @@ import { Nullable } from "../util";
 import * as BanditDialogJSON from "../dialog/bandit.json";
 import * as GoblinDialogJSON from "../dialog/goblin.json";
 
+// TODO: add logic where some lines can only be said once in a whole team
+// TODO: Add special line for when afraid and on fire
 // TODO: Add confused state end dialog line.
 // TODO: Add dispariaging line when an ally flees
+// TODO: Add line mocking player when they have low health
 
 type DialogRule = [string, "=" | ">" | "<" | "<=" | ">=", string | number | boolean];
 
@@ -271,7 +274,7 @@ export function queryDialogTable(
             return Math.random() <= .5 ? -1 : 1;
         }
 
-        return aRules - bRules;
+        return bRules - aRules;
     });
     const match = matches[0];
 

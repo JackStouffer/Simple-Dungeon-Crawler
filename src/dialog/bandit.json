@@ -15,7 +15,8 @@
             ],
             "dialog": [
                 "Never should have come here!",
-                "Enemy spotted!"
+                "Enemy spotted!",
+                "Can't wait to count out your coin"
             ],
             "aiStateChange": {
                 "currentOrder": "alert_allies"
@@ -144,6 +145,26 @@
             "aiStateChange": {},
             "dialogMemoryChange": {
                 "said_bandit_afraid": true
+            }
+        },
+        {
+            "name": "bandit_call_coward",
+            "respondingTo": "bandit_afraid",
+            "rules": [
+                ["race", "=", "human"],
+                ["said_bandit_call_coward", "=", false],
+                ["is_confused", "=", false],
+                ["is_afraid", "=", false],
+                ["on_fire", "=", false]
+            ],
+            "dialog": [
+                "Coward!",
+                "Coward! Get back here and fight!",
+                "I'll gut you for this!"
+            ],
+            "aiStateChange": {},
+            "dialogMemoryChange": {
+                "said_bandit_call_coward": true
             }
         },
         {
