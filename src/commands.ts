@@ -7,6 +7,7 @@ import { WeightCallback, PassableCallback } from "./rot/path/path";
 
 import globals from "./globals";
 import {
+    Affinity,
     DamageType,
     InteractableType,
     ItemType,
@@ -39,7 +40,7 @@ import {
     StatsComponent,
     TriggerTypeComponent
 } from "./entity";
-import { attack, getEffectiveSpeedData, takeDamage } from "./fighter";
+import { attack, getEffectiveDamageAffinity, getEffectiveSpeedData, takeDamage } from "./fighter";
 import { deepWaterTrigger, eventTrigger, fireTrigger, mudTrigger, shallowWaterTrigger, steamTrigger } from "./trigger";
 import { giveItemsInteract, giveSpellsInteract, doorInteract, levelLoadInteract, restPointInteract } from "./interactable";
 import { setOnFire, setStunned, SpellDataDetails, ItemDataDetails } from "./skills";
@@ -184,10 +185,13 @@ export function generateWeightCallback(
     ecs: World,
     map: GameMap,
     entityMap: EntityMap,
+    entity: Entity,
     origin: Vector2D
 ): WeightCallback {
     return function (x: number, y: number): number {
         if (globals.Game === null) { throw new Error("Global game object is null"); }
+
+        const affinity = getEffectiveDamageAffinity(entity);
 
         const neighbors: Vector2D[] = [];
         for (let i = 0; i < DIRS[8].length; i++) {
@@ -208,10 +212,13 @@ export function generateWeightCallback(
 
                 if (trigger !== undefined) {
                     switch (trigger.currentTriggerType) {
-                        case TriggerType.Fire:
-                            weight += 20;
+                        case TriggerType.Fire: {
+                            if (affinity !== null &&
+                                affinity[DamageType.Fire] !== Affinity.nullified) {
+                                weight += 20;
+                            }
                             break;
-                        case TriggerType.ShallowWater:
+                        } case TriggerType.ShallowWater:
                             weight += 2;
                             break;
                         case TriggerType.DeepWater:
@@ -220,10 +227,13 @@ export function generateWeightCallback(
                         case TriggerType.Mud:
                             weight += 7;
                             break;
-                        case TriggerType.Steam:
-                            weight += 20;
+                        case TriggerType.Steam: {
+                            if (affinity !== null &&
+                                affinity[DamageType.Water] !== Affinity.nullified) {
+                                weight += 20;
+                            }
                             break;
-                        case TriggerType.Event:
+                        } case TriggerType.Event:
                             break;
                         case TriggerType.Ice:
                             weight += 7;

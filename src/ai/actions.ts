@@ -65,7 +65,7 @@ function getStepsTowardsTarget(
         weightCB = () => 1;
     } else {
         passableCB = createPassableCallback(origin);
-        weightCB = generateWeightCallback(ecs, map, entityMap, origin);
+        weightCB = generateWeightCallback(ecs, map, entityMap, actor, origin);
     }
 
     const aStar = new Path.AStar(
@@ -553,7 +553,7 @@ function goToSafePositionAction(
     const bfs = new Path.ReverseAStar(
         (x, y) => !dangerousPositions.has(`${x},${y}`),
         createPassableCallback(tilePos),
-        generateWeightCallback(ecs, map, entityMap, tilePos)
+        generateWeightCallback(ecs, map, entityMap, aiState.entity, tilePos)
     );
 
     let path: Vector2D[] = [];
@@ -608,7 +608,7 @@ function repositionAction(
             return Math.floor(d) === aiState.desiredDistanceToTarget;
         },
         createPassableCallback(pos.tilePosition),
-        generateWeightCallback(ecs, map, entityMap, pos.tilePosition)
+        generateWeightCallback(ecs, map, entityMap, aiState.entity, pos.tilePosition)
     );
 
     let path: Vector2D[] = [];
@@ -683,7 +683,7 @@ function douseFireOnSelfAction(
             return false;
         },
         createPassableCallback(pos.tilePosition),
-        generateWeightCallback(ecs, map, entityMap, pos.tilePosition)
+        generateWeightCallback(ecs, map, entityMap, aiState.entity, pos.tilePosition)
     );
 
     let path: Vector2D[] = [];
