@@ -14,13 +14,14 @@ interface SoundChannel {
     sound: Nullable<Howl>
 }
 
-const musicVolume = 0.8;
+const musicVolume = 0.7;
 const musicChannel: SoundChannel = {
     id: null,
     sound: null
 };
 
 // TODO, cleanup: Load sounds async with the game code
+// TODO: low pass filter when in inventory and spells. This is not possible in Howler.js
 
 export async function loadSounds() {
     await Promise.all([
@@ -128,8 +129,8 @@ export function playUIClick() {
 
 export function playUIRollover() {
     // perturbation
-    sounds.uiRollover.rate(randomFromInterval(0.88, 1.12));
-    sounds.uiRollover.volume(randomFromInterval(0.7, 1));
+    sounds.uiRollover.rate(randomFromInterval(0.95, 1.08));
+    sounds.uiRollover.volume(randomFromInterval(0.95, 1.05));
 
     sounds.uiRollover.play();
 }

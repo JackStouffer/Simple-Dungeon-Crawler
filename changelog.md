@@ -10,10 +10,11 @@ _In Development_
   * More dialog responses
     * Added lines when confused
     * Added lines when a bandit gives up on chasing the player
+    * Added response when ally runs away
 * Technical
   * Refactored chest updating to less over engineered. Just flip the texture key and then follow the normal code path
   * Added simple template system to dialog definitions to allow for dynamic rules
-  * Enemies can be immune to confusion due to confusion refactor
+  * Enemies can be immune to confusion due to a refactoring of the confusion component
 
 ## Version 12
 

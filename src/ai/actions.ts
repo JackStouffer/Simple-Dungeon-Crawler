@@ -548,7 +548,7 @@ function goToSafePositionAction(
     // TODO, speed: Calculating the dangerous positions twice here. Once
     // in the goal resolver and once here.
     const dangerousPositions = getPotentiallyDangerousPositions(
-        ecs, entityMap, aiState.entity, 20, false
+        ecs, entityMap, aiState.entity, 20
     );
 
     const bfs = new Path.ReverseAStar(

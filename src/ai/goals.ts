@@ -454,6 +454,7 @@ export function resolveOnFire(ecs: World, entityMap: EntityMap, ai: Entity): boo
  * @returns {boolean}
  */
 function resolveNearWater(ecs: World, entityMap: EntityMap, ai: Entity): boolean {
+    // TODO: Change this to be "can get there in n turns", not by distance
     const pos = ai.getOne(PositionComponent)!.tilePosition;
     const entities = ecs
         .createQuery()
