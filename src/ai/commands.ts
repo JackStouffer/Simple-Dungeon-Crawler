@@ -1,7 +1,6 @@
 import { isEqual, get } from "lodash";
 import { World } from "ape-ecs";
-
-import { PassableCallback } from "../rot/path/path";
+import { LightPassesCallback } from "../rot/fov/fov";
 
 import globals from "../globals";
 import { Planner, ActionList, PlannerWorldState } from "./planner";
@@ -30,8 +29,9 @@ import { buildDialogQuery, queryAlliesForResponses, queryDialogTable, sayDialogD
  * Creates a function which returns if an x and y coordinate
  * represents a spot on the map which can be seen through
  */
-export function createPassableSightCallback(origin: Vector2D): PassableCallback {
+export function createPassableSightCallback(origin: Vector2D): LightPassesCallback {
     return function(x: number, y: number) {
+        // TODO, bug: Light is allowed to pass through diagonally adjacent tiles
         if (globals.Game === null) { throw new Error("Global game object is null"); }
 
         // own space is passable

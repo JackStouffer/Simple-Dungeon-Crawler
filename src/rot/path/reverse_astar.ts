@@ -128,7 +128,7 @@ export default class ReverseAStar {
             const x = cx + dir[0];
             const y = cy + dir[1];
 
-            if (!this._passableCallback(x, y)) { continue; }
+            if (!this._passableCallback(x, y, cx, cy)) { continue; }
             result.push([x, y]);
         }
 

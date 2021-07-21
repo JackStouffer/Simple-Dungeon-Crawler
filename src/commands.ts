@@ -53,13 +53,84 @@ import { Camera } from "./camera";
  * represents a passable spot on the map
  */
 export function createPassableCallback(origin: Vector2D): PassableCallback {
-    return function(x: number, y: number) {
+    return function(x: number, y: number, previousX?: number, previousY?: number) {
         if (globals.Game === null) { throw new Error("Global game object is null"); }
+
+        // Don't allow entities to pass through diagonally through diagonally
+        // adjacent blocks
+        let dx, dy;
+        if (previousX !== undefined && previousY !== undefined) {
+            dx = x - previousX;
+            dy = y - previousY;
+
+            // NW
+            if (dx === -1 && dy === -1) {
+                const { blocks: east } = isBlocked(
+                    globals.Game.ecs,
+                    globals.Game.map,
+                    globals.Game.entityMap,
+                    new Vector2D(x + 1, y)
+                );
+                const { blocks: south } = isBlocked(
+                    globals.Game.ecs,
+                    globals.Game.map,
+                    globals.Game.entityMap,
+                    new Vector2D(x, y + 1)
+                );
+                if (east && south) { return false; }
+            // NE
+            } else if (dx === 1 && dy === -1) {
+                const { blocks: west } = isBlocked(
+                    globals.Game.ecs,
+                    globals.Game.map,
+                    globals.Game.entityMap,
+                    new Vector2D(x - 1, y)
+                );
+                const { blocks: south } = isBlocked(
+                    globals.Game.ecs,
+                    globals.Game.map,
+                    globals.Game.entityMap,
+                    new Vector2D(x, y + 1)
+                );
+                if (west && south) { return false; }
+            // SW
+            } else if (dx === -1 && dy === 1) {
+                const { blocks: east } = isBlocked(
+                    globals.Game.ecs,
+                    globals.Game.map,
+                    globals.Game.entityMap,
+                    new Vector2D(x + 1, y)
+                );
+                const { blocks: north } = isBlocked(
+                    globals.Game.ecs,
+                    globals.Game.map,
+                    globals.Game.entityMap,
+                    new Vector2D(x, y - 1)
+                );
+                if (east && north) { return false; }
+            // SE
+            } else if (dx === 1 && dy === 1) {
+                const { blocks: west } = isBlocked(
+                    globals.Game.ecs,
+                    globals.Game.map,
+                    globals.Game.entityMap,
+                    new Vector2D(x - 1, y)
+                );
+                const { blocks: north } = isBlocked(
+                    globals.Game.ecs,
+                    globals.Game.map,
+                    globals.Game.entityMap,
+                    new Vector2D(x, y - 1)
+                );
+                if (west && north) { return false; }
+            }
+        }
 
         // own space is passable
         if (origin.x === x && origin.y === y) {
             return true;
         }
+
         const { blocks } = isBlocked(
             globals.Game.ecs,
             globals.Game.map,

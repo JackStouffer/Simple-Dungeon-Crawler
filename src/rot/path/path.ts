@@ -29,7 +29,12 @@
 import { DIRS } from "../constants";
 
 export type ComputeCallback = (x: number, y: number) => any;
-export type PassableCallback = (x: number, y: number) => boolean;
+export type PassableCallback = (
+    x: number,
+    y: number,
+    previousX?: number,
+    previousY?: number
+) => boolean;
 export type WeightCallback = (x: number, y: number) => number;
 
 export interface Options {
@@ -89,12 +94,12 @@ export default abstract class Path {
 
     _getNeighbors(cx: number, cy: number) {
         const result = [];
-        for (let i=0;i<this._dirs.length;i++) {
+        for (let i = 0; i < this._dirs.length; i++) {
             const dir = this._dirs[i];
             const x = cx + dir[0];
             const y = cy + dir[1];
 
-            if (!this._passableCallback(x, y)) { continue; }
+            if (!this._passableCallback(x, y, cx, cy)) { continue; }
             result.push([x, y]);
         }
 
