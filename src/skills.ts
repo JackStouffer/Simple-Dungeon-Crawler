@@ -44,7 +44,7 @@ import { getCirclePositions, getTargetingReticle } from "./graphics";
 import { PushBackCommand } from "./commands";
 
 export interface Area {
-    type: "rectangle" | "circle";
+    type: "rectangle" | "circle" | "ring";
     width?: number;
     height?: number;
     radius?: number;
@@ -792,6 +792,33 @@ export function castFireWall(
         rotation,
         "fire_effect"
     );
+}
+
+export function castFireRing(
+    item: ItemDataDetails | SpellDataDetails,
+    user: Entity,
+    ecs: World,
+    map: GameMap,
+    entityMap: EntityMap,
+    target: Vector2D,
+    rotation: number
+): boolean {
+    if (globals.Game === null) { throw new Error("Global game object is null"); }
+    if (item.areaOfEffect === undefined) { throw new Error("areaOfEffect cannot be null for castWall"); }
+
+    const tiles = getTargetingReticle(item, target, rotation);
+
+    for (let i = 0; i < tiles.length; i++) {
+        const { blocks, entity } = isBlocked(ecs, map, entityMap, tiles[i]);
+
+        if (blocks === true && entity === null) {
+            continue;
+        }
+
+        createEntity(ecs, globals.Game.textureAtlas, "fire_effect", tiles[i]);
+    }
+
+    return true;
 }
 
 /**
@@ -1861,6 +1888,21 @@ export const SpellData: { [key: string]: SpellDataDetails } = {
                 startRotation: { min: 90, max: 90 }
             }
         }
+    },
+    "ring_of_fire": {
+        id: "ring_of_fire",
+        displayName: "Ring of Fire",
+        description: "Conjure a ring of flame that damages all who walk through it",
+        baseCastCount: 10,
+        value: 10,
+        type: SpellType.DamageOther,
+        damageType: DamageType.Fire,
+        range: 9,
+        areaOfEffect: {
+            type: "ring",
+            radius: 3
+        },
+        useFunc: castFireRing
     },
     "fire_wall": {
         id: "fire_wall",

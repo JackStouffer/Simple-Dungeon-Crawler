@@ -462,12 +462,12 @@ function resolveNearWater(ecs: World, entityMap: EntityMap, ai: Entity): boolean
     const NUM_MOVES = 4;
     const distance = speedData.maxTilesPerMove * NUM_MOVES * 1.4;
 
-    const entities = ecs
+    const waterTiles = ecs
         .createQuery()
         .fromAll(PositionComponent, "waterTile")
         .execute();
 
-    for (const e of entities) {
+    for (const e of waterTiles) {
         if (e.id === ai.id) { continue; }
 
         const ePos = e.getOne(PositionComponent)!;

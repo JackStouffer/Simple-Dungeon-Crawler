@@ -64,7 +64,7 @@ export class DrawSystem extends System {
             if (flameData !== undefined && flameData.onFire === true) {
                 graphics.sprite.tint = 0xFF0000;
             } else if (wetData !== undefined && wetData.wet === true) {
-                graphics.sprite.tint = 0x0000FF;
+                graphics.sprite.tint = 0x000FF;
             } else {
                 graphics.sprite.tint = 0xFFFFFF;
             }
@@ -182,6 +182,44 @@ export function getCirclePositions(radius: number, cx: number, cy: number): Vect
 }
 
 /**
+ * Bresenham's circle algorithm
+ */
+export function getRingPositions(radius: number, cx: number, cy: number): Vector2D[] {
+    const positions: Vector2D[] = [];
+    let f = 1 - radius;
+    let ddFX = 0;
+    let ddFY = -2 * radius;
+    let x = 0;
+    let y = radius;
+
+    positions.push(new Vector2D(cx, cy + radius));
+    positions.push(new Vector2D(cx, cy - radius));
+    positions.push(new Vector2D(cx + radius, cy));
+    positions.push(new Vector2D(cx - radius, cy));
+
+    while(x < y) {
+        if (f >= 0) {
+            y--;
+            ddFY += 2;
+            f += ddFY;
+        }
+        x++;
+        ddFX += 2;
+        f += ddFX + 1;
+        positions.push(new Vector2D(cx + x, cy + y));
+        positions.push(new Vector2D(cx - x, cy + y));
+        positions.push(new Vector2D(cx + x, cy - y));
+        positions.push(new Vector2D(cx - x, cy - y));
+        positions.push(new Vector2D(cx + y, cy + x));
+        positions.push(new Vector2D(cx - y, cy + x));
+        positions.push(new Vector2D(cx + y, cy - x));
+        positions.push(new Vector2D(cx - y, cy - x));
+    }
+
+    return positions;
+}
+
+/**
  * Returns a list of Points that represent the area being targeted by
  * the player.
  */
@@ -236,6 +274,8 @@ export function getTargetingReticle(
             }
         } else if (data.areaOfEffect.type === "circle") {
             return getCirclePositions(data.areaOfEffect.radius!, pos.x, pos.y);
+        } else if (data.areaOfEffect.type === "ring") {
+            return getRingPositions(data.areaOfEffect.radius!, pos.x, pos.y);
         }
     } else {
         ret.push(new Vector2D(pos.x, pos.y));
@@ -301,7 +341,7 @@ export class DrawPlayerSystem extends System {
                 if (flameData !== undefined && flameData.onFire === true) {
                     graphics.sprite.tint = 0xFF0000;
                 } else if (wetData !== undefined && wetData.wet === true) {
-                    graphics.sprite.tint = 0x0000FF;
+                    graphics.sprite.tint = 0x000FF;
                 } else {
                     graphics.sprite.tint = 0xFFFFFF;
                 }
@@ -556,7 +596,7 @@ export function createSpeechBubbleTexture(x: number, y: number, text: string) {
     graphics.zIndex = 10;
     graphics.zIndex = 10;
 
-    const speech = new PIXI.Text(text, { fontFamily : "monospace", fontSize: 12, fill : 0x000000 });
+    const speech = new PIXI.Text(text, { fontFamily : "monospace", fontSize: 12, fill : 0x00000 });
     const rectWidth = speech.width + padding;
     const rectHeight = speech.height + padding;
     const halfTileSize = ((TILE_SIZE * globals.Game!.gameCamera.zoom) / 2);
