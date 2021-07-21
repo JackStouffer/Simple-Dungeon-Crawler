@@ -12,6 +12,7 @@ import {
     PlannerAIComponent,
     PositionComponent,
     SilenceableComponent,
+    SpeedComponent,
     SpellsComponent,
     TriggerTypeComponent
 } from "../entity";
@@ -454,8 +455,13 @@ export function resolveOnFire(ecs: World, entityMap: EntityMap, ai: Entity): boo
  * @returns {boolean}
  */
 function resolveNearWater(ecs: World, entityMap: EntityMap, ai: Entity): boolean {
-    // TODO: Change this to be "can get there in n turns", not by distance
-    const pos = ai.getOne(PositionComponent)!.tilePosition;
+    const pos = ai.getOne(PositionComponent);
+    const speedData = ai.getOne(SpeedComponent);
+    if (pos === undefined || speedData === undefined) { return false; }
+
+    const NUM_MOVES = 4;
+    const distance = speedData.maxTilesPerMove * NUM_MOVES * 1.4;
+
     const entities = ecs
         .createQuery()
         .fromAll(PositionComponent, "waterTile")
@@ -465,7 +471,7 @@ function resolveNearWater(ecs: World, entityMap: EntityMap, ai: Entity): boolean
         if (e.id === ai.id) { continue; }
 
         const ePos = e.getOne(PositionComponent)!;
-        if (tileDistanceBetweenPoints(ePos.tilePosition, pos) < 15) {
+        if (tileDistanceBetweenPoints(ePos.tilePosition, pos.tilePosition) < distance) {
             return true;
         }
     }

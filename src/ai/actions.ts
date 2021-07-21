@@ -538,7 +538,6 @@ function goToSafePositionAction(
     entityMap: EntityMap,
     aiState: PlannerAIComponent
 ): Command {
-    // TODO, bug: This is broken when two entities are on fire next to each other
     const pos = aiState.entity.getOne(PositionComponent);
     const speedData = aiState.entity.getOne(SpeedComponent);
     if (pos === undefined || speedData === undefined) {
