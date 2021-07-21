@@ -1900,7 +1900,7 @@ export const SpellData: { [key: string]: SpellDataDetails } = {
         range: 9,
         areaOfEffect: {
             type: "ring",
-            radius: 3
+            radius: 2
         },
         useFunc: castFireRing
     },

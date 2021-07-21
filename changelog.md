@@ -11,6 +11,8 @@ _In Development_
     * Added lines when confused
     * Added lines when a bandit gives up on chasing the player
     * Added response when ally runs away
+  * Added ring of fire defensive spell
+  * Fixed bug where entities could path through two diagonally adjacent blocking tiles
 * Technical
   * Refactored chest updating to less over engineered. Just flip the texture key and then follow the normal code path
   * Added simple template system to dialog definitions to allow for dynamic rules

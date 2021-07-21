@@ -182,38 +182,19 @@ export function getCirclePositions(radius: number, cx: number, cy: number): Vect
 }
 
 /**
- * Bresenham's circle algorithm
+ * Not really a ring, more of an empty rectangle because the square tile based movement
+ * allows one to move diagonally, skipping the triggers on the two cardinal tiles
  */
 export function getRingPositions(radius: number, cx: number, cy: number): Vector2D[] {
     const positions: Vector2D[] = [];
-    let f = 1 - radius;
-    let ddFX = 0;
-    let ddFY = -2 * radius;
-    let x = 0;
-    let y = radius;
 
-    positions.push(new Vector2D(cx, cy + radius));
-    positions.push(new Vector2D(cx, cy - radius));
-    positions.push(new Vector2D(cx + radius, cy));
-    positions.push(new Vector2D(cx - radius, cy));
-
-    while(x < y) {
-        if (f >= 0) {
-            y--;
-            ddFY += 2;
-            f += ddFY;
+    for (let y = cy - radius; y < cy + radius + 1; y++) {
+        for (let x = cx - radius; x < cx + radius + 1; x++) {
+            if ((y === cy - radius || y === cy + radius) ||
+                (x === cx - radius || x === cx + radius)) {
+                positions.push(new Vector2D(x, y));
+            }
         }
-        x++;
-        ddFX += 2;
-        f += ddFX + 1;
-        positions.push(new Vector2D(cx + x, cy + y));
-        positions.push(new Vector2D(cx - x, cy + y));
-        positions.push(new Vector2D(cx + x, cy - y));
-        positions.push(new Vector2D(cx - x, cy - y));
-        positions.push(new Vector2D(cx + y, cy + x));
-        positions.push(new Vector2D(cx - y, cy + x));
-        positions.push(new Vector2D(cx + y, cy - x));
-        positions.push(new Vector2D(cx - y, cy - x));
     }
 
     return positions;
