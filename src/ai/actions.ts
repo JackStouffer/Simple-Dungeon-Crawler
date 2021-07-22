@@ -354,29 +354,29 @@ function healAllyAction(
     entityMap: EntityMap,
     aiState: PlannerAIComponent
 ): Command {
-    // TODO, bug: bandit white mage is currently healing self
     // TODO: this should generate a move camera command to the entity being healed
     const pos = aiState.entity.getOne(PositionComponent);
     const spells = aiState.entity.getOne(SpellsComponent);
     const displayName = aiState.entity.getOne(DisplayNameComponent);
+    const team = globals.Game?.entityTeams.get(aiState.teamId ?? Infinity);
     if (pos === undefined) { throw new Error("No position on AI for healAllyAction"); }
     if (spells === undefined) { throw new Error("No spells on AI for healAllyAction"); }
     if (displayName === undefined) { throw new Error(`Entity ${aiState.entity.id} is missing DisplayNameComponent`); }
+    if (team === undefined) { throw new Error(`Entity ${aiState.entity.id} is missing a team for healAllyAction`); }
 
     const spell = getKnownSpells(spells)
         .filter(i => i.type === SpellType.HealOther)
         .sort((a, b) => a.value! - b.value!)[0];
 
-    const entities = ecs
-        .createQuery()
-        .fromAll(PositionComponent, PlannerAIComponent, HitPointsComponent)
-        .execute();
-
     // TODO, SPEED: this information is being calculated twice, once here
     // and once in the goals
     let target: Nullable<Vector2D> = null;
     let targetHPPercent: Nullable<number> = null;
-    for (const e of entities) {
+    for (const eId of team.memberIds) {
+        if (eId === aiState.entity.id) { continue; }
+        const e = ecs.getEntity(eId);
+        if (e === undefined) { continue; }
+
         const hpData = e.getOne(HitPointsComponent)!;
         const ePos = e.getOne(PositionComponent)!;
         const hpPercent = hpData.hp / hpData.maxHp;

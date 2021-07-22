@@ -225,18 +225,17 @@ export function resolveHasDamageOtherSpellCasts(
 function resolveAllyLowHealth(ecs: World, entityMap: EntityMap, ai: Entity): boolean {
     const pos = ai.getOne(PositionComponent)!;
     const aiData = ai.getOne(PlannerAIComponent)!;
-    const entities = ecs
-        .createQuery()
-        .fromAll(PositionComponent, PlannerAIComponent, HitPointsComponent)
-        .execute();
+    const team = globals.Game?.entityTeams.get(aiData.teamId ?? Infinity);
+    if (team === undefined) { return false; }
 
     // TODO, SPEED: this information is being calculated twice, once here
     // and once in the action
     let target: Nullable<Vector2D> = null;
     let targetHPData: Nullable<HitPointsComponent> = null;
-    for (const e of entities) {
-        // TODO: remove when we have target selection/factions
-        if (e.id === aiData.targetId || e === ai) { continue; }
+    for (const eId of team.memberIds) {
+        if (eId === ai.id) { continue; }
+        const e = ecs.getEntity(eId);
+        if (e === undefined) { continue; }
 
         const hpData = e.getOne(HitPointsComponent)!;
         const ePos = e.getOne(PositionComponent)!;
