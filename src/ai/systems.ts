@@ -29,30 +29,31 @@ export class LoseTargetSystem extends System {
     }
 
     update() {
-        // TODO: Do nothing if ai is toggled off
-        const entities = this.query.execute();
-        for (const e of entities) {
-            const loseTrackData = e.getOne(LoseTargetAIComponent)!;
-            const aiState = e.getOne(PlannerAIComponent)!;
-            if (!aiState.hasTargetInSight && aiState.knowsTargetPosition) {
-                ++loseTrackData.turnsWithTargetOutOfSight;
+        if (globals.Game?.processAI === true) {
+            const entities = this.query.execute();
+            for (const e of entities) {
+                const loseTrackData = e.getOne(LoseTargetAIComponent)!;
+                const aiState = e.getOne(PlannerAIComponent)!;
+                if (!aiState.hasTargetInSight && aiState.knowsTargetPosition) {
+                    ++loseTrackData.turnsWithTargetOutOfSight;
 
-                if (loseTrackData.turnsWithTargetOutOfSight > loseTrackData.loseTrackAfterNTurns
-                ) {
-                    aiState.knowsTargetPosition = false;
-                    loseTrackData.turnsWithTargetOutOfSight = 0;
-                    aiState.update();
+                    if (loseTrackData.turnsWithTargetOutOfSight > loseTrackData.loseTrackAfterNTurns
+                    ) {
+                        aiState.knowsTargetPosition = false;
+                        loseTrackData.turnsWithTargetOutOfSight = 0;
+                        aiState.update();
 
-                    const displayName = e.getOne(DisplayNameComponent);
-                    if (displayName !== undefined) {
-                        displayMessage(`${displayName.name} lost track of you`);
+                        const displayName = e.getOne(DisplayNameComponent);
+                        if (displayName !== undefined) {
+                            displayMessage(`${displayName.name} lost track of you`);
+                        }
                     }
-                }
 
-                loseTrackData.update();
-            } else {
-                loseTrackData.turnsWithTargetOutOfSight = 0;
-                loseTrackData.update();
+                    loseTrackData.update();
+                } else {
+                    loseTrackData.turnsWithTargetOutOfSight = 0;
+                    loseTrackData.update();
+                }
             }
         }
     }
@@ -126,30 +127,32 @@ export class UpdateAISightData extends System {
     }
 
     update() {
-        // TODO: Do nothing if ai is toggled off
-        const entities = this.query.execute();
-        for (const e of entities) {
-            const aiState = e.getOne(PlannerAIComponent)!;
-            const pos = e.getOne(PositionComponent)!.tilePosition;
+        if (globals.Game?.processAI === true) {
+            const entities = this.query.execute();
+            for (const e of entities) {
+                const aiState = e.getOne(PlannerAIComponent)!;
+                const pos = e.getOne(PositionComponent)!.tilePosition;
 
-            // compute the FOV to see if the player is sighted
-            const fov = new FOV.PreciseShadowcasting(createPassableSightCallback(pos));
-            fov.compute(
-                pos.x,
-                pos.y,
-                aiState.sightRange,
-                createVisibilityCallback(this.world, e)
-            );
+                // compute the FOV to see if the player is sighted
+                const fov = new FOV.PreciseShadowcasting(createPassableSightCallback(pos));
+                fov.compute(
+                    pos.x,
+                    pos.y,
+                    aiState.sightRange,
+                    createVisibilityCallback(this.world, e)
+                );
+            }
         }
     }
 }
 
 export class UpdateEntityTeamsSystem extends System {
     update() {
-        // TODO, cleanup: Iterator "each" function
-        // TODO: Do nothing if ai is toggled off
-        for (const team of globals.Game!.entityTeams.values()) {
-            team.update();
+        if (globals.Game?.processAI === true) {
+            // TODO, cleanup: Iterator "each" function
+            for (const team of globals.Game!.entityTeams.values()) {
+                team.update();
+            }
         }
     }
 }
@@ -168,25 +171,26 @@ export class ConfusableAISystem extends System {
     }
 
     update() {
-        // TODO: Do nothing if ai is toggled off
-        const entities = this.query.execute();
-        for (const entity of entities) {
-            const confusedState = entity.getOne(ConfusableAIComponent)!;
+        if (globals.Game?.processAI === true) {
+            const entities = this.query.execute();
+            for (const entity of entities) {
+                const confusedState = entity.getOne(ConfusableAIComponent)!;
 
-            --confusedState.turnsLeft;
+                --confusedState.turnsLeft;
 
-            if (confusedState.turnsLeft === 0) {
-                confusedState.confused = false;
+                if (confusedState.turnsLeft === 0) {
+                    confusedState.confused = false;
 
-                const displayName = entity.getOne(DisplayNameComponent);
-                if (entity.id === globals.Game!.playerId) {
-                    displayMessage("You are no longer confused");
-                } else if (displayName !== undefined) {
-                    displayMessage(`${displayName.name} is no longer confused`);
+                    const displayName = entity.getOne(DisplayNameComponent);
+                    if (entity.id === globals.Game!.playerId) {
+                        displayMessage("You are no longer confused");
+                    } else if (displayName !== undefined) {
+                        displayMessage(`${displayName.name} is no longer confused`);
+                    }
                 }
-            }
 
-            confusedState.update();
+                confusedState.update();
+            }
         }
     }
 }
