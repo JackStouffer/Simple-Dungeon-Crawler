@@ -29,6 +29,7 @@ export class LoseTargetSystem extends System {
     }
 
     update() {
+        // TODO: Do nothing if ai is toggled off
         const entities = this.query.execute();
         for (const e of entities) {
             const loseTrackData = e.getOne(LoseTargetAIComponent)!;
@@ -125,6 +126,7 @@ export class UpdateAISightData extends System {
     }
 
     update() {
+        // TODO: Do nothing if ai is toggled off
         const entities = this.query.execute();
         for (const e of entities) {
             const aiState = e.getOne(PlannerAIComponent)!;
@@ -145,6 +147,7 @@ export class UpdateAISightData extends System {
 export class UpdateEntityTeamsSystem extends System {
     update() {
         // TODO, cleanup: Iterator "each" function
+        // TODO: Do nothing if ai is toggled off
         for (const team of globals.Game!.entityTeams.values()) {
             team.update();
         }
@@ -165,6 +168,7 @@ export class ConfusableAISystem extends System {
     }
 
     update() {
+        // TODO: Do nothing if ai is toggled off
         const entities = this.query.execute();
         for (const entity of entities) {
             const confusedState = entity.getOne(ConfusableAIComponent)!;

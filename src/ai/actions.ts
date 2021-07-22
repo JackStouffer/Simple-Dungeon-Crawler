@@ -64,7 +64,7 @@ function getStepsTowardsTarget(
         passableCB = createWaterBasedPassableCallback(origin);
         weightCB = () => 1;
     } else {
-        passableCB = createPassableCallback(origin);
+        passableCB = createPassableCallback(ecs, entityMap, origin, actor);
         weightCB = generateWeightCallback(ecs, map, entityMap, actor, origin);
     }
 
@@ -206,6 +206,7 @@ function chaseAction(
     entityMap: EntityMap,
     aiState: PlannerAIComponent
 ): Command {
+    // TODO: Should only be called if some hasPathToTarget goal is true
     const speedData = aiState.entity.getOne(SpeedComponent);
     const posData = aiState.entity.getOne(PositionComponent);
 
@@ -353,6 +354,7 @@ function healAllyAction(
     entityMap: EntityMap,
     aiState: PlannerAIComponent
 ): Command {
+    // TODO, bug: bandit white mage is currently healing self
     // TODO: this should generate a move camera command to the entity being healed
     const pos = aiState.entity.getOne(PositionComponent);
     const spells = aiState.entity.getOne(SpellsComponent);
@@ -552,7 +554,7 @@ function goToSafePositionAction(
 
     const bfs = new Path.ReverseAStar(
         (x, y) => !dangerousPositions.has(`${x},${y}`),
-        createPassableCallback(tilePos),
+        createPassableCallback(ecs, entityMap, tilePos, aiState.entity),
         generateWeightCallback(ecs, map, entityMap, aiState.entity, tilePos)
     );
 
@@ -607,7 +609,7 @@ function repositionAction(
             const d = tileDistanceBetweenPoints(new Vector2D(x, y), targetPosData.tilePosition);
             return Math.floor(d) === aiState.desiredDistanceToTarget;
         },
-        createPassableCallback(pos.tilePosition),
+        createPassableCallback(ecs, entityMap, pos.tilePosition, aiState.entity),
         generateWeightCallback(ecs, map, entityMap, aiState.entity, pos.tilePosition)
     );
 
@@ -682,7 +684,7 @@ function douseFireOnSelfAction(
             }
             return false;
         },
-        createPassableCallback(pos.tilePosition),
+        createPassableCallback(ecs, entityMap, pos.tilePosition, aiState.entity),
         generateWeightCallback(ecs, map, entityMap, aiState.entity, pos.tilePosition)
     );
 

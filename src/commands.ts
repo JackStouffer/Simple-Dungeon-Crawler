@@ -53,7 +53,12 @@ import { Camera } from "./camera";
  * Creates a function which returns if an x and y coordinate
  * represents a passable spot on the map
  */
-export function createPassableCallback(origin: Vector2D): PassableCallback {
+export function createPassableCallback(
+    ecs: World,
+    entityMap: EntityMap,
+    origin: Vector2D,
+    ai?: Entity
+): PassableCallback {
     return function(x: number, y: number, previousX?: number, previousY?: number) {
         if (globals.Game === null) { throw new Error("Global game object is null"); }
 
@@ -138,8 +143,28 @@ export function createPassableCallback(origin: Vector2D): PassableCallback {
             globals.Game.entityMap,
             new Vector2D(x, y)
         );
+        if (blocks) { return false; }
 
-        return !blocks;
+        if (ai !== undefined) {
+            const aiState = ai.getOne(PlannerAIComponent);
+            const flammableData = ai.getOne(FlammableComponent);
+            const affinity = getEffectiveDamageAffinity(ai);
+            if (aiState !== undefined &&
+                flammableData?.onFire !== true &&
+                affinity !== null &&
+                affinity[DamageType.Fire] !== Affinity.nullified) {
+                const entities = getEntitiesAtLocation(ecs, entityMap, new Vector2D(x, y));
+                for (const e of entities) {
+                    const triggerData = e.getOne(TriggerTypeComponent);
+                    if (triggerData !== undefined &&
+                        triggerData.currentTriggerType === TriggerType.Fire) {
+                        return false;
+                    }
+                }
+            }
+        }
+
+        return true;
     };
 }
 
@@ -320,7 +345,7 @@ export function getPlayerMovementPath(
         const aStar = new Path.AStar(
             destination.x,
             destination.y,
-            createPassableCallback(origin),
+            createPassableCallback(ecs, entityMap, origin),
             generatePlayerWeightCallback(origin),
             { topology: 8 }
         );
