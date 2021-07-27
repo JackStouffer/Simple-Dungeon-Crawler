@@ -289,6 +289,9 @@ export function getPotentiallyDangerousPositions(
 
         const tilePos = e.getOne(PositionComponent)!.tilePosition;
         const fireData = e.getOne(FlammableComponent)!;
+        // TODO: This is a really dumb way of telling if there's a dangerous fire close by. What we
+        // could do is have some pre-computed graph of connected flammable points and see if we're in
+        // on of those graphs which has a spreading fire
         if (fireData.onFire && tileDistanceBetweenPoints(tilePos, entityTilePos) < sightRange) {
             closeTileOnFire = true;
             break;

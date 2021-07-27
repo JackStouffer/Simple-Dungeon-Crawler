@@ -15,6 +15,7 @@ _In Development_
   * Enemies will no longer run through fire to get to the player if they can be damaged by it
   * Enemy pathing now takes damage resistances into account when avoiding tiles
   * Fixed bug where entities could path through two diagonally adjacent blocking tiles
+  * Fixed bug where enemies could use heal other spell on self
 * Technical
   * Refactored chest updating to less over engineered. Just flip the texture key and then follow the normal code path
   * Added simple template system to dialog definitions to allow for dynamic rules

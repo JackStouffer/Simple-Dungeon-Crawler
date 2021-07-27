@@ -285,7 +285,9 @@ export class SpellsComponent extends Component {
 export class PlannerAIComponent extends Component {
     targetId: string;
     teamId: Nullable<number>;
-    sightRange: number;
+    sightRange: null;
+    nonAlertSightRange: number;
+    alertSightRange: number;
     planner: Planner;
     previousWorldState: PlannerWorldState;
     currentAction: Nullable<string>;
@@ -301,7 +303,8 @@ export class PlannerAIComponent extends Component {
     static properties = {
         targetId: "",
         teamId: null,
-        sightRange: 7,
+        nonAlertSightRange: 5,
+        alertSightRange: 5,
         planner: null,
         previousWorldState: {},
         currentAction: null,
@@ -539,7 +542,8 @@ interface ObjectDataDetails {
     addPlannerAI?: boolean;
     addDialogMemory?: boolean;
     desiredDistanceToTarget?: number;
-    sightRange?: number;
+    nonAlertSightRange?: number;
+    alertSightRange?: number;
     spells?: [string, number][];
     actions?: string[];
     lowHealthThreshold?: number;
@@ -1252,7 +1256,8 @@ export const ObjectData: { [key: string]: ObjectDataDetails } = {
         addInventory: true,
         addPlannerAI: true,
         addDialogMemory: true,
-        sightRange: 7,
+        nonAlertSightRange: 5,
+        alertSightRange: 7,
         lowHealthThreshold: 0.5,
         desiredDistanceToTarget: 1,
         actions: [
@@ -1342,7 +1347,8 @@ export const ObjectData: { [key: string]: ObjectDataDetails } = {
         addInventory: true,
         addPlannerAI: true,
         addDialogMemory: true,
-        sightRange: 10,
+        nonAlertSightRange: 7,
+        alertSightRange: 7,
         desiredDistanceToTarget: 1,
         actions: [
             "guard",
@@ -1434,7 +1440,8 @@ export const ObjectData: { [key: string]: ObjectDataDetails } = {
     },
     "rat": {
         addPlannerAI: true,
-        sightRange: 5,
+        nonAlertSightRange: 4,
+        alertSightRange: 5,
         lowHealthThreshold: 0.5,
         desiredDistanceToTarget: 1,
         actions: [
@@ -1521,7 +1528,8 @@ export const ObjectData: { [key: string]: ObjectDataDetails } = {
     },
     "eel": {
         addPlannerAI: true,
-        sightRange: 9,
+        nonAlertSightRange: 6,
+        alertSightRange: 7,
         lowHealthThreshold: 0.5,
         desiredDistanceToTarget: 1,
         actions: [
@@ -1599,7 +1607,8 @@ export const ObjectData: { [key: string]: ObjectDataDetails } = {
         addInventory: true,
         addPlannerAI: true,
         addDialogMemory: true,
-        sightRange: 8,
+        nonAlertSightRange: 6,
+        alertSightRange: 8,
         lowHealthThreshold: 0.5,
         desiredDistanceToTarget: 1,
         actions: [
@@ -1696,7 +1705,8 @@ export const ObjectData: { [key: string]: ObjectDataDetails } = {
         addInventory: true,
         addPlannerAI: true,
         addDialogMemory: true,
-        sightRange: 8,
+        nonAlertSightRange: 6,
+        alertSightRange: 8,
         lowHealthThreshold: 0.5,
         desiredDistanceToTarget: 5,
         spells: [
@@ -1804,7 +1814,8 @@ export const ObjectData: { [key: string]: ObjectDataDetails } = {
         addInventory: true,
         addPlannerAI: true,
         addDialogMemory: true,
-        sightRange: 8,
+        nonAlertSightRange: 6,
+        alertSightRange: 8,
         lowHealthThreshold: 0.4,
         desiredDistanceToTarget: 5,
         spells: [
@@ -1904,7 +1915,8 @@ export const ObjectData: { [key: string]: ObjectDataDetails } = {
     },
     "dog": {
         addPlannerAI: true,
-        sightRange: 7,
+        nonAlertSightRange: 5,
+        alertSightRange: 8,
         lowHealthThreshold: 0.5,
         desiredDistanceToTarget: 1,
         actions: [
@@ -1934,11 +1946,6 @@ export const ObjectData: { [key: string]: ObjectDataDetails } = {
                 LoseTargetAIComponent: {
                     turnsWithTargetOutOfSight: 0,
                     loseTrackAfterNTurns: 6
-                },
-                FearAIComponent: {
-                    fear: 0,
-                    isAfraidThreshold: 10,
-                    isCowering: false
                 },
                 ConfusableAIComponent: {
                     confused: false,
@@ -2215,7 +2222,8 @@ export function createEntity(
 
         entity.addComponent({
             type: "PlannerAIComponent",
-            sightRange: data?.sightRange ?? 5,
+            nonAlertSightRange: data?.nonAlertSightRange ?? 5,
+            alertSightRange: data?.alertSightRange ?? 5,
             desiredDistanceToTarget: data?.desiredDistanceToTarget ?? 1,
             planner,
             targetId: "player", // TODO: generic target selection

@@ -108,7 +108,7 @@ function wanderAction(
     const pos = aiState.entity.getOne(PositionComponent)!.tilePosition;
     const validPositions: Vector2D[] = [];
     const dangerousPositions = getPotentiallyDangerousPositions(
-        ecs, entityMap, aiState.entity, aiState.sightRange
+        ecs, entityMap, aiState.entity, aiState.nonAlertSightRange
     );
 
     if (Math.random() > 0.8) {

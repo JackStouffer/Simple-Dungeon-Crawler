@@ -138,7 +138,8 @@ export class UpdateAISightData extends System {
                 fov.compute(
                     pos.x,
                     pos.y,
-                    aiState.sightRange,
+                    aiState.knowsTargetPosition ?
+                        aiState.alertSightRange : aiState.nonAlertSightRange,
                     createVisibilityCallback(this.world, e)
                 );
             }
