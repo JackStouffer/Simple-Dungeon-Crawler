@@ -535,13 +535,13 @@ export class GoToLocationCommand implements Command {
                             steamTrigger(ecs, globals.Game!.entityMap, entity);
                             break;
                         case TriggerType.Ice: {
-                            const vecX = destination.x - pos.tilePosition.x;
-                            const vecY = destination.y - pos.tilePosition.y;
                             // TODO: pushing directly onto the command queue sort of sucks
                             globals.Game!.commandQueue.push(
                                 new GoToLocationCommand(
                                     this.entityId,
-                                    [new Vector2D(destination.x + vecX, destination.y + vecY)]
+                                    [new Vector2D(
+                                        pos.tilePosition.x + dir.x, pos.tilePosition.y + dir.y
+                                    )]
                                 )
                             );
                             this.done = true;
