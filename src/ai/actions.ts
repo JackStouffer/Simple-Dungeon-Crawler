@@ -42,6 +42,7 @@ import { ItemData, SpellData } from "../skills";
 import { getPotentiallyDangerousPositions } from "./goals";
 import { PassableCallback, WeightCallback } from "../rot/path/path";
 import globals from "../globals";
+import { rectangleContains } from "../camera";
 
 /**
  * Calculate a path from a game object to the give x and y
@@ -122,6 +123,11 @@ function wanderAction(
 
         if ((isAquatic && blocks === false && entity !== null && entity.tags.has("waterTile")) ||
             (!isAquatic && blocks === false)) {
+            if (aiState.wanderBounds !== null &&
+                !rectangleContains(aiState.wanderBounds, newPosition)) {
+                continue;
+            }
+
             if (!dangerousPositions.has(`${newPosition.x},${newPosition.y}`)) {
                 validPositions.push(newPosition);
             }

@@ -12,6 +12,13 @@ export interface Rectangle {
     height: number;
 }
 
+export function rectangleContains(rect: Rectangle, pos: Vector2D): boolean {
+    return pos.x >= rect.x &&
+        pos.x <= rect.x + rect.width &&
+        pos.y >= rect.y &&
+        pos.y <= rect.y + rect.height;
+}
+
 export class Camera {
     // world position
     x: number;

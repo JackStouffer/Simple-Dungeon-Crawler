@@ -1291,6 +1291,10 @@ export function loadTiledMap(
         (l) => l.name === "Shadow Boxes"
     ), "[0]", null) as TiledLayerObjectGroup;
 
+    const wanderBoundsLayer = get(sourceData.layers.filter(
+        (l) => l.name === "Wander Bounds"
+    ), "[0]", null) as TiledLayerObjectGroup;
+
     if (tileLayers.length === 0) {
         throw new Error(`No tile layer in map ${level}`);
     }
@@ -1302,6 +1306,9 @@ export function loadTiledMap(
     }
     if (shadowBoxLayer === null) {
         throw new Error(`No shadow box layer in map ${level}`);
+    }
+    if (wanderBoundsLayer === null) {
+        throw new Error(`No wander bounds layer in map ${level}`);
     }
 
     // Create the visibility data of the tiles
@@ -1405,6 +1412,16 @@ export function loadTiledMap(
         );
     });
 
+    const wanderBounds: Map<number, Rectangle> = new Map();
+    wanderBoundsLayer.objects.forEach(o => {
+        wanderBounds.set(o.id, {
+            x: Math.floor(o.x / tileSize),
+            y: Math.floor(o.y / tileSize),
+            width: Math.floor(o.width / tileSize),
+            height: Math.floor(o.height / tileSize)
+        });
+    });
+
     const teams: EntityTeamMap = new Map();
 
     objectLayer.objects.forEach(o => {
@@ -1420,7 +1437,8 @@ export function loadTiledMap(
                     fallbackPosition = findProperty(o, "fallbackPosition") as number,
                     event = findProperty(o, "event") as string,
                     teamId = findProperty(o, "teamId") as number,
-                    isTeamCommander = findProperty(o, "commander") as boolean;
+                    isTeamCommander = findProperty(o, "commander") as boolean,
+                    wanderBoundsId = findProperty(o, "wanderBounds") as number;
 
                 if (type === null) {
                     throw new Error(`No type for ${o.name}`);
@@ -1543,6 +1561,21 @@ export function loadTiledMap(
                         if (ai !== undefined) {
                             ai.teamId = teamId;
                         }
+                    }
+
+                    if (wanderBoundsId !== null) {
+                        const bounds = wanderBounds.get(wanderBoundsId);
+                        if (bounds === undefined) {
+                            throw new Error(`Invalid wander bounds reference ${wanderBoundsId} in ${o.id}`);
+                        }
+
+                        const aiState = entity.getOne(PlannerAIComponent);
+                        if (aiState === undefined) {
+                            throw new Error(`Attempting to add wander bounds to entity ${entity.id} with no AI state`);
+                        }
+
+                        aiState.wanderBounds = bounds;
+                        aiState.update();
                     }
                 }
             } else {

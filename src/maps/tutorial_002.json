@@ -170,6 +170,11 @@
                          "name":"teamId",
                          "type":"int",
                          "value":1
+                        }, 
+                        {
+                         "name":"wanderBounds",
+                         "type":"object",
+                         "value":117
                         }],
                  "rotation":0,
                  "type":"object",
@@ -198,6 +203,11 @@
                          "name":"teamId",
                          "type":"int",
                          "value":1
+                        }, 
+                        {
+                         "name":"wanderBounds",
+                         "type":"object",
+                         "value":117
                         }],
                  "rotation":0,
                  "type":"object",
@@ -387,6 +397,11 @@
                          "name":"teamId",
                          "type":"int",
                          "value":2
+                        }, 
+                        {
+                         "name":"wanderBounds",
+                         "type":"object",
+                         "value":116
                         }],
                  "rotation":0,
                  "type":"object",
@@ -415,6 +430,11 @@
                          "name":"teamId",
                          "type":"int",
                          "value":2
+                        }, 
+                        {
+                         "name":"wanderBounds",
+                         "type":"object",
+                         "value":116
                         }],
                  "rotation":0,
                  "type":"object",
@@ -443,6 +463,11 @@
                          "name":"teamId",
                          "type":"int",
                          "value":2
+                        }, 
+                        {
+                         "name":"wanderBounds",
+                         "type":"object",
+                         "value":116
                         }],
                  "rotation":0,
                  "type":"object",
@@ -622,9 +647,42 @@
          "visible":true,
          "x":0,
          "y":0
+        }, 
+        {
+         "draworder":"topdown",
+         "id":11,
+         "name":"Wander Bounds",
+         "objects":[
+                {
+                 "height":144.080775994101,
+                 "id":116,
+                 "name":"",
+                 "rotation":0,
+                 "type":"",
+                 "visible":true,
+                 "width":121.958137160361,
+                 "x":1044.30200238244,
+                 "y":143.513528844518
+                }, 
+                {
+                 "height":160.530943332009,
+                 "id":117,
+                 "name":"",
+                 "rotation":0,
+                 "type":"",
+                 "visible":true,
+                 "width":109.478699869533,
+                 "x":705.08820693176,
+                 "y":142.379034545352
+                }],
+         "opacity":1,
+         "type":"objectgroup",
+         "visible":true,
+         "x":0,
+         "y":0
         }],
- "nextlayerid":11,
- "nextobjectid":116,
+ "nextlayerid":12,
+ "nextobjectid":118,
  "orientation":"orthogonal",
  "renderorder":"right-down",
  "tiledversion":"1.4.3",

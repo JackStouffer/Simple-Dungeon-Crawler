@@ -29,6 +29,7 @@ import {
 } from "./commands";
 import { ItemDataDetails, SpellDataDetails } from "./skills";
 import { Vector2D } from "./map";
+import { Rectangle } from "./camera";
 
 export type EntityMap = Map<string, string[]>;
 
@@ -298,6 +299,7 @@ export class PlannerAIComponent extends Component {
     desiredDistanceToTarget: number;
     knowsTargetPosition: boolean;
     hasTargetInSight: boolean;
+    wanderBounds: Nullable<Rectangle>;
 
     static typeName = "PlannerAIComponent";
     static properties = {
@@ -314,7 +316,8 @@ export class PlannerAIComponent extends Component {
         lowHealthThreshold: 0.25,
         desiredDistanceToTarget: 1,
         knowsTargetPosition: false,
-        hasTargetInSight: false
+        hasTargetInSight: false,
+        wanderBounds: null
     }
 }
 
@@ -1256,8 +1259,8 @@ export const ObjectData: { [key: string]: ObjectDataDetails } = {
         addInventory: true,
         addPlannerAI: true,
         addDialogMemory: true,
-        nonAlertSightRange: 5,
-        alertSightRange: 7,
+        nonAlertSightRange: 6,
+        alertSightRange: 8,
         lowHealthThreshold: 0.5,
         desiredDistanceToTarget: 1,
         actions: [
@@ -1440,8 +1443,8 @@ export const ObjectData: { [key: string]: ObjectDataDetails } = {
     },
     "rat": {
         addPlannerAI: true,
-        nonAlertSightRange: 4,
-        alertSightRange: 5,
+        nonAlertSightRange: 5,
+        alertSightRange: 6,
         lowHealthThreshold: 0.5,
         desiredDistanceToTarget: 1,
         actions: [
@@ -1710,8 +1713,7 @@ export const ObjectData: { [key: string]: ObjectDataDetails } = {
         lowHealthThreshold: 0.5,
         desiredDistanceToTarget: 5,
         spells: [
-            ["lightning_bolt", 3],
-            ["lesser_heal", 1]
+            ["lightning_bolt", 3]
         ],
         actions: [
             "wander",
@@ -2235,7 +2237,8 @@ export function createEntity(
             actions,
             lowHealthThreshold: data.lowHealthThreshold ?? 0.25,
             knowsTargetPosition: false,
-            hasTargetInSight: false
+            hasTargetInSight: false,
+            wanderBounds: null
         });
     }
 

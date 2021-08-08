@@ -157,6 +157,11 @@
                          "name":"teamId",
                          "type":"int",
                          "value":1
+                        }, 
+                        {
+                         "name":"wanderBounds",
+                         "type":"object",
+                         "value":49
                         }],
                  "rotation":0,
                  "type":"object",
@@ -241,6 +246,11 @@
                          "name":"teamId",
                          "type":"int",
                          "value":1
+                        }, 
+                        {
+                         "name":"wanderBounds",
+                         "type":"object",
+                         "value":49
                         }],
                  "rotation":0,
                  "type":"object",
@@ -363,6 +373,11 @@
                          "name":"teamId",
                          "type":"int",
                          "value":2
+                        }, 
+                        {
+                         "name":"wanderBounds",
+                         "type":"object",
+                         "value":50
                         }],
                  "rotation":0,
                  "type":"object",
@@ -396,6 +411,11 @@
                          "name":"teamId",
                          "type":"int",
                          "value":2
+                        }, 
+                        {
+                         "name":"wanderBounds",
+                         "type":"object",
+                         "value":50
                         }],
                  "rotation":0,
                  "type":"object",
@@ -429,6 +449,11 @@
                          "name":"teamId",
                          "type":"int",
                          "value":2
+                        }, 
+                        {
+                         "name":"wanderBounds",
+                         "type":"object",
+                         "value":50
                         }],
                  "rotation":0,
                  "type":"object",
@@ -462,6 +487,11 @@
                          "name":"teamId",
                          "type":"int",
                          "value":2
+                        }, 
+                        {
+                         "name":"wanderBounds",
+                         "type":"object",
+                         "value":50
                         }],
                  "rotation":0,
                  "type":"object",
@@ -677,9 +707,42 @@
          "visible":true,
          "x":0,
          "y":0
+        }, 
+        {
+         "draworder":"topdown",
+         "id":10,
+         "name":"Wander Bounds",
+         "objects":[
+                {
+                 "height":144.717800289436,
+                 "id":49,
+                 "name":"",
+                 "rotation":0,
+                 "type":"",
+                 "visible":true,
+                 "width":145.682585624699,
+                 "x":590.448625180897,
+                 "y":1071.39411480945
+                }, 
+                {
+                 "height":165.145916597542,
+                 "id":50,
+                 "name":"",
+                 "rotation":0,
+                 "type":"",
+                 "visible":true,
+                 "width":183.244099238368,
+                 "x":565.568207525828,
+                 "y":583.666390166654
+                }],
+         "opacity":1,
+         "type":"objectgroup",
+         "visible":true,
+         "x":0,
+         "y":0
         }],
- "nextlayerid":10,
- "nextobjectid":49,
+ "nextlayerid":11,
+ "nextobjectid":51,
  "orientation":"orthogonal",
  "renderorder":"right-down",
  "tiledversion":"1.4.3",
