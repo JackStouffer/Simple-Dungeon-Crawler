@@ -1336,3 +1336,65 @@ export class ZoomOutCameraCommand implements Command {
         }
     }
 }
+
+export function moveCameraLeft(): null {
+    globals.Game!.gameCamera.x -= 5;
+
+    if (globals.Game!.gameCamera.x < 0) {
+        globals.Game!.gameCamera.x = 0;
+    }
+
+    return null;
+}
+
+export function moveCameraRight(): null {
+    globals.Game!.gameCamera.x += 5;
+
+    const maxWidth = globals.Game!.map.width *
+        globals.Game!.gameCamera.tileSize *
+        globals.Game!.gameCamera.zoom;
+    if (globals.Game!.gameCamera.x >= maxWidth) {
+        globals.Game!.gameCamera.x = 0;
+    }
+
+    return null;
+}
+
+export function moveCameraUp(): null {
+    globals.Game!.gameCamera.y -= 5;
+
+    if (globals.Game!.gameCamera.y < 0) {
+        globals.Game!.gameCamera.y = 0;
+    }
+
+    return null;
+}
+
+export function moveCameraDown(): null {
+    globals.Game!.gameCamera.y += 5;
+
+    const maxHeight = globals.Game!.map.height *
+        globals.Game!.gameCamera.tileSize *
+        globals.Game!.gameCamera.zoom;
+    if (globals.Game!.gameCamera.y >= maxHeight) {
+        globals.Game!.gameCamera.y = maxHeight;
+    }
+
+    return null;
+}
+
+export function cameraReset(): null {
+    const player = globals.Game!.ecs.getEntity(globals.Game!.playerId);
+    if (player === undefined) { throw new Error("Undefined player id"); }
+    const playerPos = player.getOne(PositionComponent)!;
+    const cameraPos = globals.Game!.gameCamera.clamp(
+        playerPos.worldPosition.x,
+        playerPos.worldPosition.y,
+        globals.Game!.map.width,
+        globals.Game!.map.height
+    );
+    globals.Game!.gameCamera.x = cameraPos.x;
+    globals.Game!.gameCamera.y = cameraPos.y;
+
+    return null;
+}

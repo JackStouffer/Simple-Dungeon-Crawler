@@ -25,11 +25,12 @@ import { useItem } from "./inventory";
 import { useSpell } from "./fighter";
 
 export interface KeyCommand {
-    key: string;
+    code: string;
     /** nice display for meta keys like Control -> Ctrl */
     keyDisplay: string;
     description: string;
-    command: () => Command;
+    continuous: boolean;
+    command: () => Nullable<Command>;
 }
 
 export enum PlayerState {
@@ -96,7 +97,7 @@ export function playerInput(
     map: GameMap,
     entityMap: EntityMap,
     player: Entity
-): Nullable<Command> {
+): Command[] {
     // TODO, BUG: Able to call up menu during spell animation
     if (globals.gameEventEmitter === null) { throw new Error("Global gameEventEmitter cannot be null"); }
 
@@ -112,12 +113,19 @@ export function playerInput(
 
     if (inputState.state === PlayerState.Combat) {
         // Key commands
+        let keyResult: Nullable<Command> = null;
         for (let i = 0; i < inputState.keyCommands.length; i++) {
             const keyCommand = inputState.keyCommands[i];
-            if (input.isDown(keyCommand.key)) {
-                return keyCommand.command();
+
+            if (keyCommand.continuous && input.isDown(keyCommand.code)) {
+                keyResult = keyCommand.command();
+            }
+
+            if (!keyCommand.continuous && input.wasPressed(keyCommand.code)) {
+                keyResult = keyCommand.command();
             }
         }
+        if (keyResult !== null) { return [keyResult]; }
 
         // Mouse input
         const mouseDownPosition = input.getLeftMouseDown();
@@ -131,12 +139,12 @@ export function playerInput(
                     mouseDownPosition
                 );
                 if (target !== null && target !== inputState.entity) {
-                    return new InteractCommand(player.id, target.id);
+                    return [new InteractCommand(player.id, target.id)];
                 }
             }
 
             if (!globals.Game!.map
-                .visibilityData[mouseDownPosition.y][mouseDownPosition.x].explored) { return null; }
+                .visibilityData[mouseDownPosition.y][mouseDownPosition.x].explored) { return []; }
 
             // Movement
             const path = getPlayerMovementPath(
@@ -148,28 +156,30 @@ export function playerInput(
                 speedData.maxTilesPerMove
             );
             if (path.length !== 0) {
-                return new GoToLocationCommand(
+                return [new GoToLocationCommand(
                     player.id,
                     path
-                );
+                )];
             }
         }
 
-        return null;
+        return [];
     } else if (inputState.state === PlayerState.Target) {
         globals.gameEventEmitter.emit("tutorial.spellTargeting");
 
         // Key commands
+        let keyResult: Nullable<Command> = null;
         for (let i = 0; i < inputState.keyCommands.length; i++) {
             const keyCommand = inputState.keyCommands[i];
-            if (input.isDown(keyCommand.key)) {
-                return keyCommand.command();
+            if (input.isDown(keyCommand.code)) {
+                keyResult = keyCommand.command();
             }
         }
+        if (keyResult !== null) { return [keyResult]; }
 
         const mousePosition = input.getLeftMouseDown();
         if (mousePosition === null) {
-            return null;
+            return [];
         }
 
         const entityPos = player.getOne(PositionComponent)!.tilePosition;
@@ -201,9 +211,9 @@ export function playerInput(
             inputState.itemForTarget = null;
             inputState.spellForTarget = null;
             inputState.update();
-            return command;
+            if (command !== null) { return [command]; }
         }
     }
 
-    return null;
+    return [];
 }

@@ -97,7 +97,8 @@ import {
     explainSpellCasts,
     explainSpellShrine,
     explainEnvironmentInteractivity,
-    explainEnemySurrounding
+    explainEnemySurrounding,
+    explainCamera
 } from "./tutorials";
 import { getItems, hasItem, InventoryItemDetails, useItem } from "./inventory";
 import { assertUnreachable, Nullable } from "./util";
@@ -140,7 +141,7 @@ const OpeningCinematicState: GameState = {
     },
 
     handleInput(game: SimpleDungeonCrawler) {
-        if (input.isDown("Enter")) {
+        if (input.wasPressed("Enter")) {
             const e = createEntity(game.ecs, game.textureAtlas, "player", new Vector2D(1, 1));
             game.playerId = e.id;
             game.scheduler.add(game.playerId, true);
@@ -171,7 +172,7 @@ const WiningCinematicState: GameState = {
     },
 
     handleInput(game: SimpleDungeonCrawler) {
-        if (input.isDown("Enter")) {
+        if (input.wasPressed("Enter")) {
             game.setState(game.gameplayState);
         }
     },
@@ -195,7 +196,7 @@ const LosingCinematicState: GameState = {
     },
 
     handleInput(game: SimpleDungeonCrawler) {
-        if (input.isDown("Enter")) {
+        if (input.wasPressed("Enter")) {
             game.setState(game.gameplayState);
         }
     },
@@ -279,10 +280,10 @@ const GameplayState: GameState = {
         }
 
         // TODO, cleanup: Maybe move these ifs to the player input handling code
-        if (input.isDown("Escape") && inputHandlerState.state === PlayerState.Combat) {
+        if (input.wasPressed("Escape") && inputHandlerState.state === PlayerState.Combat) {
             game.setState(game.pauseMenuState);
             return;
-        } else if (input.isDown("Escape") && inputHandlerState.state === PlayerState.Target) {
+        } else if (input.wasPressed("Escape") && inputHandlerState.state === PlayerState.Target) {
             inputHandlerState.state = PlayerState.Combat;
             inputHandlerState.itemForTarget = null;
             inputHandlerState.spellForTarget = null;
@@ -293,14 +294,11 @@ const GameplayState: GameState = {
 
         if (game.currentActor === game.playerId) {
             const command = playerInput(game.ecs, game.map, game.entityMap, player);
-            if (command !== null) {
-                game.commandQueue.push(command);
-            }
+            game.commandQueue.push(...command);
         }
     },
 
     render(game: SimpleDungeonCrawler): void {
-        game.gameCamera.update(game.ecs, game.map);
         drawMap(game.gameCamera, game.map);
         game.ecs.runSystems("frame");
     }
@@ -338,7 +336,7 @@ const PauseMenuState: GameState = {
             return;
         }
 
-        if (input.isDown("Escape")) {
+        if (input.wasPressed("Escape")) {
             game.setState(game.gameplayState);
             return;
         }
@@ -381,7 +379,7 @@ const InventoryMenuState: GameState = {
             return;
         }
 
-        if (input.isDown("Escape")) {
+        if (input.wasPressed("Escape")) {
             game.setState(game.gameplayState);
             return;
         }
@@ -463,7 +461,7 @@ const SpellMenuState: GameState = {
             return;
         }
 
-        if (input.isDown("Escape")) {
+        if (input.wasPressed("Escape")) {
             game.setState(game.gameplayState);
             return;
         }
@@ -736,6 +734,7 @@ export class SimpleDungeonCrawler {
 
         if (globals.gameEventEmitter === null) { throw new Error("Global gameEventEmitter cannot be null"); }
         globals.gameEventEmitter.on("tutorial.start", explainMovement);
+        globals.gameEventEmitter.on("tutorial.camera", explainCamera);
         globals.gameEventEmitter.on("tutorial.attacking", explainAttacking);
         globals.gameEventEmitter.on("tutorial.inventory", explainInventory);
         globals.gameEventEmitter.on("tutorial.spellMenu", explainSpellMenu);
@@ -866,11 +865,16 @@ export class SimpleDungeonCrawler {
         playerPos.tilePosition = this.gameCamera.worldPositionToTile(playerPos.worldPosition);
         playerPos.update();
 
+        const cameraPos = this.gameCamera.clamp(
+            playerPos.worldPosition.x, playerPos.worldPosition.y, map.width, map.height
+        );
+        this.gameCamera.x = cameraPos.x;
+        this.gameCamera.y = cameraPos.y;
+
         for (const query of this.ecs.queries) {
             query.refresh();
         }
         this.ecs.runSystems("postTurn");
-        this.gameCamera.update(this.ecs, this.map);
 
         playLevelTheme(name);
     }
@@ -937,7 +941,7 @@ export class SimpleDungeonCrawler {
         this.handleInput();
         this.update();
         this.render();
-        input.clearInputs();
+        input.updateInputs();
         this.ecs.tick();
     }
 }

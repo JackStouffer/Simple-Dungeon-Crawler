@@ -427,18 +427,18 @@ export class InventoryMenu {
     handleInput(inventoryItems: InventoryItemDetails[]): Nullable<InventoryItemDetails> {
         if (globals.gameEventEmitter === null) { throw new Error("Global gameEventEmitter is null"); }
 
-        if (input.isDown("Enter")) {
+        if (input.wasPressed("Enter")) {
             playUIClick();
             return inventoryItems[this.currentSelection];
         }
 
-        if (input.isDown("ArrowUp") && this.currentSelection > 0) {
+        if (input.wasPressed("ArrowUp") && this.currentSelection > 0) {
             playUIRollover();
             this.currentSelection--;
             this.descriptionText.text = inventoryItems[this.currentSelection].description;
         }
 
-        if (input.isDown("ArrowDown") && this.currentSelection < inventoryItems.length - 1) {
+        if (input.wasPressed("ArrowDown") && this.currentSelection < inventoryItems.length - 1) {
             playUIRollover();
             this.currentSelection++;
             this.descriptionText.text = inventoryItems[this.currentSelection].description;
@@ -645,19 +645,19 @@ export class SpellSelectionMenu {
     handleInput(spells: KnownSpellDetails[]): Nullable<SpellDataDetails> {
         if (globals.gameEventEmitter === null) { throw new Error("Global gameEventEmitter is null"); }
 
-        if (input.isDown("Enter")) {
+        if (input.wasPressed("Enter")) {
             playUIClick();
             return SpellData[spells[this.currentSelection].id];
         }
 
-        if (input.isDown("ArrowUp") && this.currentSelection > 0) {
+        if (input.wasPressed("ArrowUp") && this.currentSelection > 0) {
             playUIRollover();
             this.currentSelection--;
             const info = spells[this.currentSelection];
             this.descriptionText.text = info.description;
         }
 
-        if (input.isDown("ArrowDown") && this.currentSelection < spells.length - 1) {
+        if (input.wasPressed("ArrowDown") && this.currentSelection < spells.length - 1) {
             playUIRollover();
             this.currentSelection++;
             const info = spells[this.currentSelection];
@@ -688,6 +688,19 @@ interface KeyCommandMenuRow {
     description: PIXI.Text;
     key: PIXI.Text;
 }
+
+const formatTable: { [key: string]: string } = {
+    "ArrowLeft": "Left Arrow",
+    "ArrowRight": "Right Arrow",
+    "ArrowDown": "Down Arrow",
+    "ArrowUp": "Up Arrow",
+    "ShiftLeft": "Left Shift",
+    "ShiftRight": "Right Shift",
+    "AltLeft": "Left Alt",
+    "AltRight": "Right Alt",
+    "ControlLeft": "Left Ctl",
+    "ControlRight": "Right Ctl"
+};
 
 export class KeyBindingMenu {
     state: "selection" | "change";
@@ -796,22 +809,22 @@ export class KeyBindingMenu {
         if (globals.gameEventEmitter === null) { throw new Error("Global gameEventEmitter is null"); }
 
         if (this.state === "selection") {
-            if (input.isDown("Escape")) {
+            if (input.wasPressed("Escape")) {
                 playUIClick();
                 return;
             }
 
-            if (input.isDown("ArrowUp") && this.currentSelection > 0) {
+            if (input.wasPressed("ArrowUp") && this.currentSelection > 0) {
                 playUIRollover();
                 this.currentSelection--;
             }
 
-            if (input.isDown("ArrowDown") && this.currentSelection < keyCommands.length - 1) {
+            if (input.wasPressed("ArrowDown") && this.currentSelection < keyCommands.length - 1) {
                 playUIRollover();
                 this.currentSelection++;
             }
 
-            if (input.isDown("Enter")) {
+            if (input.wasPressed("Enter")) {
                 playUIClick();
                 this.state = "change";
                 this.menuItems[this.currentSelection].key.text = "";
@@ -819,23 +832,14 @@ export class KeyBindingMenu {
         } else if (this.state === "change") {
             playUIClick();
 
-            const formatTable: { [key: string]: string } = {
-                "Control": "Ctrl",
-                "Shift": "Shift",
-                "Command": "Cmd",
-                "Alt": "Alt"
-            };
-
             const keys = input.getPressedKeys();
-            if (keys.length === 2 && keys[0] in formatTable) {
-                keyCommands[this.currentSelection].key = `${keys[0]} ${keys[1]}`;
-                keyCommands[this.currentSelection].keyDisplay = `${formatTable[keys[0]]} ${keys[1].toUpperCase()}`;
-                this.menuItems[this.currentSelection].key.text = `${formatTable[keys[0]]} ${keys[1].toUpperCase()}`;
-                this.state = "selection";
-            } else if (keys.length === 1 && !(keys[0] in formatTable)) {
-                keyCommands[this.currentSelection].key = keys[0];
-                keyCommands[this.currentSelection].keyDisplay = keys[0].toUpperCase();
-                this.menuItems[this.currentSelection].key.text = keys[0].toUpperCase();
+            if (keys.length > 0) {
+                keyCommands[this.currentSelection].code = keys[0].code;
+
+                const display = keys[0].code in formatTable ?
+                    formatTable[keys[0].code] : keys[0].character!.toUpperCase();
+                keyCommands[this.currentSelection].keyDisplay = display;
+                this.menuItems[this.currentSelection].key.text = display;
                 this.state = "selection";
             }
         }

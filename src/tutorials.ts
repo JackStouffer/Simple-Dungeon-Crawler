@@ -3,6 +3,7 @@ import { playPing } from "./audio";
 
 const hasMessageBeenShown = {
     movement: false,
+    cameraMovement: false,
     attack: false,
     inventory: false,
     pickUpItem: false,
@@ -19,6 +20,13 @@ export function explainMovement() {
     if (!hasMessageBeenShown.movement) {
         displayMessage("Move by clicking where you want to go. You can only move seven tiles at a time.", MessageType.Tutorial);
         hasMessageBeenShown.movement = true;
+    }
+}
+
+export function explainCamera() {
+    if (!hasMessageBeenShown.cameraMovement) {
+        displayMessage("Move the camera using WASD.", MessageType.Tutorial);
+        hasMessageBeenShown.cameraMovement = true;
     }
 }
 

@@ -5,7 +5,7 @@
 _In Development_
 
 * Gameplay
-  * Keybind system now allows you to use modifier keys (shift, ctrl, cmd) in your bindings
+  * The camera can now move independently of the player with WASD
   * Setting enemies on fire makes them more likely to run away in fear
   * More dialog responses
     * Added lines when confused
@@ -20,6 +20,9 @@ _In Development_
   * Refactored chest updating to less over engineered. Just flip the texture key and then follow the normal code path
   * Added simple template system to dialog definitions to allow for dynamic rules
   * Enemies can be immune to confusion due to a refactoring of the confusion component
+  * Refactored input system
+    * Can now distinguish between a key press and a key hold
+    * Support international keyboard layouts
 
 ## Version 12
 

@@ -1,8 +1,5 @@
-import { World } from "ape-ecs";
-
 import { TILE_SIZE } from "./constants";
-import { PositionComponent } from "./entity";
-import { GameMap, Vector2D } from "./map";
+import { Vector2D } from "./map";
 import { Nullable } from "./util";
 
 export interface Rectangle {
@@ -35,21 +32,6 @@ export class Camera {
         this.zoom = 2; // TODO, bind to key?
         this.viewport = viewport;
         this.following = null;
-    }
-
-    update(ecs: World, map: GameMap): void {
-        if (this.following === null) { return; }
-        const entity = ecs.getEntity(this.following);
-        if (entity === undefined) { return; }
-        const pos = entity.getOne(PositionComponent);
-        if (pos === undefined) { return; }
-
-        // make the camera follow the sprite
-        const point = this.clamp(pos.worldPosition.x, pos.worldPosition.y, map.width, map.height);
-        // const screenPos = this.worldPositionToScreen(pos.worldPosition);
-        // const point = this.clamp(screenPos.x, screenPos.y, map.width, map.height);
-        this.x = point.x;
-        this.y = point.y;
     }
 
     clamp(x: number, y: number, width: number, height: number): Vector2D {

@@ -20,6 +20,11 @@ import { dialogByClassification } from "./ai/dialog";
 import { Planner, PlannerWorldState } from "./ai/planner";
 import { createPlanner } from "./ai/commands";
 import {
+    cameraReset,
+    moveCameraDown,
+    moveCameraLeft,
+    moveCameraRight,
+    moveCameraUp,
     NoOpCommand,
     OpenInventoryCommand,
     OpenSpellsCommand,
@@ -2200,12 +2205,17 @@ export function createEntity(
 
     if (data?.addInput === true && entity.has(InputHandlingComponent) === false) {
         const keyCommands: KeyCommand[] = [
-            { key: "i", keyDisplay: "I", description: "Inventory", command: () => new OpenInventoryCommand() },
-            { key: "m", keyDisplay: "M", description: "Spell Menu", command: () => new OpenSpellsCommand() },
-            { key: "r", keyDisplay: "R", description: "Rotate Target Reticle", command: () => new RotateReticleCommand(entity.id) },
-            { key: "Control =", keyDisplay: "Ctrl =", description: "Zoom In", command: () => new ZoomInCameraCommand() },
-            { key: "Control -", keyDisplay: "Ctrl -", description: "Zoom Out", command: () => new ZoomOutCameraCommand() },
-            { key: "x", keyDisplay: "X", description: "Pass Turn", command: () => new NoOpCommand(true) }
+            { code: "KeyW", keyDisplay: "W", description: "Move Camera Up", continuous: true, command: moveCameraUp },
+            { code: "KeyA", keyDisplay: "A", description: "Move Camera Left", continuous: true, command: moveCameraLeft },
+            { code: "KeyS", keyDisplay: "S", description: "Move Camera Down", continuous: true, command: moveCameraDown },
+            { code: "KeyD", keyDisplay: "D", description: "Move Camera Right", continuous: true, command: moveCameraRight },
+            { code: "KeyQ", keyDisplay: "Q", description: "Camera Reset", continuous: false, command: cameraReset },
+            { code: "KeyI", keyDisplay: "I", description: "Inventory", continuous: false, command: () => new OpenInventoryCommand() },
+            { code: "KeyM", keyDisplay: "M", description: "Spell Menu", continuous: false, command: () => new OpenSpellsCommand() },
+            { code: "KeyR", keyDisplay: "R", description: "Rotate Target Reticle", continuous: false, command: () => new RotateReticleCommand(entity.id) },
+            { code: "Equal", keyDisplay: "Ctrl =", description: "Zoom In", continuous: false, command: () => new ZoomInCameraCommand() },
+            { code: "Minus", keyDisplay: "Ctrl -", description: "Zoom Out", continuous: false, command: () => new ZoomOutCameraCommand() },
+            { code: "KeyX", keyDisplay: "X", description: "Pass Turn", continuous: false, command: () => new NoOpCommand(true) }
         ];
 
         entity.addComponent({
