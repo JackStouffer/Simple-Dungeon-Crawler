@@ -31,7 +31,7 @@ import {
     SpeedComponent,
     SpeedEffectComponent,
     SpellsComponent,
-    TriggerTypeComponent,
+    TriggerComponent,
     TypeComponent,
     WetableComponent,
     ConfusableAIComponent,
@@ -348,7 +348,7 @@ export function setStunned(target: Entity, turns?: number): boolean {
 
 export function setFrozen(target: Entity, turns: number): boolean {
     const name = target.getOne(DisplayNameComponent);
-    const triggerData = target.getOne(TriggerTypeComponent);
+    const triggerData = target.getOne(TriggerComponent);
 
     // Put the fire out if on fire
     const flammableData = target.getOne(FlammableComponent);
@@ -544,7 +544,10 @@ export function castDamageSpell(
     return true;
 }
 
-export function castFireBall(
+/**
+ * Give fire damages to all entities in an area
+ */
+function fireball(
     item: ItemDataDetails | SpellDataDetails,
     user: Entity,
     ecs: World,
@@ -553,18 +556,12 @@ export function castFireBall(
     target: Vector2D,
     rotation: number
 ): boolean {
-    if (item.value === null) { throw new Error("Item does not have a value for castFireBall"); }
-
-    const targetedEntity = mouseTarget(ecs, map, entityMap, target);
-    if (targetedEntity === null) {
-        displayMessage("Canceled casting");
-        return false;
-    }
+    if (item.value === null) { throw new Error("Item does not have a value for fireball"); }
 
     const tiles = getTargetingReticle(item, target, rotation);
     for (let i = 0; i < tiles.length; i++) {
-        const { entity } = isBlocked(ecs, map, entityMap, tiles[i]);
-        if (entity !== null) {
+        const entities = getEntitiesAtLocation(ecs, entityMap, tiles[i]);
+        for (const entity of entities) {
             const targetHPData = entity.getOne(HitPointsComponent);
             if (targetHPData !== undefined) {
                 // Make the spell dangerous by having it set things on fire rather than
@@ -592,6 +589,26 @@ export function castFireBall(
     }
 
     return true;
+}
+
+export function castFireballTargeted(
+    item: ItemDataDetails | SpellDataDetails,
+    user: Entity,
+    ecs: World,
+    map: GameMap,
+    entityMap: EntityMap,
+    target: Vector2D,
+    rotation: number
+): boolean {
+    if (item.value === null) { throw new Error("Item does not have a value for castFireballTargeted"); }
+
+    const targetedEntity = mouseTarget(ecs, map, entityMap, target);
+    if (targetedEntity === null) {
+        displayMessage("Canceled casting");
+        return false;
+    }
+
+    return fireball(item, user, ecs, map, entityMap, target, rotation);
 }
 
 export function castConfuse(
@@ -1018,6 +1035,26 @@ export function castFreeze(
         }
     }
 
+    return true;
+}
+
+function castFireballRune(
+    skillData: ItemDataDetails | SpellDataDetails,
+    user: Entity,
+    ecs: World,
+    map: GameMap,
+    entityMap: EntityMap,
+    target: Vector2D
+): boolean {
+    if (globals.Game === null) { throw new Error("Global game object is null"); }
+
+    const { blocks, entity } = isBlocked(ecs, map, entityMap, target);
+
+    if (blocks === true && entity === null) {
+        return false;
+    }
+
+    createEntity(ecs, globals.Game.textureAtlas, "fireball_rune", target);
     return true;
 }
 
@@ -1598,8 +1635,8 @@ export const SpellData: { [key: string]: SpellDataDetails } = {
             fadeOut: 400
         }
     },
-    "fireball": {
-        id: "fireball",
+    "fireball_targeted": {
+        id: "fireball_targeted",
         displayName: "Fireball",
         description: "Hurl a ball of fire towards a specific spot that deals fire damage and has a chance to catch targets on fire. Explodes in a large radius, possibly dealing self-damage or friendly fire",
         baseCastCount: 3,
@@ -1607,7 +1644,50 @@ export const SpellData: { [key: string]: SpellDataDetails } = {
         type: SpellType.DamageOther,
         damageType: DamageType.Fire,
         range: 10,
-        useFunc: castFireBall,
+        useFunc: castFireballTargeted,
+        areaOfEffect: {
+            type: "circle",
+            radius: 3
+        },
+        statusEffect: StatusEffectType.OnFire,
+        effect: "particles",
+        particles: {
+            particleImages: ["particle_cloud"],
+            particleLocation: "target",
+            particleConfig: {
+                acceleration: { x: 0, y: 0 },
+                addAtBack: false,
+                alpha: { start: 0.84, end: 0.4 },
+                angleStart: 0,
+                blendMode: "normal",
+                color: { start: "#f7a134", end: "#fa0303" },
+                emitterLifetime: 0.35,
+                frequency: 0.04,
+                lifetime: { min: 0.3, max: 0.35 },
+                maxParticles: 80,
+                maxSpeed: 0,
+                noRotation: false,
+                particleSpacing: 0,
+                particlesPerWave: 40,
+                pos: { x: 0, y: 0 },
+                rotationSpeed: { min: 0, max: 0 },
+                scale: { start: 1, end: 0.3, minimumScaleMultiplier: 1 },
+                spawnType: "burst",
+                speed: { start: 200, end: 100, minimumSpeedMultiplier: 1 },
+                startRotation: { min: 0, max: 0 },
+            }
+        }
+    },
+    "fireball_placed": {
+        id: "fireball_placed",
+        displayName: "[DEV] Fireball",
+        description: "",
+        baseCastCount: 1,
+        value: 40,
+        type: SpellType.DamageOther,
+        damageType: DamageType.Fire,
+        range: 10,
+        useFunc: fireball,
         areaOfEffect: {
             type: "circle",
             radius: 3
@@ -2084,5 +2164,15 @@ export const SpellData: { [key: string]: SpellDataDetails } = {
             type: "circle",
             radius: 3
         }
+    },
+    "fireball_trap": {
+        id: "fireball_trap",
+        displayName: "Fireball Rune",
+        description: "Places a rune on the ground which creates an explosion when stepped on",
+        baseCastCount: 1,
+        value: 40,
+        type: SpellType.DamageOther,
+        range: 10,
+        useFunc: castFireballRune
     }
 };

@@ -468,36 +468,22 @@ export class StunnableComponent extends Component {
     }
 }
 
-export class TriggerTypeComponent extends Component {
+export class TriggerComponent extends Component {
     currentTriggerType: TriggerType;
     initialTriggerType: TriggerType;
+    effectTurns: Nullable<number>;
+    effectDamage: Nullable<number>;
+    damage: Nullable<number>;
+    event: Nullable<string>;
 
-    static typeName = "TriggerTypeComponent";
+    static typeName = "TriggerComponent";
     static properties = {
         currentTriggerType: null,
-        initialTriggerType: null
-    }
-}
-
-export class FireTriggerComponent extends Component {
-    effectTurns: number;
-    effectDamage: number;
-    damage: number;
-
-    static typeName = "FireTriggerComponent";
-    static properties = {
-        effectTurns: 0,
-        effectDamage: 0,
-        damage: 0
-    }
-}
-
-export class EventTriggerComponent extends Component {
-    event: string;
-
-    static typeName = "EventTriggerComponent";
-    static properties = {
-        event: ""
+        initialTriggerType: null,
+        effectTurns: null,
+        effectDamage: null,
+        damage: null,
+        event: null
     }
 }
 
@@ -805,11 +791,9 @@ export const ObjectData: { [key: string]: ObjectDataDetails } = {
                     range: 6,
                     lightingType: LightingType.TwoPass
                 },
-                TriggerTypeComponent: {
+                TriggerComponent: {
                     currentTriggerType: TriggerType.Fire,
-                    initialTriggerType: TriggerType.Fire
-                },
-                FireTriggerComponent: {
+                    initialTriggerType: TriggerType.Fire,
                     effectTurns: 3,
                     effectDamage: 3,
                     damage: 10
@@ -863,11 +847,9 @@ export const ObjectData: { [key: string]: ObjectDataDetails } = {
                 RemoveAfterNTurnsComponent: {
                     turnsLeft: 5
                 },
-                TriggerTypeComponent: {
+                TriggerComponent: {
                     currentTriggerType: TriggerType.Fire,
-                    initialTriggerType: TriggerType.Fire
-                },
-                FireTriggerComponent: {
+                    initialTriggerType: TriggerType.Fire,
                     effectTurns: 5,
                     effectDamage: 5,
                     damage: 15
@@ -963,7 +945,7 @@ export const ObjectData: { [key: string]: ObjectDataDetails } = {
                     race: null,
                     classification: "trigger"
                 },
-                TriggerTypeComponent: {
+                TriggerComponent: {
                     currentTriggerType: TriggerType.Event,
                     initialTriggerType: TriggerType.Event
                 }
@@ -987,7 +969,7 @@ export const ObjectData: { [key: string]: ObjectDataDetails } = {
                     sprite: null,
                     zIndex: 5
                 },
-                TriggerTypeComponent: {
+                TriggerComponent: {
                     currentTriggerType: TriggerType.ShallowWater,
                     initialTriggerType: TriggerType.ShallowWater
                 },
@@ -1016,7 +998,7 @@ export const ObjectData: { [key: string]: ObjectDataDetails } = {
                     sprite: null,
                     zIndex: 3
                 },
-                TriggerTypeComponent: {
+                TriggerComponent: {
                     currentTriggerType: TriggerType.ShallowWater,
                     initialTriggerType: TriggerType.ShallowWater
                 },
@@ -1048,7 +1030,7 @@ export const ObjectData: { [key: string]: ObjectDataDetails } = {
                     sprite: null,
                     zIndex: 5
                 },
-                TriggerTypeComponent: {
+                TriggerComponent: {
                     currentTriggerType: TriggerType.DeepWater,
                     initialTriggerType: TriggerType.DeepWater
                 },
@@ -1079,7 +1061,7 @@ export const ObjectData: { [key: string]: ObjectDataDetails } = {
                 },
                 // TODO, bug: Steam does not currently hurt you if you're standing still
                 // in it
-                TriggerTypeComponent: {
+                TriggerComponent: {
                     currentTriggerType: TriggerType.Steam,
                     initialTriggerType: TriggerType.Steam
                 },
@@ -1106,7 +1088,7 @@ export const ObjectData: { [key: string]: ObjectDataDetails } = {
                     sprite: null,
                     zIndex: 5
                 },
-                TriggerTypeComponent: {
+                TriggerComponent: {
                     currentTriggerType: TriggerType.Mud,
                     initialTriggerType: TriggerType.Mud
                 },
@@ -1114,6 +1096,29 @@ export const ObjectData: { [key: string]: ObjectDataDetails } = {
                     frozen: false,
                     turnsLeft: 0,
                     textureKey: "frozen_water"
+                }
+            }
+        }
+    },
+    "fireball_rune": {
+        staticallyKnownComponents: {
+            c: {
+                TypeComponent: {
+                    entityType: "fireball_rune",
+                    race: null,
+                    classification: "object"
+                },
+                DisplayNameComponent: {
+                    name: "Rune"
+                },
+                GraphicsComponent: {
+                    textureKey: "red_rune",
+                    sprite: null,
+                    zIndex: 5
+                },
+                TriggerComponent: {
+                    currentTriggerType: TriggerType.Explosion,
+                    initialTriggerType: TriggerType.Explosion
                 }
             }
         }

@@ -41,7 +41,7 @@ export class LightingSystem extends System {
         const sightFov = new FOV.PreciseShadowcasting(
             createPassableSightCallback(pos.tilePosition)
         );
-        sightFov.compute(pos.tilePosition.x, pos.tilePosition.y, 30, function(x, y, r, visibility) {
+        sightFov.compute(pos.tilePosition.x, pos.tilePosition.y, 28, function(x, y, r, visibility) {
             if (globals.Game === null ||
                 x < 0 ||
                 y < 0 ||

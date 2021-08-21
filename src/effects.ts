@@ -5,7 +5,6 @@ import { DamageType } from "./constants";
 import { displayMessage, MessageType } from "./ui";
 import {
     DisplayNameComponent,
-    FireTriggerComponent,
     FlammableComponent,
     FreezableComponent,
     GraphicsComponent,
@@ -17,7 +16,7 @@ import {
     SilenceableComponent,
     SpeedEffectComponent,
     StatsEffectComponent,
-    TriggerTypeComponent,
+    TriggerComponent,
     TypeComponent,
     WetableComponent
 } from "./entity";
@@ -64,9 +63,8 @@ export class OnFireSystem extends System {
                     // because it was on fire and non-blocking, then remove
                     // the trigger
                     if (entity.tags.has("blocks") === false &&
-                        entity.has(TriggerTypeComponent)) {
-                        entity.removeComponent(entity.getOne(TriggerTypeComponent)!);
-                        entity.removeComponent(entity.getOne(FireTriggerComponent)!);
+                        entity.has(TriggerComponent)) {
+                        entity.removeComponent(entity.getOne(TriggerComponent)!);
                     }
 
 
@@ -258,7 +256,7 @@ export class FrozenSystem extends System {
                     graphics.update();
                 }
 
-                const triggerData = entity.getOne(TriggerTypeComponent);
+                const triggerData = entity.getOne(TriggerComponent);
                 if (triggerData !== undefined &&
                     triggerData.currentTriggerType !== triggerData.initialTriggerType) {
                     triggerData.currentTriggerType = triggerData.initialTriggerType;

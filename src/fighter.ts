@@ -19,7 +19,6 @@ import {
     DisplayNameComponent,
     EntityMap,
     FearAIComponent,
-    FireTriggerComponent,
     FlammableComponent,
     FreezableComponent,
     GraphicsComponent,
@@ -38,7 +37,7 @@ import {
     SpellsComponent,
     StatsComponent,
     StatsEffectComponent,
-    TriggerTypeComponent,
+    TriggerComponent,
     TypeComponent,
     WetableComponent
 } from "./entity";
@@ -139,8 +138,7 @@ export class DeathSystem extends System {
             FlammableComponent,
             WetableComponent,
             FreezableComponent,
-            TriggerTypeComponent,
-            FireTriggerComponent,
+            TriggerComponent,
             StunnableComponent
         ];
 

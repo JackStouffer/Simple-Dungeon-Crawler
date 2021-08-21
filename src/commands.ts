@@ -29,7 +29,6 @@ import { displayMessage, MessageType } from "./ui";
 import {
     DisplayNameComponent,
     EntityMap,
-    FireTriggerComponent,
     FlammableComponent,
     GraphicsComponent,
     HitPointsComponent,
@@ -37,11 +36,12 @@ import {
     InteractableTypeComponent,
     PlannerAIComponent,
     PositionComponent,
+    removeEntity,
     StatsComponent,
-    TriggerTypeComponent
+    TriggerComponent
 } from "./entity";
 import { attack, getEffectiveDamageAffinity, getEffectiveSpeedData, takeDamage } from "./fighter";
-import { deepWaterTrigger, eventTrigger, fireTrigger, mudTrigger, shallowWaterTrigger, steamTrigger } from "./trigger";
+import { deepWaterTrigger, eventTrigger, explosionTrapTrigger, fireTrigger, mudTrigger, shallowWaterTrigger, steamTrigger } from "./trigger";
 import { giveItemsInteract, giveSpellsInteract, doorInteract, levelLoadInteract, restPointInteract } from "./interactable";
 import { setOnFire, setStunned, SpellDataDetails, ItemDataDetails } from "./skills";
 import { DIRS } from "./rot";
@@ -155,7 +155,7 @@ export function createPassableCallback(
                 affinity[DamageType.Fire] !== Affinity.nullified) {
                 const entities = getEntitiesAtLocation(ecs, entityMap, new Vector2D(x, y));
                 for (const e of entities) {
-                    const triggerData = e.getOne(TriggerTypeComponent);
+                    const triggerData = e.getOne(TriggerComponent);
                     if (triggerData !== undefined &&
                         triggerData.currentTriggerType === TriggerType.Fire) {
                         return false;
@@ -233,7 +233,7 @@ export function generateWeightCallback(
             const entities = getEntitiesAtLocation(ecs, entityMap, new Vector2D(x, y));
             for (let i = 0; i < entities.length; i++) {
                 const e = entities[i];
-                const trigger = e.getOne(TriggerTypeComponent);
+                const trigger = e.getOne(TriggerComponent);
 
                 if (trigger !== undefined) {
                     switch (trigger.currentTriggerType) {
@@ -263,6 +263,8 @@ export function generateWeightCallback(
                         case TriggerType.Ice:
                             weight += 7;
                             break;
+                        case TriggerType.Explosion:
+                            break;
                         default:
                             assertUnreachable(trigger.currentTriggerType);
                     }
@@ -278,8 +280,9 @@ export function generateWeightCallback(
 
                 for (let j = 0; j < entities.length; j++) {
                     const e = entities[j];
-                    const trigger = e.getOne(FireTriggerComponent);
-                    if (trigger !== undefined) { weight += 5; }
+                    const trigger = e.getOne(TriggerComponent);
+                    if (trigger !== undefined &&
+                        trigger.currentTriggerType === TriggerType.Fire) { weight += 5; }
                 }
             }
         }
@@ -494,7 +497,7 @@ export class GoToLocationCommand implements Command {
             );
             for (let i = 0; i < entities.length; i++) {
                 const e = entities[i];
-                const triggerData = e.getOne(TriggerTypeComponent);
+                const triggerData = e.getOne(TriggerComponent);
                 const flammableData = e.getOne(FlammableComponent);
 
                 // If we're walking over a flammable entity and we're
@@ -547,6 +550,9 @@ export class GoToLocationCommand implements Command {
                             this.done = true;
                             return;
                         }
+                        case TriggerType.Explosion:
+                            explosionTrapTrigger(ecs, globals.Game!.entityMap, entity, e);
+                            break;
                         default:
                             assertUnreachable(triggerData.currentTriggerType);
                     }
@@ -699,7 +705,7 @@ export class PushBackCommand implements Command {
             );
             for (let i = 0; i < entities.length; i++) {
                 const e = entities[i];
-                const triggerData = e.getOne(TriggerTypeComponent);
+                const triggerData = e.getOne(TriggerComponent);
                 const flammableData = e.getOne(FlammableComponent);
 
                 // If we're walking over a flammable entity and we're
@@ -741,6 +747,8 @@ export class PushBackCommand implements Command {
                             break;
                         case TriggerType.Ice:
                             this.numTiles++;
+                            break;
+                        case TriggerType.Explosion:
                             break;
                         default:
                             assertUnreachable(triggerData.currentTriggerType);
@@ -1293,6 +1301,32 @@ export class MoveCameraCommand implements Command {
     }
 }
 
+/**
+ * Useful for removing an entity after another command executes
+ */
+export class RemoveEntityCommand implements Command {
+    entity: Entity;
+    blocks: boolean = true;
+    isSetUp: boolean = false;
+
+    constructor(entity: Entity) {
+        this.entity = entity;
+    }
+
+    usedTurn(): boolean {
+        return false;
+    }
+
+    isFinished(): boolean {
+        return true;
+    }
+
+    update(): void {
+        removeEntity(globals.Game!.ecs, this.entity);
+    }
+}
+
+// TODO, Cleanup: Change to bear functions
 export class ZoomInCameraCommand implements Command {
     blocks: boolean = true;
     isSetUp: boolean = false;

@@ -25,13 +25,14 @@ import {
     KnownSpellData,
     PatrolPathComponent,
     PlannerAIComponent,
-    PositionComponent
+    PositionComponent,
+    TriggerComponent
 } from "./entity";
 import { Camera, Rectangle } from "./camera";
 import { Nullable, randomIntFromInterval } from "./util";
 import { createPlanner } from "./ai/commands";
 import { ItemData, SpellData } from "./skills";
-import { TILE_SIZE, TriggerType } from "./constants";
+import { TILE_SIZE } from "./constants";
 
 const COLOR_AMBIENT_LIGHT = "rgb(50, 50, 50)";
 
@@ -84,6 +85,13 @@ const TileData: { [key: number]: TileDataDetails } = {
     186: {
         name: "stone",
         textureKey: "stone_2",
+        blocks: false,
+        blocksSight: false,
+        reflectivity: 0.18
+    },
+    188: {
+        name: "stone",
+        textureKey: "sprite191",
         blocks: false,
         blocksSight: false,
         reflectivity: 0.18
@@ -1534,15 +1542,10 @@ export function loadTiledMap(
                     }
 
                     if (type === "event_trigger" && event !== null) {
-                        entity.addComponent({
-                            type: "TriggerTypeComponent",
-                            initialTriggerType: TriggerType.Event,
-                            currentTriggerType: TriggerType.Event
-                        });
-                        entity.addComponent({
-                            type: "EventTriggerComponent",
-                            event
-                        });
+                        const triggerData = entity.getOne(TriggerComponent);
+                        if (triggerData === undefined) { throw new Error(`Missing TriggerComponent on ${entity.id}`); }
+                        triggerData.event = event;
+                        triggerData.update();
                     }
 
                     if (teamId !== null) {
@@ -1621,9 +1624,9 @@ interface BlocksResult {
 }
 
 /**
- * Returns an entity with two keys, entity and blocks. entity
+ * Gives data about a location. Key entity
  * will be the Entity on the tile if there is one, and null
- * otherwise. Blocks is true if either the tile or the object on
+ * otherwise. blocks is true if either the tile or the object on
  * the tile blocks, false otherwise.
  */
 export function isBlocked(

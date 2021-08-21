@@ -5,7 +5,6 @@ import {
     EntityMap,
     FallbackAIComponent,
     FearAIComponent,
-    FireTriggerComponent,
     FlammableComponent,
     HitPointsComponent,
     InventoryComponent,
@@ -14,7 +13,7 @@ import {
     SilenceableComponent,
     SpeedComponent,
     SpellsComponent,
-    TriggerTypeComponent
+    TriggerComponent
 } from "../entity";
 import { getEffectiveDamageAffinity, getEffectiveHitPointData, getKnownSpells } from "../fighter";
 import globals from "../globals";
@@ -308,8 +307,8 @@ export function getPotentiallyDangerousPositions(
                 if (e.id === entity.id) { continue; }
 
                 const flammableData = e.getOne(FlammableComponent);
-                const fireTriggerData = e.getOne(FireTriggerComponent);
-                const steamData = e.getOne(TriggerTypeComponent);
+                const triggerData = e.getOne(TriggerComponent);
+                const steamData = e.getOne(TriggerComponent);
 
                 // If the entity has damage affinity then we can be a bit more intelligent
                 // about avoiding or not avoiding tiles. E.g. a lava snake can move through
@@ -345,7 +344,8 @@ export function getPotentiallyDangerousPositions(
                         positions.add(`${x},${y}`);
                     }
 
-                    if (fireTriggerData !== undefined) {
+                    if (triggerData !== undefined &&
+                        triggerData.currentTriggerType === TriggerType.Fire) {
                         positions.add(`${x},${y}`);
                     }
 

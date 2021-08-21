@@ -39,16 +39,14 @@ import {
     InputHandlingComponent,
     FreezableComponent,
     FlammableComponent,
-    TriggerTypeComponent,
+    TriggerComponent,
     InteractableTypeComponent,
     StatsEffectComponent,
     SpeedEffectComponent,
     HitPointsEffectComponent,
     LevelComponent,
     DamageAffinityComponent,
-    FireTriggerComponent,
     ConfusableAIComponent,
-    EventTriggerComponent,
     RemoveAfterNTurnsComponent,
     RemoveAfterNTurnsSystem,
     LoadLevelComponent,
@@ -700,13 +698,12 @@ export class SimpleDungeonCrawler {
         this.ecs.registerComponent(WetableComponent, 50);
         this.ecs.registerComponent(SilenceableComponent, 50);
         this.ecs.registerComponent(StunnableComponent, 50);
-        this.ecs.registerComponent(TriggerTypeComponent, 50);
-        this.ecs.registerComponent(FireTriggerComponent, 20);
-        this.ecs.registerComponent(EventTriggerComponent, 20);
+        this.ecs.registerComponent(TriggerComponent, 50);
         this.ecs.registerComponent(InteractableTypeComponent, 50);
         this.ecs.registerComponent(LoadLevelComponent, 10);
         this.ecs.registerComponent(RemoveAfterNTurnsComponent, 10);
 
+        this.ecs.registerSystem("frame", UpdateEntityMapSystem);
         this.ecs.registerSystem("frame", LightingSystem);
         this.ecs.registerSystem("frame", DrawSystem);
         this.ecs.registerSystem("frame", DrawPlayerSystem);
@@ -715,7 +712,6 @@ export class SimpleDungeonCrawler {
 
         this.ecs.registerSystem("postTurn", DeathSystem);
         this.ecs.registerSystem("postTurn", UpdateSchedulerSystem);
-        this.ecs.registerSystem("postTurn", UpdateEntityMapSystem);
         this.ecs.registerSystem("postTurn", UpdateEntityTeamsSystem);
         this.ecs.registerSystem("postTurn", UpdateChestsSystem);
 
@@ -898,6 +894,8 @@ export class SimpleDungeonCrawler {
                         this.totalTurns++;
                     }
 
+                    // TODO, bug: this should only be run when the command queue is CLEARED, not when
+                    // one command on the queue is run
                     this.ecs.runSystems("postTurn");
                     this.currentActor = null;
                 }

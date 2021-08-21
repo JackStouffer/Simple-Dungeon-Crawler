@@ -5,16 +5,17 @@ import { DamageType } from "./constants";
 import {
     DisplayNameComponent,
     EntityMap,
-    EventTriggerComponent,
-    FireTriggerComponent,
     FlammableComponent,
+    PositionComponent,
     SpeedComponent,
+    TriggerComponent,
     TypeComponent,
     WetableComponent,
 } from "./entity";
 import { takeDamage } from "./fighter";
-import { setOnFire, setWet } from "./skills";
+import { setOnFire, setWet, SpellData } from "./skills";
 import { displayMessage } from "./ui";
+import { RemoveEntityCommand, UseSkillCommand } from "./commands";
 
 /**
  * Checks if the actor is flammable, and then damages them, and then sets
@@ -29,12 +30,16 @@ export function fireTrigger(
     const flammableData = actor.getOne(FlammableComponent);
 
     if (flammableData !== undefined) {
-        const fireTriggerData = trigger.getOne(FireTriggerComponent);
-        if (fireTriggerData === undefined) { throw new Error("Fire trigger is missing its data"); }
+        const triggerData = trigger.getOne(TriggerComponent);
+        if (triggerData === undefined ||
+            triggerData.damage === null ||
+            triggerData.effectDamage === null ||
+            triggerData.effectTurns === null) { throw new Error("Fire trigger is missing its data"); }
+
         const wasSetOnFire = setOnFire(
             actor,
-            Math.max(flammableData.fireDamage, fireTriggerData.effectDamage),
-            Math.max(flammableData.turnsLeft, fireTriggerData.effectTurns)
+            Math.max(flammableData.fireDamage, triggerData.effectDamage),
+            Math.max(flammableData.turnsLeft, triggerData.effectTurns)
         );
 
         if (!wasSetOnFire) { return; }
@@ -42,7 +47,7 @@ export function fireTrigger(
             ecs,
             entityMap,
             actor,
-            fireTriggerData.damage,
+            triggerData.damage,
             false,
             DamageType.Fire
         );
@@ -52,18 +57,18 @@ export function fireTrigger(
 export function eventTrigger(actor: Entity, trigger: Entity): void {
     if (globals.gameEventEmitter === null) { throw new Error("Global gameEventEmitter object is null"); }
 
-    const eventData = trigger.getOne(EventTriggerComponent);
+    const triggerData = trigger.getOne(TriggerComponent);
     const typeData = actor.getOne(TypeComponent);
 
-    if (eventData === undefined) {
-        throw new Error(`Event trigger ${trigger.id} is missing a EventTriggerComponent`);
+    if (triggerData === undefined || triggerData.event === null) {
+        throw new Error(`Event trigger ${trigger.id} is missing a TriggerComponent`);
     }
     if (typeData === undefined) {
         throw new Error(`Actor ${actor.id} is missing a TypeComponent`);
     }
 
     if (typeData.entityType === "player") {
-        globals.gameEventEmitter.emit(eventData.event);
+        globals.gameEventEmitter.emit(triggerData.event);
     }
 }
 
@@ -136,5 +141,23 @@ export function steamTrigger(
         7,
         false,
         DamageType.Water
+    );
+}
+
+export function explosionTrapTrigger(
+    ecs: World,
+    entityMap: EntityMap,
+    actor: Entity,
+    trigger: Entity
+) {
+    const pos = trigger.getOne(PositionComponent)!.tilePosition;
+    globals.Game!.commandQueue.unshift(
+        new UseSkillCommand(
+            actor.id,
+            SpellData["fireball_placed"],
+            pos,
+            0
+        ),
+        new RemoveEntityCommand(trigger)
     );
 }

@@ -18,7 +18,7 @@ import {
     InputHandlingComponent,
     LevelComponent,
     PlannerAIComponent,
-    TriggerTypeComponent,
+    TriggerComponent,
     WetableComponent
 } from "./entity";
 import { InventoryItemDetails } from "./inventory";
@@ -199,10 +199,10 @@ export class StatusBar {
 
                             if (a.getOne(PlannerAIComponent) !== undefined) { aValue += 10; }
                             if (a.getOne(HitPointsComponent) !== undefined) { aValue += 5; }
-                            if (a.getOne(TriggerTypeComponent) !== undefined) { aValue += 3; }
+                            if (a.getOne(TriggerComponent) !== undefined) { aValue += 3; }
                             if (b.getOne(PlannerAIComponent) !== undefined) { bValue += 10; }
                             if (b.getOne(HitPointsComponent) !== undefined) { bValue += 5; }
-                            if (b.getOne(TriggerTypeComponent) !== undefined) { bValue += 3; }
+                            if (b.getOne(TriggerComponent) !== undefined) { bValue += 3; }
 
                             return aValue - bValue;
                         });

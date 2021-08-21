@@ -92,5 +92,6 @@ export enum TriggerType {
     DeepWater,
     Mud,
     Steam,
-    Ice
+    Ice,
+    Explosion
 }
