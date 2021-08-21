@@ -14,6 +14,7 @@ _In Development_
   * Added ring of fire defensive spell
   * Enemies will no longer run through fire to get to the player if they can be damaged by it
   * Enemy pathing now takes damage resistances into account when avoiding tiles
+  * Add a new explosion trap spell
   * Fixed bug where entities could path through two diagonally adjacent blocking tiles
   * Fixed bug where enemies could use heal other spell on self
 * Technical
@@ -23,6 +24,7 @@ _In Development_
   * Refactored input system
     * Can now distinguish between a key press and a key hold
     * Support international keyboard layouts
+  * Refactored trigger data design by merging it all into one component
 
 ## Version 12
 

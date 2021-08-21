@@ -29,8 +29,8 @@ import {
     OpenInventoryCommand,
     OpenSpellsCommand,
     RotateReticleCommand,
-    ZoomInCameraCommand,
-    ZoomOutCameraCommand
+    zoomInCamera,
+    zoomOutCamera
 } from "./commands";
 import { ItemDataDetails, SpellDataDetails } from "./skills";
 import { Vector2D } from "./map";
@@ -2218,8 +2218,8 @@ export function createEntity(
             { code: "KeyI", keyDisplay: "I", description: "Inventory", continuous: false, command: () => new OpenInventoryCommand() },
             { code: "KeyM", keyDisplay: "M", description: "Spell Menu", continuous: false, command: () => new OpenSpellsCommand() },
             { code: "KeyR", keyDisplay: "R", description: "Rotate Target Reticle", continuous: false, command: () => new RotateReticleCommand(entity.id) },
-            { code: "Equal", keyDisplay: "Ctrl =", description: "Zoom In", continuous: false, command: () => new ZoomInCameraCommand() },
-            { code: "Minus", keyDisplay: "Ctrl -", description: "Zoom Out", continuous: false, command: () => new ZoomOutCameraCommand() },
+            { code: "Equal", keyDisplay: "Ctrl =", description: "Zoom In", continuous: false, command: zoomInCamera },
+            { code: "Minus", keyDisplay: "Ctrl -", description: "Zoom Out", continuous: false, command: zoomOutCamera },
             { code: "KeyX", keyDisplay: "X", description: "Pass Turn", continuous: false, command: () => new NoOpCommand(true) }
         ];
 

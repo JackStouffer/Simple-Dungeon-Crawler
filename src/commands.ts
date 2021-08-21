@@ -1326,49 +1326,26 @@ export class RemoveEntityCommand implements Command {
     }
 }
 
-// TODO, Cleanup: Change to bear functions
-export class ZoomInCameraCommand implements Command {
-    blocks: boolean = true;
-    isSetUp: boolean = false;
+export function zoomInCamera(): null {
+    const g = globals.Game;
+    if (g === null) { throw new Error("Global Game object is null"); }
 
-    usedTurn(): boolean {
-        return false;
+    if (g.gameCamera.zoom !== 4) {
+        g.gameCamera.zoom += 1;
     }
 
-    isFinished(): boolean {
-        return true;
-    }
-
-    update(): void {
-        const g = globals.Game;
-        if (g === null) { throw new Error("Global Game object is null"); }
-
-        if (g.gameCamera.zoom !== 4) {
-            g.gameCamera.zoom += 1;
-        }
-    }
+    return null;
 }
 
-export class ZoomOutCameraCommand implements Command {
-    blocks: boolean = true;
-    isSetUp: boolean = false;
+export function zoomOutCamera(): null {
+    const g = globals.Game;
+    if (g === null) { throw new Error("Global Game object is null"); }
 
-    usedTurn(): boolean {
-        return false;
+    if (g.gameCamera.zoom !== 1) {
+        g.gameCamera.zoom -= 1;
     }
 
-    isFinished(): boolean {
-        return true;
-    }
-
-    update(): void {
-        const g = globals.Game;
-        if (g === null) { throw new Error("Global Game object is null"); }
-
-        if (g.gameCamera.zoom !== 1) {
-            g.gameCamera.zoom -= 1;
-        }
-    }
+    return null;
 }
 
 export function moveCameraLeft(): null {
