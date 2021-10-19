@@ -759,6 +759,9 @@ export class PushBackCommand implements Command {
     }
 }
 
+/**
+ * Call the attack logic and animate the attacker
+ */
 export class PhysicalAttackCommand implements Command {
     blocks = true;
     isSetUp: boolean = false;
@@ -879,8 +882,7 @@ export class PhysicalAttackCommand implements Command {
 }
 
 /**
- * Interact with the target, either calling the interactable or
- * attacking the fighter
+ * Interact with the target calling the interactable function
  */
 export class InteractCommand implements Command {
     // TODO, cleanup: This needs to be completely rethought. Too much

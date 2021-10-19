@@ -529,7 +529,6 @@ export function takeDamage(
 
     if (targetStats !== null && damageAffinity !== null) {
         calculatedDamage = calculatedDamage * damageAffinity[damageType];
-        calculatedDamage = Math.max(1, calculatedDamage - targetStats.defense);
     } else if (targetStats === null && damageAffinity !== null) {
         calculatedDamage = calculatedDamage * damageAffinity[damageType];
         calculatedDamage = Math.max(1, calculatedDamage);
@@ -537,18 +536,28 @@ export function takeDamage(
         calculatedDamage = Math.max(1, calculatedDamage - targetStats.defense);
     }
 
-    if (calculatedDamage > 0) {
-        const aiState = target.getOne(PlannerAIComponent);
-        // Update the AI state to know where the target is
-        // This is of course assuming that all damage is done by
-        // the target and that the target is in line of sight
-        // TODO: Target acquisition code
-        if (aiState !== undefined && aiState.knowsTargetPosition === false) {
-            // Bonus damage for sneak attack
+    // Update the AI state to know where the target is
+    // This is of course assuming that all damage is done by
+    // the target and that the target is in line of sight
+    // TODO: Target acquisition code
+    const aiState = target.getOne(PlannerAIComponent);
+    if (aiState !== undefined && aiState.knowsTargetPosition === false) {
+        // Bonus damage for sneak attack
+        if (calculatedDamage > 0 &&
+            (damageAffinity === null || damageAffinity[damageType] !== Affinity.nullified)) {
             calculatedDamage = Math.ceil(calculatedDamage * 1.5);
             critical = true;
         }
 
+        aiState.knowsTargetPosition = true;
+        aiState.update();
+    }
+
+    if (damageAffinity === null || damageAffinity[damageType] !== Affinity.nullified) {
+        calculatedDamage = Math.max(1, calculatedDamage);
+    }
+
+    if (calculatedDamage > 0) {
         hpData.hp -= calculatedDamage;
         hpData.update();
     }

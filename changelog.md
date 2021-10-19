@@ -15,8 +15,9 @@ _In Development_
   * Enemies will no longer run through fire to get to the player if they can be damaged by it
   * Enemy pathing now takes damage resistances into account when avoiding tiles
   * Add a new explosion trap spell
-  * Fixed bug where entities could path through two diagonally adjacent blocking tiles
-  * Fixed bug where enemies could use heal other spell on self
+  * Fixed a bug where entities could path through two diagonally adjacent blocking tiles
+  * Fixed a bug where enemies could use heal other spell on self
+  * Fixed a bug where enemies weren't alerted after a sneak attack
 * Technical
   * Refactored chest updating to less over engineered. Just flip the texture key and then follow the normal code path
   * Added simple template system to dialog definitions to allow for dynamic rules
@@ -25,6 +26,8 @@ _In Development_
     * Can now distinguish between a key press and a key hold
     * Support international keyboard layouts
   * Refactored trigger data design by merging it all into one component
+* Graphical
+  * Physical attacks now have an animation
 
 ## Version 12
 
