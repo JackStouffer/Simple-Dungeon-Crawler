@@ -238,12 +238,9 @@ export function setOnFire(target: Entity, damage?: number, turns?: number): bool
     // on fire when they step on it
     if (flammableData.onFire === false && !blocks) {
         target.addComponent({
-            type: "TriggerTypeComponent",
+            type: "TriggerComponent",
             currentTriggerType: TriggerType.Fire,
-            initialTriggerType: TriggerType.Fire
-        });
-        target.addComponent({
-            type: "FireTriggerComponent",
+            initialTriggerType: TriggerType.Fire,
             effectTurns: 5,
             effectDamage: 5,
             damage: 15
@@ -365,8 +362,7 @@ export function setFrozen(target: Entity, turns: number): boolean {
         }
 
         if (triggerData !== undefined && triggerData.currentTriggerType === TriggerType.Fire) {
-            target.removeComponent("TriggerTypeComponent");
-            target.removeComponent("FireTriggerComponent");
+            target.removeComponent("TriggerComponent");
         }
 
         return false;
@@ -2172,7 +2168,7 @@ export const SpellData: { [key: string]: SpellDataDetails } = {
         baseCastCount: 1,
         value: 40,
         type: SpellType.DamageOther,
-        range: 10,
+        range: 30,
         useFunc: castFireballRune
     }
 };

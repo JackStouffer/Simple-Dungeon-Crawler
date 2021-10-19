@@ -216,15 +216,16 @@ const GameplayState: GameState = {
         if (game.currentActor === null) {
             game.currentActor = game.scheduler.next()!;
             // Camera update
-            if (game.currentActor === game.playerId &&
-                game.gameCamera.following !== game.playerId) {
+            if (game.currentActor === game.playerId) {
                 const moveToEntity = game.ecs.getEntity(game.currentActor);
                 if (moveToEntity !== undefined) {
                     game.commandQueue.unshift(
                         new MoveCameraCommand(
                             game.map,
                             game.gameCamera,
-                            moveToEntity
+                            moveToEntity,
+                            null,
+                            0
                         )
                     );
                 }

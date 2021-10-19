@@ -1233,16 +1233,24 @@ export class MoveCameraCommand implements Command {
     map: GameMap;
     camera: Camera;
     duration: number;
+    delay: number;
     entityId: string;
     private xTween: Nullable<Tween> = null;
     private yTween: Nullable<Tween> = null;
     readonly position: Vector2D;
 
-    constructor(map: GameMap, camera: Camera, to: Entity, duration: Nullable<number> = null) {
+    constructor(
+        map: GameMap,
+        camera: Camera,
+        to: Entity,
+        duration: Nullable<number> = null,
+        delay = 200
+    ) {
         this.map = map;
         this.camera = camera;
         this.camera.following = null;
         this.entityId = to.id;
+        this.delay = delay;
 
         const pos = to.getOne(PositionComponent)!;
         this.position = camera.clamp(
@@ -1276,20 +1284,20 @@ export class MoveCameraCommand implements Command {
         this.xTween = new Tween({
             object: this.camera,
             key: "x",
-            delay: 200,
+            delay: this.delay,
             duration: this.duration,
             start: this.camera.x,
             end: this.position.x,
-            transition: Transition.Linear
+            transition: Transition.EaseOutSine
         });
         this.yTween = new Tween({
             object: this.camera,
             key: "y",
-            delay: 200,
+            delay: this.delay,
             duration: this.duration,
             start: this.camera.y,
             end: this.position.y,
-            transition: Transition.Linear
+            transition: Transition.EaseOutSine
         });
     }
 

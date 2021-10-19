@@ -1,6 +1,8 @@
 export enum Transition {
     Linear,
-    EaseIn
+    EaseInSine,
+    EaseOutSine,
+    EaseBezier
 }
 
 export interface TweenConfig {
@@ -49,18 +51,27 @@ export class Tween {
         if (this.timer >= this.delay) {
             if (this.transition === Transition.Linear) {
                 this.obj[this.key] = this.linear(
-                    (this.timer - this.delay) / this.duration,
-                    (this.timer - this.delay),
+                    Math.min(1, (this.timer - this.delay) / this.duration),
                     this.start,
                     this.end
                 );
-            } else if (this.transition === Transition.EaseIn) {
-                this.obj[this.key] = this.easeIn(
-                    (this.timer - this.delay) / this.duration,
-                    (this.timer - this.delay),
+            } else if (this.transition === Transition.EaseInSine) {
+                this.obj[this.key] = this.easeInSine(
+                    Math.min(1, (this.timer - this.delay) / this.duration),
                     this.start,
-                    this.end,
-                    this.duration
+                    this.end
+                );
+            } else if (this.transition === Transition.EaseOutSine) {
+                this.obj[this.key] = this.easeOutSine(
+                    Math.min(1, (this.timer - this.delay) / this.duration),
+                    this.start,
+                    this.end
+                );
+            } else if (this.transition === Transition.EaseBezier) {
+                this.obj[this.key] = this.easeBezier(
+                    Math.min(1, (this.timer - this.delay) / this.duration),
+                    this.start,
+                    this.end
                 );
             }
         }
@@ -70,11 +81,22 @@ export class Tween {
         }
     }
 
-    linear(percent: number, elapsed: number, start: number, end: number) {
+    linear(percent: number, start: number, end: number) {
         return start + (end - start) * percent;
     }
 
-    easeIn(percent: number, elapsed: number, start: number, end: number, duration: number): number {
-        return end * ( elapsed / duration ) * elapsed + start;
+    easeInSine(percent: number, start: number, end: number): number {
+        const pos = 1 - Math.cos((percent * Math.PI) / 2);
+        return start + ((end - start) * pos);
+    }
+
+    easeOutSine(percent: number, start: number, end: number): number {
+        const pos = Math.sin((percent * Math.PI) / 2);
+        return start + ((end - start) * pos);
+    }
+
+    easeBezier(percent: number, start: number, end: number): number {
+        const pos = percent * percent * (3 - 2 * percent);
+        return start + ((end - start) * pos);
     }
 }
