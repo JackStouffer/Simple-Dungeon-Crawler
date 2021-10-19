@@ -4,12 +4,12 @@ import {
     Command,
     UseSkillCommand,
     GoToLocationCommand,
-    InteractCommand,
     NoOpCommand,
     createPassableCallback,
     generateWeightCallback,
     createWaterBasedPassableCallback,
-    AlertAlliesCommand
+    AlertAlliesCommand,
+    PhysicalAttackCommand
 } from "../commands";
 import {
     DisplayNameComponent,
@@ -280,7 +280,7 @@ function meleeAttackAction(
     aiState: PlannerAIComponent
 ): Command {
     if (aiState.targetId === null) { throw new Error("Cannot perform meleeAttackAction without a target"); }
-    return new InteractCommand(aiState.entity.id, aiState.targetId);
+    return new PhysicalAttackCommand(aiState.entity.id, aiState.targetId);
 }
 
 /**

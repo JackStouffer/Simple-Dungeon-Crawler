@@ -7,7 +7,8 @@ import {
     getPlayerMovementPath,
     GoToLocationCommand,
     UseSkillCommand,
-    InteractCommand
+    InteractCommand,
+    PhysicalAttackCommand
 } from "./commands";
 import { tileDistanceBetweenPoints, getEntitiesAtLocation, GameMap, Vector2D } from "./map";
 import { Nullable } from "./util";
@@ -138,8 +139,16 @@ export function playerInput(
                     entityMap,
                     mouseDownPosition
                 );
+
                 if (target !== null && target !== inputState.entity) {
-                    return [new InteractCommand(player.id, target.id)];
+                    const hpData = target.getOne(HitPointsComponent);
+                    const interactableData = target.getOne(InteractableTypeComponent);
+
+                    if (hpData !== undefined) {
+                        return [new PhysicalAttackCommand(player.id, target.id)];
+                    } else if (interactableData !== undefined) {
+                        return [new InteractCommand(player.id, target.id)];
+                    }
                 }
             }
 

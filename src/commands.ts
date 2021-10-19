@@ -759,6 +759,125 @@ export class PushBackCommand implements Command {
     }
 }
 
+export class PhysicalAttackCommand implements Command {
+    blocks = true;
+    isSetUp: boolean = false;
+    attacked: boolean = true;
+    inTweenX: Nullable<Tween> = null;
+    inTweenY: Nullable<Tween> = null;
+    outTweenX: Nullable<Tween> = null;
+    outTweenY: Nullable<Tween> = null;
+    readonly entityId: string;
+    readonly targetId: string;
+
+    constructor(entityId: string, targetId: string) {
+        this.entityId = entityId;
+        this.targetId = targetId;
+    }
+
+    usedTurn(): boolean {
+        return this.attacked;
+    }
+
+    isFinished(): boolean {
+        if (this.attacked) {
+            if (this.outTweenX !== null) {
+                return this.outTweenX.finished;
+            }
+
+            return false;
+        }
+
+        return true;
+    }
+
+    setUp(ecs: World) {
+        const entity = ecs.getEntity(this.entityId);
+        const target = ecs.getEntity(this.targetId);
+        if (entity === undefined || target === undefined) {
+            this.attacked = false;
+            return;
+        }
+
+        const actorStats = entity.getOne(StatsComponent);
+        const actorPosData = entity.getOne(PositionComponent);
+        const targetHPData = target.getOne(HitPointsComponent);
+        const targetPosData = target.getOne(PositionComponent);
+
+        if (targetHPData !== undefined &&
+            actorStats !== undefined &&
+            actorPosData !== undefined &&
+            targetPosData !== undefined
+        ) {
+            attack(ecs, globals.Game!.entityMap, entity, target);
+            this.attacked = true;
+            this.inTweenX = new Tween({
+                object: actorPosData.worldPosition,
+                key: "x",
+                duration: 100,
+                delay: 20,
+                start: actorPosData.worldPosition.x,
+                end: targetPosData.worldPosition.x,
+                transition: Transition.Linear
+            });
+            this.inTweenY = new Tween({
+                object: actorPosData.worldPosition,
+                key: "y",
+                duration: 100,
+                delay: 20,
+                start: actorPosData.worldPosition.y,
+                end: targetPosData.worldPosition.y,
+                transition: Transition.Linear
+            });
+            this.outTweenX = new Tween({
+                object: actorPosData.worldPosition,
+                key: "x",
+                duration: 100,
+                delay: 0,
+                start: targetPosData.worldPosition.x,
+                end: actorPosData.worldPosition.x,
+                transition: Transition.Linear
+            });
+            this.outTweenY = new Tween({
+                object: actorPosData.worldPosition,
+                key: "y",
+                duration: 100,
+                delay: 0,
+                start: targetPosData.worldPosition.y,
+                end: actorPosData.worldPosition.y,
+                transition: Transition.Linear
+            });
+            return;
+        }
+
+        this.attacked = false;
+    }
+
+    update(ecs: World, deltaTime: DOMHighResTimeStamp): void {
+        if (this.inTweenX !== null) {
+            this.inTweenX.update(deltaTime);
+
+            if (this.inTweenX.finished) {
+                this.inTweenX = null;
+            }
+        }
+        if (this.inTweenY !== null) {
+            this.inTweenY.update(deltaTime);
+
+            if (this.inTweenY.finished) {
+                this.inTweenY = null;
+            }
+        }
+
+        if (this.inTweenX === null && this.outTweenX !== null) {
+            this.outTweenX.update(deltaTime);
+        }
+        if (this.inTweenY === null && this.outTweenY !== null) {
+            this.outTweenY.update(deltaTime);
+        }
+    }
+}
+
 /**
  * Interact with the target, either calling the interactable or
  * attacking the fighter
@@ -766,13 +885,13 @@ export class PushBackCommand implements Command {
 export class InteractCommand implements Command {
     // TODO, cleanup: This needs to be completely rethought. Too much
     // logic is happening in the update function here. Really we should
-    // have different commands for each interactable type and attacking
-    // should really be its own thing.
+    // have different commands for each interactable type so there can
+    // be different effects/animations
 
     blocks = true;
     isSetUp: boolean = false;
-    readonly entityId: string;
     interacted: boolean = true;
+    readonly entityId: string;
     readonly targetId: string;
 
     constructor(entityId: string, targetId: string) {
@@ -795,9 +914,7 @@ export class InteractCommand implements Command {
             return;
         }
 
-        const actorStats = entity.getOne(StatsComponent);
         const interactableData = target.getOne(InteractableTypeComponent);
-        const hpData = target.getOne(HitPointsComponent);
 
         if (interactableData !== undefined) {
             switch (interactableData.interactableType) {
@@ -820,12 +937,6 @@ export class InteractCommand implements Command {
                     assertUnreachable(interactableData.interactableType);
             }
 
-            this.interacted = true;
-            return;
-        }
-
-        if (hpData !== undefined && actorStats !== undefined) {
-            attack(ecs, globals.Game!.entityMap, entity, target);
             this.interacted = true;
             return;
         }
