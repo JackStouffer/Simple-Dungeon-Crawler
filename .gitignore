@@ -1,4 +1,5 @@
 *.map
+*.zip
 node_modules/
 node_modules (Ignored Item Conflict)/
 test-dist/

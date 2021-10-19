@@ -347,7 +347,13 @@ export class InventoryMenu {
         this.descriptionBackground.zIndex = 22;
         this.descriptionBackground.visible = false;
 
-        this.descriptionText = new PIXI.Text("", { fontFamily : "monospace", fontSize: 14, fill : 0xFFFFFF });
+        this.descriptionText = new PIXI.Text("", {
+            fontFamily: "monospace",
+            fontSize: 14,
+            fill: 0xFFFFFF,
+            wordWrap: true,
+            wordWrapWidth: this.descriptionBackground.width * 0.95
+        });
         this.descriptionText.x = 20;
         this.descriptionText.y = descriptionBoxTop + 15;
         this.descriptionText.zIndex = 23;
@@ -532,7 +538,13 @@ export class SpellSelectionMenu {
         this.descriptionBackground.zIndex = 22;
         this.descriptionBackground.visible = false;
 
-        this.descriptionText = new PIXI.Text("", { fontFamily : "monospace", fontSize: 14, fill : 0xFFFFFF });
+        this.descriptionText = new PIXI.Text("", {
+            fontFamily: "monospace",
+            fontSize: 14,
+            fill: 0xFFFFFF,
+            wordWrap: true,
+            wordWrapWidth: this.descriptionBackground.width * 0.95
+        });
         this.descriptionText.x = 20;
         this.descriptionText.y = descriptionBoxTop + 15;
         this.descriptionText.zIndex = 23;
