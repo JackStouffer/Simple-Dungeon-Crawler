@@ -1681,7 +1681,7 @@ export const ObjectData: { [key: string]: ObjectDataDetails } = {
                 },
                 SpeedComponent: {
                     speed: BASE_SPEED,
-                    maxTilesPerMove: 5
+                    maxTilesPerMove: 4
                 },
                 HitPointsComponent: {
                     hp: 10,

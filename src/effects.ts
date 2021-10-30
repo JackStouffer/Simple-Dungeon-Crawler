@@ -414,25 +414,6 @@ export class AreaOfEffectSystem extends System {
                 position.tilePosition,
                 0
             ));
-
-            // const tiles = getTargetedArea(aoeData.areaOfEffect, position.tilePosition, 0);
-
-            // for (const tile of tiles) {
-            //     const entitiesAtPos = getEntitiesAtLocation(
-            //         this.world, globals.Game!.entityMap, tile
-            //     );
-            //     for (const e of entitiesAtPos) {
-            //         if (e === entity) { continue; }
-            //         takeDamage(
-            //             this.world,
-            //             globals.Game!.entityMap,
-            //             e,
-            //             aoeData.damage,
-            //             false,
-            //             aoeData.damageType
-            //         );
-            //     }
-            // }
         }
     }
 }

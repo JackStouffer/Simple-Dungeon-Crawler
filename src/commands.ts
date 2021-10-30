@@ -1045,6 +1045,7 @@ export class UseSkillCommand implements Command {
     setUp(ecs: World) {
         const entity = ecs.getEntity(this.entityId);
         if (entity === undefined) { return; }
+        const entityPos = entity.getOne(PositionComponent)!;
 
         // Wild spell target selection
         if (this.details.type === SpellType.WildDamage ||
@@ -1052,7 +1053,7 @@ export class UseSkillCommand implements Command {
             const targetedEntity = getRandomFighterWithinRange(
                 globals.Game!.ecs,
                 globals.Game!.map,
-                entity.getOne(PositionComponent)!.tilePosition,
+                entityPos.tilePosition,
                 16
             );
 
@@ -1084,7 +1085,9 @@ export class UseSkillCommand implements Command {
             }
 
             if (this.details.effect === "particles" &&
-                this.details.particles !== undefined) {
+                this.details.particles !== undefined &&
+                ((this.details.particles.particleLocation === "target" && this.target !== undefined && globals.Game!.gameCamera.isTilePosOnScreen(this.target)) ||
+                (this.details.particles.particleLocation === "self" && globals.Game!.gameCamera.isTilePosOnScreen(entityPos.tilePosition)))) {
                 let sprite: PIXI.Sprite | undefined;
 
                 if (this.details.particles.particleLocation === "target" && this.target !== undefined) {
