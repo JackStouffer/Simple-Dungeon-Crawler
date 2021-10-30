@@ -17,7 +17,7 @@ import { tileDistanceBetweenPoints, getEntitiesAtLocation, getHighestZIndexWithT
 import { PlayerState } from "./input-handler";
 import { getPlayerMovementPath } from "./commands";
 import { getEffectiveSpeedData } from "./fighter";
-import { ItemDataDetails, SpellDataDetails } from "./skills";
+import { Area } from "./skills";
 import { Nullable, randomIntFromInterval } from "./util";
 import { TILE_SIZE } from "./constants";
 
@@ -204,62 +204,62 @@ export function getRingPositions(radius: number, cx: number, cy: number): Vector
  * Returns a list of Points that represent the area being targeted by
  * the player.
  */
-export function getTargetingReticle(
-    data: ItemDataDetails | SpellDataDetails | null,
-    pos: Nullable<Vector2D>,
+export function getTargetedArea(
+    areaOfEffect: Nullable<Area>,
+    origin: Nullable<Vector2D>,
     rotation: number
 ): Vector2D[] {
     const ret: Vector2D[] = [];
 
-    if (pos === null) {
+    if (origin === null) {
         return [];
     }
 
-    if (data === null) {
-        ret.push(new Vector2D(pos.x, pos.y));
+    if (areaOfEffect === null) {
+        ret.push(new Vector2D(origin.x, origin.y));
         return ret;
     }
 
-    if (data.areaOfEffect !== undefined) {
-        if (data.areaOfEffect.type === "rectangle") {
-            for (let dx = 0; dx < data.areaOfEffect.width!; dx++) {
-                for (let dy = 0; dy < data.areaOfEffect.height!; dy++) {
+    if (areaOfEffect !== undefined) {
+        if (areaOfEffect.type === "rectangle") {
+            for (let dx = 0; dx < areaOfEffect.width!; dx++) {
+                for (let dy = 0; dy < areaOfEffect.height!; dy++) {
                     switch (rotation) {
                         case 0:
                             ret.push(new Vector2D(
-                                pos.x + dx,
-                                (pos.y - Math.floor(data.areaOfEffect.height! / 2)) + dy
+                                origin.x + dx,
+                                (origin.y - Math.floor(areaOfEffect.height! / 2)) + dy
                             ));
                             break;
                         case 90:
                             ret.push(new Vector2D(
-                                (pos.x - Math.floor(data.areaOfEffect.height! / 2)) + dy,
-                                pos.y + dx
+                                (origin.x - Math.floor(areaOfEffect.height! / 2)) + dy,
+                                origin.y + dx
                             ));
                             break;
                         case 180:
                             ret.push(new Vector2D(
-                                pos.x + dx,
-                                (pos.y + Math.floor(data.areaOfEffect.height! / 2)) - dy
+                                origin.x + dx,
+                                (origin.y + Math.floor(areaOfEffect.height! / 2)) - dy
                             ));
                             break;
                         case 270:
                             ret.push(new Vector2D(
-                                (pos.x + Math.floor(data.areaOfEffect.height! / 2)) - dy,
-                                pos.y + dx
+                                (origin.x + Math.floor(areaOfEffect.height! / 2)) - dy,
+                                origin.y + dx
                             ));
                             break;
                         default: break;
                     }
                 }
             }
-        } else if (data.areaOfEffect.type === "circle") {
-            return getCirclePositions(data.areaOfEffect.radius!, pos.x, pos.y);
-        } else if (data.areaOfEffect.type === "ring") {
-            return getRingPositions(data.areaOfEffect.radius!, pos.x, pos.y);
+        } else if (areaOfEffect.type === "circle") {
+            return getCirclePositions(areaOfEffect.radius!, origin.x, origin.y);
+        } else if (areaOfEffect.type === "ring") {
+            return getRingPositions(areaOfEffect.radius!, origin.x, origin.y);
         }
     } else {
-        ret.push(new Vector2D(pos.x, pos.y));
+        ret.push(new Vector2D(origin.x, origin.y));
     }
 
     return ret;
@@ -406,8 +406,9 @@ export class DrawPlayerSystem extends System {
 
                     if (mousePosition !== null &&
                         tileDistanceBetweenPoints(mousePosition, entityPos) <= range) {
-                        const targetArea = getTargetingReticle(
-                            inputStateData.spellForTarget ?? inputStateData.itemForTarget,
+                        const data = inputStateData.spellForTarget ?? inputStateData.itemForTarget;
+                        const targetArea = getTargetedArea(
+                            data?.areaOfEffect ?? null,
                             mousePosition,
                             inputStateData.reticleRotation
                         );

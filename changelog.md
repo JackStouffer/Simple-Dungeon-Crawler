@@ -5,6 +5,7 @@
 _In Development_
 
 * Gameplay
+  * Added new Lightning Bug enemy which has a constant AoE lightning attack
   * The camera can now move independently of the player with WASD
   * Setting enemies on fire makes them more likely to run away in fear
   * More dialog responses

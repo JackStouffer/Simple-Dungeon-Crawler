@@ -13,7 +13,8 @@ const hasMessageBeenShown = {
     spellCasts: false,
     spellShrines: false,
     environment: false,
-    enemySurrounding: false
+    enemySurrounding: false,
+    attackPlanning: false
 };
 
 export function explainMovement() {
@@ -109,5 +110,13 @@ export function explainEnemySurrounding() {
         displayMessage("Your defense and movement are penalized for each enemy which surrounds you.", MessageType.Tutorial);
         playPing();
         hasMessageBeenShown.enemySurrounding = true;
+    }
+}
+
+export function explainAttackPlanning() {
+    if (!hasMessageBeenShown.enemySurrounding) {
+        displayMessage("Observing your enemy from afar and planning your attack is key to survival", MessageType.Tutorial);
+        playPing();
+        hasMessageBeenShown.attackPlanning = true;
     }
 }

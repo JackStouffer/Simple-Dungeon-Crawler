@@ -1,11 +1,4 @@
 { "compressionlevel":-1,
- "editorsettings":
-    {
-     "export":
-        {
-         "target":"."
-        }
-    },
  "height":80,
  "infinite":false,
  "layers":[
@@ -568,6 +561,90 @@
                  "width":0,
                  "x":103.035143769968,
                  "y":172.523961661342
+                }, 
+                {
+                 "height":0,
+                 "id":56,
+                 "name":"Lightning Bug",
+                 "point":true,
+                 "properties":[
+                        {
+                         "name":"commander",
+                         "type":"bool",
+                         "value":false
+                        }, 
+                        {
+                         "name":"inventory",
+                         "type":"string",
+                         "value":""
+                        }, 
+                        {
+                         "name":"objectType",
+                         "type":"string",
+                         "value":"lightning_bug"
+                        }],
+                 "rotation":0,
+                 "type":"object",
+                 "visible":true,
+                 "width":0,
+                 "x":562.965529187597,
+                 "y":996.882037069115
+                }, 
+                {
+                 "height":0,
+                 "id":57,
+                 "name":"Lightning Bug",
+                 "point":true,
+                 "properties":[
+                        {
+                         "name":"commander",
+                         "type":"bool",
+                         "value":false
+                        }, 
+                        {
+                         "name":"inventory",
+                         "type":"string",
+                         "value":""
+                        }, 
+                        {
+                         "name":"objectType",
+                         "type":"string",
+                         "value":"lightning_bug"
+                        }],
+                 "rotation":0,
+                 "type":"object",
+                 "visible":true,
+                 "width":0,
+                 "x":528.321496622207,
+                 "y":934.522778451412
+                }, 
+                {
+                 "height":0,
+                 "id":58,
+                 "name":"Lightning Bug",
+                 "point":true,
+                 "properties":[
+                        {
+                         "name":"commander",
+                         "type":"bool",
+                         "value":false
+                        }, 
+                        {
+                         "name":"inventory",
+                         "type":"string",
+                         "value":""
+                        }, 
+                        {
+                         "name":"objectType",
+                         "type":"string",
+                         "value":"lightning_bug"
+                        }],
+                 "rotation":0,
+                 "type":"object",
+                 "visible":true,
+                 "width":0,
+                 "x":617.529880478088,
+                 "y":1053.17858998787
                 }],
          "opacity":1,
          "type":"objectgroup",
@@ -733,10 +810,10 @@
          "y":0
         }],
  "nextlayerid":11,
- "nextobjectid":56,
+ "nextobjectid":59,
  "orientation":"orthogonal",
  "renderorder":"right-down",
- "tiledversion":"1.4.3",
+ "tiledversion":"1.7.2",
  "tileheight":16,
  "tilesets":[
         {
@@ -745,6 +822,6 @@
         }],
  "tilewidth":16,
  "type":"map",
- "version":1.4,
+ "version":"1.6",
  "width":120
 }

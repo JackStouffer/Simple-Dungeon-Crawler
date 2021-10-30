@@ -1,7 +1,7 @@
 import { Query, System } from "ape-ecs";
 
 import globals from "./globals";
-import { DamageType } from "./constants";
+import { AreaOfEffectType, DamageType } from "./constants";
 import { displayMessage, MessageType } from "./ui";
 import {
     DisplayNameComponent,
@@ -18,12 +18,15 @@ import {
     StatsEffectComponent,
     TriggerComponent,
     TypeComponent,
-    WetableComponent
+    WetableComponent,
+    AreaOfEffectComponent
 } from "./entity";
 import { takeDamage } from "./fighter";
-import { setOnFire } from "./skills";
+import { setOnFire, SpellData } from "./skills";
 import { DIRS } from "./rot";
 import { getEntitiesAtLocation, Vector2D } from "./map";
+import { UseSkillCommand } from "./commands";
+import { cloneDeep } from "lodash";
 
 /**
  * Gives damage to those entities with a flammable comp that is
@@ -374,6 +377,62 @@ export class UpdateSpeedEffectsSystem extends System {
                     effect.update();
                 }
             }
+        }
+    }
+}
+
+/**
+ * Apply the area of effect to an area around the entity once
+ * per turn cycle.
+ */
+export class AreaOfEffectSystem extends System {
+    private mainQuery: Query;
+
+    init() {
+        this.mainQuery = this
+            .createQuery()
+            .fromAll(AreaOfEffectComponent, PositionComponent)
+            .persist();
+    }
+
+    update() {
+        const entities = this.mainQuery.execute();
+        for (const entity of entities) {
+            const aoeData = entity.getOne(AreaOfEffectComponent)!;
+            const position = entity.getOne(PositionComponent)!;
+
+            const spellIDMapping = {
+                [AreaOfEffectType.Electric]: "lightning_aoe"
+            };
+            const data = cloneDeep(SpellData[spellIDMapping[aoeData.effectType]]);
+            data.value = aoeData.damage;
+            data.damageType = aoeData.damageType;
+
+            globals.Game!.commandQueue.push(new UseSkillCommand(
+                entity.id,
+                data,
+                position.tilePosition,
+                0
+            ));
+
+            // const tiles = getTargetedArea(aoeData.areaOfEffect, position.tilePosition, 0);
+
+            // for (const tile of tiles) {
+            //     const entitiesAtPos = getEntitiesAtLocation(
+            //         this.world, globals.Game!.entityMap, tile
+            //     );
+            //     for (const e of entitiesAtPos) {
+            //         if (e === entity) { continue; }
+            //         takeDamage(
+            //             this.world,
+            //             globals.Game!.entityMap,
+            //             e,
+            //             aoeData.damage,
+            //             false,
+            //             aoeData.damageType
+            //         );
+            //     }
+            // }
         }
     }
 }

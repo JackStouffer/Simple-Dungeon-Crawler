@@ -95,3 +95,7 @@ export enum TriggerType {
     Ice,
     Explosion
 }
+
+export enum AreaOfEffectType {
+    Electric
+}

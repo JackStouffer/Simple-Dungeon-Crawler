@@ -39,7 +39,8 @@ import {
     StatsEffectComponent,
     TriggerComponent,
     TypeComponent,
-    WetableComponent
+    WetableComponent,
+    AreaOfEffectComponent
 } from "./entity";
 import { displayMessage, MessageType } from "./ui";
 import { assertUnreachable, Nullable, randomIntFromInterval } from "./util";
@@ -139,7 +140,8 @@ export class DeathSystem extends System {
             WetableComponent,
             FreezableComponent,
             TriggerComponent,
-            StunnableComponent
+            StunnableComponent,
+            AreaOfEffectComponent
         ];
 
         for (let i = 0; i < compArray.length; i++) {
@@ -506,6 +508,14 @@ export function getEffectiveDamageAffinity(entity: Entity) {
 /**
  * Take damage from an attacker. Takes this fighter's current defense
  * into account
+ *
+ * @param ecs The ECS world
+ * @param entityMap The game's map of position to entities
+ * @param target The Entity to damage
+ * @param damage The amount of damage the attack deals
+ * @param critical Is this a critical hit?
+ * @param damageType What type of damage was the attack
+ * @returns {boolean} Did the target's hp reach zero
  */
 export function takeDamage(
     ecs: World,
@@ -555,6 +565,8 @@ export function takeDamage(
 
     if (damageAffinity === null || damageAffinity[damageType] !== Affinity.nullified) {
         calculatedDamage = Math.max(1, calculatedDamage);
+    } else {
+        calculatedDamage = Math.max(0, calculatedDamage);
     }
 
     if (calculatedDamage > 0) {

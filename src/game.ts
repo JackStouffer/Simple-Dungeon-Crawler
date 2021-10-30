@@ -58,7 +58,8 @@ import {
     StunnableComponent,
     removeEntity,
     EntityTeamMap,
-    DialogMemoryComponent
+    DialogMemoryComponent,
+    AreaOfEffectComponent
 } from "./entity";
 import {
     Command,
@@ -96,7 +97,8 @@ import {
     explainSpellShrine,
     explainEnvironmentInteractivity,
     explainEnemySurrounding,
-    explainCamera
+    explainCamera,
+    explainAttackPlanning
 } from "./tutorials";
 import { getItems, hasItem, InventoryItemDetails, useItem } from "./inventory";
 import { assertUnreachable, Nullable } from "./util";
@@ -111,7 +113,8 @@ import {
     WetSystem,
     SilenceSystem,
     StunSystem,
-    FrozenSystem
+    FrozenSystem,
+    AreaOfEffectSystem
 } from "./effects";
 import { generateAICommands } from "./ai/commands";
 import { ItemData, SpellData } from "./skills";
@@ -703,6 +706,7 @@ export class SimpleDungeonCrawler {
         this.ecs.registerComponent(InteractableTypeComponent, 50);
         this.ecs.registerComponent(LoadLevelComponent, 10);
         this.ecs.registerComponent(RemoveAfterNTurnsComponent, 10);
+        this.ecs.registerComponent(AreaOfEffectComponent, 10);
 
         this.ecs.registerSystem("frame", UpdateEntityMapSystem);
         this.ecs.registerSystem("frame", LightingSystem);
@@ -727,6 +731,7 @@ export class SimpleDungeonCrawler {
         this.ecs.registerSystem("postOneTurnCycle", StunSystem);
         this.ecs.registerSystem("postOneTurnCycle", FrozenSystem);
         this.ecs.registerSystem("postOneTurnCycle", ConfusableAISystem);
+        this.ecs.registerSystem("postOneTurnCycle", AreaOfEffectSystem);
         this.ecs.registerSystem("postOneTurnCycle", LevelUpSystem);
 
         if (globals.gameEventEmitter === null) { throw new Error("Global gameEventEmitter cannot be null"); }
@@ -742,6 +747,7 @@ export class SimpleDungeonCrawler {
         globals.gameEventEmitter.on("tutorial.spellShrine", explainSpellShrine);
         globals.gameEventEmitter.on("tutorial.environmentInteractivity", explainEnvironmentInteractivity);
         globals.gameEventEmitter.on("tutorial.enemySurrounding", explainEnemySurrounding);
+        globals.gameEventEmitter.on("tutorial.planning", explainAttackPlanning);
 
         this.keyBindingMenu = new KeyBindingMenu(this.pixiApp.screen, this.pixiApp.stage);
         this.inventoryMenu = new InventoryMenu(this.pixiApp.screen, this.pixiApp.stage);
@@ -891,6 +897,8 @@ export class SimpleDungeonCrawler {
                 if (command.usedTurn()) {
                     if (this.currentActor === this.playerId) {
                         // TODO, bug: This is wrong when the player is hasted or slowed
+                        // SOLUTION: empty entity with a base_speed speed stat that acts as a marker
+                        // of the end of the turn.
                         this.ecs.runSystems("postOneTurnCycle");
                         this.totalTurns++;
                     }

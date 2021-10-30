@@ -40,7 +40,7 @@ import {
 import { randomIntFromInterval, Nullable, assertUnreachable } from "./util";
 import { mouseTarget } from "./input-handler";
 import { getEffectiveHitPointData, getEffectiveStatData, heal, takeDamage } from "./fighter";
-import { getCirclePositions, getTargetingReticle } from "./graphics";
+import { getCirclePositions, getTargetedArea } from "./graphics";
 import { PushBackCommand } from "./commands";
 
 export interface Area {
@@ -554,7 +554,7 @@ function fireball(
 ): boolean {
     if (item.value === null) { throw new Error("Item does not have a value for fireball"); }
 
-    const tiles = getTargetingReticle(item, target, rotation);
+    const tiles = getTargetedArea(item.areaOfEffect ?? null, target, rotation);
     for (let i = 0; i < tiles.length; i++) {
         const entities = getEntitiesAtLocation(ecs, entityMap, tiles[i]);
         for (const entity of entities) {
@@ -750,7 +750,7 @@ function castWall(
     if (globals.Game === null) { throw new Error("Global game object is null"); }
     if (item.areaOfEffect === undefined) { throw new Error("areaOfEffect cannot be null for castWall"); }
 
-    const tiles = getTargetingReticle(item, target, rotation);
+    const tiles = getTargetedArea(item.areaOfEffect, target, rotation);
 
     for (let i = 0; i < tiles.length; i++) {
         const { blocks, entity } = isBlocked(ecs, map, entityMap, tiles[i]);
@@ -819,7 +819,7 @@ export function castFireRing(
     if (globals.Game === null) { throw new Error("Global game object is null"); }
     if (item.areaOfEffect === undefined) { throw new Error("areaOfEffect cannot be null for castWall"); }
 
-    const tiles = getTargetingReticle(item, target, rotation);
+    const tiles = getTargetedArea(item.areaOfEffect, target, rotation);
 
     for (let i = 0; i < tiles.length; i++) {
         const { blocks, entity } = isBlocked(ecs, map, entityMap, tiles[i]);
@@ -1051,6 +1051,55 @@ function castFireballRune(
     }
 
     createEntity(ecs, globals.Game.textureAtlas, "fireball_rune", target);
+    return true;
+}
+
+/**
+ * Give fire damages to all entities in an area
+ */
+function castAreaOfEffect(
+    item: ItemDataDetails | SpellDataDetails,
+    user: Entity,
+    ecs: World,
+    map: GameMap,
+    entityMap: EntityMap,
+    target: Vector2D,
+    rotation: number
+): boolean {
+    if (item.value === null) { throw new Error("Item does not have a value for fireball"); }
+
+    const tiles = getTargetedArea(item.areaOfEffect ?? null, target, rotation);
+    for (let i = 0; i < tiles.length; i++) {
+        const entities = getEntitiesAtLocation(ecs, entityMap, tiles[i]);
+        for (const entity of entities) {
+            if (entity === user) { continue; }
+
+            const targetHPData = entity.getOne(HitPointsComponent);
+            if (targetHPData !== undefined) {
+                // Make the spell dangerous by having it set things on fire rather than
+                // destroy them if they're not actors
+                if (item.statusEffect === StatusEffectType.OnFire && !entity.tags.has("sentient")) {
+                    setOnFire(entity);
+                } else {
+                    takeDamage(
+                        ecs,
+                        entityMap,
+                        entity,
+                        item.value,
+                        false,
+                        item.damageType ?? DamageType.Physical
+                    );
+
+                    const stats = getEffectiveStatData(ecs, entityMap, entity);
+                    const hp = getEffectiveHitPointData(entity);
+                    if (stats !== null && hp !== null) {
+                        rollForStatusEffect(item, entity, stats, hp);
+                    }
+                }
+            }
+        }
+    }
+
     return true;
 }
 
@@ -1676,7 +1725,7 @@ export const SpellData: { [key: string]: SpellDataDetails } = {
     },
     "fireball_placed": {
         id: "fireball_placed",
-        displayName: "[DEV] Fireball",
+        displayName: "[DEV] Fireball Placed",
         description: "",
         baseCastCount: 1,
         value: 40,
@@ -1711,6 +1760,49 @@ export const SpellData: { [key: string]: SpellDataDetails } = {
                 pos: { x: 0, y: 0 },
                 rotationSpeed: { min: 0, max: 0 },
                 scale: { start: 1, end: 0.3, minimumScaleMultiplier: 1 },
+                spawnType: "burst",
+                speed: { start: 200, end: 100, minimumSpeedMultiplier: 1 },
+                startRotation: { min: 0, max: 0 },
+            }
+        }
+    },
+    "lightning_aoe": {
+        id: "lightning_aoe",
+        displayName: "[DEV] Lightning AOE",
+        description: "[DEV] Lightning AOE",
+        baseCastCount: 1,
+        value: 40,
+        type: SpellType.DamageOther,
+        damageType: DamageType.Electric,
+        range: 10,
+        useFunc: castAreaOfEffect,
+        areaOfEffect: {
+            type: "circle",
+            radius: 3
+        },
+        statusEffect: StatusEffectType.Stunned,
+        effect: "particles",
+        particles: {
+            particleImages: ["particle_lightning_bolt"],
+            particleLocation: "target",
+            particleConfig: {
+                acceleration: { x: 0, y: 0 },
+                addAtBack: false,
+                alpha: { start: 0.84, end: 0.4 },
+                angleStart: 0,
+                blendMode: "normal",
+                color: { start: "#effc02", end: "#effc02" },
+                emitterLifetime: 0.55,
+                frequency: 0.04,
+                lifetime: { min: 0.3, max: 0.35 },
+                maxParticles: 10,
+                maxSpeed: 0,
+                noRotation: false,
+                particleSpacing: 0,
+                particlesPerWave: 40,
+                pos: { x: 0, y: 0 },
+                rotationSpeed: { min: 0, max: 0 },
+                scale: { start: 1.5, end: 0.5, minimumScaleMultiplier: 1 },
                 spawnType: "burst",
                 speed: { start: 200, end: 100, minimumSpeedMultiplier: 1 },
                 startRotation: { min: 0, max: 0 },

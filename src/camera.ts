@@ -64,6 +64,14 @@ export class Camera {
         return new Vector2D(dx, dy);
     }
 
+    isTilePosOnScreen(pos: Vector2D): boolean {
+        const screenPos = this.tilePositionToScreen(pos);
+        return screenPos.x >= 0 &&
+            screenPos.x < this.viewport.width &&
+            screenPos.y >= 0 &&
+            screenPos.y < this.viewport.height;
+    }
+
     worldPositionToScreen(pos: Vector2D): Vector2D {
         const dx = (pos.x * this.zoom) - (this.x * this.zoom);
         const dy = (pos.y * this.zoom) - (this.y * this.zoom);

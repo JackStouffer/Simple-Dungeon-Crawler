@@ -12,7 +12,8 @@ import {
     DeathType,
     LightingType,
     InteractableType,
-    TriggerType
+    TriggerType,
+    AreaOfEffectType
 } from "./constants";
 import { Nullable, randomIntFromInterval } from "./util";
 import { KeyCommand, PlayerState } from "./input-handler";
@@ -32,7 +33,7 @@ import {
     zoomInCamera,
     zoomOutCamera
 } from "./commands";
-import { ItemDataDetails, SpellDataDetails } from "./skills";
+import { Area, ItemDataDetails, SpellDataDetails } from "./skills";
 import { Vector2D } from "./map";
 import { Rectangle } from "./camera";
 
@@ -521,6 +522,29 @@ export class DialogMemoryComponent extends Component {
     static properties = {
         memory: new Map()
     }
+}
+
+/**
+ * Effect to be applied to an area around the entity once
+ * per turn cycle.
+ */
+export class AreaOfEffectComponent extends Component {
+    /** Visual effect type */
+    effectType: AreaOfEffectType;
+    damageType: DamageType;
+    damage: number;
+    areaOfEffect: Area;
+
+    static typeName = "AreaOfEffectComponent";
+    static properties = {
+        effectType: AreaOfEffectType.Electric,
+        damageType: DamageType.Electric,
+        damage: 0,
+        areaOfEffect: {
+            type: "circle",
+            radius: 1
+        }
+    };
 }
 
 export interface InventoryPoolProbabilities {
@@ -1612,6 +1636,100 @@ export const ObjectData: { [key: string]: ObjectDataDetails } = {
                 StunnableComponent: {
                     stunned: false,
                     turnsLeft: 0
+                }
+            }
+        }
+    },
+    "lightning_bug": {
+        addPlannerAI: true,
+        nonAlertSightRange: 5,
+        alertSightRange: 6,
+        lowHealthThreshold: 0.5,
+        desiredDistanceToTarget: 1,
+        actions: [
+            "wander",
+            "chase",
+            "goToEnemy",
+            "meleeAttack",
+            "goToSafePosition",
+            "runAway",
+            "confusedWander"
+        ],
+        staticallyKnownComponents: {
+            tags: ["blocks", "sentient", "moveable"],
+            c: {
+                TypeComponent: {
+                    entityType: "lightning_bug",
+                    race: "bug",
+                    classification: "bug"
+                },
+                DisplayNameComponent: {
+                    name: "Lightning Bug"
+                },
+                GraphicsComponent: {
+                    textureKey: "lightning_bug",
+                    sprite: null,
+                    zIndex: 5
+                },
+                LoseTargetAIComponent: {
+                    turnsWithTargetOutOfSight: 0,
+                    loseTrackAfterNTurns: 6
+                },
+                ConfusableAIComponent: {
+                    confused: false,
+                    turnsLeft: 0
+                },
+                SpeedComponent: {
+                    speed: BASE_SPEED,
+                    maxTilesPerMove: 5
+                },
+                HitPointsComponent: {
+                    hp: 10,
+                    maxHp: 10,
+                    onDeath: DeathType.Default
+                },
+                StatsComponent: {
+                    strength: 2,
+                    defense: 1,
+                    criticalChance: 0.05,
+                    criticalDamageMultiplier: 1.5,
+                    ailmentSusceptibility: 0.1
+                },
+                LevelComponent: {
+                    level: 1,
+                    experience: 0,
+                    experienceGiven: 10
+                },
+                DamageAffinityComponent: {
+                    [DamageType.Physical]: Affinity.normal,
+                    [DamageType.Fire]: Affinity.normal,
+                    [DamageType.Electric]: Affinity.nullified,
+                    [DamageType.Water]: Affinity.weak,
+                    [DamageType.Nature]: Affinity.normal,
+                    [DamageType.Ice]: Affinity.normal
+                },
+                FlammableComponent: {
+                    onFire: false,
+                    fireDamage: 0,
+                    turnsLeft: 0
+                },
+                FreezableComponent: {
+                    frozen: false,
+                    turnsLeft: 0,
+                    textureKey: "ice_wall"
+                },
+                WetableComponent: {
+                    wet: false,
+                    turnsLeft: 0
+                },
+                AreaOfEffectComponent: {
+                    effectType: AreaOfEffectType.Electric,
+                    damageType: DamageType.Electric,
+                    damage: 10,
+                    areaOfEffect: {
+                        type: "circle",
+                        radius: 3
+                    }
                 }
             }
         }
