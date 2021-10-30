@@ -40,7 +40,8 @@ import {
     TriggerComponent,
     TypeComponent,
     WetableComponent,
-    AreaOfEffectComponent
+    AreaOfEffectComponent,
+    ConfusableAIComponent
 } from "./entity";
 import { displayMessage, MessageType } from "./ui";
 import { assertUnreachable, Nullable, randomIntFromInterval } from "./util";
@@ -130,11 +131,14 @@ export class DeathSystem extends System {
 
         const compArray: any = [
             HitPointsComponent,
+            DamageAffinityComponent,
+            LevelComponent,
             StatsComponent,
             SpeedComponent,
             PlannerAIComponent,
             LoseTargetAIComponent,
             FearAIComponent,
+            ConfusableAIComponent,
             InteractableTypeComponent,
             FlammableComponent,
             WetableComponent,

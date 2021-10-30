@@ -895,6 +895,10 @@ export class SimpleDungeonCrawler {
 
             if (command.isFinished()) {
                 if (command.usedTurn()) {
+                    // TODO, bug: this should only be run when the command queue is CLEARED, not when
+                    // one command on the queue is run
+                    this.ecs.runSystems("postTurn");
+
                     if (this.currentActor === this.playerId) {
                         // TODO, bug: This is wrong when the player is hasted or slowed
                         // SOLUTION: empty entity with a base_speed speed stat that acts as a marker
@@ -903,9 +907,6 @@ export class SimpleDungeonCrawler {
                         this.totalTurns++;
                     }
 
-                    // TODO, bug: this should only be run when the command queue is CLEARED, not when
-                    // one command on the queue is run
-                    this.ecs.runSystems("postTurn");
                     this.currentActor = null;
                 }
 
