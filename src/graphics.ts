@@ -343,7 +343,8 @@ export class DrawPlayerSystem extends System {
 
                 if (inputStateData.state === PlayerState.Combat &&
                     globals.Game.currentActor === entity.id &&
-                    globals.Game.commandQueue.length === 0) {
+                    globals.Game.commandQueue.length === 0 &&
+                    globals.Game.isGameplayPaused === false) {
                     const mousePosition = input.getMousePosition();
                     if (mousePosition === null) { return; }
                     if (!globals.Game.map
@@ -397,7 +398,8 @@ export class DrawPlayerSystem extends System {
                     }
                 } else if (inputStateData.state === PlayerState.Target &&
                     globals.Game.currentActor === entity.id &&
-                    globals.Game.commandQueue.length === 0) {
+                    globals.Game.commandQueue.length === 0 &&
+                    globals.Game.isGameplayPaused === false) {
                     const mousePosition = input.getMousePosition();
                     const entityPos = entity.getOne(PositionComponent)!.tilePosition;
                     const range = inputStateData.spellForTarget?.range ??

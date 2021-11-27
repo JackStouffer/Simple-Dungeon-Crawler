@@ -26,7 +26,8 @@ import { getEffectiveHitPointData, getEffectiveStatData, KnownSpellDetails } fro
 import { GameMap, getEntitiesAtLocation, getHighestZIndexWithTile, isVisibleAndLit } from "./map";
 import { assertUnreachable, Nullable } from "./util";
 import { SpellData, SpellDataDetails } from "./skills";
-import { playUIClick, playUIRollover } from "./audio";
+import { playPing, playUIClick, playUIRollover } from "./audio";
+import { rectangleContains } from "./camera";
 
 export class StatusBar {
     readonly height = 96;
@@ -869,4 +870,251 @@ export class KeyBindingMenu {
             }
         }
     }
+}
+
+class Button {
+    readonly viewport: PIXI.Rectangle;
+    readonly currentStage: PIXI.Container;
+    readonly zIndex: number;
+    readonly background: PIXI.Graphics;
+    readonly backgroundX: number;
+    readonly backgroundY: number;
+    backgroundWidth: number;
+    backgroundHeight: number;
+    backgroundColor: number;
+    backgroundBorderColor: number;
+    readonly buttonText: PIXI.Text;
+    buttonTextColor: number;
+
+    onMouseEnter: Nullable<(button: Button) => void> = null;
+    onMouseExit: Nullable<(button: Button) => void> = null;
+    onMouseDown: Nullable<(button: Button) => void> = null;
+    onMouseUp: Nullable<(button: Button) => void> = null;
+
+    pressed: boolean = false;
+    visible: boolean = true;
+    mouseIsOver: boolean = false;
+    mouseIsDown: boolean = false;
+
+    constructor(
+        viewport: PIXI.Rectangle,
+        stage: PIXI.Container,
+        text: string,
+        x: number,
+        y: number,
+        width: number,
+        height: number,
+        zIndex: number
+    ) {
+        this.viewport = viewport;
+        this.currentStage = stage;
+        this.background = new PIXI.Graphics();
+        this.backgroundX = x;
+        this.backgroundY = y;
+        this.backgroundWidth = width;
+        this.backgroundHeight = height;
+        this.backgroundColor = 0x000000;
+        this.backgroundBorderColor = 0xFFFFFF;
+        this.zIndex = zIndex;
+
+        this.buttonTextColor = 0xFFFFFF;
+        this.buttonText = new PIXI.Text(text, { fontFamily: "monospace", fontSize: 14, fill: 0xFFFFFF });
+        this.buttonText.x = x + ((width / 2) - (this.buttonText.width / 2));
+        this.buttonText.y = y + ((height / 2) - (this.buttonText.height / 2));
+        this.buttonText.zIndex = zIndex + 2;
+        this.buttonText.visible = true;
+
+        this.redraw();
+
+        this.onMouseEnter = defaultMouseEnter;
+        this.onMouseExit = defaultMouseExit;
+        this.onMouseDown = defaultMouseDown;
+
+        this.currentStage.addChild(this.background);
+        this.currentStage.addChild(this.buttonText);
+    }
+
+    /**
+     * Force the button to redraw
+     */
+    redraw(): void {
+        this.background.clear();
+        this.background.lineStyle(2, this.backgroundBorderColor, 1, 1);
+        this.background.beginFill(this.backgroundColor);
+        this.background.drawRect(0, 0, this.backgroundWidth, this.backgroundHeight);
+        this.background.endFill();
+        this.background.x = this.backgroundX;
+        this.background.y = this.backgroundY;
+        this.background.zIndex = this.zIndex + 1;
+        this.background.visible = true;
+
+        this.buttonText.style.fill = this.buttonTextColor;
+    }
+
+    handleInput(): void {
+        const mousePos = input.getMouseScreenPosition();
+        if (mousePos === null) {
+            return;
+        }
+        const mouseDownPos = input.getLeftMouseDownScreen();
+
+        if (rectangleContains(this.background, mousePos)) {
+            if (!this.mouseIsOver) {
+                this.mouseIsOver = true;
+                if (this.onMouseEnter !== null) {
+                    this.onMouseEnter(this);
+                }
+            }
+
+            if (!this.mouseIsDown && mouseDownPos !== null) {
+                this.mouseIsDown = true;
+                if (this.onMouseDown !== null) {
+                    this.onMouseDown(this);
+                }
+            }
+        } else if (this.mouseIsOver) {
+            this.mouseIsOver = false;
+            if (this.onMouseExit !== null) {
+                this.onMouseExit(this);
+            }
+        }
+
+        if (this.mouseIsDown && mouseDownPos === null) {
+            this.mouseIsDown = false;
+            if (this.onMouseUp !== null) {
+                this.onMouseUp(this);
+            }
+        }
+    }
+
+    remove(): void {
+        this.currentStage.removeChild(this.background);
+        this.currentStage.removeChild(this.buttonText);
+    }
+}
+
+function defaultMouseEnter(button: Button) {
+    button.backgroundColor = 0xE3E3E3;
+    button.buttonTextColor = 0x000000;
+    button.redraw();
+    globals.Game!.canvas!.style.cursor = "pointer";
+}
+
+function defaultMouseExit(button: Button) {
+    button.backgroundColor = 0x000000;
+    button.buttonTextColor = 0xFFFFFF;
+    button.redraw();
+    globals.Game!.canvas!.style.cursor = "default";
+}
+
+function defaultMouseDown() {
+    playUIClick();
+}
+
+export class ConfirmationModal {
+    readonly viewport: PIXI.Rectangle;
+    readonly currentStage: PIXI.Container;
+    readonly background: PIXI.Graphics;
+    readonly descriptionBackground: PIXI.Graphics;
+    readonly titleText: PIXI.Text;
+    readonly bodyText: PIXI.Text;
+    readonly button: Button;
+
+    onConfirmation: Nullable<(modal: ConfirmationModal) => void>;
+
+    constructor(viewport: PIXI.Rectangle, stage: PIXI.Container, title: string, body: string) {
+        this.viewport = viewport;
+        this.currentStage = stage;
+
+        const backgroundWidth = viewport.width / 2;
+        const backgroundHeight = viewport.height / 2;
+        const backgroundX = backgroundWidth - (backgroundWidth / 2);
+        const backgroundY = backgroundHeight - (backgroundHeight / 2);
+
+        const backgroundLineWidth = 4;
+        const backgroundZIndex = 20;
+        this.background = new PIXI.Graphics();
+        this.background.lineStyle(backgroundLineWidth, 0x999999, 1, 1);
+        this.background.beginFill(0x000000);
+        this.background.drawRect(
+            backgroundX,
+            backgroundY,
+            backgroundWidth,
+            backgroundHeight
+        );
+        this.background.endFill();
+        this.background.zIndex = backgroundZIndex;
+        this.background.visible = true;
+
+        this.titleText = new PIXI.Text(title, { fontFamily: "monospace", fontSize: 24, fill: 0xFFFFFF, align: "center" });
+        this.titleText.x = (viewport.width / 2) - (this.titleText.width / 2);
+        this.titleText.y = backgroundY + 10;
+        this.titleText.zIndex = 21;
+        this.titleText.visible = true;
+
+        const buttonWidth = 50;
+        const buttonHeight = 30;
+        this.button = new Button(
+            viewport,
+            stage,
+            "Ok",
+            (viewport.width / 2) - (buttonWidth / 2),
+            backgroundY + backgroundHeight - (buttonHeight * 1.5),
+            buttonWidth,
+            buttonHeight,
+            backgroundZIndex
+        );
+
+        this.bodyText = new PIXI.Text(body, {
+            fontFamily: "monospace",
+            fontSize: 14,
+            fill: 0xFFFFFF,
+            align: "center",
+            wordWrap: true,
+            wordWrapWidth: backgroundWidth * 0.90
+        });
+        this.bodyText.x = (viewport.width / 2) - (this.bodyText.width / 2);
+        this.bodyText.y = (viewport.height / 2) - (this.bodyText.height / 2);
+        this.bodyText.zIndex = 21;
+        this.bodyText.visible = true;
+
+        this.button.onMouseDown = () => {
+            playUIClick();
+            if (this.onConfirmation !== null) {
+                this.onConfirmation(this);
+            }
+        };
+
+        this.currentStage.addChild(this.background);
+        this.currentStage.addChild(this.titleText);
+        this.currentStage.addChild(this.bodyText);
+    }
+
+    handleInput(): void {
+        this.button.handleInput();
+    }
+
+    remove(): void {
+        this.currentStage.removeChild(this.background);
+        this.currentStage.removeChild(this.titleText);
+        this.currentStage.removeChild(this.bodyText);
+
+        this.button.remove();
+    }
+}
+
+export function showConfirmationDialogBox(text: string): void {
+    playPing();
+    const modal = new ConfirmationModal(
+        globals.Game!.pixiApp.screen,
+        globals.Game!.pixiApp.stage,
+        "Tutorial",
+        text
+    );
+    modal.onConfirmation = (m) => {
+        globals.Game!.isGameplayPaused = false;
+        m.remove();
+    };
+    globals.Game!.confirmationModal = modal;
+    globals.Game!.isGameplayPaused = true;
 }

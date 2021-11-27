@@ -194,7 +194,7 @@ function getPressedKeys(): KeyState[] {
 }
 
 /**
- * Give the world position of the mouse click if there is
+ * Give the tile position of the mouse click if there is
  * one, null otherwise.
  * @returns {Vector2D} the position in the game world
  */
@@ -223,7 +223,31 @@ function getLeftMouseDown(): Nullable<Vector2D> {
 }
 
 /**
- * Give the world position of the mouse cursor's position if there is
+ * Give the screen position of the mouse click if there is
+ * one, null otherwise.
+ * @returns {Vector2D} the position in the game world
+ */
+function getLeftMouseDownScreen(): Nullable<Vector2D> {
+    if (globals.Game === null ||
+        globals.Game === undefined ||
+        mouseDownEvent === null
+    ) {
+        return null;
+    }
+
+    const rect = (mouseDownEvent.target! as HTMLElement).getBoundingClientRect();
+    const x = mouseDownEvent.clientX - rect.left;
+    const y = mouseDownEvent.clientY - rect.top;
+
+    if (x < 0 || y < 0) {
+        return null;
+    }
+
+    return new Vector2D(x, y);
+}
+
+/**
+ * Give the tile position of the mouse cursor's position if there is
  * one, null otherwise.
  * @returns {Vector2D} the position in the game world
  */
@@ -251,6 +275,30 @@ function getMousePosition(): Nullable<Vector2D> {
 }
 
 /**
+ * Give the screen position of the mouse cursor's position if it's within the canvas.
+ * Null otherwise.
+ * @returns {Vector2D} the position in the game world
+ */
+function getMouseScreenPosition(): Nullable<Vector2D> {
+    if (globals.Game === null ||
+        globals.Game === undefined ||
+        mouseMoveEvent === null
+    ) {
+        return null;
+    }
+
+    const rect = (mouseMoveEvent.target! as HTMLElement).getBoundingClientRect();
+    const x = mouseMoveEvent.clientX - rect.left;
+    const y = mouseMoveEvent.clientY - rect.top;
+
+    if (x < 0 || y < 0) {
+        return null;
+    }
+
+    return new Vector2D(x, y);
+}
+
+/**
  * Clear the currently pressed keys and the mouse click info.
  * Should be called after every frame.
  */
@@ -273,6 +321,8 @@ export default {
     wasPressed,
     getPressedKeys,
     getLeftMouseDown,
+    getLeftMouseDownScreen,
     getMousePosition,
+    getMouseScreenPosition,
     updateInputs
 };

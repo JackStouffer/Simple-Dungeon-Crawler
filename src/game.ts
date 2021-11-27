@@ -15,7 +15,7 @@ import {
     pauseMusic,
     resumeMusic,
     playOpenInventory,
-    playOpenSpells
+    playOpenSpells,
 } from "./audio";
 import { Camera } from "./camera";
 import {
@@ -84,16 +84,13 @@ import {
     SpellSelectionMenu,
     StatusBar,
     displayMessage,
+    ConfirmationModal,
 } from "./ui";
 import {
-    explainMovement,
     explainAttacking,
-    explainSpellTargeting,
     explainWildSpells,
-    explainInventory,
     explainSpellMenu,
     explainPickUpItem,
-    explainSpellCasts,
     explainSpellShrine,
     explainEnvironmentInteractivity,
     explainEnemySurrounding,
@@ -150,7 +147,6 @@ const OpeningCinematicState: GameState = {
             game.openingText.visible = false;
             game.loadLevel("tutorial_001");
             game.setState(game.gameplayState);
-            globals.gameEventEmitter!.emit("tutorial.start");
         }
     },
 
@@ -169,7 +165,6 @@ const WiningCinematicState: GameState = {
         game.winningText.visible = false;
         game.reset();
         game.loadLevel("tutorial_001");
-        globals.gameEventEmitter!.emit("tutorial.start");
     },
 
     handleInput(game: SimpleDungeonCrawler) {
@@ -193,7 +188,6 @@ const LosingCinematicState: GameState = {
         game.losingText.visible = false;
         game.reset();
         game.loadLevel("tutorial_001");
-        globals.gameEventEmitter!.emit("tutorial.start");
     },
 
     handleInput(game: SimpleDungeonCrawler) {
@@ -210,11 +204,16 @@ const GameplayState: GameState = {
     enter(game: SimpleDungeonCrawler): void {
         game.statusBar.setVisible(true);
     },
+
     exit(game: SimpleDungeonCrawler) {
         game.statusBar.setVisible(false);
     },
 
     update(game: SimpleDungeonCrawler) {
+        if (game.isGameplayPaused) {
+            return;
+        }
+
         // Turn order
         if (game.currentActor === null) {
             game.currentActor = game.scheduler.next()!;
@@ -271,11 +270,18 @@ const GameplayState: GameState = {
     },
 
     handleInput(game: SimpleDungeonCrawler) {
+        if (game.confirmationModal !== null) {
+            game.confirmationModal.handleInput();
+        }
+
+        if (game.isGameplayPaused) {
+            return;
+        }
+
         const player = game.ecs.getEntity(game.playerId);
         if (player === undefined) {
             return;
         }
-
         const inputHandlerState = player.getOne(InputHandlingComponent);
         if (inputHandlerState === undefined) {
             return;
@@ -529,6 +535,7 @@ export class SimpleDungeonCrawler {
     textureAtlas: PIXI.ITextureDictionary;
     gameCamera: Camera;
 
+    isGameplayPaused: boolean = false;
     state: GameState;
     openingCinematicState = OpeningCinematicState;
     winingCinematicState = WiningCinematicState;
@@ -563,6 +570,7 @@ export class SimpleDungeonCrawler {
     inventoryMenu: InventoryMenu;
     spellSelectionMenu: SpellSelectionMenu;
     statusBar: StatusBar;
+    confirmationModal: Nullable<ConfirmationModal>;
 
     blackBackground: PIXI.Graphics;
     openingText: PIXI.Text;
@@ -735,15 +743,11 @@ export class SimpleDungeonCrawler {
         this.ecs.registerSystem("postOneTurnCycle", LevelUpSystem);
 
         if (globals.gameEventEmitter === null) { throw new Error("Global gameEventEmitter cannot be null"); }
-        globals.gameEventEmitter.on("tutorial.start", explainMovement);
         globals.gameEventEmitter.on("tutorial.camera", explainCamera);
         globals.gameEventEmitter.on("tutorial.attacking", explainAttacking);
-        globals.gameEventEmitter.on("tutorial.inventory", explainInventory);
         globals.gameEventEmitter.on("tutorial.spellMenu", explainSpellMenu);
         globals.gameEventEmitter.on("tutorial.pickUpItem", explainPickUpItem);
-        globals.gameEventEmitter.on("tutorial.spellTargeting", explainSpellTargeting);
         globals.gameEventEmitter.on("tutorial.wildSpells", explainWildSpells);
-        globals.gameEventEmitter.on("tutorial.spellCasts", explainSpellCasts);
         globals.gameEventEmitter.on("tutorial.spellShrine", explainSpellShrine);
         globals.gameEventEmitter.on("tutorial.environmentInteractivity", explainEnvironmentInteractivity);
         globals.gameEventEmitter.on("tutorial.enemySurrounding", explainEnemySurrounding);
@@ -753,6 +757,8 @@ export class SimpleDungeonCrawler {
         this.inventoryMenu = new InventoryMenu(this.pixiApp.screen, this.pixiApp.stage);
         this.spellSelectionMenu = new SpellSelectionMenu(this.pixiApp.screen, this.pixiApp.stage);
         this.statusBar = new StatusBar(this.pixiApp.screen, this.pixiApp.stage);
+        this.confirmationModal = null;
+
         this.gameCamera = new Camera({
             x: this.pixiApp.screen.x,
             y: this.pixiApp.screen.y,

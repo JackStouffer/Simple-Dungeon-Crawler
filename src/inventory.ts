@@ -58,12 +58,9 @@ export function addItem(inventory: InventoryComponent, id: string, count: number
         inventory.inventory.set(id, count);
     }
 
-    if (inventory.entity.id === globals.Game.playerId) {
-        globals.gameEventEmitter.emit("tutorial.inventory");
-
-        if (ItemData[id].type === ItemType.WildDamageScroll) {
-            globals.gameEventEmitter.emit("tutorial.wildSpells");
-        }
+    if (inventory.entity.id === globals.Game.playerId &&
+        ItemData[id].type === ItemType.WildDamageScroll) {
+        globals.gameEventEmitter.emit("tutorial.wildSpells");
     }
 
     return true;

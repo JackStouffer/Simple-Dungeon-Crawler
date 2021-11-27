@@ -1029,8 +1029,6 @@ export class UseSkillCommand implements Command {
     }
 
     isFinished(): boolean {
-        globals.gameEventEmitter!.emit("tutorial.spellCasts");
-
         if (this.particleEmitter !== null) {
             return !this.particleEmitter.emit;
         }

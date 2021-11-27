@@ -1,5 +1,4 @@
-import { displayMessage, MessageType } from "./ui";
-import { playPing } from "./audio";
+import { showConfirmationDialogBox } from "./ui";
 
 const hasMessageBeenShown = {
     movement: false,
@@ -8,115 +7,72 @@ const hasMessageBeenShown = {
     inventory: false,
     pickUpItem: false,
     spellMenu: false,
-    spellTargeting: false,
     wildSpells: false,
-    spellCasts: false,
     spellShrines: false,
     environment: false,
     enemySurrounding: false,
     attackPlanning: false
 };
 
-export function explainMovement() {
-    if (!hasMessageBeenShown.movement) {
-        displayMessage("Move by clicking where you want to go. You can only move seven tiles at a time.", MessageType.Tutorial);
-        hasMessageBeenShown.movement = true;
-    }
-}
-
 export function explainCamera() {
     if (!hasMessageBeenShown.cameraMovement) {
-        displayMessage("Move the camera using WASD.", MessageType.Tutorial);
+        showConfirmationDialogBox("Move the camera using WASD.");
         hasMessageBeenShown.cameraMovement = true;
     }
 }
 
 export function explainAttacking() {
     if (!hasMessageBeenShown.attack) {
-        displayMessage("Click on an enemy when next to it to attack", MessageType.Tutorial);
-        playPing();
+        showConfirmationDialogBox("Click on an enemy when next to it to attack");
         hasMessageBeenShown.attack = true;
-    }
-}
-
-export function explainInventory() {
-    if (!hasMessageBeenShown.inventory) {
-        displayMessage("Use i to open your inventory", MessageType.Tutorial);
-        playPing();
-        hasMessageBeenShown.inventory = true;
     }
 }
 
 export function explainSpellMenu() {
     if (!hasMessageBeenShown.spellMenu) {
-        displayMessage("Press m to open your spells", MessageType.Tutorial);
-        playPing();
+        showConfirmationDialogBox("Press m to open your spells. Left click on an enemy to target it, click elsewhere to cancel. Spells have a limited number of casts. Use them sparingly.");
         hasMessageBeenShown.spellMenu = true;
     }
 }
 
 export function explainPickUpItem() {
     if (!hasMessageBeenShown.pickUpItem) {
-        displayMessage("Click on a dropped item to pick it up", MessageType.Tutorial);
-        playPing();
+        showConfirmationDialogBox("Click on a dropped item to pick it up. Use i to open your inventory");
         hasMessageBeenShown.pickUpItem = true;
-    }
-}
-
-export function explainSpellTargeting() {
-    if (!hasMessageBeenShown.spellTargeting) {
-        displayMessage("Left click on an enemy to target it, click elsewhere to cancel", MessageType.Tutorial);
-        playPing();
-        hasMessageBeenShown.spellMenu = true;
-        hasMessageBeenShown.spellTargeting = true;
     }
 }
 
 export function explainWildSpells() {
     if (!hasMessageBeenShown.wildSpells) {
-        displayMessage("Wild spells will randomly target an enemy within range", MessageType.Tutorial);
-        playPing();
+        showConfirmationDialogBox("Wild spells will randomly target an enemy within range");
         hasMessageBeenShown.wildSpells = true;
-    }
-}
-
-export function explainSpellCasts() {
-    if (!hasMessageBeenShown.spellCasts) {
-        displayMessage("Spells have a limited number of casts. Use them sparingly.", MessageType.Tutorial);
-        playPing();
-        hasMessageBeenShown.spellMenu = true;
-        hasMessageBeenShown.spellCasts = true;
     }
 }
 
 export function explainSpellShrine() {
     if (!hasMessageBeenShown.spellShrines) {
-        displayMessage("Learn new spells by finding magic shrines", MessageType.Tutorial);
-        playPing();
+        showConfirmationDialogBox("Learn new spells by finding magic shrines");
         hasMessageBeenShown.spellShrines = true;
     }
 }
 
 export function explainEnvironmentInteractivity() {
     if (!hasMessageBeenShown.environment) {
-        displayMessage("Spells can interact with the environment in different ways", MessageType.Tutorial);
-        playPing();
+        showConfirmationDialogBox("Spells can interact with the environment in different ways");
         hasMessageBeenShown.environment = true;
     }
 }
 
 export function explainEnemySurrounding() {
     if (!hasMessageBeenShown.enemySurrounding) {
-        displayMessage("Your defense and movement are penalized for each enemy which surrounds you.", MessageType.Tutorial);
-        playPing();
+        showConfirmationDialogBox("Your defense and movement are penalized for each enemy which surrounds you.");
         hasMessageBeenShown.enemySurrounding = true;
     }
 }
 
 export function explainAttackPlanning() {
     if (!hasMessageBeenShown.enemySurrounding) {
-        displayMessage("Observing your enemy from afar and planning your attack is key to survival", MessageType.Tutorial);
-        playPing();
+        showConfirmationDialogBox("Observing your enemy from afar and planning your attack is key to survival");
         hasMessageBeenShown.attackPlanning = true;
     }
 }

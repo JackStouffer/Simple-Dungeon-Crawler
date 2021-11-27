@@ -174,8 +174,6 @@ export function playerInput(
 
         return [];
     } else if (inputState.state === PlayerState.Target) {
-        globals.gameEventEmitter.emit("tutorial.spellTargeting");
-
         // Key commands
         let keyResult: Nullable<Command> = null;
         for (let i = 0; i < inputState.keyCommands.length; i++) {
