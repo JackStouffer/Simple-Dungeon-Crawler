@@ -189,8 +189,10 @@ export function setOnFire(target: Entity, damage?: number, turns?: number): bool
 
     if (flammableData === undefined) {
         if (target.id === globals.Game?.playerId) {
+            // TODO, sound: spell not working sound
             displayMessage("You were not set on fire because you're immune", MessageType.StatusEffect);
         } else if (displayName !== undefined) {
+            // TODO, sound: spell not working sound
             displayMessage(`${displayName.name} was not set on fire because it is immune`, MessageType.StatusEffect);
         }
         return false;
@@ -203,8 +205,10 @@ export function setOnFire(target: Entity, damage?: number, turns?: number): bool
         wetData.update();
 
         if (target.id === globals.Game?.playerId) {
+            // TODO, sound: spell not working sound
             displayMessage("You were not set on fire because you were wet", MessageType.StatusEffect);
         } else if (displayName !== undefined) {
+            // TODO, sound: spell not working sound
             displayMessage(`${displayName.name} was not set on fire because it was wet`, MessageType.StatusEffect);
         }
 
@@ -225,8 +229,10 @@ export function setOnFire(target: Entity, damage?: number, turns?: number): bool
 
 
         if (target.id === globals.Game?.playerId) {
+            // TODO, sound: ice shattering sound
             displayMessage("You were not set on fire because you were frozen", MessageType.StatusEffect);
         } else if (displayName !== undefined) {
+            // TODO, sound: ice shattering sound
             displayMessage(`${displayName.name} was not set on fire because it was frozen`, MessageType.StatusEffect);
         }
 
@@ -277,12 +283,37 @@ export function setOnFire(target: Entity, damage?: number, turns?: number): bool
     flammableData.onFire = true;
     flammableData.update();
 
-    if (target.id === globals.Game!.playerId) {
-        displayMessage("You are now on fire", MessageType.StatusEffect);
-    } else if (target.tags.has("sentient")) {
-        const displayName = target.getOne(DisplayNameComponent);
-        if (displayName === undefined) { throw new Error(`Undefined display name on ${target.id}`); }
-        displayMessage(`${displayName.name} is now on fire`, MessageType.StatusEffect);
+    // Add the particle emitter
+    const graphicsData = target.getOne(GraphicsComponent);
+    if (graphicsData !== undefined) {
+        target.addComponent({
+            type: "ParticleEmitterComponent",
+            emitter: null,
+            turnsLeft: flammableData.turnsLeft,
+            particleDefinition: {
+                particleImages: ["particle_cloud", "particle_fire"],
+                particleConfig: {
+                    acceleration: { x: 0, y: 0 },
+                    addAtBack: false,
+                    alpha: { start: 0.62, end: 0 },
+                    blendMode: "normal",
+                    color: { start: "#fff191", end: "#ff622c" },
+                    emitterLifetime: -1,
+                    frequency: 0.001,
+                    lifetime: { min: 0.05, max: 0.1 },
+                    maxParticles: 1000,
+                    maxSpeed: 0,
+                    noRotation: false,
+                    pos: { x: 8, y: 8 },
+                    rotationSpeed: { min: 50, max: 50 },
+                    scale: { start: .2, end: 1, minimumScaleMultiplier: 1 },
+                    spawnCircle: { x: 0, y: 0, r: 10 },
+                    spawnType: "circle",
+                    speed: { start: 300, end: 200, minimumSpeedMultiplier: 1 },
+                    startRotation: { min: 265, max: 275 }
+                }
+            }
+        });
     }
 
     return true;
@@ -308,6 +339,40 @@ export function setWet(target: Entity, turns?: number): boolean {
         wetData.wet = true;
         wetData.turnsLeft = turns;
         wetData.update();
+
+        // Add the particle emitter
+        const graphicsData = target.getOne(GraphicsComponent);
+        if (graphicsData !== undefined) {
+            target.addComponent({
+                type: "ParticleEmitterComponent",
+                emitter: null,
+                turnsLeft: wetData.turnsLeft,
+                particleDefinition: {
+                    particleImages: ["particle_cloud"],
+                    particleConfig: {
+                        acceleration: { x: 0, y: 0 },
+                        addAtBack: false,
+                        alpha: { start: 1, end: 0.8 },
+                        blendMode: "normal",
+                        color: { start: "#003cff", end: "#003cff" },
+                        emitterLifetime: -1,
+                        frequency: 0.004,
+                        lifetime: { min: 0.2, max: 0.25 },
+                        maxParticles: 4,
+                        maxSpeed: 0,
+                        noRotation: false,
+                        pos: { x: 8, y: 8 },
+                        rotationSpeed: { min: 50, max: 50 },
+                        scale: { start: .18, end: .18, minimumScaleMultiplier: 1 },
+                        spawnCircle: { x: 0, y: -2, r: 10 },
+                        spawnType: "circle",
+                        speed: { start: 5, end: 10, minimumSpeedMultiplier: 1 },
+                        startRotation: { min: 90, max: 90 }
+                    }
+                }
+            });
+        }
+
         return true;
     }
 

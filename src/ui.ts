@@ -1118,6 +1118,7 @@ export function showConfirmationDialogBox(text: string): void {
     modal.onConfirmation = (m) => {
         globals.Game!.isGameplayPaused = false;
         m.remove();
+        globals.Game!.confirmationModal = null;
     };
     globals.Game!.confirmationModal = modal;
     globals.Game!.isGameplayPaused = true;

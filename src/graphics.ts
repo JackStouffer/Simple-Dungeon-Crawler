@@ -6,13 +6,11 @@ import * as particles from "pixi-particles";
 import globals from "./globals";
 import {
     ChestComponent,
-    FlammableComponent,
     GraphicsComponent,
     InputHandlingComponent,
     InventoryComponent,
     ParticleEmitterComponent,
     PositionComponent,
-    WetableComponent
 } from "./entity";
 import input from "./input";
 import { tileDistanceBetweenPoints, getEntitiesAtLocation, getHighestZIndexWithTile, Vector2D, isVisibleAndLit } from "./map";
@@ -59,18 +57,6 @@ export class DrawSystem extends System {
             const { x, y } = globals.Game.gameCamera.worldPositionToScreen(pos.worldPosition);
             graphics.sprite.position.set(x, y);
             graphics.sprite.scale.set(globals.Game!.gameCamera.zoom, globals.Game!.gameCamera.zoom);
-
-            const flameData = entity.getOne(FlammableComponent);
-            const wetData = entity.getOne(WetableComponent);
-
-            if (flameData !== undefined && flameData.onFire === true) {
-                graphics.sprite.tint = 0xFF0000;
-            } else if (wetData !== undefined && wetData.wet === true) {
-                graphics.sprite.tint = 0x000FF;
-            } else {
-                graphics.sprite.tint = 0xFFFFFF;
-            }
-
             graphics.sprite.alpha = graphics.opacity;
             graphics.sprite.zIndex = graphics.zIndex;
         } else if (graphics.sprite !== null) {
@@ -385,18 +371,6 @@ export class DrawPlayerSystem extends System {
                     globals.Game!.gameCamera.zoom,
                     globals.Game!.gameCamera.zoom
                 );
-
-                const flameData = entity.getOne(FlammableComponent);
-                const wetData = entity.getOne(WetableComponent);
-
-                if (flameData !== undefined && flameData.onFire === true) {
-                    graphics.sprite.tint = 0xFF0000;
-                } else if (wetData !== undefined && wetData.wet === true) {
-                    graphics.sprite.tint = 0x000FF;
-                } else {
-                    graphics.sprite.tint = 0xFFFFFF;
-                }
-
                 graphics.sprite.alpha = graphics.opacity;
                 graphics.sprite.zIndex = graphics.zIndex;
 
