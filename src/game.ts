@@ -84,7 +84,7 @@ import {
     SpellSelectionMenu,
     StatusBar,
     displayMessage,
-    ConfirmationModal,
+    ConfirmationModal
 } from "./ui";
 import {
     explainAttacking,

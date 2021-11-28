@@ -71,7 +71,7 @@ export function explainEnemySurrounding() {
 }
 
 export function explainAttackPlanning() {
-    if (!hasMessageBeenShown.enemySurrounding) {
+    if (!hasMessageBeenShown.attackPlanning) {
         showConfirmationDialogBox("Observing your enemy from afar and planning your attack is key to survival");
         hasMessageBeenShown.attackPlanning = true;
     }

@@ -870,6 +870,8 @@ export class PhysicalAttackCommand implements Command {
             if (this.inTweenY.finished) {
                 this.inTweenY = null;
             }
+
+            // TODO, sound: move attack call here
         }
 
         if (this.inTweenX === null && this.outTweenX !== null) {
@@ -1445,6 +1447,107 @@ export class RemoveEntityCommand implements Command {
 
     update(): void {
         removeEntity(globals.Game!.ecs, this.entity);
+    }
+}
+
+export class ShowDamageIndicatorCommand implements Command {
+    entityId: string;
+    text: PIXI.Text;
+    tweenY: Nullable<Tween>;
+    worldPosition: Vector2D;
+    blocks: boolean = true;
+    isSetUp: boolean = false;
+
+    static normalTextStyle = {
+        fontFamily: "monospace",
+        fontSize: 24,
+        fill: 0xFFFFFF,
+        stroke: 0x000000,
+        strokeThickness: 2
+    };
+    static criticalTextStyle = {
+        fontFamily: "monospace",
+        fontSize: 24,
+        fill: 0xFF0000,
+        stroke: 0x000000,
+        strokeThickness: 2
+    };
+    static immuneTextStyle = {
+        fontFamily: "monospace",
+        fontSize: 24,
+        fill: 0xFF0000,
+        stroke: 0x000000,
+        strokeThickness: 2
+    };
+
+    constructor(
+        entityId: string,
+        damage: number,
+        isCritical: boolean,
+        wasImmune: boolean
+    ) {
+        this.entityId = entityId;
+        this.text = new PIXI.Text(damage.toString());
+        this.text.zIndex = 20;
+        if (isCritical) {
+            this.text.style = ShowDamageIndicatorCommand.criticalTextStyle;
+        } else if (wasImmune) {
+            this.text.style = ShowDamageIndicatorCommand.immuneTextStyle;
+        } else {
+            this.text.style = ShowDamageIndicatorCommand.normalTextStyle;
+        }
+    }
+
+    setUp(ecs: World): void {
+        const entity = ecs.getEntity(this.entityId);
+        if (entity === undefined) { return; }
+
+        const worldPos = entity.getOne(PositionComponent)!.worldPosition;
+        const screenPos = globals.Game!.gameCamera.worldPositionToScreen(worldPos);
+
+        // Only show if we're on screen
+        if (screenPos.x < globals.Game!.gameCamera.viewport.width &&
+            screenPos.x >= 0 &&
+            screenPos.y < globals.Game!.gameCamera.viewport.height &&
+            screenPos.y >= 0) {
+            this.text.x = screenPos.x + (
+                ((globals.Game!.gameCamera.tileSize * globals.Game!.gameCamera.zoom) / 2) -
+                (this.text.width / 2)
+            );
+            this.text.y = screenPos.y - this.text.height - 5;
+
+            this.tweenY = new Tween({
+                object: this.text,
+                key: "y",
+                duration: 500,
+                delay: 0,
+                start: this.text.y,
+                end: this.text.y - (this.text.height * 1.35),
+                transition: Transition.EaseOutSine
+            });
+
+            globals.Game?.pixiApp.stage.addChild(this.text);
+        }
+    }
+
+    usedTurn(): boolean {
+        return false;
+    }
+
+    isFinished(): boolean {
+        return this.tweenY !== null ? this.tweenY.finished : true;
+    }
+
+    update(ecs: World, deltaTime: DOMHighResTimeStamp): void {
+        if (this.tweenY !== null) {
+            this.tweenY.update(deltaTime);
+        }
+    }
+
+    tearDown() {
+        if (this.tweenY !== null) {
+            globals.Game?.pixiApp.stage.removeChild(this.text);
+        }
     }
 }
 

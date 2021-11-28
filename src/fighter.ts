@@ -13,6 +13,7 @@ import {
     Affinity,
     StatusEffectType
 } from "./constants";
+import { playBoxBreak } from "./audio";
 import {
     createEntity,
     DamageAffinityComponent,
@@ -43,12 +44,12 @@ import {
     AreaOfEffectComponent,
     ConfusableAIComponent
 } from "./entity";
-import { displayMessage, MessageType } from "./ui";
-import { assertUnreachable, Nullable, randomIntFromInterval } from "./util";
 import { SpellData, Area } from "./skills";
-import { createPassableSightCallback } from "./ai/commands";
 import { getEntitiesAtLocation, Vector2D } from "./map";
-import { playBoxBreak } from "./audio";
+import { displayMessage } from "./ui";
+import { assertUnreachable, Nullable, randomIntFromInterval } from "./util";
+import { createPassableSightCallback } from "./ai/commands";
+import { ShowDamageIndicatorCommand } from "./commands";
 
 /**
  * Find all entities with HitPointsComponents and when hp is <= 0,
@@ -530,7 +531,6 @@ export function takeDamage(
     damageType: DamageType
 ): boolean {
     let calculatedDamage = damage;
-    const name = target.getOne(DisplayNameComponent);
     const hpData = target.getOne(HitPointsComponent);
     if (hpData === undefined) { return false; }
 
@@ -578,20 +578,21 @@ export function takeDamage(
         hpData.update();
     }
 
-    // TODO: fix messages to say who did the attacking
-    if (critical && name !== undefined) {
-        displayMessage(`CRITICAL! ${name.name} takes ${calculatedDamage} of ${DamageType[damageType]} damage.`, MessageType.Critical);
-    } else if (name !== undefined &&
-        damageAffinity !== null &&
-        damageAffinity[damageType] === Affinity.nullified) {
-        displayMessage(`${name.name} is immune to ${DamageType[damageType]} attacks!`);
-    } else if (name !== undefined &&
-        damageAffinity !== null &&
-        damageAffinity[damageType] === Affinity.strong) {
-        displayMessage(`${name.name} resists the ${DamageType[damageType]} damage and takes ${calculatedDamage} damage.`);
-    } else if (name !== undefined) {
-        displayMessage(`${name.name} takes ${calculatedDamage} ${DamageType[damageType]} damage.`);
+    const entityPos = target.getOne(PositionComponent);
+    if (entityPos === undefined) {
+        throw new Error(`missing position data on entity ${target.id}`);
     }
+
+    if (target.tags.has("sentient")) {
+        globals.Game!.commandQueue.push(new ShowDamageIndicatorCommand(
+            target.id,
+            calculatedDamage,
+            critical || (damageAffinity !== null && damageAffinity[damageType] === Affinity.strong),
+            damageAffinity !== null && damageAffinity[damageType] === Affinity.nullified
+        ));
+    }
+
+    // TODO, sound: play hit/crit/death sound here
 
     if (hpData.hp <= 0) {
         return true;
@@ -612,9 +613,7 @@ export function attack(
 ): void {
     const attackerLevelData = attacker.getOne(LevelComponent);
     const attackerEffectiveStats = getEffectiveStatData(ecs, entityMap, attacker);
-    const attackerDisplayName = attacker.getOne(DisplayNameComponent);
     const targetLevelData = target.getOne(LevelComponent);
-    const targetDisplayName = target.getOne(DisplayNameComponent);
 
     if (attackerEffectiveStats === null) { throw new Error("Cannot attack damage without a StatsComponent"); }
 
@@ -633,8 +632,6 @@ export function attack(
             attackerLevelData.experience += experience;
             attackerLevelData.update();
         }
-    } else if (attackerDisplayName !== undefined && targetDisplayName !== undefined) {
-        displayMessage(`${attackerDisplayName.name} attacks ${targetDisplayName.name}, but it's too weak!`);
     }
 }
 

@@ -29,6 +29,8 @@ _In Development_
   * Refactored trigger data design by merging it all into one component
 * Graphical
   * Physical attacks now have an animation
+  * Damage values are now shown as animated values on the screen rather than in the log
+  * Tutorials are now shown in a confirmation modal window
 
 ## Version 12
 

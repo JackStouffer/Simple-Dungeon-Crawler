@@ -580,7 +580,7 @@ export function createSpeechBubbleTexture(x: number, y: number, text: string) {
     graphics.zIndex = 10;
     graphics.zIndex = 10;
 
-    const speech = new PIXI.Text(text, { fontFamily : "monospace", fontSize: 12, fill : 0x00000 });
+    const speech = new PIXI.Text(text, { fontFamily: "monospace", fontSize: 12, fill: 0x00000 });
     const rectWidth = speech.width + padding;
     const rectHeight = speech.height + padding;
     const halfTileSize = ((TILE_SIZE * globals.Game!.gameCamera.zoom) / 2);
