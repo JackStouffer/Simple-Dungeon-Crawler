@@ -17,7 +17,6 @@ import { playBoxBreak } from "./audio";
 import {
     createEntity,
     DamageAffinityComponent,
-    DisplayNameComponent,
     EntityMap,
     FearAIComponent,
     FlammableComponent,
@@ -100,13 +99,6 @@ export class DeathSystem extends System {
     actorDeath(target: Entity): void {
         if (globals.Game === null) { throw new Error("Global game object is null"); }
         if (globals.gameEventEmitter === null) { throw new Error("Global gameEventEmitter object is null"); }
-
-        const nameData = target.getOne(DisplayNameComponent);
-        if (nameData !== undefined) {
-            displayMessage(`${nameData.name} has been killed`);
-            nameData.name = `Remains of a ${nameData.name}`;
-            nameData.update();
-        }
 
         target.removeTag("blocks");
         target.removeTag("blocksSight");

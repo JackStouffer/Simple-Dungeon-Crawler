@@ -1,6 +1,7 @@
 import { World, Component, Entity, EntityRef, System, Query, IEntityConfig } from "ape-ecs";
 import { assignIn } from "lodash";
 import * as PIXI from "pixi.js";
+import * as particles from "pixi-particles";
 
 import { RNG } from "./rot/index";
 
@@ -99,7 +100,7 @@ export class DisplayNameComponent extends Component {
 }
 
 export class GraphicsComponent extends Component {
-    textureKey: string;
+    textureKey: Nullable<string>;
     sprite: Nullable<PIXI.Sprite>;
     opacity: number;
     zIndex: number;
@@ -547,6 +548,25 @@ export class AreaOfEffectComponent extends Component {
     };
 }
 
+/**
+ * Add particle visual effect to any entity
+ */
+export class ParticleEmitterComponent extends Component {
+    emitter: Nullable<particles.Emitter>;
+    particleDefinition: {
+        particleImages: string[];
+        particleConfig: particles.OldEmitterConfig;
+    };
+    turnsLeft: number;
+
+    static typeName = "ParticleEmitterComponent";
+    static properties = {
+        turnsLeft: Infinity,
+        particleDefinition: {},
+        emitter: null
+    };
+}
+
 export interface InventoryPoolProbabilities {
     itemID: string;
     probability: number;
@@ -859,9 +879,35 @@ export const ObjectData: { [key: string]: ObjectDataDetails } = {
                     name: "Fire"
                 },
                 GraphicsComponent: {
-                    textureKey: "campfire_1_lit_1",
+                    textureKey: null,
                     sprite: null,
-                    zIndex: 8
+                    zIndex: 5
+                },
+                ParticleEmitterComponent: {
+                    turnsLeft: Infinity,
+                    particleDefinition: {
+                        particleImages: ["particle_cloud", "particle_fire"],
+                        particleConfig: {
+                            acceleration: { x: 0, y: 0 },
+                            addAtBack: false,
+                            alpha: { start: 0.62, end: 0 },
+                            blendMode: "normal",
+                            color: { start: "#fff191", end: "#ff622c" },
+                            emitterLifetime: -1,
+                            frequency: 0.001,
+                            lifetime: { min: 0.05, max: 0.1 },
+                            maxParticles: 1000,
+                            maxSpeed: 0,
+                            noRotation: false,
+                            pos: { x: 8, y: 8 },
+                            rotationSpeed: { min: 50, max: 50 },
+                            scale: { start: .2, end: 1, minimumScaleMultiplier: 1 },
+                            spawnCircle: { x: 0, y: 0, r: 10 },
+                            spawnType: "circle",
+                            speed: { start: 300, end: 200, minimumSpeedMultiplier: 1 },
+                            startRotation: { min: 265, max: 275 }
+                        }
+                    }
                 },
                 LightingComponent: {
                     color: "orange",
@@ -2283,7 +2329,10 @@ export function createEntity(
     }
 
     const graphics = entity.getOne(GraphicsComponent);
-    if (graphics !== undefined) {
+    if (graphics !== undefined && graphics.textureKey === null) {
+        graphics.sprite = new PIXI.Sprite();
+        globals.Game.pixiApp.stage.addChild(graphics.sprite);
+    } else if (graphics !== undefined && graphics.textureKey !== null) {
         graphics.sprite = new PIXI.Sprite(textures[graphics.textureKey]);
         globals.Game.pixiApp.stage.addChild(graphics.sprite);
     }

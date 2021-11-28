@@ -393,6 +393,7 @@ export function setFrozen(target: Entity, turns: number): boolean {
             graphics.sprite.texture = globals.Game!.textureAtlas[frozenData.textureKey];
         } else if (graphics !== undefined &&
             graphics.sprite !== null &&
+            graphics.textureKey !== null &&
             frozenData.textureKey === null) {
             graphics.sprite.texture = globals.Game!.textureAtlas[graphics.textureKey];
         }

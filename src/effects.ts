@@ -69,16 +69,6 @@ export class OnFireSystem extends System {
                         entity.has(TriggerComponent)) {
                         entity.removeComponent(entity.getOne(TriggerComponent)!);
                     }
-
-
-                    if (entity.id === globals.Game!.playerId) {
-                        displayMessage("You are no longer on fire", MessageType.StatusEffect);
-                    } else if (entity.tags.has("sentient")) {
-                        const displayName = entity.getOne(DisplayNameComponent);
-                        if (displayName !== undefined) {
-                            displayMessage(`${displayName.name} is no longer on fire`, MessageType.StatusEffect);
-                        }
-                    }
                 } else {
                     // Simulate Fire Spreading
                     // Check neighboring tiles for flammable entities
@@ -109,18 +99,6 @@ export class OnFireSystem extends System {
                 }
 
                 flammableData.update();
-
-                // TODO, cleanup: two messages are generated here, one for the fire
-                // damage and one in the takeDamage function
-                if (globals.Game === null) { continue; }
-                if (entity.id === globals.Game.playerId) {
-                    displayMessage(`You took ${flammableData.fireDamage} damage from being on fire`);
-                } else if (entity.tags.has("sentient")) {
-                    const displayName = entity.getOne(DisplayNameComponent);
-                    if (displayName !== undefined) {
-                        displayMessage(`${displayName.name} took ${flammableData.fireDamage} damage from being on fire`);
-                    }
-                }
             }
         }
     }
@@ -146,15 +124,6 @@ export class WetSystem extends System {
             } else if (effect.wet && effect.turnsLeft <= 0) {
                 effect.wet = false;
                 effect.update();
-
-                if (entity.id === globals.Game!.playerId) {
-                    displayMessage("You are no longer wet", MessageType.StatusEffect);
-                } else {
-                    const displayName = entity.getOne(DisplayNameComponent);
-                    if (displayName !== undefined) {
-                        displayMessage(`${displayName.name} is no longer wet`, MessageType.StatusEffect);
-                    }
-                }
             }
         }
     }

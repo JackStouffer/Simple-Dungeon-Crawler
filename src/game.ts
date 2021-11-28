@@ -59,7 +59,8 @@ import {
     removeEntity,
     EntityTeamMap,
     DialogMemoryComponent,
-    AreaOfEffectComponent
+    AreaOfEffectComponent,
+    ParticleEmitterComponent
 } from "./entity";
 import {
     Command,
@@ -100,7 +101,7 @@ import {
 import { getItems, hasItem, InventoryItemDetails, useItem } from "./inventory";
 import { assertUnreachable, Nullable } from "./util";
 import { DeathSystem, getEffectiveHitPointData, getKnownSpells, LevelUpSystem, UpdateSchedulerSystem, useSpell } from "./fighter";
-import { UpdateChestsSystem, DrawPlayerSystem, DrawSystem } from "./graphics";
+import { UpdateChestsSystem, DrawPlayerSystem, DrawSystem, DrawParticlesSystem, UpdateParticlesSystem } from "./graphics";
 import { LightingSystem } from "./lighting";
 import {
     OnFireSystem,
@@ -715,10 +716,12 @@ export class SimpleDungeonCrawler {
         this.ecs.registerComponent(LoadLevelComponent, 10);
         this.ecs.registerComponent(RemoveAfterNTurnsComponent, 10);
         this.ecs.registerComponent(AreaOfEffectComponent, 10);
+        this.ecs.registerComponent(ParticleEmitterComponent, 10);
 
         this.ecs.registerSystem("frame", UpdateEntityMapSystem);
         this.ecs.registerSystem("frame", LightingSystem);
         this.ecs.registerSystem("frame", DrawSystem);
+        this.ecs.registerSystem("frame", DrawParticlesSystem);
         this.ecs.registerSystem("frame", DrawPlayerSystem);
 
         this.ecs.registerSystem("preTurn", UpdateAISightData);
@@ -740,6 +743,7 @@ export class SimpleDungeonCrawler {
         this.ecs.registerSystem("postOneTurnCycle", FrozenSystem);
         this.ecs.registerSystem("postOneTurnCycle", ConfusableAISystem);
         this.ecs.registerSystem("postOneTurnCycle", AreaOfEffectSystem);
+        this.ecs.registerSystem("postOneTurnCycle", UpdateParticlesSystem);
         this.ecs.registerSystem("postOneTurnCycle", LevelUpSystem);
 
         if (globals.gameEventEmitter === null) { throw new Error("Global gameEventEmitter cannot be null"); }

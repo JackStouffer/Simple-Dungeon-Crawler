@@ -1104,6 +1104,10 @@ export class ConfirmationModal {
 }
 
 export function showConfirmationDialogBox(text: string): void {
+    if (globals.Game!.confirmationModal !== null) {
+        return;
+    }
+
     playPing();
     const modal = new ConfirmationModal(
         globals.Game!.pixiApp.screen,

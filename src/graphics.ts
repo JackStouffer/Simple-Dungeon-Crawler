@@ -1,6 +1,7 @@
 import { Entity, Query, System } from "ape-ecs";
 import * as PIXI from "pixi.js";
 import { GlowFilter } from "pixi-filters";
+import * as particles from "pixi-particles";
 
 import globals from "./globals";
 import {
@@ -9,6 +10,7 @@ import {
     GraphicsComponent,
     InputHandlingComponent,
     InventoryComponent,
+    ParticleEmitterComponent,
     PositionComponent,
     WetableComponent
 } from "./entity";
@@ -155,6 +157,74 @@ export class UpdateChestsSystem extends System {
                 graphics.sprite.texture = globals.Game!.textureAtlas[chestData.openTextureKey];
             } else {
                 graphics.sprite.texture = globals.Game!.textureAtlas[chestData.closedTextureKey];
+            }
+        }
+    }
+}
+
+/**
+ * Update and draw entity's particle components
+ */
+export class DrawParticlesSystem extends System {
+    query: Query;
+
+    init() {
+        this.query = this
+            .createQuery()
+            .fromAll(GraphicsComponent, ParticleEmitterComponent)
+            .persist();
+    }
+
+    update() {
+        const entities = this.query.execute();
+        for (const e of entities) {
+            const particleData = e.getOne(ParticleEmitterComponent)!;
+
+            if (particleData.emitter === null) {
+                const graphicsData = e.getOne(GraphicsComponent)!;
+                particleData.emitter = new particles.Emitter(
+                    graphicsData.sprite!,
+                    particleData.particleDefinition.particleImages.map(
+                        e => globals.Game!.textureAtlas[e]
+                    ),
+                    particleData.particleDefinition.particleConfig
+                );
+                particleData.emitter.emit = true;
+                particleData.update();
+            }
+
+            particleData.emitter.update(globals.Game!.deltaTime * .001);
+        }
+    }
+}
+
+/**
+ * Count down the number of turns left on the component
+ */
+export class UpdateParticlesSystem extends System {
+    query: Query;
+
+    init() {
+        this.query = this
+            .createQuery()
+            .fromAll(ParticleEmitterComponent)
+            .persist();
+    }
+
+    update() {
+        const entities = this.query.execute();
+        for (const e of entities) {
+            const particleData = e.getOne(ParticleEmitterComponent)!;
+            if (particleData.emitter === null) {
+                return;
+            }
+
+            --particleData.turnsLeft;
+            if (particleData.turnsLeft <= 0) {
+                particleData.emitter.destroy();
+                e.removeComponent(particleData);
+            } else {
+                particleData.update();
             }
         }
     }

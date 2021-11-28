@@ -25,7 +25,7 @@ import {
     getRandomFighterWithinRange
 } from "./map";
 import { assertUnreachable, Nullable, randomIntFromInterval } from "./util";
-import { displayMessage, MessageType } from "./ui";
+import { displayMessage, MessageType, showConfirmationDialogBox } from "./ui";
 import {
     DisplayNameComponent,
     EntityMap,
@@ -1059,7 +1059,7 @@ export class UseSkillCommand implements Command {
 
             if (targetedEntity === null) {
                 if (entity.id === "player") {
-                    displayMessage("No target is close enough to use the scroll");
+                    showConfirmationDialogBox("No target is close enough to use the scroll");
                 }
 
                 this.didUseTurn = false;
