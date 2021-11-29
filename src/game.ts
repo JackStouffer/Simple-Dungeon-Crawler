@@ -96,7 +96,6 @@ import {
     explainEnvironmentInteractivity,
     explainEnemySurrounding,
     explainCamera,
-    explainAttackPlanning
 } from "./tutorials";
 import { getItems, hasItem, InventoryItemDetails, useItem } from "./inventory";
 import { assertUnreachable, Nullable } from "./util";
@@ -755,7 +754,6 @@ export class SimpleDungeonCrawler {
         globals.gameEventEmitter.on("tutorial.spellShrine", explainSpellShrine);
         globals.gameEventEmitter.on("tutorial.environmentInteractivity", explainEnvironmentInteractivity);
         globals.gameEventEmitter.on("tutorial.enemySurrounding", explainEnemySurrounding);
-        globals.gameEventEmitter.on("tutorial.planning", explainAttackPlanning);
 
         this.keyBindingMenu = new KeyBindingMenu(this.pixiApp.screen, this.pixiApp.stage);
         this.inventoryMenu = new InventoryMenu(this.pixiApp.screen, this.pixiApp.stage);

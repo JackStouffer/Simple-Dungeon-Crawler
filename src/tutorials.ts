@@ -11,7 +11,8 @@ const hasMessageBeenShown = {
     spellShrines: false,
     environment: false,
     enemySurrounding: false,
-    attackPlanning: false
+    attackPlanning: false,
+    wetStatus: false
 };
 
 export function explainCamera() {
@@ -58,7 +59,7 @@ export function explainSpellShrine() {
 
 export function explainEnvironmentInteractivity() {
     if (!hasMessageBeenShown.environment) {
-        showConfirmationDialogBox("Spells can interact with the environment in different ways");
+        showConfirmationDialogBox("Spells can interact with the environment in different ways. Observing your enemy and environment from afar and planning your attack is key to survival");
         hasMessageBeenShown.environment = true;
     }
 }
@@ -70,9 +71,9 @@ export function explainEnemySurrounding() {
     }
 }
 
-export function explainAttackPlanning() {
-    if (!hasMessageBeenShown.attackPlanning) {
-        showConfirmationDialogBox("Observing your enemy from afar and planning your attack is key to survival");
-        hasMessageBeenShown.attackPlanning = true;
+export function explainWetStatus() {
+    if (!hasMessageBeenShown.wetStatus) {
+        showConfirmationDialogBox("You are now wet. Electric attacks will do more damage, but you are immune to fire damage for one hit. You will dry off after several turns.");
+        hasMessageBeenShown.wetStatus = true;
     }
 }

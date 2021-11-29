@@ -1487,6 +1487,8 @@ export class ShowDamageIndicatorCommand implements Command {
         wasImmune: boolean
     ) {
         this.entityId = entityId;
+        this.tweenY = null;
+
         this.text = new PIXI.Text(damage.toString());
         this.text.zIndex = 20;
         if (isCritical) {

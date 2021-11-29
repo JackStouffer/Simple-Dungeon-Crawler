@@ -31,6 +31,10 @@ _In Development_
   * Physical attacks now have an animation
   * Damage values are now shown as animated values on the screen rather than in the log
   * Tutorials are now shown in a confirmation modal window
+  * Added particle effects to entities when they have the following status effects
+    * On fire
+    * Wet
+    * Stunned
 
 ## Version 12
 

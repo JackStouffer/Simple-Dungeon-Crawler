@@ -42,6 +42,7 @@ import { mouseTarget } from "./input-handler";
 import { getEffectiveHitPointData, getEffectiveStatData, heal, takeDamage } from "./fighter";
 import { getCirclePositions, getTargetedArea } from "./graphics";
 import { PushBackCommand } from "./commands";
+import { explainWetStatus } from "./tutorials";
 
 export interface Area {
     type: "rectangle" | "circle" | "ring";
@@ -327,10 +328,6 @@ export function setWet(target: Entity, turns?: number): boolean {
         flammableData.turnsLeft = 0;
         flammableData.fireDamage = 0;
         flammableData.update();
-
-        if (target.id === globals.Game?.playerId) {
-            displayMessage("The water doused you", MessageType.StatusEffect);
-        }
     }
 
     if (turns === undefined) { turns = 10; }
@@ -373,6 +370,10 @@ export function setWet(target: Entity, turns?: number): boolean {
             });
         }
 
+        if (target.id === globals.Game?.playerId) {
+            explainWetStatus();
+        }
+
         return true;
     }
 
@@ -387,7 +388,8 @@ export function setStunned(target: Entity, turns?: number): boolean {
 
     if (stunnableData.stunned && stunnableData.turnsLeft >= turns) {
         return false;
-    } else if (stunnableData.stunned && stunnableData.turnsLeft < turns) {
+    }
+    if (stunnableData.stunned && stunnableData.turnsLeft < turns) {
         stunnableData.turnsLeft = turns ?? 0;
         stunnableData.update();
         return true;
@@ -397,12 +399,37 @@ export function setStunned(target: Entity, turns?: number): boolean {
     stunnableData.turnsLeft = turns;
     stunnableData.update();
 
-    if (target.id === globals.Game?.playerId) {
-        displayMessage("You are stunned!", MessageType.StatusEffect);
-    } else {
-        const displayName = target.getOne(DisplayNameComponent);
-        if (displayName === undefined) { throw new Error(`Undefined display name on ${target.id}`); }
-        displayMessage(`${displayName.name} is now stunned`, MessageType.StatusEffect);
+    // Add the particle emitter
+    const graphicsData = target.getOne(GraphicsComponent);
+    if (graphicsData !== undefined) {
+        target.addComponent({
+            type: "ParticleEmitterComponent",
+            emitter: null,
+            turnsLeft: stunnableData.turnsLeft,
+            particleDefinition: {
+                particleImages: ["particle_star"],
+                particleConfig: {
+                    acceleration: { x: 0, y: 0 },
+                    addAtBack: false,
+                    alpha: { start: 1, end: .8 },
+                    blendMode: "normal",
+                    color: { start: "#eaff00", end: "#eaff00" },
+                    emitterLifetime: -1,
+                    frequency: 0.15,
+                    lifetime: { min: 0.3, max: 0.4 },
+                    maxParticles: 100,
+                    maxSpeed: 0,
+                    noRotation: false,
+                    pos: { x: 0, y: 0 },
+                    rotationSpeed: { min: 0, max: 1 },
+                    scale: { start: .8, end: .6, minimumScaleMultiplier: 0.5 },
+                    spawnCircle: { x: 8, y: 8, r: 18 },
+                    spawnType: "circle",
+                    speed: { start: 0, end: 0, minimumSpeedMultiplier: 1 },
+                    startRotation: { min: 0, max: 360 }
+                }
+            }
+        });
     }
 
     return true;
