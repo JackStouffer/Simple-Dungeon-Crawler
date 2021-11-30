@@ -27,6 +27,7 @@ import * as GoblinDialogJSON from "../dialog/goblin.json";
 // TODO: add logic where some lines can only be said once in a whole team
 // TODO: Add confused state end dialog line.
 // TODO: Add line mocking player when they have low health
+// TODO, Bug: goblin on fire then sees player, does not say player seen until after fire goes out
 
 type DialogRule = [string, "=" | ">" | "<" | "<=" | ">=", string | number | boolean];
 

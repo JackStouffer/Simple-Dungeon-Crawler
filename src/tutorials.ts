@@ -17,21 +17,21 @@ const hasMessageBeenShown = {
 
 export function explainCamera() {
     if (!hasMessageBeenShown.cameraMovement) {
-        showConfirmationDialogBox("Move the camera using WASD.");
+        showConfirmationDialogBox("Move the camera around by using WASD.");
         hasMessageBeenShown.cameraMovement = true;
     }
 }
 
 export function explainAttacking() {
     if (!hasMessageBeenShown.attack) {
-        showConfirmationDialogBox("Click on an enemy when next to it to attack");
+        showConfirmationDialogBox("Click on an enemy when you're next to it to melee attack.");
         hasMessageBeenShown.attack = true;
     }
 }
 
 export function explainSpellMenu() {
     if (!hasMessageBeenShown.spellMenu) {
-        showConfirmationDialogBox("Press m to open your spells. Left click on an enemy to target it, click elsewhere to cancel. Spells have a limited number of casts. Use them sparingly.");
+        showConfirmationDialogBox("Press m to open your spells. Left click on an enemy to target it and click an empty tile to cancel. Spells have a limited number of casts, so use them sparingly.");
         hasMessageBeenShown.spellMenu = true;
     }
 }
@@ -45,14 +45,14 @@ export function explainPickUpItem() {
 
 export function explainWildSpells() {
     if (!hasMessageBeenShown.wildSpells) {
-        showConfirmationDialogBox("Wild spells will randomly target an enemy within range");
+        showConfirmationDialogBox("You've learned a wild spell. Wild spells will randomly target an enemy within range.");
         hasMessageBeenShown.wildSpells = true;
     }
 }
 
 export function explainSpellShrine() {
     if (!hasMessageBeenShown.spellShrines) {
-        showConfirmationDialogBox("Learn new spells by finding magic shrines");
+        showConfirmationDialogBox("You can learn new spells by finding magic shrines. Some shrines will be hidden.");
         hasMessageBeenShown.spellShrines = true;
     }
 }

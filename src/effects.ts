@@ -381,7 +381,8 @@ export class AreaOfEffectSystem extends System {
                 entity.id,
                 data,
                 position.tilePosition,
-                0
+                0,
+                false
             ));
         }
     }

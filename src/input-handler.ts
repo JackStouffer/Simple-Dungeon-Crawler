@@ -202,6 +202,7 @@ export function playerInput(
                     ItemData[inputState.itemForTarget.id],
                     mousePosition,
                     inputState.reticleRotation,
+                    true,
                     useItem
                 );
             } else if (inputState.spellForTarget !== null) {
@@ -210,6 +211,7 @@ export function playerInput(
                     SpellData[inputState.spellForTarget.id],
                     mousePosition,
                     inputState.reticleRotation,
+                    true,
                     useSpell
                 );
             }

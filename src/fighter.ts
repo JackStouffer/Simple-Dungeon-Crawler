@@ -41,7 +41,8 @@ import {
     TypeComponent,
     WetableComponent,
     AreaOfEffectComponent,
-    ConfusableAIComponent
+    ConfusableAIComponent,
+    ParticleEmitterComponent
 } from "./entity";
 import { SpellData, Area } from "./skills";
 import { getEntitiesAtLocation, Vector2D } from "./map";
@@ -138,7 +139,8 @@ export class DeathSystem extends System {
             FreezableComponent,
             TriggerComponent,
             StunnableComponent,
-            AreaOfEffectComponent
+            AreaOfEffectComponent,
+            ParticleEmitterComponent
         ];
 
         for (let i = 0; i < compArray.length; i++) {

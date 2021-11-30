@@ -98,6 +98,7 @@ export function levelLoadInteract(actor: Entity, interactable: Entity): void {
     }
 }
 
+// TODO: rest point does not remove statues
 export function restPointInteract(entity: Entity): void {
     const hpData = entity.getOne(HitPointsComponent);
     if (hpData !== undefined) {

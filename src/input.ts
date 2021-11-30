@@ -225,7 +225,7 @@ function getLeftMouseDown(): Nullable<Vector2D> {
 /**
  * Give the screen position of the mouse click if there is
  * one, null otherwise.
- * @returns {Vector2D} the position in the game world
+ * @returns {Vector2D} the position on the screen
  */
 function getLeftMouseDownScreen(): Nullable<Vector2D> {
     if (globals.Game === null ||

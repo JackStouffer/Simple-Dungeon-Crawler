@@ -111,7 +111,7 @@
                         {
                          "name":"inventory",
                          "type":"string",
-                         "value":"health_potion_weak"
+                         "value":"haste_potion_weak"
                         }, 
                         {
                          "name":"objectType",

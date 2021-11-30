@@ -415,6 +415,7 @@ const InventoryMenuState: GameState = {
                         ItemData[item.id],
                         undefined,
                         undefined,
+                        true,
                         useItem
                     ));
                     break;
@@ -505,6 +506,7 @@ const SpellMenuState: GameState = {
                         SpellData[spell.id],
                         undefined,
                         undefined,
+                        true,
                         useSpell
                     ));
                     game.setState(game.gameplayState);

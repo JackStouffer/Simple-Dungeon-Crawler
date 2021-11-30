@@ -294,65 +294,65 @@ export function generateAICommands(
     }
 
     const aiState = ai.getOne(PlannerAIComponent);
-    if (aiState !== undefined) {
-        const commands: Command[] = [];
-        const target = ecs.getEntity(aiState.targetId);
-        if (target === undefined) {
-            if (globals.Game?.debugAI === true) {
-                // eslint-disable-next-line no-console
-                console.log(`generateAICommands for ${aiState.entity.id} has a non-existent target ${aiState.targetId}`);
-            }
-            return [new NoOpCommand(true)];
-        }
-
-        // Move the camera to the entity, but only if we're not running away
-        // or confused
-        const fearData = ai.getOne(FearAIComponent);
-        const confusedData = ai.getOne(ConfusableAIComponent);
-        if (aiState.knowsTargetPosition &&
-            target.id === globals.Game!.playerId &&
-            (fearData === undefined || fearData.fear < fearData.isAfraidThreshold) &&
-            (confusedData === undefined || !confusedData.confused)) {
-            commands.push(new MoveCameraCommand(map, globals.Game!.gameCamera, ai));
-        }
-
-        const query = buildDialogQuery(ecs, map, entityMap, entityTeams, ai, aiState);
-        const debugDialog = globals.Game?.debugAIDialog === true;
-
-        if (debugDialog) {
-            // eslint-disable-next-line no-console
-            console.groupCollapsed(aiState.entity.id + " dialog");
-            // eslint-disable-next-line no-console
-            console.log("query", query);
-        }
-
-        const dialogDefinition = queryDialogTable(query);
-
-        if (dialogDefinition !== null) {
-            commands.push(sayDialogDefinition(ai, dialogDefinition));
-
-            const allyResponse = queryAlliesForResponses(
-                ecs, map, entityMap, entityTeams, aiState, dialogDefinition
-            );
-            if (allyResponse !== null) {
-                commands.push(sayDialogDefinition(allyResponse.teamMate, allyResponse.response));
-            }
-        }
-
-        if (debugDialog) {
-            // eslint-disable-next-line no-console
-            console.groupEnd();
-        }
-
-        commands.push(plannerAIGenerateCommand(ecs, aiState, map, entityMap));
-
-        // Assume we've lost sight of the target after every turn,
-        // so that when the visibility callback sets the flag to true,
-        // iff the target is seen, we get the right behavior
-        aiState.hasTargetInSight = false;
-
-        return commands;
+    if (aiState === undefined) {
+        throw new Error(`Missing AI state on entity ${ai.id}`);
     }
 
-    throw new Error(`Missing AI state on entity ${ai.id}`);
+    const commands: Command[] = [];
+    const target = ecs.getEntity(aiState.targetId);
+    if (target === undefined) {
+        if (globals.Game?.debugAI === true) {
+            // eslint-disable-next-line no-console
+            console.log(`generateAICommands for ${aiState.entity.id} has a non-existent target ${aiState.targetId}`);
+        }
+        return [new NoOpCommand(true)];
+    }
+
+    // Move the camera to the entity, but only if we're not running away
+    // or confused
+    const fearData = ai.getOne(FearAIComponent);
+    const confusedData = ai.getOne(ConfusableAIComponent);
+    if (aiState.knowsTargetPosition &&
+        target.id === globals.Game!.playerId &&
+        (fearData === undefined || fearData.fear < fearData.isAfraidThreshold) &&
+        (confusedData === undefined || !confusedData.confused)) {
+        commands.push(new MoveCameraCommand(map, globals.Game!.gameCamera, ai));
+    }
+
+    const query = buildDialogQuery(ecs, map, entityMap, entityTeams, ai, aiState);
+    const debugDialog = globals.Game?.debugAIDialog === true;
+
+    if (debugDialog) {
+        // eslint-disable-next-line no-console
+        console.groupCollapsed(aiState.entity.id + " dialog");
+        // eslint-disable-next-line no-console
+        console.log("query", query);
+    }
+
+    const dialogDefinition = queryDialogTable(query);
+
+    if (dialogDefinition !== null) {
+        commands.push(sayDialogDefinition(ai, dialogDefinition));
+
+        const allyResponse = queryAlliesForResponses(
+            ecs, map, entityMap, entityTeams, aiState, dialogDefinition
+        );
+        if (allyResponse !== null) {
+            commands.push(sayDialogDefinition(allyResponse.teamMate, allyResponse.response));
+        }
+    }
+
+    if (debugDialog) {
+        // eslint-disable-next-line no-console
+        console.groupEnd();
+    }
+
+    commands.push(plannerAIGenerateCommand(ecs, aiState, map, entityMap));
+
+    // Assume we've lost sight of the target after every turn,
+    // so that when the visibility callback sets the flag to true,
+    // iff the target is seen, we get the right behavior
+    aiState.hasTargetInSight = false;
+
+    return commands;
 }

@@ -435,6 +435,10 @@ export function setStunned(target: Entity, turns?: number): boolean {
     return true;
 }
 
+/**
+ * Freeze an entity if it can be frozen. If it's on fire, put out the
+ * fire instead.
+ */
 export function setFrozen(target: Entity, turns: number): boolean {
     const name = target.getOne(DisplayNameComponent);
     const triggerData = target.getOne(TriggerComponent);
@@ -496,6 +500,10 @@ export function setFrozen(target: Entity, turns: number): boolean {
     return false;
 }
 
+/**
+ * Given a skill definition being used, roll to see if the status effect
+ * will be applied to the target
+ */
 function rollForStatusEffect(
     item: ItemDataDetails | SpellDataDetails,
     target: Entity,

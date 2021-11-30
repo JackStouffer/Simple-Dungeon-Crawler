@@ -1003,31 +1003,34 @@ export class UseSkillCommand implements Command {
     blocks: boolean = true;
     isSetUp: boolean = false;
     didUseTurn: boolean = false;
-    readonly entityId: string;
-    readonly rotation: number | undefined;
-    readonly details: SpellDataDetails | ItemDataDetails;
+    shouldUseTurn: boolean = true;
+    entityId: string;
+    rotation: number | undefined;
+    details: SpellDataDetails | ItemDataDetails;
     target: Vector2D | undefined;
     particleEmitter: Nullable<particles.Emitter> = null;
     effectGraphics: Nullable<PIXI.Graphics> = null;
     effectTween: Nullable<Tween> = null;
-    readonly skillCallback: SkillCallback | undefined;
+    skillCallback: SkillCallback | undefined;
 
     constructor(
         entityId: string,
         details: SpellDataDetails | ItemDataDetails,
         target?: Vector2D,
         rotation?: number,
+        shouldUseTurn?: boolean,
         cb?: SkillCallback
     ) {
         this.entityId = entityId;
         this.target = target;
         this.rotation = rotation;
         this.details = details;
+        this.shouldUseTurn = shouldUseTurn ?? true;
         this.skillCallback = cb;
     }
 
     usedTurn(): boolean {
-        return this.didUseTurn;
+        return this.shouldUseTurn ? this.didUseTurn : false;
     }
 
     isFinished(): boolean {
@@ -1475,7 +1478,7 @@ export class ShowDamageIndicatorCommand implements Command {
     static immuneTextStyle = {
         fontFamily: "monospace",
         fontSize: 24,
-        fill: 0xFF0000,
+        fill: 0x0000FF,
         stroke: 0x000000,
         strokeThickness: 2
     };
