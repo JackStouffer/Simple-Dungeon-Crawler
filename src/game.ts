@@ -300,7 +300,7 @@ const GameplayState: GameState = {
             return;
         }
 
-        if (game.currentActor === game.playerId) {
+        if (game.currentActor === game.playerId && game.commandQueue.length === 0) {
             const command = playerInput(game.ecs, game.map, game.entityMap, player);
             game.commandQueue.push(...command);
         }

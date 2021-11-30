@@ -99,7 +99,6 @@ export function playerInput(
     entityMap: EntityMap,
     player: Entity
 ): Command[] {
-    // TODO, BUG: Able to call up menu during spell animation
     if (globals.gameEventEmitter === null) { throw new Error("Global gameEventEmitter cannot be null"); }
 
     const inputState = player.getOne(InputHandlingComponent);
