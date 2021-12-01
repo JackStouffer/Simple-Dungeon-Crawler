@@ -155,6 +155,7 @@ export class DrawParticlesSystem extends System {
     query: Query;
 
     init() {
+        this.subscribe("ParticleEmitterComponent");
         this.query = this
             .createQuery()
             .fromAll(GraphicsComponent, ParticleEmitterComponent)
@@ -165,21 +166,40 @@ export class DrawParticlesSystem extends System {
         const entities = this.query.execute();
         for (const e of entities) {
             const particleData = e.getOne(ParticleEmitterComponent)!;
-
-            if (particleData.emitter === null) {
-                const graphicsData = e.getOne(GraphicsComponent)!;
-                particleData.emitter = new particles.Emitter(
-                    graphicsData.sprite!,
-                    particleData.particleDefinition.particleImages.map(
-                        e => globals.Game!.textureAtlas[e]
-                    ),
-                    particleData.particleDefinition.particleConfig
-                );
-                particleData.emitter.emit = true;
-                particleData.update();
-            }
-
+            if (particleData.emitter === null) { continue; }
             particleData.emitter.update(globals.Game!.deltaTime * .001);
+        }
+
+        for (let i = 0; i < this.changes.length; i++) {
+            const change = this.changes[i];
+            const entity = this.world.getEntity(change.entity);
+            if (entity === undefined) { continue; }
+            const particleData = entity.getOne(ParticleEmitterComponent);
+            if (particleData === undefined) { continue; }
+
+            switch (change.op) {
+                case "add":
+                    if (particleData.emitter === null) {
+                        const graphicsData = entity.getOne(GraphicsComponent)!;
+                        particleData.emitter = new particles.Emitter(
+                            graphicsData.sprite!,
+                            particleData.particleDefinition.particleImages.map(
+                                e => globals.Game!.textureAtlas[e]
+                            ),
+                            particleData.particleDefinition.particleConfig
+                        );
+                        particleData.emitter.emit = true;
+                        particleData.update();
+                    }
+                    break;
+                case "destroy":
+                case "change":
+                case "addRef":
+                case "deleteRef":
+                    break;
+                default:
+                    throw new Error(`${change.entity}: Unknown change operation ${change.op}`);
+            }
         }
     }
 }
@@ -201,13 +221,12 @@ export class UpdateParticlesSystem extends System {
         const entities = this.query.execute();
         for (const e of entities) {
             const particleData = e.getOne(ParticleEmitterComponent)!;
-            if (particleData.emitter === null) {
-                return;
-            }
-
             --particleData.turnsLeft;
+
             if (particleData.turnsLeft <= 0) {
-                particleData.emitter.destroy();
+                if (particleData.emitter !== null) {
+                    particleData.emitter.destroy();
+                }
                 e.removeComponent(particleData);
             } else {
                 particleData.update();

@@ -64,7 +64,15 @@ export class DeathSystem extends System {
             .persist();
     }
 
-    generateUpdateFearVisibilityCallback(target: Entity) {
+    /**
+     * Generate a callback given an entity which died. Updates the entities at the
+     * given position to have increased fear and to alert them to the player's
+     * presence.
+     *
+     * @param target {Entity}
+     * @returns {void}
+     */
+    generateAISeesDeadBodyCallback(target: Entity) {
         const targetLevelData = target.getOne(LevelComponent);
         const parent = this;
 
@@ -83,11 +91,22 @@ export class DeathSystem extends System {
 
                 const fearBasis = targetLevelData.level - levelData.level;
                 const fearVariance = Math.round(fearBasis * 0.5);
-                const newFear = randomIntFromInterval(
+                const addedFear = Math.max(randomIntFromInterval(
                     fearBasis - fearVariance, fearBasis + fearVariance
-                );
-                fearData.fear += Math.max(newFear, 1);
+                ), 1);
+
+                if (globals.Game?.debugAI === true) {
+                    // eslint-disable-next-line no-console
+                    console.log(`${e.id} saw ${target.id} die. Adding ${addedFear} fear`);
+                }
+
+                fearData.fear += addedFear;
                 fearData.update();
+
+                const aiState = e.getOne(PlannerAIComponent);
+                if (aiState === undefined) { return; }
+                aiState.knowsTargetPosition = true;
+                aiState.update();
             }
         };
     }
@@ -111,16 +130,14 @@ export class DeathSystem extends System {
             graphicData.update();
         }
 
-        // Calculate the added fear for all of the entities
-        // with fear components within an FOV of the current
-        // location
+        // Update the surrounding AI's fear and target data
         const pos = target.getOne(PositionComponent)!.tilePosition;
         const fov = new FOV.PreciseShadowcasting(createPassableSightCallback(pos));
         fov.compute(
             pos.x,
             pos.y,
             10,
-            this.generateUpdateFearVisibilityCallback(target)
+            this.generateAISeesDeadBodyCallback(target)
         );
 
         const compArray: any = [
@@ -139,8 +156,7 @@ export class DeathSystem extends System {
             FreezableComponent,
             TriggerComponent,
             StunnableComponent,
-            AreaOfEffectComponent,
-            ParticleEmitterComponent
+            AreaOfEffectComponent
         ];
 
         for (let i = 0; i < compArray.length; i++) {
@@ -148,6 +164,12 @@ export class DeathSystem extends System {
             if (c !== undefined) {
                 target.removeComponent(c);
             }
+        }
+
+        const particleData = target.getOne(ParticleEmitterComponent);
+        if (particleData !== undefined) {
+            particleData.emitter?.destroy();
+            target.removeComponent(particleData);
         }
 
         target.tags.delete("sentient");
@@ -181,6 +203,12 @@ export class DeathSystem extends System {
         if (globals.Game === null) { throw new Error("Global game object is null"); }
         if (globals.gameEventEmitter === null) { throw new Error("Global gameEventEmitter object is null"); }
 
+        const particleData = target.getOne(ParticleEmitterComponent);
+        if (particleData !== undefined) {
+            particleData.emitter?.destroy();
+            target.removeComponent(particleData);
+        }
+
         const inventoryData = target.getOne(InventoryComponent);
         const positionData = target.getOne(PositionComponent);
         if (inventoryData !== undefined &&
@@ -198,7 +226,7 @@ export class DeathSystem extends System {
             itemInventory!.inventory = inventoryData.inventory;
         }
 
-        // TODO define these sounds in data on the entity or fighter instance or something
+        // TODO, sound: define these sounds in data on the entity or fighter instance or something
         const typeData = target.getOne(TypeComponent);
         if (typeData?.entityType === "crate") {
             playBoxBreak();

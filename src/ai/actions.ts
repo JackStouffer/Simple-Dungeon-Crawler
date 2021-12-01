@@ -576,16 +576,20 @@ function goToSafePositionAction(
     bfs.compute(tilePos.x, tilePos.y, pathCallback);
 
     if (path.length === 0) {
-        // eslint-disable-next-line no-console
-        console.log("Could not find a path to a safe position");
+        if (globals.Game!.debugAI) {
+            // eslint-disable-next-line no-console
+            console.log("Could not find a path to a safe position");
+        }
         return new NoOpCommand(true);
     }
 
     // remove our own position
     path.shift();
     if (path.length === 0) {
-        // eslint-disable-next-line no-console
-        console.log("Could not find a path to a safe position");
+        if (globals.Game!.debugAI) {
+            // eslint-disable-next-line no-console
+            console.log("Could not find a path to a safe position");
+        }
         return new NoOpCommand(true);
     }
 
