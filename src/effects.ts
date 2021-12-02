@@ -2,7 +2,7 @@ import { Query, System } from "ape-ecs";
 
 import globals from "./globals";
 import { AreaOfEffectType, DamageType } from "./constants";
-import { displayMessage, MessageType } from "./ui";
+import { showLogMessage } from "./ui";
 import {
     DisplayNameComponent,
     FlammableComponent,
@@ -151,11 +151,11 @@ export class SilenceSystem extends System {
                 effect.update();
 
                 if (entity.id === globals.Game!.playerId) {
-                    displayMessage("You are no longer silenced", MessageType.StatusEffect);
+                    showLogMessage("You are no longer silenced");
                 } else {
                     const displayName = entity.getOne(DisplayNameComponent);
                     if (displayName !== undefined) {
-                        displayMessage(`${displayName.name} is no longer silenced`, MessageType.StatusEffect);
+                        showLogMessage(`${displayName.name} is no longer silenced`);
                     }
                 }
             }
@@ -185,11 +185,11 @@ export class StunSystem extends System {
                 effect.update();
 
                 if (entity.id === globals.Game!.playerId) {
-                    displayMessage("You are no longer stunned", MessageType.StatusEffect);
+                    showLogMessage("You are no longer stunned");
                 } else {
                     const displayName = entity.getOne(DisplayNameComponent);
                     if (displayName !== undefined) {
-                        displayMessage(`${displayName.name} is no longer stunned`, MessageType.StatusEffect);
+                        showLogMessage(`${displayName.name} is no longer stunned`);
                     }
                 }
             }
@@ -236,11 +236,13 @@ export class FrozenSystem extends System {
                 }
 
                 if (entity.id === globals.Game!.playerId) {
-                    displayMessage("You are no longer frozen", MessageType.StatusEffect);
+                    // TODO, sound: ice cracking sound
+                    showLogMessage("You are no longer frozen");
                 } else {
                     const displayName = entity.getOne(DisplayNameComponent);
                     if (displayName !== undefined) {
-                        displayMessage(`${displayName.name} is no longer frozen`, MessageType.StatusEffect);
+                        // TODO, sound: ice cracking sound
+                        showLogMessage(`${displayName.name} is no longer frozen`);
                     }
                 }
             }
@@ -273,7 +275,7 @@ export class UpdateHitPointsEffectsSystem extends System {
                     effect.destroy();
 
                     const displayName = entity.getOne(DisplayNameComponent)!;
-                    displayMessage(`${effect.name} has ended for ${displayName.name}`, MessageType.StatusEffect);
+                    showLogMessage(`${effect.name} has ended for ${displayName.name}`);
                 } else {
                     effect.update();
                 }
@@ -306,7 +308,7 @@ export class UpdateStatsEffectsSystem extends System {
                     effect.destroy();
 
                     const displayName = entity.getOne(DisplayNameComponent)!;
-                    displayMessage(`${effect.name} has ended for ${displayName.name}`, MessageType.StatusEffect);
+                    showLogMessage(`${effect.name} has ended for ${displayName.name}`);
                 } else {
                     effect.update();
                 }
@@ -340,7 +342,7 @@ export class UpdateSpeedEffectsSystem extends System {
 
                     if (effect.display) {
                         const displayName = entity.getOne(DisplayNameComponent)!;
-                        displayMessage(`${effect.name} has ended for ${displayName.name}`, MessageType.StatusEffect);
+                        showLogMessage(`${effect.name} has ended for ${displayName.name}`);
                     }
                 } else {
                     effect.update();

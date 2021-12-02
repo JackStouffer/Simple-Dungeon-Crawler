@@ -13,7 +13,7 @@ import {
     getEntitiesAtLocation,
     getHighestZIndexWithTile
 } from "./map";
-import { displayMessage, MessageType } from "./ui";
+import { showLogMessage } from "./ui";
 import { DamageType, ItemType, SpellType, StatusEffectType, TriggerType } from "./constants";
 import {
     createEntity,
@@ -132,9 +132,9 @@ function castHeal(
 
     if (hpData.hp >= hpData.maxHp) {
         if (user.id === "player") {
-            displayMessage("You are already at full health.");
+            showLogMessage("You are already at full health.");
         } else {
-            displayMessage(`${displayName.name} tries and fails to take a health potion`);
+            showLogMessage(`${displayName.name} tries and fails to take a health potion`);
         }
 
         return false;
@@ -142,9 +142,9 @@ function castHeal(
 
     heal(user.getOne(HitPointsComponent)!, item.value);
     if (user.id === "player") {
-        displayMessage(`You are healed for ${item.value} hp.`);
+        showLogMessage(`You are healed for ${item.value} hp.`);
     } else {
-        displayMessage(`${displayName.name} is healed for ${item.value} hp.`);
+        showLogMessage(`${displayName.name} is healed for ${item.value} hp.`);
     }
     return true;
 }
@@ -161,14 +161,14 @@ function castHealOther(
 
     const targetedEntity = mouseTarget(ecs, map, entityMap, target);
     if (targetedEntity === null) {
-        displayMessage("Canceled casting");
+        showLogMessage("Canceled casting");
         return false;
     }
 
     const targetName = targetedEntity.getOne(DisplayNameComponent)!;
     const targetHPData = targetedEntity.getOne(HitPointsComponent);
     if (targetHPData === undefined) {
-        displayMessage(`${targetName.name} isn't healable`);
+        showLogMessage(`${targetName.name} isn't healable`);
         return false;
     }
 
@@ -191,10 +191,10 @@ export function setOnFire(target: Entity, damage?: number, turns?: number): bool
     if (flammableData === undefined) {
         if (target.id === globals.Game?.playerId) {
             // TODO, sound: spell not working sound
-            displayMessage("You were not set on fire because you're immune", MessageType.StatusEffect);
+            showLogMessage("You were not set on fire because you're immune");
         } else if (displayName !== undefined) {
             // TODO, sound: spell not working sound
-            displayMessage(`${displayName.name} was not set on fire because it is immune`, MessageType.StatusEffect);
+            showLogMessage(`${displayName.name} was not set on fire because it is immune`);
         }
         return false;
     }
@@ -207,10 +207,10 @@ export function setOnFire(target: Entity, damage?: number, turns?: number): bool
 
         if (target.id === globals.Game?.playerId) {
             // TODO, sound: spell not working sound
-            displayMessage("You were not set on fire because you were wet", MessageType.StatusEffect);
+            showLogMessage("You were not set on fire because you were wet");
         } else if (displayName !== undefined) {
             // TODO, sound: spell not working sound
-            displayMessage(`${displayName.name} was not set on fire because it was wet`, MessageType.StatusEffect);
+            showLogMessage(`${displayName.name} was not set on fire because it was wet`);
         }
 
         return false;
@@ -231,10 +231,10 @@ export function setOnFire(target: Entity, damage?: number, turns?: number): bool
 
         if (target.id === globals.Game?.playerId) {
             // TODO, sound: ice shattering sound
-            displayMessage("You were not set on fire because you were frozen", MessageType.StatusEffect);
+            showLogMessage("You were not set on fire because you were frozen");
         } else if (displayName !== undefined) {
             // TODO, sound: ice shattering sound
-            displayMessage(`${displayName.name} was not set on fire because it was frozen`, MessageType.StatusEffect);
+            showLogMessage(`${displayName.name} was not set on fire because it was frozen`);
         }
 
         return false;
@@ -452,9 +452,11 @@ export function setFrozen(target: Entity, turns: number): boolean {
         flammableData.update();
 
         if (target.id === globals.Game?.playerId) {
-            displayMessage("Instead of being frozen, the fire was extinguished");
+            // TODO, sound: Dousing sound effect
+            showLogMessage("Instead of being frozen, the fire was extinguished");
         } else if (name !== undefined) {
-            displayMessage(`Instead of ${name.name} being frozen, it is no longer on fire`);
+            // TODO, sound: Dousing sound effect
+            showLogMessage(`Instead of ${name.name} being frozen, it is no longer on fire`);
         }
 
         if (triggerData !== undefined && triggerData.currentTriggerType === TriggerType.Fire) {
@@ -469,12 +471,6 @@ export function setFrozen(target: Entity, turns: number): boolean {
         frozenData.frozen = true;
         frozenData.turnsLeft = turns;
         frozenData.update();
-
-        if (target.id === globals.Game?.playerId) {
-            displayMessage("You are frozen", MessageType.StatusEffect);
-        } else if (name !== undefined && target.tags.has("sentient")) {
-            displayMessage(`${name.name} is now frozen`, MessageType.StatusEffect);
-        }
 
         if (triggerData !== undefined &&
             (triggerData.currentTriggerType === TriggerType.DeepWater ||
@@ -583,14 +579,14 @@ export function castDamageSpell(
 
     const targetedEntity = mouseTarget(ecs, map, entityMap, target);
     if (targetedEntity === null) {
-        displayMessage("Canceled casting");
+        showLogMessage("Canceled casting");
         return false;
     }
 
     const targetName = targetedEntity.getOne(DisplayNameComponent);
     const targetHPData = targetedEntity.getOne(HitPointsComponent);
     if (targetHPData === undefined && targetName !== undefined) {
-        displayMessage(`${targetName.name} isn't attack-able`);
+        showLogMessage(`${targetName.name} isn't attack-able`);
         return false;
     }
 
@@ -701,7 +697,7 @@ export function castFireballTargeted(
 
     const targetedEntity = mouseTarget(ecs, map, entityMap, target);
     if (targetedEntity === null) {
-        displayMessage("Canceled casting");
+        showLogMessage("Canceled casting");
         return false;
     }
 
@@ -720,7 +716,7 @@ export function castConfuse(
 
     const entity = mouseTarget(ecs, map, entityMap, target);
     if (entity === null) {
-        displayMessage("Canceled casting");
+        showLogMessage("Canceled casting");
         return false;
     }
 
@@ -729,13 +725,13 @@ export function castConfuse(
 
     const confusedState = entity.getOne(ConfusableAIComponent);
     if (confusedState === undefined) {
-        displayMessage(`${displayName.name} is immune to confusion`);
+        showLogMessage(`${displayName.name} is immune to confusion`);
         return false;
     }
 
     confusedState.confused = true;
     confusedState.turnsLeft = item.value;
-    displayMessage(`${displayName.name} is now confused`);
+    showLogMessage(`${displayName.name} is now confused`);
 
     return true;
 }
@@ -743,7 +739,7 @@ export function castConfuse(
 export function castClairvoyance(): boolean {
     if (globals.Game === null) { throw new Error("Global game object is null"); }
 
-    displayMessage("You have been granted Clairvoyance");
+    showLogMessage("You have been granted Clairvoyance");
     setAllToExplored(globals.Game.map);
     return true;
 }
@@ -762,7 +758,7 @@ export function castHaste(
     // TODO implement filter/map for Iterators
     for (const e of speedEffects) {
         if (e.name === "Haste") {
-            displayMessage("You are already hasted");
+            showLogMessage("You are already hasted");
             return false;
         }
     }
@@ -795,7 +791,7 @@ export function castSlow(
 
     const entity = mouseTarget(ecs, map, entityMap, target);
     if (entity === null) {
-        displayMessage("Canceled casting");
+        showLogMessage("Canceled casting");
         return false;
     }
 
@@ -806,7 +802,7 @@ export function castSlow(
     }
 
     if (speedData === undefined) {
-        displayMessage(`${displayName.name} isn't slow-able`);
+        showLogMessage(`${displayName.name} isn't slow-able`);
         return false;
     }
 
@@ -814,12 +810,12 @@ export function castSlow(
     // TODO implement filter/map for Iterators
     for (const e of speedEffects) {
         if (e.name === "Slow") {
-            displayMessage(`${displayName.name} is already slowed`);
+            showLogMessage(`${displayName.name} is already slowed`);
             return false;
         }
     }
 
-    displayMessage(`Spell hits and slows ${displayName.name}`);
+    showLogMessage(`Spell hits and slows ${displayName.name}`);
 
     entity.addComponent({
         type: "SpeedEffectComponent",
@@ -950,7 +946,7 @@ export function castCombust(
     if (target.x >= map.width ||
         target.y >= map.height ||
         map.visibilityData[target.y][target.x].visible === false) {
-        displayMessage("Canceled casting");
+        showLogMessage("Canceled casting");
         return false;
     }
 
@@ -967,7 +963,7 @@ export function castCombust(
         })[0];
 
     if (targetedEntity === undefined) {
-        displayMessage("Canceled casting");
+        showLogMessage("Canceled casting");
         return false;
     }
 
@@ -1033,7 +1029,7 @@ export function castSilence(
 
     const targetedEntity = mouseTarget(ecs, map, entityMap, target);
     if (targetedEntity === null) {
-        displayMessage("Canceled casting");
+        showLogMessage("Canceled casting");
         return false;
     }
 
@@ -1041,15 +1037,15 @@ export function castSilence(
     const targetSpellData = targetedEntity.getOne(SpellsComponent);
     const targetSilenceableData = targetedEntity.getOne(SilenceableComponent);
     if (targetSilenceableData === undefined) {
-        displayMessage(`${targetName.name} is immune to silence effects`);
+        showLogMessage(`${targetName.name} is immune to silence effects`);
         return false;
     }
     if (targetSpellData === undefined) {
-        displayMessage(`${targetName.name} cannot be silenced because it doesn't know any spells`);
+        showLogMessage(`${targetName.name} cannot be silenced because it doesn't know any spells`);
         return false;
     }
 
-    displayMessage(`${targetName.name} is silenced`);
+    showLogMessage(`${targetName.name} is silenced`);
     targetSilenceableData.silenced = true;
     targetSilenceableData.turnsLeft = item.value;
     targetSilenceableData.update();
@@ -1100,14 +1096,14 @@ export function castFreeze(
 
     const targetedEntity = mouseTarget(ecs, map, entityMap, target, false);
     if (targetedEntity === null) {
-        displayMessage("Canceled casting");
+        showLogMessage("Canceled casting");
         return false;
     }
 
     const targetName = targetedEntity.getOne(DisplayNameComponent)!;
     const targetFreezableData = targetedEntity.getOne(FreezableComponent);
     if (targetFreezableData === undefined) {
-        displayMessage(`${targetName.name} cannot be frozen`);
+        showLogMessage(`${targetName.name} cannot be frozen`);
         return false;
     }
 

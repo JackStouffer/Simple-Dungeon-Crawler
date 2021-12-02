@@ -14,7 +14,7 @@ import {
 } from "./entity";
 import { takeDamage } from "./fighter";
 import { setOnFire, setWet, SpellData } from "./skills";
-import { displayMessage } from "./ui";
+import { showLogMessage } from "./ui";
 import { RemoveEntityCommand, UseSkillCommand } from "./commands";
 
 /**
@@ -92,7 +92,7 @@ export function shallowWaterTrigger(actor: Entity): void {
     setWet(actor, 10);
     const wetData = actor.getOne(WetableComponent);
     if (wetData !== undefined && wetData.wet === false && actor.id === globals.Game?.playerId) {
-        displayMessage("You are now wet from stepping in the water");
+        showLogMessage("You are now wet from stepping in the water");
     }
 }
 
@@ -100,7 +100,7 @@ export function deepWaterTrigger(actor: Entity): void {
     setWet(actor, 20);
     const wetData = actor.getOne(WetableComponent);
     if (wetData !== undefined && wetData.wet === false && actor.id === globals.Game?.playerId) {
-        displayMessage("You are now wet from stepping in the water");
+        showLogMessage("You are now wet from stepping in the water");
     }
 
     if (!actor.tags.has("aquatic")) {
@@ -126,11 +126,11 @@ export function steamTrigger(
     actor: Entity
 ): void {
     if (actor.id === globals.Game?.playerId) {
-        displayMessage("You take damage from the steam");
+        showLogMessage("You take damage from the steam");
     } else {
         const d = actor.getOne(DisplayNameComponent);
         if (d !== undefined) {
-            displayMessage(`${d.name} is hurt by the steam`);
+            showLogMessage(`${d.name} is hurt by the steam`);
         }
     }
 

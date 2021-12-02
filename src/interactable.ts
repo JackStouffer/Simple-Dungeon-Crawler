@@ -10,7 +10,7 @@ import {
     HitPointsComponent
 } from "./entity";
 import { addItem, getItems, useItem } from "./inventory";
-import { displayMessage } from "./ui";
+import { showLogMessage } from "./ui";
 import { addSpellById, getKnownSpells } from "./fighter";
 import { ItemData } from "./skills";
 import { playChestOpen, playDoorOpen } from "./audio";
@@ -29,7 +29,7 @@ export function giveItemsInteract(actor: Entity, interactable: Entity) {
         if (items.length > 0) {
             for (let i = 0; i < items.length; i++) {
                 const item = items[i];
-                displayMessage(`Found a ${ItemData[item.id].displayName}`);
+                showLogMessage(`Found a ${ItemData[item.id].displayName}`);
                 addItem(actorInventory, item.id, item.count);
                 useItem(interactable, item.id);
             }
@@ -42,7 +42,7 @@ export function giveItemsInteract(actor: Entity, interactable: Entity) {
                 removeEntity(globals.Game.ecs, interactable);
             }
         } else {
-            displayMessage("Empty");
+            showLogMessage("Empty");
         }
     } else {
         throw new Error(`Missing inventory on ${actor.id} or ${interactable.id}`);
@@ -63,9 +63,9 @@ export function giveSpellsInteract(entity: Entity, interactable: Entity): void {
         const res = addSpellById(entity, spell.id, spell.count, spell.maxCount);
         if (entity.id === globals.Game?.playerId) {
             if (res) {
-                displayMessage(`You learned a new spell: ${spell.displayName}`);
+                showLogMessage(`You learned a new spell: ${spell.displayName}`);
             } else {
-                displayMessage(`You already know ${spell.displayName}`);
+                showLogMessage(`You already know ${spell.displayName}`);
             }
         }
     }
@@ -114,5 +114,5 @@ export function restPointInteract(entity: Entity): void {
         }
     }
 
-    displayMessage("You are now rested");
+    showLogMessage("You are now rested");
 }

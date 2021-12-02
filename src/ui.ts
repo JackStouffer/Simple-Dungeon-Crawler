@@ -236,46 +236,41 @@ export class StatusBar {
     }
 }
 
-export enum MessageType {
-    Default,
-    Tutorial,
-    Critical,
-    StatusEffect
+export class LogMessage {
+    stage: PIXI.Container;
+    text: PIXI.Text;
+    lifeTime: number;
+
+    constructor(stage: PIXI.Container, text: string) {
+        this.stage = stage;
+        this.text = new PIXI.Text(text, {
+            fontFamily: "monospace",
+            fontSize: 18,
+            fill: 0xFFFFFF,
+            stroke: 0x000000,
+            strokeThickness: 2
+        });
+        this.text.zIndex = 21;
+        this.stage.addChild(this.text);
+        this.lifeTime = 5000;
+    }
+
+    update(deltaTime: DOMHighResTimeStamp) {
+        this.lifeTime -= deltaTime;
+    }
+
+    remove() {
+        this.stage.removeChild(this.text);
+        this.text.destroy();
+    }
 }
 
-export function displayMessage(text: string, type: MessageType = MessageType.Default): void {
+export function showLogMessage(text: string): void {
     if (globals.document === null) { throw new Error("Global document object is null"); }
     if (globals.Game === null) { throw new Error("Global Game object is null"); }
 
-    const log = globals.document.getElementById("log");
-    if (log === null) { throw new Error("Can't find log list element"); }
-
-    const el = document.createElement("div");
-    const p = document.createElement("p");
-    const small = document.createElement("p");
-    p.innerHTML = `${text}`;
-
-    if (type === MessageType.Tutorial) {
-        el.className = "tutorial";
-    } else if (type === MessageType.Critical) {
-        el.className = "critical";
-        small.innerHTML = `<small>Turn: ${globals.Game.totalTurns}</small>`;
-    } else if (type === MessageType.StatusEffect) {
-        el.className = "status-effect";
-        small.innerHTML = `<small>Turn: ${globals.Game.totalTurns}</small>`;
-    } else {
-        small.innerHTML = `<small>Turn: ${globals.Game.totalTurns}</small>`;
-    }
-
-    el.appendChild(p);
-    el.appendChild(small);
-    log.appendChild(el);
-
-    while (log.children.length > 100) {
-        log.children[0].remove();
-    }
-
-    log.scrollTop = log.scrollHeight;
+    globals.Game.logMessages.push(new LogMessage(globals.Game.pixiApp.stage, text));
+    globals.Game.updateLogMessages();
 }
 
 interface InventoryMenuRow {

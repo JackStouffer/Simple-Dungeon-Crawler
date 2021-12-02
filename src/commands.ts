@@ -25,9 +25,8 @@ import {
     getRandomFighterWithinRange
 } from "./map";
 import { assertUnreachable, Nullable, randomIntFromInterval } from "./util";
-import { displayMessage, MessageType, showConfirmationDialogBox } from "./ui";
+import { showConfirmationDialogBox } from "./ui";
 import {
-    DisplayNameComponent,
     EntityMap,
     FlammableComponent,
     GraphicsComponent,
@@ -640,11 +639,7 @@ export class PushBackCommand implements Command {
             const damage = (this.numTiles * 3) + (tilesLeft * 2);
             takeDamage(ecs, globals.Game!.entityMap, entity, damage, false, DamageType.Physical);
             if (Math.random() > 0.3) {
-                const stunned = setStunned(entity, 3);
-                if (stunned) {
-                    const displayName = entity.getOne(DisplayNameComponent)!;
-                    displayMessage(`${displayName.name} is now stunned`, MessageType.StatusEffect);
-                }
+                setStunned(entity, 3);
             }
 
             if (blocker !== null) {

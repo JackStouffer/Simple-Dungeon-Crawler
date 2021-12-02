@@ -46,7 +46,7 @@ import {
 } from "./entity";
 import { SpellData, Area } from "./skills";
 import { getEntitiesAtLocation, Vector2D } from "./map";
-import { displayMessage } from "./ui";
+import { showLogMessage } from "./ui";
 import { assertUnreachable, Nullable, randomIntFromInterval } from "./util";
 import { createPassableSightCallback } from "./ai/commands";
 import { ShowDamageIndicatorCommand } from "./commands";
@@ -337,7 +337,7 @@ export class LevelUpSystem extends System {
                 }
 
                 if (globals.Game !== null && entity.id === globals.Game.playerId) {
-                    displayMessage(`You reached level ${levelData.level}!`);
+                    showLogMessage(`You reached level ${levelData.level}!`);
                 }
             }
         }

@@ -21,7 +21,7 @@ import {
     FearAIComponent,
     ConfusableAIComponent,
 } from "../entity";
-import { displayMessage } from "../ui";
+import { showLogMessage } from "../ui";
 import { Nullable } from "../util";
 import { buildDialogQuery, queryAlliesForResponses, queryDialogTable, sayDialogDefinition } from "./dialog";
 
@@ -142,7 +142,7 @@ export function getPlan(
 
     if (aiState.previousWorldState.targetPositionKnown === false &&
         worldState.targetPositionKnown === true) {
-        displayMessage(`${displayName.name} saw you`);
+        showLogMessage(`${displayName.name} saw you`);
     }
 
     const actions = Object.keys(aiState.planner.actionList!.reactions);

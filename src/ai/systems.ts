@@ -11,7 +11,7 @@ import {
     PlannerAIComponent,
     PositionComponent
 } from "../entity";
-import { displayMessage } from "../ui";
+import { showLogMessage } from "../ui";
 import { createPassableSightCallback } from "./commands";
 import { FOV } from "../rot";
 
@@ -45,7 +45,7 @@ export class LoseTargetSystem extends System {
 
                         const displayName = e.getOne(DisplayNameComponent);
                         if (displayName !== undefined) {
-                            displayMessage(`${displayName.name} lost track of you`);
+                            showLogMessage(`${displayName.name} lost track of you`);
                         }
                     }
 
@@ -184,9 +184,9 @@ export class ConfusableAISystem extends System {
 
                     const displayName = entity.getOne(DisplayNameComponent);
                     if (entity.id === globals.Game!.playerId) {
-                        displayMessage("You are no longer confused");
+                        showLogMessage("You are no longer confused");
                     } else if (displayName !== undefined) {
-                        displayMessage(`${displayName.name} is no longer confused`);
+                        showLogMessage(`${displayName.name} is no longer confused`);
                     }
                 }
 

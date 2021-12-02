@@ -32,7 +32,7 @@ import {
     Vector2D,
     getEntitiesAtLocation,
 } from "../map";
-import { displayMessage } from "../ui";
+import { showLogMessage } from "../ui";
 import { ItemType, SpellType } from "../constants";
 import { Nullable } from "../util";
 import { Entity, World } from "ape-ecs";
@@ -327,7 +327,7 @@ function useHealingItemAction(
         .filter(i => i.type === ItemType.HealSelf)
         .sort((a, b) => a.value! - b.value!)[0];
 
-    displayMessage(`${displayName.name} used a ${item.displayName}`);
+    showLogMessage(`${displayName.name} used a ${item.displayName}`);
 
     return new UseSkillCommand(
         aiState.entity.id, ItemData[item.id], undefined, undefined, true, useItem
@@ -349,7 +349,7 @@ function useHealingSpellAction(
         .filter(i => i.type === SpellType.HealSelf)
         .sort((a, b) => a.value! - b.value!)[0];
 
-    displayMessage(`${displayName.name} casted ${spell.displayName}`);
+    showLogMessage(`${displayName.name} casted ${spell.displayName}`);
 
     return new UseSkillCommand(
         aiState.entity.id, SpellData[spell.id], undefined, undefined, true, useSpell
@@ -400,7 +400,7 @@ function healAllyAction(
         throw new Error("Should never get here, there's a bug in goal allyLowHealth");
     }
 
-    displayMessage(`${displayName.name} casted ${spell.displayName}`);
+    showLogMessage(`${displayName.name} casted ${spell.displayName}`);
 
     return new UseSkillCommand(
         aiState.entity.id, SpellData[spell.id], target, undefined, true, useSpell

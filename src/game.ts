@@ -84,8 +84,9 @@ import {
     InventoryMenu,
     SpellSelectionMenu,
     StatusBar,
-    displayMessage,
-    ConfirmationModal
+    showLogMessage,
+    ConfirmationModal,
+    LogMessage
 } from "./ui";
 import {
     explainAttacking,
@@ -214,6 +215,8 @@ const GameplayState: GameState = {
             return;
         }
 
+        game.updateLogMessages();
+
         // Turn order
         if (game.currentActor === null) {
             game.currentActor = game.scheduler.next()!;
@@ -296,7 +299,7 @@ const GameplayState: GameState = {
             inputHandlerState.itemForTarget = null;
             inputHandlerState.spellForTarget = null;
             inputHandlerState.update();
-            displayMessage("Canceled casting");
+            showLogMessage("Canceled casting");
             return;
         }
 
@@ -399,7 +402,7 @@ const InventoryMenuState: GameState = {
         if (item !== null) {
             // This really should never happen. Just for sanity checking
             if (!hasItem(playerInventory, item.id)) {
-                displayMessage(`You don't have ${item.displayName} in your inventory`);
+                showLogMessage(`You don't have ${item.displayName} in your inventory`);
                 return;
             }
 
@@ -481,17 +484,17 @@ const SpellMenuState: GameState = {
 
         if (spell !== null) {
             if (playerSilence !== undefined && playerSilence.silenced) {
-                displayMessage("Cannot cast spells while silenced");
+                showLogMessage("Cannot cast spells while silenced");
                 return;
             }
 
             if (!(spell.id in playerSpells.knownSpells)) {
-                displayMessage(`You don't know ${spell.displayName}`);
+                showLogMessage(`You don't know ${spell.displayName}`);
                 return;
             }
 
             if ((playerSpells.knownSpells[spell.id]?.count ?? -1) < 1) {
-                displayMessage(`You don't have enough casts to use ${spell.displayName}`);
+                showLogMessage(`You don't have enough casts to use ${spell.displayName}`);
                 return;
             }
 
@@ -573,6 +576,7 @@ export class SimpleDungeonCrawler {
     spellSelectionMenu: SpellSelectionMenu;
     statusBar: StatusBar;
     confirmationModal: Nullable<ConfirmationModal>;
+    logMessages: LogMessage[];
 
     blackBackground: PIXI.Graphics;
     openingText: PIXI.Text;
@@ -762,6 +766,7 @@ export class SimpleDungeonCrawler {
         this.spellSelectionMenu = new SpellSelectionMenu(this.pixiApp.screen, this.pixiApp.stage);
         this.statusBar = new StatusBar(this.pixiApp.screen, this.pixiApp.stage);
         this.confirmationModal = null;
+        this.logMessages = [];
 
         this.gameCamera = new Camera({
             x: this.pixiApp.screen.x,
@@ -933,6 +938,25 @@ export class SimpleDungeonCrawler {
             }
 
             if (command.blocks) { break; }
+        }
+    }
+
+    updateLogMessages() {
+        while (this.logMessages.length > 5) {
+            this.logMessages[0].remove();
+            this.logMessages.splice(0, 1);
+        }
+
+        for (let i = this.logMessages.length - 1; i >= 0; --i) {
+            const log = this.logMessages[i];
+            log.text.x = (this.pixiApp.screen.width * .965) - log.text.width;
+            log.text.y = 10 + (i * log.text.height * 1.3);
+            log.update(this.deltaTime);
+
+            if (log.lifeTime < 0) {
+                log.remove();
+                this.logMessages.splice(i, 1);
+            }
         }
     }
 
