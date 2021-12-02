@@ -19,6 +19,7 @@ _In Development_
   * Fixed a bug where entities could path through two diagonally adjacent blocking tiles
   * Fixed a bug where enemies could use heal other spell on self
   * Fixed a bug where enemies weren't alerted after a sneak attack
+  * Fixed a bug where enemies weren't alerted after seeing someone next to them dying
 * Technical
   * Refactored chest updating to less over engineered. Just flip the texture key and then follow the normal code path
   * Added simple template system to dialog definitions to allow for dynamic rules
@@ -28,6 +29,7 @@ _In Development_
     * Support international keyboard layouts
   * Refactored trigger data design by merging it all into one component
 * Graphical
+  * Moved log messages from HTML to text on the game screen
   * Physical attacks now have an animation
   * Damage values are now shown as animated values on the screen rather than in the log
   * Tutorials are now shown in a confirmation modal window
