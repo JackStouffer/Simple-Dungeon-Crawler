@@ -49,7 +49,7 @@ import { getEntitiesAtLocation, Vector2D } from "./map";
 import { showLogMessage } from "./ui";
 import { assertUnreachable, Nullable, randomIntFromInterval } from "./util";
 import { createPassableSightCallback } from "./ai/commands";
-import { ShowDamageIndicatorCommand } from "./commands";
+import { IndicatorStyle, ShowDamageIndicatorCommand } from "./commands";
 
 /**
  * Find all entities with HitPointsComponents and when hp is <= 0,
@@ -606,11 +606,19 @@ export function takeDamage(
     }
 
     if (target.tags.has("sentient")) {
+        let style: IndicatorStyle = IndicatorStyle.Damage;
+
+        if (critical ||
+            (damageAffinity !== null && damageAffinity[damageType] === Affinity.strong)) {
+            style = IndicatorStyle.Critical;
+        } else if (damageAffinity !== null && damageAffinity[damageType] === Affinity.nullified) {
+            style = IndicatorStyle.Immune;
+        }
+
         globals.Game!.commandQueue.push(new ShowDamageIndicatorCommand(
             target.id,
             calculatedDamage,
-            critical || (damageAffinity !== null && damageAffinity[damageType] === Affinity.strong),
-            damageAffinity !== null && damageAffinity[damageType] === Affinity.nullified
+            style
         ));
     }
 
@@ -664,11 +672,17 @@ export function attack(
 export function heal(hpData: HitPointsComponent, amount: number): void {
     const effectiveHp = getEffectiveHitPointData(hpData.entity);
     if (effectiveHp !== null) {
-        hpData.hp += amount;
-        if (hpData.hp > effectiveHp.maxHp) {
-            hpData.hp = effectiveHp.maxHp;
+        if (amount > effectiveHp.maxHp) {
+            amount = effectiveHp.maxHp;
         }
+        hpData.hp += amount;
         hpData.update();
+
+        globals.Game!.commandQueue.push(new ShowDamageIndicatorCommand(
+            hpData.entity.id,
+            amount,
+            IndicatorStyle.Heal
+        ));
     }
 }
 

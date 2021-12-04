@@ -1448,6 +1448,13 @@ export class RemoveEntityCommand implements Command {
     }
 }
 
+export enum IndicatorStyle {
+    Damage,
+    Heal,
+    Immune,
+    Critical
+}
+
 export class ShowDamageIndicatorCommand implements Command {
     entityId: string;
     text: PIXI.Text;
@@ -1460,6 +1467,13 @@ export class ShowDamageIndicatorCommand implements Command {
         fontFamily: "monospace",
         fontSize: 24,
         fill: 0xFFFFFF,
+        stroke: 0x000000,
+        strokeThickness: 2
+    };
+    static heathTextStyle = {
+        fontFamily: "monospace",
+        fontSize: 24,
+        fill: 0x00FF00,
         stroke: 0x000000,
         strokeThickness: 2
     };
@@ -1480,21 +1494,29 @@ export class ShowDamageIndicatorCommand implements Command {
 
     constructor(
         entityId: string,
-        damage: number,
-        isCritical: boolean,
-        wasImmune: boolean
+        value: number,
+        type: IndicatorStyle
     ) {
         this.entityId = entityId;
         this.tweenY = null;
 
-        this.text = new PIXI.Text(damage.toString());
+        this.text = new PIXI.Text(value.toString());
         this.text.zIndex = 20;
-        if (isCritical) {
-            this.text.style = ShowDamageIndicatorCommand.criticalTextStyle;
-        } else if (wasImmune) {
-            this.text.style = ShowDamageIndicatorCommand.immuneTextStyle;
-        } else {
-            this.text.style = ShowDamageIndicatorCommand.normalTextStyle;
+        switch (type) {
+            case IndicatorStyle.Damage:
+                this.text.style = ShowDamageIndicatorCommand.normalTextStyle;
+                break;
+            case IndicatorStyle.Critical:
+                this.text.style = ShowDamageIndicatorCommand.criticalTextStyle;
+                break;
+            case IndicatorStyle.Immune:
+                this.text.style = ShowDamageIndicatorCommand.immuneTextStyle;
+                break;
+            case IndicatorStyle.Heal:
+                this.text.style = ShowDamageIndicatorCommand.heathTextStyle;
+                break;
+            default:
+                assertUnreachable(type);
         }
     }
 
