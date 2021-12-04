@@ -2232,6 +2232,7 @@ export class EntityTeam {
                 const ai = entity.getOne(PlannerAIComponent);
                 if (ai !== undefined) {
                     ai.knowsTargetPosition = true;
+                    ai.currentOrder = "attack";
                     ai.update();
                 }
             }
