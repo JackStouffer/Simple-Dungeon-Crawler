@@ -80,7 +80,7 @@ export class PositionComponent extends Component {
 export class TypeComponent extends Component {
     entityType: string;
     race: Nullable<string>;
-    classification: string;
+    classification: Nullable<string>;
 
     static typeName = "TypeComponent";
     static properties = {
@@ -2302,23 +2302,127 @@ export class RemoveAfterNTurnsSystem extends System {
 
 /**
  * Use an entity type to grab component data and create a new Entity
+ * and add it to the current ECS
  */
 export function createEntity(
     ecs: World,
     textures: PIXI.ITextureDictionary,
     type: string,
     tilePosition?: Vector2D,
-    id?: string
+    id?: string,
+    staticData?: IEntityConfig
 ): Entity {
     if (globals.Game === null) { throw new Error("Global game is null"); }
-    if (!(type in ObjectData)) { throw new Error(`${type} is not valid object id`); }
 
     let hash = randomIntFromInterval(1, 2147483647);
     hash = hash & hash; // Convert to 32bit integer
     const entityId = id ?? `${type}-${hash.toString(16)}`;
 
-    const data = ObjectData[type];
-    const entity = ecs.createEntity(assignIn({}, { id: entityId }, data.staticallyKnownComponents));
+    let entity: Entity;
+    if (staticData !== undefined) {
+        entity = ecs.createEntity(assignIn(
+            {},
+            { id: entityId },
+            staticData
+        ));
+    } else {
+        if (!(type in ObjectData)) { throw new Error(`${type} is not valid object id`); }
+        const data = ObjectData[type];
+        entity = ecs.createEntity(assignIn(
+            {},
+            { id: entityId },
+            data.staticallyKnownComponents
+        ));
+
+        if (data.spells !== undefined && entity.has(SpellsComponent) === false) {
+            const spells: { [key: string]: KnownSpellData } = {};
+            data.spells.forEach(s => {
+                spells[s[0]] = { count: s[1], maxCount: s[1] };
+            });
+            entity.addComponent({ type: "SpellsComponent", knownSpells: spells });
+        }
+
+        if (data?.addInventory === true && entity.has(InventoryComponent) === false) {
+            const inventory: Map<string, number> = new Map();
+
+            if (data.inventoryPool !== undefined) {
+                for (let i = 0; i < data.inventoryPool.length; i++) {
+                    if (RNG.getUniform() <= data.inventoryPool[i].probability) {
+                        inventory.set(data.inventoryPool[i].itemID, 1);
+                    }
+                }
+            }
+
+            entity.addComponent({ type: "InventoryComponent", inventory });
+        }
+
+        if (data?.addDialogMemory === true && entity.has(DialogMemoryComponent) === false) {
+            const memory: Map<string, boolean> = new Map();
+
+            const typeData = entity.getOne(TypeComponent);
+            if (typeData !== undefined && typeData.classification !== null) {
+                const dialogDefinitions = dialogByClassification[typeData.classification];
+                if (dialogDefinitions !== undefined) {
+                    for (const def of dialogDefinitions.rules) {
+                        memory.set(`said_${def.name}`, false);
+                    }
+                }
+            }
+
+            entity.addComponent({ type: "DialogMemoryComponent", memory });
+        }
+
+        if (data?.addInput === true && entity.has(InputHandlingComponent) === false) {
+            const keyCommands: KeyCommand[] = [
+                { code: "KeyW", keyDisplay: "W", description: "Move Camera Up", continuous: true, command: moveCameraUp },
+                { code: "KeyA", keyDisplay: "A", description: "Move Camera Left", continuous: true, command: moveCameraLeft },
+                { code: "KeyS", keyDisplay: "S", description: "Move Camera Down", continuous: true, command: moveCameraDown },
+                { code: "KeyD", keyDisplay: "D", description: "Move Camera Right", continuous: true, command: moveCameraRight },
+                { code: "KeyQ", keyDisplay: "Q", description: "Camera Reset", continuous: false, command: cameraReset },
+                { code: "KeyI", keyDisplay: "I", description: "Inventory", continuous: false, command: () => new OpenInventoryCommand() },
+                { code: "KeyM", keyDisplay: "M", description: "Spell Menu", continuous: false, command: () => new OpenSpellsCommand() },
+                { code: "KeyR", keyDisplay: "R", description: "Rotate Target Reticle", continuous: false, command: () => new RotateReticleCommand(entity.id) },
+                { code: "Equal", keyDisplay: "Ctrl =", description: "Zoom In", continuous: false, command: zoomInCamera },
+                { code: "Minus", keyDisplay: "Ctrl -", description: "Zoom Out", continuous: false, command: zoomOutCamera },
+                { code: "KeyX", keyDisplay: "X", description: "Pass Turn", continuous: false, command: () => new NoOpCommand(true) }
+            ];
+
+            entity.addComponent({
+                type: "InputHandlingComponent",
+                state: PlayerState.Combat,
+                reticleRotation: 0,
+                keyCommands,
+                itemForTarget: null,
+                spellForTarget: null
+            });
+        }
+
+        if (data?.addPlannerAI === true &&
+            data.actions !== undefined &&
+            entity.has(PlannerAIComponent) === false) {
+            const actions: Set<string> = new Set(data.actions);
+            const { goals, planner } = createPlanner(actions);
+
+            entity.addComponent({
+                type: "PlannerAIComponent",
+                nonAlertSightRange: data?.nonAlertSightRange ?? 5,
+                alertSightRange: data?.alertSightRange ?? 5,
+                desiredDistanceToTarget: data?.desiredDistanceToTarget ?? 1,
+                planner,
+                targetId: "player", // TODO: generic target selection
+                teamId: null,
+                previousWorldState: {},
+                currentAction: null,
+                currentOrder: "attack",
+                goals,
+                actions,
+                lowHealthThreshold: data.lowHealthThreshold ?? 0.25,
+                knowsTargetPosition: false,
+                hasTargetInSight: false,
+                wanderBounds: null
+            });
+        }
+    }
 
     if (tilePosition !== undefined && entity.has(PositionComponent) === false) {
         const worldPosition = globals.Game.gameCamera.tilePositionToWorld(tilePosition);
@@ -2336,93 +2440,6 @@ export function createEntity(
     } else if (graphics !== undefined && graphics.textureKey !== null) {
         graphics.sprite = new PIXI.Sprite(textures[graphics.textureKey]);
         globals.Game.pixiApp.stage.addChild(graphics.sprite);
-    }
-
-    if (data.spells !== undefined && entity.has(SpellsComponent) === false) {
-        const spells: { [key: string]: KnownSpellData } = {};
-        data.spells.forEach(s => {
-            spells[s[0]] = { count: s[1], maxCount: s[1] };
-        });
-        entity.addComponent({ type: "SpellsComponent", knownSpells: spells });
-    }
-
-    if (data?.addInventory === true && entity.has(InventoryComponent) === false) {
-        const inventory: Map<string, number> = new Map();
-
-        if (data.inventoryPool !== undefined) {
-            for (let i = 0; i < data.inventoryPool.length; i++) {
-                if (RNG.getUniform() <= data.inventoryPool[i].probability) {
-                    inventory.set(data.inventoryPool[i].itemID, 1);
-                }
-            }
-        }
-
-        entity.addComponent({ type: "InventoryComponent", inventory });
-    }
-
-    if (data?.addDialogMemory === true && entity.has(DialogMemoryComponent) === false) {
-        const memory: Map<string, boolean> = new Map();
-
-        const typeData = entity.getOne(TypeComponent);
-        if (typeData !== undefined) {
-            const dialogDefinitions = dialogByClassification[typeData.classification];
-            if (dialogDefinitions !== undefined) {
-                for (const def of dialogDefinitions.rules) {
-                    memory.set(`said_${def.name}`, false);
-                }
-            }
-        }
-
-        entity.addComponent({ type: "DialogMemoryComponent", memory });
-    }
-
-    if (data?.addInput === true && entity.has(InputHandlingComponent) === false) {
-        const keyCommands: KeyCommand[] = [
-            { code: "KeyW", keyDisplay: "W", description: "Move Camera Up", continuous: true, command: moveCameraUp },
-            { code: "KeyA", keyDisplay: "A", description: "Move Camera Left", continuous: true, command: moveCameraLeft },
-            { code: "KeyS", keyDisplay: "S", description: "Move Camera Down", continuous: true, command: moveCameraDown },
-            { code: "KeyD", keyDisplay: "D", description: "Move Camera Right", continuous: true, command: moveCameraRight },
-            { code: "KeyQ", keyDisplay: "Q", description: "Camera Reset", continuous: false, command: cameraReset },
-            { code: "KeyI", keyDisplay: "I", description: "Inventory", continuous: false, command: () => new OpenInventoryCommand() },
-            { code: "KeyM", keyDisplay: "M", description: "Spell Menu", continuous: false, command: () => new OpenSpellsCommand() },
-            { code: "KeyR", keyDisplay: "R", description: "Rotate Target Reticle", continuous: false, command: () => new RotateReticleCommand(entity.id) },
-            { code: "Equal", keyDisplay: "Ctrl =", description: "Zoom In", continuous: false, command: zoomInCamera },
-            { code: "Minus", keyDisplay: "Ctrl -", description: "Zoom Out", continuous: false, command: zoomOutCamera },
-            { code: "KeyX", keyDisplay: "X", description: "Pass Turn", continuous: false, command: () => new NoOpCommand(true) }
-        ];
-
-        entity.addComponent({
-            type: "InputHandlingComponent",
-            state: PlayerState.Combat,
-            reticleRotation: 0,
-            keyCommands,
-            itemForTarget: null,
-            spellForTarget: null
-        });
-    }
-
-    if (data?.addPlannerAI === true && data.actions !== undefined) {
-        const actions: Set<string> = new Set(data.actions);
-        const { goals, planner } = createPlanner(actions);
-
-        entity.addComponent({
-            type: "PlannerAIComponent",
-            nonAlertSightRange: data?.nonAlertSightRange ?? 5,
-            alertSightRange: data?.alertSightRange ?? 5,
-            desiredDistanceToTarget: data?.desiredDistanceToTarget ?? 1,
-            planner,
-            targetId: "player", // TODO: generic target selection
-            teamId: null,
-            previousWorldState: {},
-            currentAction: null,
-            currentOrder: "attack",
-            goals,
-            actions,
-            lowHealthThreshold: data.lowHealthThreshold ?? 0.25,
-            knowsTargetPosition: false,
-            hasTargetInSight: false,
-            wanderBounds: null
-        });
     }
 
     return entity;

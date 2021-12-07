@@ -7,13 +7,16 @@ import {
     TypeComponent,
     LoadLevelComponent,
     removeEntity,
-    HitPointsComponent
+    HitPointsComponent,
+    PositionComponent
 } from "./entity";
 import { addItem, getItems, useItem } from "./inventory";
 import { showLogMessage } from "./ui";
 import { addSpellById, getKnownSpells } from "./fighter";
 import { ItemData } from "./skills";
 import { playChestOpen, playDoorOpen } from "./audio";
+import { PLAYER_ID } from "./constants";
+import { saveLevelState } from "./map";
 
 /**
  * Give the actor all of the items in the interactable's inventory
@@ -35,7 +38,8 @@ export function giveItemsInteract(actor: Entity, interactable: Entity) {
             }
 
             const interactableEntityType = interactable.getOne(TypeComponent);
-            if (actor.id === globals.Game.playerId && interactableEntityType?.entityType === "chest") {
+            // TODO, sound: We need some sort of table for interactable sound lookups
+            if (actor.id === PLAYER_ID && interactableEntityType?.entityType === "chest") {
                 playChestOpen();
             }
             if (interactableEntityType?.entityType === "dropped_item") {
@@ -61,7 +65,7 @@ export function giveSpellsInteract(entity: Entity, interactable: Entity): void {
     const spells = getKnownSpells(interactableSpellData);
     for (const spell of spells) {
         const res = addSpellById(entity, spell.id, spell.count, spell.maxCount);
-        if (entity.id === globals.Game?.playerId) {
+        if (entity.id === PLAYER_ID) {
             if (res) {
                 showLogMessage(`You learned a new spell: ${spell.displayName}`);
             } else {
@@ -91,8 +95,19 @@ export function levelLoadInteract(actor: Entity, interactable: Entity): void {
     if (globals.Game === null) { throw new Error("Global game object is null"); }
     if (globals.gameEventEmitter === null) { throw new Error("Global gameEventEmitter object is null"); }
 
+    const player = globals.Game.ecs.getEntity(PLAYER_ID)!;
+    const pos = player.getOne(PositionComponent)!;
+
+    saveLevelState(
+        globals.Game.map.name,
+        globals.Game.ecs,
+        globals.Game.entityTeams,
+        pos.tilePosition
+    );
+
     globals.Game.loadLevel(loadLevelData.levelName);
 
+    // TODO, sound: We need some sort of table for interactable sound lookups
     if (typeData?.entityType === "load_door") {
         playDoorOpen();
     }

@@ -1,5 +1,5 @@
 import { get } from "lodash";
-import { Entity, World } from "ape-ecs";
+import { Entity, IEntityConfig, World } from "ape-ecs";
 import * as PIXI from "pixi.js";
 import TiledMapOrthogonal, {
     TiledLayerTilelayer as TiledLayerTileLayer,
@@ -32,7 +32,7 @@ import { Camera, Rectangle } from "./camera";
 import { Nullable, randomIntFromInterval } from "./util";
 import { createPlanner } from "./ai/commands";
 import { ItemData, SpellData } from "./skills";
-import { TILE_SIZE } from "./constants";
+import { PLAYER_ID, TILE_SIZE } from "./constants";
 
 const COLOR_AMBIENT_LIGHT = "rgb(50, 50, 50)";
 
@@ -43,6 +43,13 @@ const LevelData: { [key: string]: TiledMapOrthogonal } = {
     forrest_001_interior_001: (forrest_001_interior_001 as any).default as TiledMapOrthogonal,
     forrest_001_interior_002: (forrest_001_interior_002 as any).default as TiledMapOrthogonal,
 };
+
+interface SavedLevelDetails {
+    entities: string[],
+    teams: string,
+    playerTilePosition: string
+}
+const levelEntityStateMap: Map<string, SavedLevelDetails> = new Map();
 
 interface TileDataDetails {
     name: string;
@@ -1273,7 +1280,7 @@ export function loadTiledMap(
     const sourceData = LevelData[level];
     const tileSize: number = sourceData.tileheight;
     const mapData: Nullable<Tile>[][][] = [];
-    const playerLocation: Vector2D = new Vector2D(0, 0);
+    let playerTilePosition: Vector2D = new Vector2D(0, 0);
 
     const tileLayers = sourceData.layers.filter(
         l => get(l, "properties[0].value", null) === "tile"
@@ -1376,6 +1383,11 @@ export function loadTiledMap(
         ecs.createEntity({
             id: o.id.toString(10),
             c: {
+                TypeComponent: {
+                    entityType: "node",
+                    race: null,
+                    classification: null
+                },
                 PositionComponent: {
                     worldPosition: new Vector2D(o.x, o.y),
                     tilePosition: new Vector2D(
@@ -1430,163 +1442,6 @@ export function loadTiledMap(
         });
     });
 
-    const teams: EntityTeamMap = new Map();
-
-    objectLayer.objects.forEach(o => {
-        if (o.point !== undefined) {
-            if (o.type === "object") {
-                // TODO, Speed: Doing a lot of iteration here. Would be better
-                // to just make a hash map.
-                const type = findProperty(o, "objectType") as string,
-                    inventory = findProperty(o, "inventory") as string,
-                    levelName = findProperty(o, "levelName") as string,
-                    spellId = findProperty(o, "spellId") as string,
-                    patrolTarget = findProperty(o, "patrolTarget") as number,
-                    fallbackPosition = findProperty(o, "fallbackPosition") as number,
-                    event = findProperty(o, "event") as string,
-                    teamId = findProperty(o, "teamId") as number,
-                    isTeamCommander = findProperty(o, "commander") as boolean,
-                    wanderBoundsId = findProperty(o, "wanderBounds") as number;
-
-                if (type === null) {
-                    throw new Error(`No type for ${o.name}`);
-                }
-
-                if (type === "player") {
-                    playerLocation.x = Math.floor(o.x / tileSize) * tileSize;
-                    playerLocation.y = Math.floor(o.y / tileSize) * tileSize;
-                } else {
-                    const entity: Entity = createEntity(
-                        ecs,
-                        textures,
-                        type,
-                        new Vector2D(Math.floor(o.x / tileSize), Math.floor(o.y / tileSize)),
-                        `${type}-${o.id}`
-                    );
-
-                    if (inventory !== null) {
-                        const items: Map<string, number> = new Map();
-                        inventory
-                            .split(",")
-                            .filter((i: string) => i in ItemData)
-                            .forEach((i: string) => items.set(i, 1));
-
-                        const existingInventory = entity.getOne(InventoryComponent);
-                        if (existingInventory === undefined) {
-                            entity.addComponent({
-                                type: "InventoryComponent",
-                                inventory: items
-                            });
-                        } else {
-                            existingInventory.inventory = items;
-                        }
-                    }
-
-                    if (levelName !== null) {
-                        entity.addComponent({
-                            type: "LoadLevelComponent",
-                            levelName
-                        });
-                    }
-
-                    if (spellId !== null) {
-                        const spellData = SpellData[spellId];
-                        if (spellData === undefined) { throw new Error(`${spellId} is not a valid spell`); }
-
-                        const spells: { [key: string]: KnownSpellData } = {
-                            [spellId]: {
-                                count: spellData.baseCastCount,
-                                maxCount: spellData.baseCastCount
-                            }
-                        };
-                        entity.addComponent({ type: "SpellsComponent", knownSpells: spells });
-                    }
-
-                    if (patrolTarget !== null) {
-                        const target = ecs.getEntity(patrolTarget.toString());
-                        if (target === undefined) { throw new Error(`Patrol target ${patrolTarget} is not initialized`); }
-                        entity.addComponent({
-                            type: "PatrolAIComponent",
-                            patrolTarget: target.id
-                        });
-
-                        // recreate the planner
-                        const aiState = entity.getOne(PlannerAIComponent);
-                        if (aiState === undefined) { throw new Error("Trying to set patrol target without an ai"); }
-                        aiState.actions.delete("wander");
-                        aiState.actions.delete("guard");
-                        aiState.actions.add("patrol");
-                        const { goals, planner } = createPlanner(aiState.actions);
-                        aiState.goals = goals;
-                        aiState.planner = planner;
-                        aiState.update();
-                    }
-
-                    if (fallbackPosition !== null) {
-                        const fallback = ecs.getEntity(fallbackPosition.toString());
-                        if (fallback === undefined) { throw new Error(`Fallback target ${fallbackPosition} is not initialized`); }
-                        entity.addComponent({
-                            type: "FallbackAIComponent",
-                            isAtFallbackPosition: false,
-                            fallbackPosition: fallback
-                        });
-
-                        // recreate the planner
-                        const aiState = entity.getOne(PlannerAIComponent);
-                        if (aiState === undefined) { throw new Error("Trying to set fallback position without an ai"); }
-                        aiState.actions.add("goToFallbackPosition");
-                        const { goals, planner } = createPlanner(aiState.actions);
-                        aiState.goals = goals;
-                        aiState.planner = planner;
-                        aiState.update();
-                    }
-
-                    if (type === "event_trigger" && event !== null) {
-                        const triggerData = entity.getOne(TriggerComponent);
-                        if (triggerData === undefined) { throw new Error(`Missing TriggerComponent on ${entity.id}`); }
-                        triggerData.event = event;
-                        triggerData.update();
-                    }
-
-                    if (teamId !== null) {
-                        if (!teams.has(teamId)) {
-                            teams.set(teamId, new EntityTeam());
-                        }
-
-                        const team = teams.get(teamId)!;
-                        team.memberIds.push(entity.id);
-                        if (isTeamCommander) {
-                            team.createdWithCommander = true;
-                            team.commanderId = entity.id;
-                        }
-
-                        const ai = entity.getOne(PlannerAIComponent);
-                        if (ai !== undefined) {
-                            ai.teamId = teamId;
-                        }
-                    }
-
-                    if (wanderBoundsId !== null) {
-                        const bounds = wanderBounds.get(wanderBoundsId);
-                        if (bounds === undefined) {
-                            throw new Error(`Invalid wander bounds reference ${wanderBoundsId} in ${o.id}`);
-                        }
-
-                        const aiState = entity.getOne(PlannerAIComponent);
-                        if (aiState === undefined) {
-                            throw new Error(`Attempting to add wander bounds to entity ${entity.id} with no AI state`);
-                        }
-
-                        aiState.wanderBounds = bounds;
-                        aiState.update();
-                    }
-                }
-            } else {
-                throw new Error(`Unrecognized object type ${o.type}`);
-            }
-        }
-    });
-
     const shadowBoxes = shadowBoxLayer.objects.map(o => {
         return new ShadowBox(
             Math.floor(o.x / tileSize),
@@ -1596,7 +1451,244 @@ export function loadTiledMap(
         );
     });
 
-    return { map: new GameMap(level, mapData, visibilityData), playerLocation, shadowBoxes, teams };
+    const teams: EntityTeamMap = new Map();
+
+    if (levelEntityStateMap.has(level)) {
+        const levelData = levelEntityStateMap.get(level)!;
+
+        for (const entityData of levelData.entities) {
+            const obj: IEntityConfig = JSON.parse(entityData, customJSONDeserializer);
+            createEntity(ecs, textures, obj.c!.TypeComponent.type, undefined, obj.id!, obj);
+        }
+
+        const teamsData: [number, { [key: string]: any }][] = JSON.parse(
+            levelData.teams, customJSONDeserializer
+        );
+        for (const teamData of teamsData) {
+            const team = new EntityTeam();
+            team.commanderId = teamData[1]["commanderId"];
+            team.createdWithCommander = teamData[1]["createdWithCommander"];
+            team.memberIds = teamData[1]["memberIds"];
+            team.state = teamData[1]["state"];
+            teams.set(teamData[0], team);
+        }
+
+        playerTilePosition = Vector2D.fromVector(JSON.parse(levelData.playerTilePosition));
+    } else {
+        objectLayer.objects.forEach(o => {
+            if (o.point !== undefined) {
+                if (o.type === "object") {
+                    // TODO, Speed: Doing a lot of iteration here. Would be better
+                    // to just make a hash map.
+                    const type = findProperty(o, "objectType") as string,
+                        inventory = findProperty(o, "inventory") as string,
+                        levelName = findProperty(o, "levelName") as string,
+                        spellId = findProperty(o, "spellId") as string,
+                        patrolTarget = findProperty(o, "patrolTarget") as number,
+                        fallbackPosition = findProperty(o, "fallbackPosition") as number,
+                        event = findProperty(o, "event") as string,
+                        teamId = findProperty(o, "teamId") as number,
+                        isTeamCommander = findProperty(o, "commander") as boolean,
+                        wanderBoundsId = findProperty(o, "wanderBounds") as number;
+
+                    if (type === null) {
+                        throw new Error(`No type for ${o.name}`);
+                    }
+
+                    if (type === "player") {
+                        playerTilePosition.x = Math.floor(o.x / tileSize);
+                        playerTilePosition.y = Math.floor(o.y / tileSize);
+                    } else {
+                        const entity: Entity = createEntity(
+                            ecs,
+                            textures,
+                            type,
+                            new Vector2D(Math.floor(o.x / tileSize), Math.floor(o.y / tileSize)),
+                            `${type}-${o.id}`,
+                        );
+
+                        if (inventory !== null) {
+                            const items: Map<string, number> = new Map();
+                            inventory
+                                .split(",")
+                                .filter((i: string) => i in ItemData)
+                                .forEach((i: string) => items.set(i, 1));
+
+                            const existingInventory = entity.getOne(InventoryComponent);
+                            if (existingInventory === undefined) {
+                                entity.addComponent({
+                                    type: "InventoryComponent",
+                                    inventory: items
+                                });
+                            } else {
+                                existingInventory.inventory = items;
+                            }
+                        }
+
+                        if (levelName !== null) {
+                            entity.addComponent({
+                                type: "LoadLevelComponent",
+                                levelName
+                            });
+                        }
+
+                        if (spellId !== null) {
+                            const spellData = SpellData[spellId];
+                            if (spellData === undefined) { throw new Error(`${spellId} is not a valid spell`); }
+
+                            const spells: { [key: string]: KnownSpellData } = {
+                                [spellId]: {
+                                    count: spellData.baseCastCount,
+                                    maxCount: spellData.baseCastCount
+                                }
+                            };
+                            entity.addComponent({ type: "SpellsComponent", knownSpells: spells });
+                        }
+
+                        if (patrolTarget !== null) {
+                            const target = ecs.getEntity(patrolTarget.toString());
+                            if (target === undefined) { throw new Error(`Patrol target ${patrolTarget} is not initialized`); }
+                            entity.addComponent({
+                                type: "PatrolAIComponent",
+                                patrolTarget: target.id
+                            });
+
+                            // recreate the planner
+                            const aiState = entity.getOne(PlannerAIComponent);
+                            if (aiState === undefined) { throw new Error("Trying to set patrol target without an ai"); }
+                            aiState.actions.delete("wander");
+                            aiState.actions.delete("guard");
+                            aiState.actions.add("patrol");
+                            const { goals, planner } = createPlanner(aiState.actions);
+                            aiState.goals = goals;
+                            aiState.planner = planner;
+                            aiState.update();
+                        }
+
+                        if (fallbackPosition !== null) {
+                            const fallback = ecs.getEntity(fallbackPosition.toString());
+                            if (fallback === undefined) { throw new Error(`Fallback target ${fallbackPosition} is not initialized`); }
+                            entity.addComponent({
+                                type: "FallbackAIComponent",
+                                isAtFallbackPosition: false,
+                                fallbackPosition: fallback
+                            });
+
+                            // recreate the planner
+                            const aiState = entity.getOne(PlannerAIComponent);
+                            if (aiState === undefined) { throw new Error("Trying to set fallback position without an ai"); }
+                            aiState.actions.add("goToFallbackPosition");
+                            const { goals, planner } = createPlanner(aiState.actions);
+                            aiState.goals = goals;
+                            aiState.planner = planner;
+                            aiState.update();
+                        }
+
+                        if (type === "event_trigger" && event !== null) {
+                            const triggerData = entity.getOne(TriggerComponent);
+                            if (triggerData === undefined) { throw new Error(`Missing TriggerComponent on ${entity.id}`); }
+                            triggerData.event = event;
+                            triggerData.update();
+                        }
+
+                        if (teamId !== null) {
+                            if (!teams.has(teamId)) {
+                                teams.set(teamId, new EntityTeam());
+                            }
+
+                            const team = teams.get(teamId)!;
+                            team.memberIds.push(entity.id);
+                            if (isTeamCommander) {
+                                team.createdWithCommander = true;
+                                team.commanderId = entity.id;
+                            }
+
+                            const ai = entity.getOne(PlannerAIComponent);
+                            if (ai !== undefined) {
+                                ai.teamId = teamId;
+                            }
+                        }
+
+                        if (wanderBoundsId !== null) {
+                            const bounds = wanderBounds.get(wanderBoundsId);
+                            if (bounds === undefined) {
+                                throw new Error(`Invalid wander bounds reference ${wanderBoundsId} in ${o.id}`);
+                            }
+
+                            const aiState = entity.getOne(PlannerAIComponent);
+                            if (aiState === undefined) {
+                                throw new Error(`Attempting to add wander bounds to entity ${entity.id} with no AI state`);
+                            }
+
+                            aiState.wanderBounds = bounds;
+                            aiState.update();
+                        }
+                    }
+                } else {
+                    throw new Error(`Unrecognized object type ${o.type}`);
+                }
+            }
+        });
+    }
+
+    return {
+        map: new GameMap(level, mapData, visibilityData),
+        playerTilePosition,
+        shadowBoxes,
+        teams
+    };
+}
+
+function customJSONSerializer(key: string, value: any) {
+    if (value instanceof Map) {
+        return {
+            dataType: "Map",
+            value: Array.from(value.entries())
+        };
+    } else if (value instanceof Set) {
+        return {
+            dataType: "Set",
+            value: Array.from(value.values())
+        };
+    } else {
+        return value;
+    }
+}
+
+function customJSONDeserializer(key: string, value: any) {
+    if (typeof value === "object" && value !== null) {
+        if (value.dataType === "Map") {
+            return new Map(value.value);
+        }
+        if (value.dataType === "Set") {
+            return new Set(value.value);
+        }
+    }
+    return value;
+}
+
+export function saveLevelState(
+    levelName: string,
+    ecs: World,
+    teams: EntityTeamMap,
+    playerTilePosition: Vector2D
+): void {
+    const entities = [];
+    for (const entity of ecs.entities.values()) {
+        if (entity.id !== PLAYER_ID) {
+            const config = entity.getObject();
+            if ("GraphicsComponent" in config.c) {
+                config.c.GraphicsComponent.sprite = null;
+            }
+            entities.push(JSON.stringify(config, customJSONSerializer));
+        }
+    }
+
+    levelEntityStateMap.set(levelName, {
+        playerTilePosition: JSON.stringify(playerTilePosition),
+        entities,
+        teams: JSON.stringify(teams, customJSONSerializer)
+    });
 }
 
 /**

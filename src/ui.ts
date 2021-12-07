@@ -5,6 +5,7 @@ import globals from "./globals";
 import {
     LEVEL_UP_BASE,
     LEVEL_UP_FACTOR,
+    PLAYER_ID,
     SpellType
 } from "./constants";
 import input from "./input";
@@ -156,7 +157,7 @@ export class StatusBar {
         this.defenseText.text = `DEF: ${statData.defense}`;
         this.experienceText.text = `EXP: ${levelData.experience}/${(LEVEL_UP_BASE + levelData.level * LEVEL_UP_FACTOR)}`;
 
-        if (globals.Game?.playerId === globals.Game?.currentActor) {
+        if (globals.Game?.currentActor === PLAYER_ID) {
             this.stateText.text = `State: ${PlayerState[inputHandlerData.state]}`;
         } else {
             this.stateText.text = "Enemy Turn";

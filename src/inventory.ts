@@ -1,5 +1,5 @@
 import globals from "./globals";
-import { ItemType } from "./constants";
+import { ItemType, PLAYER_ID } from "./constants";
 import { InventoryComponent } from "./entity";
 import { ItemData, ItemDataDetails } from "./skills";
 import { Entity } from "ape-ecs";
@@ -58,7 +58,7 @@ export function addItem(inventory: InventoryComponent, id: string, count: number
         inventory.inventory.set(id, count);
     }
 
-    if (inventory.entity.id === globals.Game.playerId &&
+    if (inventory.entity.id === PLAYER_ID &&
         ItemData[id].type === ItemType.WildDamageScroll) {
         globals.gameEventEmitter.emit("tutorial.wildSpells");
     }

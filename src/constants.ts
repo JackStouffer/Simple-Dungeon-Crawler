@@ -4,6 +4,8 @@ export const BASE_SPEED = 10;
 export const LEVEL_UP_BASE = 50;
 export const LEVEL_UP_FACTOR = 150;
 
+export const PLAYER_ID = "player";
+
 /**
  * Damage type enum.
  *

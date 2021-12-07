@@ -11,6 +11,7 @@ import {
     DamageType,
     InteractableType,
     ItemType,
+    PLAYER_ID,
     SpellType,
     TriggerType,
 } from "./constants";
@@ -1642,7 +1643,7 @@ export function moveCameraDown(): null {
 }
 
 export function cameraReset(): null {
-    const player = globals.Game!.ecs.getEntity(globals.Game!.playerId);
+    const player = globals.Game!.ecs.getEntity(PLAYER_ID);
     if (player === undefined) { throw new Error("Undefined player id"); }
     const playerPos = player.getOne(PositionComponent)!;
     const cameraPos = globals.Game!.gameCamera.clamp(

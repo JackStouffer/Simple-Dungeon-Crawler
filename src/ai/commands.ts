@@ -24,6 +24,7 @@ import {
 import { showLogMessage } from "../ui";
 import { Nullable } from "../util";
 import { buildDialogQuery, queryAlliesForResponses, queryDialogTable, sayDialogDefinition } from "./dialog";
+import { PLAYER_ID } from "../constants";
 
 /**
  * Creates a function which returns if an x and y coordinate
@@ -313,7 +314,7 @@ export function generateAICommands(
     const fearData = ai.getOne(FearAIComponent);
     const confusedData = ai.getOne(ConfusableAIComponent);
     if (aiState.knowsTargetPosition &&
-        target.id === globals.Game!.playerId &&
+        target.id === PLAYER_ID &&
         (fearData === undefined || fearData.fear < fearData.isAfraidThreshold) &&
         (confusedData === undefined || !confusedData.confused)) {
         commands.push(new MoveCameraCommand(map, globals.Game!.gameCamera, ai));

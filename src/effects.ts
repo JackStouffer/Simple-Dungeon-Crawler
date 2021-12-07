@@ -1,7 +1,7 @@
 import { Query, System } from "ape-ecs";
 
 import globals from "./globals";
-import { AreaOfEffectType, DamageType } from "./constants";
+import { AreaOfEffectType, DamageType, PLAYER_ID } from "./constants";
 import { showLogMessage } from "./ui";
 import {
     DisplayNameComponent,
@@ -150,7 +150,7 @@ export class SilenceSystem extends System {
                 effect.silenced = false;
                 effect.update();
 
-                if (entity.id === globals.Game!.playerId) {
+                if (entity.id === PLAYER_ID) {
                     showLogMessage("You are no longer silenced");
                 } else {
                     const displayName = entity.getOne(DisplayNameComponent);
@@ -184,7 +184,7 @@ export class StunSystem extends System {
                 effect.stunned = false;
                 effect.update();
 
-                if (entity.id === globals.Game!.playerId) {
+                if (entity.id === PLAYER_ID) {
                     showLogMessage("You are no longer stunned");
                 } else {
                     const displayName = entity.getOne(DisplayNameComponent);
@@ -235,7 +235,7 @@ export class FrozenSystem extends System {
                     triggerData.update();
                 }
 
-                if (entity.id === globals.Game!.playerId) {
+                if (entity.id === PLAYER_ID) {
                     // TODO, sound: ice cracking sound
                     showLogMessage("You are no longer frozen");
                 } else {

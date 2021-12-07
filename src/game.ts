@@ -68,7 +68,7 @@ import {
     NoOpCommand,
     UseSkillCommand
 } from "./commands";
-import { ItemType, SpellType } from "./constants";
+import { ItemType, PLAYER_ID, SpellType } from "./constants";
 import input from "./input";
 import { playerInput, PlayerState } from "./input-handler";
 import {
@@ -141,9 +141,8 @@ const OpeningCinematicState: GameState = {
 
     handleInput(game: SimpleDungeonCrawler) {
         if (input.wasPressed("Enter")) {
-            const e = createEntity(game.ecs, game.textureAtlas, "player", new Vector2D(1, 1));
-            game.playerId = e.id;
-            game.scheduler.add(game.playerId, true);
+            createEntity(game.ecs, game.textureAtlas, PLAYER_ID, new Vector2D(1, 1));
+            game.scheduler.add(PLAYER_ID, true);
 
             game.openingText.visible = false;
             game.loadLevel("tutorial_001");
@@ -221,7 +220,7 @@ const GameplayState: GameState = {
         if (game.currentActor === null) {
             game.currentActor = game.scheduler.next()!;
             // Camera update
-            if (game.currentActor === game.playerId) {
+            if (game.currentActor === PLAYER_ID) {
                 const moveToEntity = game.ecs.getEntity(game.currentActor);
                 if (moveToEntity !== undefined) {
                     game.commandQueue.unshift(
@@ -239,7 +238,7 @@ const GameplayState: GameState = {
 
         // Command generation
         if (game.currentActor !== null &&
-            game.currentActor !== game.playerId &&
+            game.currentActor !== PLAYER_ID &&
             game.commandQueue.length === 0) {
             if (game.processAI) {
                 game.commandQueue.push(...generateAICommands(
@@ -259,7 +258,7 @@ const GameplayState: GameState = {
             game.processCommands();
         }
 
-        const player = game.ecs.getEntity(game.playerId);
+        const player = game.ecs.getEntity(PLAYER_ID);
         if (player !== undefined) {
             const hpData = getEffectiveHitPointData(player);
             if (hpData === null || hpData.hp <= 0) {
@@ -281,7 +280,7 @@ const GameplayState: GameState = {
             return;
         }
 
-        const player = game.ecs.getEntity(game.playerId);
+        const player = game.ecs.getEntity(PLAYER_ID);
         if (player === undefined) {
             return;
         }
@@ -303,7 +302,7 @@ const GameplayState: GameState = {
             return;
         }
 
-        if (game.currentActor === game.playerId && game.commandQueue.length === 0) {
+        if (game.currentActor === PLAYER_ID && game.commandQueue.length === 0) {
             const command = playerInput(game.ecs, game.map, game.entityMap, player);
             game.commandQueue.push(...command);
         }
@@ -320,7 +319,7 @@ const PauseMenuState: GameState = {
         pauseMusic();
         playUIClick();
 
-        const player = game.ecs.getEntity(game.playerId);
+        const player = game.ecs.getEntity(PLAYER_ID);
         if (player === undefined) {
             throw new Error("player is undefined");
         }
@@ -337,7 +336,7 @@ const PauseMenuState: GameState = {
     },
 
     handleInput(game: SimpleDungeonCrawler) {
-        const player = game.ecs.getEntity(game.playerId);
+        const player = game.ecs.getEntity(PLAYER_ID);
         if (player === undefined) {
             return;
         }
@@ -363,7 +362,7 @@ const InventoryMenuState: GameState = {
     enter(game: SimpleDungeonCrawler) {
         playOpenInventory();
 
-        const player = game.ecs.getEntity(game.playerId);
+        const player = game.ecs.getEntity(PLAYER_ID);
         if (player === undefined) {
             throw new Error("player is undefined");
         }
@@ -378,7 +377,7 @@ const InventoryMenuState: GameState = {
     },
 
     handleInput(game: SimpleDungeonCrawler) {
-        const player = game.ecs.getEntity(game.playerId);
+        const player = game.ecs.getEntity(PLAYER_ID);
         if (player === undefined) {
             return;
         }
@@ -414,7 +413,7 @@ const InventoryMenuState: GameState = {
                     game.setState(game.gameplayState);
 
                     game.commandQueue.push(new UseSkillCommand(
-                        game.playerId,
+                        PLAYER_ID,
                         ItemData[item.id],
                         undefined,
                         undefined,
@@ -445,7 +444,7 @@ const SpellMenuState: GameState = {
     enter(game: SimpleDungeonCrawler) {
         playOpenSpells();
 
-        const player = game.ecs.getEntity(game.playerId);
+        const player = game.ecs.getEntity(PLAYER_ID);
         if (player === undefined) {
             throw new Error("player is undefined");
         }
@@ -460,7 +459,7 @@ const SpellMenuState: GameState = {
     },
 
     handleInput(game: SimpleDungeonCrawler) {
-        const player = game.ecs.getEntity(game.playerId);
+        const player = game.ecs.getEntity(PLAYER_ID);
         if (player === undefined) {
             return;
         }
@@ -505,7 +504,7 @@ const SpellMenuState: GameState = {
                 case SpellType.WildDamage:
                 case SpellType.Push:
                     game.commandQueue.push(new UseSkillCommand(
-                        game.playerId,
+                        PLAYER_ID,
                         SpellData[spell.id],
                         undefined,
                         undefined,
@@ -562,7 +561,6 @@ export class SimpleDungeonCrawler {
     deltaTime: DOMHighResTimeStamp;
 
     scheduler: EntityScheduler;
-    playerId: string;
     currentActor: Nullable<string>;
     commandQueue: Command[];
     map: GameMap;
@@ -804,13 +802,12 @@ export class SimpleDungeonCrawler {
         });
 
         this.currentActor = null;
-        const p = createEntity(this.ecs, this.textureAtlas, "player", new Vector2D(1, 1));
-        this.playerId = p.id;
+        createEntity(this.ecs, this.textureAtlas, PLAYER_ID, new Vector2D(1, 1));
         this.totalTurns = 1;
 
         this.loadLevel("tutorial_001");
-        this.scheduler.add(this.playerId, true);
-        this.gameCamera.following = this.playerId;
+        this.scheduler.add(PLAYER_ID, true);
+        this.gameCamera.following = PLAYER_ID;
 
         const log = globals.document.getElementById("log");
         if (log === null) { return; }
@@ -841,7 +838,7 @@ export class SimpleDungeonCrawler {
         if (globals.gameEventEmitter === null) { throw new Error("Global gameEventEmitter cannot be null"); }
 
         for (const e of this.ecs.entities.values()) {
-            if (e.id !== this.playerId) {
+            if (e.id !== PLAYER_ID) {
                 removeEntity(this.ecs, e);
             }
         }
@@ -860,9 +857,9 @@ export class SimpleDungeonCrawler {
         }
 
         this.scheduler.clear();
-        this.scheduler.add(this.playerId, true);
+        this.scheduler.add(PLAYER_ID, true);
 
-        const { map, playerLocation, shadowBoxes, teams } = loadTiledMap(
+        const { map, playerTilePosition, shadowBoxes, teams } = loadTiledMap(
             this.ecs,
             this.pixiApp.stage,
             this.textureAtlas,
@@ -872,15 +869,17 @@ export class SimpleDungeonCrawler {
         this.shadowBoxes = shadowBoxes;
         this.entityTeams = teams;
 
-        const player = this.ecs.getEntity(this.playerId);
+        // NOTE: Scheduler is auto updated from the query system
+
+        const player = this.ecs.getEntity(PLAYER_ID);
         if (player === undefined) {
             throw new Error("player is undefined");
         }
 
         const playerPos = player.getOne(PositionComponent);
         if (playerPos === undefined) { throw new Error("Player doesn't have a PositionComponent"); }
-        playerPos.worldPosition = playerLocation;
-        playerPos.tilePosition = this.gameCamera.worldPositionToTile(playerPos.worldPosition);
+        playerPos.tilePosition = playerTilePosition;
+        playerPos.worldPosition = this.gameCamera.tilePositionToWorld(playerTilePosition);
         playerPos.update();
 
         const cameraPos = this.gameCamera.clamp(
@@ -914,7 +913,7 @@ export class SimpleDungeonCrawler {
                     // one command on the queue is run
                     this.ecs.runSystems("postTurn");
 
-                    if (this.currentActor === this.playerId) {
+                    if (this.currentActor === PLAYER_ID) {
                         // TODO, bug: This is wrong when the player is hasted or slowed
                         // SOLUTION: empty entity with a base_speed speed stat that acts as a marker
                         // of the end of the turn.

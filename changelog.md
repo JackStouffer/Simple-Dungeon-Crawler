@@ -1,8 +1,17 @@
 # Changelog
 
-## Version 13
+## Version 14
 
 _In Development_
+
+* Gameplay
+  * Fixed a bug where being alerted by a dead body would cause mages not to attack
+* Graphical
+  * Added visual indicators for health values a-la the damage indicators
+
+## Version 13
+
+_December 2, 2021_
 
 * Gameplay
   * Added new Lightning Bug enemy which has a constant AoE lightning attack

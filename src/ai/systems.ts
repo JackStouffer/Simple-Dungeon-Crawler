@@ -14,6 +14,7 @@ import {
 import { showLogMessage } from "../ui";
 import { createPassableSightCallback } from "./commands";
 import { FOV } from "../rot";
+import { PLAYER_ID } from "../constants";
 
 /**
  * Lose known target position after a defined number of turns
@@ -183,7 +184,7 @@ export class ConfusableAISystem extends System {
                     confusedState.confused = false;
 
                     const displayName = entity.getOne(DisplayNameComponent);
-                    if (entity.id === globals.Game!.playerId) {
+                    if (entity.id === PLAYER_ID) {
                         showLogMessage("You are no longer confused");
                     } else if (displayName !== undefined) {
                         showLogMessage(`${displayName.name} is no longer confused`);

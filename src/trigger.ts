@@ -1,7 +1,7 @@
 import { Entity, World } from "ape-ecs";
 
 import globals from "./globals";
-import { DamageType } from "./constants";
+import { DamageType, PLAYER_ID } from "./constants";
 import {
     DisplayNameComponent,
     EntityMap,
@@ -91,7 +91,7 @@ export function mudTrigger(actor: Entity): void {
 export function shallowWaterTrigger(actor: Entity): void {
     setWet(actor, 10);
     const wetData = actor.getOne(WetableComponent);
-    if (wetData !== undefined && wetData.wet === false && actor.id === globals.Game?.playerId) {
+    if (wetData !== undefined && wetData.wet === false && actor.id === PLAYER_ID) {
         showLogMessage("You are now wet from stepping in the water");
     }
 }
@@ -99,7 +99,7 @@ export function shallowWaterTrigger(actor: Entity): void {
 export function deepWaterTrigger(actor: Entity): void {
     setWet(actor, 20);
     const wetData = actor.getOne(WetableComponent);
-    if (wetData !== undefined && wetData.wet === false && actor.id === globals.Game?.playerId) {
+    if (wetData !== undefined && wetData.wet === false && actor.id === PLAYER_ID) {
         showLogMessage("You are now wet from stepping in the water");
     }
 
@@ -125,7 +125,7 @@ export function steamTrigger(
     entityMap: EntityMap,
     actor: Entity
 ): void {
-    if (actor.id === globals.Game?.playerId) {
+    if (actor.id === PLAYER_ID) {
         showLogMessage("You take damage from the steam");
     } else {
         const d = actor.getOne(DisplayNameComponent);

@@ -14,7 +14,7 @@ import {
     getHighestZIndexWithTile
 } from "./map";
 import { showLogMessage } from "./ui";
-import { DamageType, ItemType, SpellType, StatusEffectType, TriggerType } from "./constants";
+import { DamageType, ItemType, PLAYER_ID, SpellType, StatusEffectType, TriggerType } from "./constants";
 import {
     createEntity,
     DisplayNameComponent,
@@ -189,7 +189,7 @@ export function setOnFire(target: Entity, damage?: number, turns?: number): bool
     const blocks = target.tags.has("blocks");
 
     if (flammableData === undefined) {
-        if (target.id === globals.Game?.playerId) {
+        if (target.id === PLAYER_ID) {
             // TODO, sound: spell not working sound
             showLogMessage("You were not set on fire because you're immune");
         } else if (displayName !== undefined) {
@@ -205,7 +205,7 @@ export function setOnFire(target: Entity, damage?: number, turns?: number): bool
         wetData.turnsLeft = 0;
         wetData.update();
 
-        if (target.id === globals.Game?.playerId) {
+        if (target.id === PLAYER_ID) {
             // TODO, sound: spell not working sound
             showLogMessage("You were not set on fire because you were wet");
         } else if (displayName !== undefined) {
@@ -229,7 +229,7 @@ export function setOnFire(target: Entity, damage?: number, turns?: number): bool
         frozenData.update();
 
 
-        if (target.id === globals.Game?.playerId) {
+        if (target.id === PLAYER_ID) {
             // TODO, sound: ice shattering sound
             showLogMessage("You were not set on fire because you were frozen");
         } else if (displayName !== undefined) {
@@ -370,7 +370,7 @@ export function setWet(target: Entity, turns?: number): boolean {
             });
         }
 
-        if (target.id === globals.Game?.playerId) {
+        if (target.id === PLAYER_ID) {
             explainWetStatus();
         }
 
@@ -451,7 +451,7 @@ export function setFrozen(target: Entity, turns: number): boolean {
         flammableData.fireDamage = 0;
         flammableData.update();
 
-        if (target.id === globals.Game?.playerId) {
+        if (target.id === PLAYER_ID) {
             // TODO, sound: Dousing sound effect
             showLogMessage("Instead of being frozen, the fire was extinguished");
         } else if (name !== undefined) {

@@ -5,6 +5,7 @@ import { addSpellById } from "./fighter";
 import { Entity } from "ape-ecs";
 import { ItemData, SpellData } from "./skills";
 import { getEntitiesAtLocation, Vector2D } from "./map";
+import { PLAYER_ID } from "./constants";
 
 /**
  * Start the game loop
@@ -29,7 +30,7 @@ export function loopOnce(): void {
  */
 export function giveAllItems(): void {
     if (globals.Game === null) { throw new Error("Global game object is null"); }
-    const player = globals.Game.ecs.getEntity(globals.Game.playerId)!;
+    const player = globals.Game.ecs.getEntity(PLAYER_ID)!;
     const inventoryData = player.getOne(InventoryComponent);
     if (inventoryData === undefined) { throw new Error("Global player does not have an inventory"); }
 
@@ -43,7 +44,7 @@ export function giveAllItems(): void {
  */
 export function giveAllSpells(): void {
     if (globals.Game === null) { throw new Error("Global game object is null"); }
-    const player = globals.Game.ecs.getEntity(globals.Game.playerId)!;
+    const player = globals.Game.ecs.getEntity(PLAYER_ID)!;
     const spellData = player.getOne(SpellsComponent);
     if (spellData === undefined) { throw new Error("Global player cannot learn spells"); }
 

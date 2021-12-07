@@ -11,7 +11,8 @@ import {
     SpellType,
     DeathType,
     Affinity,
-    StatusEffectType
+    StatusEffectType,
+    PLAYER_ID
 } from "./constants";
 import { playBoxBreak } from "./audio";
 import {
@@ -42,7 +43,8 @@ import {
     WetableComponent,
     AreaOfEffectComponent,
     ConfusableAIComponent,
-    ParticleEmitterComponent
+    ParticleEmitterComponent,
+    DisplayNameComponent
 } from "./entity";
 import { SpellData, Area } from "./skills";
 import { getEntitiesAtLocation, Vector2D } from "./map";
@@ -126,8 +128,15 @@ export class DeathSystem extends System {
 
         const graphicData = target.getOne(GraphicsComponent);
         if (graphicData !== undefined && graphicData.sprite !== null) {
+            graphicData.textureKey = "skull_bone";
             graphicData.sprite.texture = globals.Game.textureAtlas["skull_bone"];
             graphicData.update();
+        }
+
+        const displayNameData = target.getOne(DisplayNameComponent);
+        if (displayNameData !== undefined) {
+            displayNameData.name = `Dead ${displayNameData.name}`;
+            displayNameData.update();
         }
 
         // Update the surrounding AI's fear and target data
@@ -281,7 +290,7 @@ export class UpdateSchedulerSystem extends System {
                 case "add":
                     // We want to add the player manually so that the player is
                     // always first to act in a level load
-                    if (entity?.id === globals.Game?.playerId) { continue; }
+                    if (entity?.id === PLAYER_ID) { continue; }
                     globals.Game.scheduler.add(change.entity, true);
                     break;
                 case "destroy":
@@ -336,7 +345,7 @@ export class LevelUpSystem extends System {
                     statsData.update();
                 }
 
-                if (globals.Game !== null && entity.id === globals.Game.playerId) {
+                if (globals.Game !== null && entity.id === PLAYER_ID) {
                     showLogMessage(`You reached level ${levelData.level}!`);
                 }
             }
@@ -718,7 +727,7 @@ export function addSpellById(entity: Entity, id: string, count: number, maxCount
     const spellData = entity.getOne(SpellsComponent);
     if (spellData === undefined || id in spellData.knownSpells) { return false; }
 
-    if (entity.id === globals.Game.playerId) {
+    if (entity.id === PLAYER_ID) {
         globals.gameEventEmitter.emit("tutorial.spellMenu");
 
         if (SpellData[id].type === SpellType.WildDamage) {
