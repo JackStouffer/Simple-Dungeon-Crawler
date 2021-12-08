@@ -2196,6 +2196,19 @@ export class EntityTeam {
     createdWithCommander: boolean = false;
     commanderId: Nullable<string> = null;
 
+    constructor(obj?: { [key: string]: any }) {
+        if (obj !== undefined) {
+            if (!("state" in obj) ||
+                !("memberIds" in obj) ||
+                !("createdWithCommander" in obj) ||
+                !("commanderId" in obj)) {
+                throw new Error("Missing data in Entity Team construction");
+            }
+
+            Object.assign(this, obj);
+        }
+    }
+
     /**
      * Remove dead team members
      */

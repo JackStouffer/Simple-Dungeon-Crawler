@@ -99,8 +99,8 @@ export function levelLoadInteract(actor: Entity, interactable: Entity): void {
     const pos = player.getOne(PositionComponent)!;
 
     saveLevelState(
-        globals.Game.map.name,
         globals.Game.ecs,
+        globals.Game.map,
         globals.Game.entityTeams,
         pos.tilePosition
     );

@@ -47,7 +47,8 @@ const LevelData: { [key: string]: TiledMapOrthogonal } = {
 interface SavedLevelDetails {
     entities: string[],
     teams: string,
-    playerTilePosition: string
+    playerTilePosition: string,
+    visibilityData: string
 }
 const levelEntityStateMap: Map<string, SavedLevelDetails> = new Map();
 
@@ -60,7 +61,7 @@ interface TileDataDetails {
     defaultToExplored?: boolean;
 }
 
-const TileData: { [key: number]: TileDataDetails } = {
+export const TileData: { [key: number]: TileDataDetails } = {
     6: {
         name: "grass",
         textureKey: "grass_1",
@@ -1156,7 +1157,7 @@ export interface VisibilityData {
 }
 
 export class Tile {
-    name: string;
+    type: number;
     sprite: PIXI.Sprite;
     blocks: boolean;
     blocksSight: boolean;
@@ -1164,21 +1165,48 @@ export class Tile {
     pathfindingCost: string = "0";
 
     constructor(
-        name: string,
-        textures: PIXI.ITextureDictionary,
-        textureKey: string,
+        type: number,
+        texture: PIXI.Texture,
         blocks: boolean,
         blocksSight: boolean
     ) {
-        this.name = name;
-        if (textures[textureKey] === undefined) { throw new Error(`No texture ${textureKey} in atlas`); }
-        this.sprite = new PIXI.Sprite(textures[textureKey]);
+        this.type = type;
+        this.sprite = new PIXI.Sprite(texture);
         this.sprite.zIndex = 0;
         this.blocks = blocks;
         this.blocksSight = blocksSight;
         this.reflectivity = 0.18;
     }
 }
+
+function customJSONSerializer(key: string, value: any) {
+    if (value instanceof Map) {
+        return {
+            dataType: "Map",
+            value: Array.from(value.entries())
+        };
+    } else if (value instanceof Set) {
+        return {
+            dataType: "Set",
+            value: Array.from(value.values())
+        };
+    } else {
+        return value;
+    }
+}
+
+function customJSONDeserializer(key: string, value: any) {
+    if (typeof value === "object" && value !== null) {
+        if (value.dataType === "Map") {
+            return new Map(value.value);
+        }
+        if (value.dataType === "Set") {
+            return new Set(value.value);
+        }
+    }
+    return value;
+}
+
 
 /**
  * Is the tile position and is lit by non-ambient light
@@ -1326,8 +1354,9 @@ export function loadTiledMap(
         throw new Error(`No wander bounds layer in map ${level}`);
     }
 
+    let visibilityData: VisibilityData[][] = new Array(sourceData.height);
+    // TODO, speed: This is done twice when the level is reloaded from a save
     // Create the visibility data of the tiles
-    const visibilityData: VisibilityData[][] = new Array(sourceData.height);
     for (let h = 0; h < sourceData.height; h++) {
         visibilityData[h] = new Array(sourceData.width);
         for (let i = 0; i < visibilityData[h].length; i++) {
@@ -1355,9 +1384,8 @@ export function loadTiledMap(
 
             const data = TileData[tile];
             const t = new Tile(
-                data.name,
-                textures,
-                data.textureKey,
+                tile,
+                textures[data.textureKey],
                 data.blocks,
                 data.blocksSight
             );
@@ -1461,17 +1489,13 @@ export function loadTiledMap(
             createEntity(ecs, textures, obj.c!.TypeComponent.type, undefined, obj.id!, obj);
         }
 
-        const teamsData: [number, { [key: string]: any }][] = JSON.parse(
-            levelData.teams, customJSONDeserializer
-        );
-        for (const teamData of teamsData) {
-            const team = new EntityTeam();
-            team.commanderId = teamData[1]["commanderId"];
-            team.createdWithCommander = teamData[1]["createdWithCommander"];
-            team.memberIds = teamData[1]["memberIds"];
-            team.state = teamData[1]["state"];
-            teams.set(teamData[0], team);
-        }
+        visibilityData = JSON.parse(levelData.visibilityData);
+
+        JSON
+            .parse(levelData.teams, customJSONDeserializer)
+            .forEach((t: [number, { [key: string]: any }]) => {
+                teams.set(t[0], new EntityTeam(t[1]));
+            });
 
         playerTilePosition = Vector2D.fromVector(JSON.parse(levelData.playerTilePosition));
     } else {
@@ -1639,37 +1663,9 @@ export function loadTiledMap(
     };
 }
 
-function customJSONSerializer(key: string, value: any) {
-    if (value instanceof Map) {
-        return {
-            dataType: "Map",
-            value: Array.from(value.entries())
-        };
-    } else if (value instanceof Set) {
-        return {
-            dataType: "Set",
-            value: Array.from(value.values())
-        };
-    } else {
-        return value;
-    }
-}
-
-function customJSONDeserializer(key: string, value: any) {
-    if (typeof value === "object" && value !== null) {
-        if (value.dataType === "Map") {
-            return new Map(value.value);
-        }
-        if (value.dataType === "Set") {
-            return new Set(value.value);
-        }
-    }
-    return value;
-}
-
 export function saveLevelState(
-    levelName: string,
     ecs: World,
+    map: GameMap,
     teams: EntityTeamMap,
     playerTilePosition: Vector2D
 ): void {
@@ -1684,10 +1680,11 @@ export function saveLevelState(
         }
     }
 
-    levelEntityStateMap.set(levelName, {
+    levelEntityStateMap.set(map.name, {
         playerTilePosition: JSON.stringify(playerTilePosition),
         entities,
-        teams: JSON.stringify(teams, customJSONSerializer)
+        teams: JSON.stringify(teams, customJSONSerializer),
+        visibilityData: JSON.stringify(map.visibilityData)
     });
 }
 
