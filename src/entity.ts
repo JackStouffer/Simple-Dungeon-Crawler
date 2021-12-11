@@ -590,6 +590,17 @@ interface ObjectDataDetails {
 }
 
 export const ObjectData: { [key: string]: ObjectDataDetails } = {
+    "node":{
+        staticallyKnownComponents: {
+            c: {
+                TypeComponent: {
+                    entityType: "node",
+                    race: null,
+                    classification: null
+                }
+            }
+        }
+    },
     "door": {
         staticallyKnownComponents: {
             tags: ["blocks", "blocksSight"],
@@ -2323,7 +2334,7 @@ export function createEntity(
     type: string,
     tilePosition?: Vector2D,
     id?: string,
-    staticData?: IEntityConfig
+    dataFromSave?: IEntityConfig
 ): Entity {
     if (globals.Game === null) { throw new Error("Global game is null"); }
 
@@ -2331,16 +2342,26 @@ export function createEntity(
     hash = hash & hash; // Convert to 32bit integer
     const entityId = id ?? `${type}-${hash.toString(16)}`;
 
+    if (!(type in ObjectData)) { throw new Error(`${type} is not valid object id`); }
+    const data = ObjectData[type];
+
     let entity: Entity;
-    if (staticData !== undefined) {
+    if (dataFromSave !== undefined) {
         entity = ecs.createEntity(assignIn(
             {},
             { id: entityId },
-            staticData
+            dataFromSave
         ));
+
+        // TODO, cleanup: We're breaking the rule here of components just as data and it's
+        // coming back to bite us here. PlannerAIComponent needs to be rethought
+        if (data?.addPlannerAI === true && entity.has(PlannerAIComponent) === true) {
+            const aiState = entity.getOne(PlannerAIComponent)!;
+            const { planner } = createPlanner(aiState.actions);
+            aiState.planner = planner;
+            aiState.update();
+        }
     } else {
-        if (!(type in ObjectData)) { throw new Error(`${type} is not valid object id`); }
-        const data = ObjectData[type];
         entity = ecs.createEntity(assignIn(
             {},
             { id: entityId },

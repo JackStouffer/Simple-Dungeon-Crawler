@@ -1408,23 +1408,16 @@ export function loadTiledMap(
 
     // First create all of the nodes
     nodeLayer.objects.forEach(o => {
-        ecs.createEntity({
-            id: o.id.toString(10),
-            c: {
-                TypeComponent: {
-                    entityType: "node",
-                    race: null,
-                    classification: null
-                },
-                PositionComponent: {
-                    worldPosition: new Vector2D(o.x, o.y),
-                    tilePosition: new Vector2D(
-                        Math.floor(o.x / tileSize),
-                        Math.floor(o.y / tileSize)
-                    )
-                }
-            }
-        });
+        createEntity(
+            ecs,
+            textures,
+            "node",
+            new Vector2D(
+                Math.floor(o.x / tileSize),
+                Math.floor(o.y / tileSize)
+            ),
+            o.id.toString(10)
+        );
     });
 
     // Do this is two passes because each node could reference
@@ -1486,7 +1479,7 @@ export function loadTiledMap(
 
         for (const entityData of levelData.entities) {
             const obj: IEntityConfig = JSON.parse(entityData, customJSONDeserializer);
-            createEntity(ecs, textures, obj.c!.TypeComponent.type, undefined, obj.id!, obj);
+            createEntity(ecs, textures, obj.c!.TypeComponent.entityType, undefined, obj.id!, obj);
         }
 
         visibilityData = JSON.parse(levelData.visibilityData);
