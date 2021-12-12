@@ -2421,6 +2421,8 @@ export function createEntity(
                 { code: "KeyX", keyDisplay: "X", description: "Pass Turn", continuous: false, command: () => new NoOpCommand(true) }
             ];
 
+            // TODO, cleanup: We're breaking the rule here of components just as data and it's
+            // coming back to bite us here. InputHandlingComponent needs to be rethought
             entity.addComponent({
                 type: "InputHandlingComponent",
                 state: PlayerState.Combat,

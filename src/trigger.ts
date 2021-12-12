@@ -49,7 +49,8 @@ export function fireTrigger(
             actor,
             triggerData.damage,
             false,
-            DamageType.Fire
+            DamageType.Fire,
+            trigger.id
         );
     }
 }
@@ -123,7 +124,8 @@ export function deepWaterTrigger(actor: Entity): void {
 export function steamTrigger(
     ecs: World,
     entityMap: EntityMap,
-    actor: Entity
+    actor: Entity,
+    trigger: Entity
 ): void {
     if (actor.id === PLAYER_ID) {
         showLogMessage("You take damage from the steam");
@@ -140,7 +142,8 @@ export function steamTrigger(
         actor,
         7,
         false,
-        DamageType.Water
+        DamageType.Water,
+        trigger.id
     );
 }
 

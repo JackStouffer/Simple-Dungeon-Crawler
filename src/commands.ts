@@ -535,10 +535,9 @@ export class GoToLocationCommand implements Command {
                             mudTrigger(entity);
                             break;
                         case TriggerType.Steam:
-                            steamTrigger(ecs, globals.Game!.entityMap, entity);
+                            steamTrigger(ecs, globals.Game!.entityMap, entity, e);
                             break;
                         case TriggerType.Ice: {
-                            // TODO: pushing directly onto the command queue sort of sucks
                             globals.Game!.commandQueue.push(
                                 new GoToLocationCommand(
                                     this.entityId,
@@ -739,7 +738,7 @@ export class PushBackCommand implements Command {
                             mudTrigger(entity);
                             break;
                         case TriggerType.Steam:
-                            steamTrigger(ecs, globals.Game!.entityMap, entity);
+                            steamTrigger(ecs, globals.Game!.entityMap, entity, e);
                             break;
                         case TriggerType.Ice:
                             this.numTiles++;

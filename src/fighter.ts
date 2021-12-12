@@ -559,7 +559,8 @@ export function takeDamage(
     target: Entity,
     damage: number,
     critical: boolean,
-    damageType: DamageType
+    damageType: DamageType,
+    damageSource?: string
 ): boolean {
     let calculatedDamage = damage;
     const hpData = target.getOne(HitPointsComponent);
@@ -586,7 +587,9 @@ export function takeDamage(
     // the target and that the target is in line of sight
     // TODO: Target acquisition code
     const aiState = target.getOne(PlannerAIComponent);
-    if (aiState !== undefined && aiState.knowsTargetPosition === false) {
+    if (aiState !== undefined &&
+        aiState.knowsTargetPosition === false &&
+        damageSource === PLAYER_ID) {
         // Bonus damage for sneak attack
         if (calculatedDamage > 0 &&
             (damageAffinity === null || damageAffinity[damageType] !== Affinity.nullified)) {
@@ -666,7 +669,9 @@ export function attack(
 
     if (damage > 0) {
         const experience = targetLevelData?.experienceGiven ?? 0;
-        const killed = takeDamage(ecs, entityMap, target, damage, critical, DamageType.Physical);
+        const killed = takeDamage(
+            ecs, entityMap, target, damage, critical, DamageType.Physical, attacker.id
+        );
         if (killed && attackerLevelData !== undefined) {
             attackerLevelData.experience += experience;
             attackerLevelData.update();

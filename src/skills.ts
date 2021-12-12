@@ -606,7 +606,8 @@ export function castDamageSpell(
                     entitiesToDamage[i],
                     item.value,
                     false,
-                    item.damageType ?? DamageType.Physical
+                    item.damageType ?? DamageType.Physical,
+                    user.id
                 );
             }
         } else {
@@ -616,7 +617,8 @@ export function castDamageSpell(
                 targetedEntity,
                 item.value,
                 false,
-                item.damageType ?? DamageType.Physical
+                item.damageType ?? DamageType.Physical,
+                user.id
             );
         }
     } else {
@@ -626,7 +628,8 @@ export function castDamageSpell(
             targetedEntity,
             item.value,
             false,
-            item.damageType ?? DamageType.Physical
+            item.damageType ?? DamageType.Physical,
+            user.id
         );
     }
 
@@ -668,7 +671,8 @@ function fireball(
                         entity,
                         item.value,
                         false,
-                        item.damageType ?? DamageType.Physical
+                        item.damageType ?? DamageType.Physical,
+                        user.id
                     );
 
                     const stats = getEffectiveStatData(ecs, entityMap, entity);
@@ -1184,7 +1188,8 @@ function castAreaOfEffect(
                         entity,
                         item.value,
                         false,
-                        item.damageType ?? DamageType.Physical
+                        item.damageType ?? DamageType.Physical,
+                        user.id
                     );
 
                     const stats = getEffectiveStatData(ecs, entityMap, entity);
