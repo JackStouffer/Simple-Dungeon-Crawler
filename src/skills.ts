@@ -192,7 +192,7 @@ export function setOnFire(target: Entity, damage?: number, turns?: number): bool
         if (target.id === PLAYER_ID) {
             // TODO, sound: spell not working sound
             showLogMessage("You were not set on fire because you're immune");
-        } else if (displayName !== undefined) {
+        } else if (displayName !== undefined && target.tags.has("sentient")) {
             // TODO, sound: spell not working sound
             showLogMessage(`${displayName.name} was not set on fire because it is immune`);
         }
@@ -302,7 +302,7 @@ export function setOnFire(target: Entity, damage?: number, turns?: number): bool
                     emitterLifetime: -1,
                     frequency: 0.001,
                     lifetime: { min: 0.05, max: 0.1 },
-                    maxParticles: 1000,
+                    maxParticles: 500,
                     maxSpeed: 0,
                     noRotation: false,
                     pos: { x: 8, y: 8 },
@@ -310,7 +310,7 @@ export function setOnFire(target: Entity, damage?: number, turns?: number): bool
                     scale: { start: .2, end: 1, minimumScaleMultiplier: 1 },
                     spawnCircle: { x: 0, y: 0, r: 10 },
                     spawnType: "circle",
-                    speed: { start: 300, end: 200, minimumSpeedMultiplier: 1 },
+                    speed: { start: 230, end: 150, minimumSpeedMultiplier: 1 },
                     startRotation: { min: 265, max: 275 }
                 }
             }
@@ -1040,12 +1040,14 @@ export function castSilence(
     const targetName = targetedEntity.getOne(DisplayNameComponent)!;
     const targetSpellData = targetedEntity.getOne(SpellsComponent);
     const targetSilenceableData = targetedEntity.getOne(SilenceableComponent);
-    if (targetSilenceableData === undefined) {
+    if (targetSilenceableData === undefined && targetedEntity.tags.has("sentient")) {
         showLogMessage(`${targetName.name} is immune to silence effects`);
         return false;
-    }
-    if (targetSpellData === undefined) {
+    } else if (targetSpellData === undefined && targetedEntity.tags.has("sentient")) {
         showLogMessage(`${targetName.name} cannot be silenced because it doesn't know any spells`);
+        return false;
+    } else if (targetSilenceableData === undefined || targetSpellData === undefined) {
+        showLogMessage(`${targetName.name} cannot be silenced`);
         return false;
     }
 
@@ -1210,6 +1212,14 @@ function castAreaOfEffect(
  * to the implementation of the item's behavior
  */
 export const ItemData: { [key: string]: ItemDataDetails } = {
+    "apple": {
+        id: "apple",
+        displayName: "Apple",
+        description: "Heals a small amount of health when eaten",
+        value: 5,
+        type: ItemType.HealSelf,
+        useFunc: castHeal
+    },
     "health_potion_weak": {
         id: "health_potion_weak",
         displayName: "Weak Potion of Healing",
@@ -1309,23 +1319,6 @@ export const ItemData: { [key: string]: ItemDataDetails } = {
             }
         }
     },
-    "lightning_scroll_weak": {
-        id: "lightning_scroll_weak",
-        displayName: "Weak Scroll of Lightning Bolt",
-        description: "Conjure a lightning bolt that damages a target with lightning damage",
-        value: 20,
-        type: ItemType.DamageScroll,
-        damageType: DamageType.Electric,
-        range: 9,
-        useFunc: castDamageSpell,
-        effect: "lightning",
-        lightning: {
-            duration: 500,
-            segments: 20,
-            strikes: 1,
-            fadeOut: 300
-        }
-    },
     "lightning_scroll": {
         id: "lightning_scroll",
         displayName: "Scroll of Lightning",
@@ -1341,61 +1334,6 @@ export const ItemData: { [key: string]: ItemDataDetails } = {
             segments: 20,
             strikes: 1,
             fadeOut: 300
-        }
-    },
-    "lightning_scroll_strong": {
-        id: "lightning_scroll_strong",
-        displayName: "Strong Scroll of Lightning",
-        description: "Conjure a lightning bolt that damages a target with lightning damage",
-        value: 100,
-        type: ItemType.DamageScroll,
-        damageType: DamageType.Electric,
-        useFunc: castDamageSpell,
-        range: 9,
-        effect: "lightning",
-        lightning: {
-            duration: 500,
-            segments: 20,
-            strikes: 1,
-            fadeOut: 300
-        }
-    },
-    "fireball_scroll_weak": {
-        id: "fireball_scroll_weak",
-        displayName: "Weak Scroll of Fire",
-        description: "Conjure a ball of fire that damages a target with fire damage",
-        value: 20,
-        type: ItemType.DamageScroll,
-        damageType: DamageType.Fire,
-        range: 9,
-        useFunc: castDamageSpell,
-        statusEffect: StatusEffectType.OnFire,
-        effect: "particles",
-        particles: {
-            particleImages: ["particle_cloud"],
-            particleLocation: "target",
-            particleConfig: {
-                acceleration: { x: 0, y: 0 },
-                addAtBack: false,
-                alpha: { start: 0.84, end: 0.4 },
-                angleStart: 0,
-                blendMode: "normal",
-                color: { start: "#f7a134", end: "#fa0303" },
-                emitterLifetime: 0.35,
-                frequency: 0.04,
-                lifetime: { min: 0.3, max: 0.35 },
-                maxParticles: 80,
-                maxSpeed: 0,
-                noRotation: false,
-                particleSpacing: 0,
-                particlesPerWave: 40,
-                pos: { x: 0, y: 0 },
-                rotationSpeed: { min: 0, max: 0 },
-                scale: { start: 1, end: 0.3, minimumScaleMultiplier: 1 },
-                spawnType: "burst",
-                speed: { start: 200, end: 100, minimumSpeedMultiplier: 1 },
-                startRotation: { min: 0, max: 0 },
-            }
         }
     },
     "fireball_scroll": {
@@ -1436,60 +1374,6 @@ export const ItemData: { [key: string]: ItemDataDetails } = {
             }
         }
     },
-    "fireball_scroll_strong": {
-        id: "fireball_scroll_strong",
-        displayName: "Strong Scroll of Fire",
-        description: "Conjure a ball of fire that damages a target with fire damage",
-        value: 100,
-        type: ItemType.DamageScroll,
-        damageType: DamageType.Fire,
-        range: 9,
-        useFunc: castDamageSpell,
-        statusEffect: StatusEffectType.OnFire,
-        effect: "particles",
-        particles: {
-            particleImages: ["particle_cloud"],
-            particleLocation: "target",
-            particleConfig: {
-                acceleration: { x: 0, y: 0 },
-                addAtBack: false,
-                alpha: { start: 0.84, end: 0.4 },
-                angleStart: 0,
-                blendMode: "normal",
-                color: { start: "#f7a134", end: "#fa0303" },
-                emitterLifetime: 0.35,
-                frequency: 0.04,
-                lifetime: { min: 0.3, max: 0.35 },
-                maxParticles: 80,
-                maxSpeed: 0,
-                noRotation: false,
-                particleSpacing: 0,
-                particlesPerWave: 40,
-                pos: { x: 0, y: 0 },
-                rotationSpeed: { min: 0, max: 0 },
-                scale: { start: 1, end: 0.3, minimumScaleMultiplier: 1 },
-                spawnType: "burst",
-                speed: { start: 200, end: 100, minimumSpeedMultiplier: 1 },
-                startRotation: { min: 0, max: 0 },
-            }
-        }
-    },
-    "lightning_scroll_weak_wild": {
-        id: "lightning_scroll_weak_wild",
-        displayName: "Weak Scroll of Wild Lightning",
-        description: "Summons a lightning bolt that's beyond your control and attacks randomly with lightning damage",
-        value: 50,
-        type: ItemType.WildDamageScroll,
-        damageType: DamageType.Electric,
-        useFunc: castDamageSpell,
-        effect: "lightning",
-        lightning: {
-            duration: 500,
-            segments: 20,
-            strikes: 1,
-            fadeOut: 300
-        }
-    },
     "lightning_scroll_wild": {
         id: "lightning_scroll_wild",
         displayName: "Scroll of Wild Lightning",
@@ -1506,101 +1390,11 @@ export const ItemData: { [key: string]: ItemDataDetails } = {
             fadeOut: 300
         }
     },
-    "lightning_scroll_strong_wild": {
-        id: "lightning_scroll_strong_wild",
-        displayName: "Strong Scroll of Wild Lightning",
-        description: "Summons a lightning bolt that's beyond your control and attacks randomly with lightning damage",
-        value: 150,
-        type: ItemType.WildDamageScroll,
-        damageType: DamageType.Electric,
-        useFunc: castDamageSpell,
-        effect: "lightning",
-        lightning: {
-            duration: 500,
-            segments: 20,
-            strikes: 1,
-            fadeOut: 300
-        }
-    },
-    "fireball_scroll_weak_wild": {
-        id: "fireball_scroll_weak_wild",
-        displayName: "Weak Scroll of Wild Fire",
-        description: "Summons a ball of fire that's beyond your control and attacks randomly with fire damage",
-        value: 50,
-        type: ItemType.WildDamageScroll,
-        damageType: DamageType.Fire,
-        useFunc: castDamageSpell,
-        statusEffect: StatusEffectType.OnFire,
-        effect: "particles",
-        particles: {
-            particleImages: ["particle_cloud"],
-            particleLocation: "target",
-            particleConfig: {
-                acceleration: { x: 0, y: 0 },
-                addAtBack: false,
-                alpha: { start: 0.84, end: 0.4 },
-                angleStart: 0,
-                blendMode: "normal",
-                color: { start: "#f7a134", end: "#fa0303" },
-                emitterLifetime: 0.35,
-                frequency: 0.04,
-                lifetime: { min: 0.3, max: 0.35 },
-                maxParticles: 80,
-                maxSpeed: 0,
-                noRotation: false,
-                particleSpacing: 0,
-                particlesPerWave: 40,
-                pos: { x: 0, y: 0 },
-                rotationSpeed: { min: 0, max: 0 },
-                scale: { start: 1, end: 0.3, minimumScaleMultiplier: 1 },
-                spawnType: "burst",
-                speed: { start: 200, end: 100, minimumSpeedMultiplier: 1 },
-                startRotation: { min: 0, max: 0 },
-            }
-        }
-    },
     "fireball_scroll_wild": {
         id: "fireball_scroll_wild",
         displayName: "Scroll of Wild Fire",
         description: "Summons a ball of fire that's beyond your control and attacks randomly with fire damage",
         value: 100,
-        type: ItemType.WildDamageScroll,
-        damageType: DamageType.Fire,
-        useFunc: castDamageSpell,
-        statusEffect: StatusEffectType.OnFire,
-        effect: "particles",
-        particles: {
-            particleImages: ["particle_cloud"],
-            particleLocation: "target",
-            particleConfig: {
-                acceleration: { x: 0, y: 0 },
-                addAtBack: false,
-                alpha: { start: 0.84, end: 0.4 },
-                angleStart: 0,
-                blendMode: "normal",
-                color: { start: "#f7a134", end: "#fa0303" },
-                emitterLifetime: 0.35,
-                frequency: 0.04,
-                lifetime: { min: 0.3, max: 0.35 },
-                maxParticles: 80,
-                maxSpeed: 0,
-                noRotation: false,
-                particleSpacing: 0,
-                particlesPerWave: 40,
-                pos: { x: 0, y: 0 },
-                rotationSpeed: { min: 0, max: 0 },
-                scale: { start: 1, end: 0.3, minimumScaleMultiplier: 1 },
-                spawnType: "burst",
-                speed: { start: 200, end: 100, minimumSpeedMultiplier: 1 },
-                startRotation: { min: 0, max: 0 },
-            }
-        }
-    },
-    "fireball_scroll_strong_wild": {
-        id: "fireball_scroll_strong_wild",
-        displayName: "Strong Scroll of Wild Fire",
-        description: "Summons a ball of fire that's beyond your control and attacks randomly with fire damage",
-        value: 150,
         type: ItemType.WildDamageScroll,
         damageType: DamageType.Fire,
         useFunc: castDamageSpell,

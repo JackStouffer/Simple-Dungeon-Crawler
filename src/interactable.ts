@@ -32,7 +32,12 @@ export function giveItemsInteract(actor: Entity, interactable: Entity) {
         if (items.length > 0) {
             for (let i = 0; i < items.length; i++) {
                 const item = items[i];
-                showLogMessage(`Found a ${ItemData[item.id].displayName}`);
+                if (item.count === 1) {
+                    showLogMessage(`Found a ${ItemData[item.id].displayName}`);
+                } else {
+                    showLogMessage(`Found ${item.count} ${ItemData[item.id].displayName}s`);
+                }
+
                 addItem(actorInventory, item.id, item.count);
                 useItem(interactable, item.id);
             }

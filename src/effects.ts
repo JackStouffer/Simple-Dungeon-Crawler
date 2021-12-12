@@ -56,7 +56,7 @@ export class OnFireSystem extends System {
                     false,
                     DamageType.Fire
                 );
-                flammableData.turnsLeft--;
+                --flammableData.turnsLeft;
 
                 if (flammableData.turnsLeft <= 0) {
                     flammableData.onFire = false;

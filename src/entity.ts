@@ -1264,8 +1264,8 @@ export const ObjectData: { [key: string]: ObjectDataDetails } = {
                     turnsLeft: 0
                 },
                 HitPointsComponent: {
-                    hp: 10,
-                    maxHp: 10,
+                    hp: 5,
+                    maxHp: 5,
                     onDeath: DeathType.RemoveFromWorld
                 }
             }
@@ -1736,6 +1736,11 @@ export const ObjectData: { [key: string]: ObjectDataDetails } = {
                     confused: false,
                     turnsLeft: 0
                 },
+                FearAIComponent: {
+                    fear: 0,
+                    isAfraidThreshold: 5,
+                    isCowering: false
+                },
                 SpeedComponent: {
                     speed: BASE_SPEED,
                     maxTilesPerMove: 4
@@ -1759,10 +1764,10 @@ export const ObjectData: { [key: string]: ObjectDataDetails } = {
                 },
                 DamageAffinityComponent: {
                     [DamageType.Physical]: Affinity.normal,
-                    [DamageType.Fire]: Affinity.normal,
+                    [DamageType.Fire]: Affinity.weak,
                     [DamageType.Electric]: Affinity.nullified,
-                    [DamageType.Water]: Affinity.weak,
-                    [DamageType.Nature]: Affinity.normal,
+                    [DamageType.Water]: Affinity.normal,
+                    [DamageType.Nature]: Affinity.strong,
                     [DamageType.Ice]: Affinity.normal
                 },
                 FlammableComponent: {

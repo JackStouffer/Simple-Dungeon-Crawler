@@ -1526,10 +1526,12 @@ export function loadTiledMap(
 
                         if (inventory !== null) {
                             const items: Map<string, number> = new Map();
-                            inventory
-                                .split(",")
-                                .filter((i: string) => i in ItemData)
-                                .forEach((i: string) => items.set(i, 1));
+                            for (const i of inventory.split(",")) {
+                                if (i in ItemData) {
+                                    let current = items.get(i) ?? 0;
+                                    items.set(i, ++current);
+                                }
+                            }
 
                             const existingInventory = entity.getOne(InventoryComponent);
                             if (existingInventory === undefined) {
