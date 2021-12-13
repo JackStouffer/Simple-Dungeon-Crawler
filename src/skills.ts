@@ -1580,7 +1580,7 @@ export const SpellData: { [key: string]: SpellDataDetails } = {
         id: "fireball_targeted",
         displayName: "Fireball",
         description: "Hurl a ball of fire towards a specific spot that deals fire damage and has a chance to catch targets on fire. Explodes in a large radius, possibly dealing self-damage or friendly fire",
-        baseCastCount: 3,
+        baseCastCount: 2,
         value: 20,
         type: SpellType.DamageOther,
         damageType: DamageType.Fire,

@@ -22,6 +22,7 @@ import { ShowSpeechBubbleCommand } from "../commands";
 import { Nullable } from "../util";
 import * as BanditDialogJSON from "../dialog/bandit.json";
 import * as GoblinDialogJSON from "../dialog/goblin.json";
+import * as DogDialogJSON from "../dialog/dog.json";
 
 // TODO: Add line for when ally is killed
 // TODO: add logic where some lines can only be said once in a whole team
@@ -55,8 +56,10 @@ export const dialogByClassification: {
     [key: string]: DialogData
 } = {
     "bandit": (BanditDialogJSON as any).default as DialogData,
-    "goblin": (GoblinDialogJSON as any).default as DialogData
+    "goblin": (GoblinDialogJSON as any).default as DialogData,
+    "dog": (DogDialogJSON as any).default as DialogData
 };
+Object.freeze(dialogByClassification);
 
 /**
  * Given a AI and the current state of the game world, generate a list of facts

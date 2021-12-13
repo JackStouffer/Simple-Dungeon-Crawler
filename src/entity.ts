@@ -2107,6 +2107,7 @@ export const ObjectData: { [key: string]: ObjectDataDetails } = {
     },
     "dog": {
         addPlannerAI: true,
+        addDialogMemory: true,
         nonAlertSightRange: 5,
         alertSightRange: 8,
         lowHealthThreshold: 0.5,
@@ -2117,7 +2118,8 @@ export const ObjectData: { [key: string]: ObjectDataDetails } = {
             "goToEnemy",
             "meleeAttack",
             "runAway",
-            "confusedWander"
+            "confusedWander",
+            "alertAllies"
         ],
         staticallyKnownComponents: {
             tags: ["blocks", "sentient", "moveable"],

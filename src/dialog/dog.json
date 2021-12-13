@@ -1,0 +1,27 @@
+{
+    "rules": [
+        {
+            "name": "dog_sees_player",
+            "respondingTo": null,
+            "rules": [
+                ["race", "=", "dog"],
+                ["said_dog_sees_player", "=", false],
+                ["has_target_in_sight", "=", true],
+                ["has_alive_allies", "=", true],
+                ["team_state", "=", "passive"],
+                ["on_fire", "=", false],
+                ["is_confused", "=", false],
+                ["is_afraid", "=", false]
+            ],
+            "dialog": [
+                "BARK BARK"
+            ],
+            "aiStateChange": {
+                "currentOrder": "alert_allies"
+            },
+            "dialogMemoryChange": {
+                "said_dog_sees_player": true
+            }
+        }
+    ]
+}
