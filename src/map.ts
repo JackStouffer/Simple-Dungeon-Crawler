@@ -286,6 +286,13 @@ export const TileData: { [key: number]: TileDataDetails } = {
         blocksSight: false,
         reflectivity: 0.18
     },
+    1264: {
+        name: "Torch",
+        textureKey: "sprite1314",
+        blocks: false,
+        blocksSight: false,
+        reflectivity: 0.18
+    },
     1432: {
         name: "Path",
         textureKey: "sprite1420",

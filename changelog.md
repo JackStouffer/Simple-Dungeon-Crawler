@@ -5,6 +5,12 @@
 _In Development_
 
 * Gameplay
+  * Leaving a level now saves the level entity state and reloads that state when returning
+    * Using a door to return to a level no longer teleports you back to the beginning of the level
+  * Lightning bugs now have fear and are weak to fire
+  * Added apples as an item which restores a low amount of health
+  * Give a better log message when picking up multiple items at once
+  * Allow entities to be defined having multiple of the same item in the map file
   * Fixed a bug where being alerted by a dead body would cause mages not to attack
 * Graphical
   * Added visual indicators for health values a-la the damage indicators

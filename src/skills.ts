@@ -1588,7 +1588,7 @@ export const SpellData: { [key: string]: SpellDataDetails } = {
         useFunc: castFireballTargeted,
         areaOfEffect: {
             type: "circle",
-            radius: 3
+            radius: 4
         },
         statusEffect: StatusEffectType.OnFire,
         effect: "particles",
@@ -1604,7 +1604,7 @@ export const SpellData: { [key: string]: SpellDataDetails } = {
                 color: { start: "#f7a134", end: "#fa0303" },
                 emitterLifetime: 0.35,
                 frequency: 0.04,
-                lifetime: { min: 0.3, max: 0.35 },
+                lifetime: { min: 0.32, max: 0.37 },
                 maxParticles: 80,
                 maxSpeed: 0,
                 noRotation: false,
@@ -1614,7 +1614,7 @@ export const SpellData: { [key: string]: SpellDataDetails } = {
                 rotationSpeed: { min: 0, max: 0 },
                 scale: { start: 1, end: 0.3, minimumScaleMultiplier: 1 },
                 spawnType: "burst",
-                speed: { start: 200, end: 100, minimumSpeedMultiplier: 1 },
+                speed: { start: 250, end: 150, minimumSpeedMultiplier: 1 },
                 startRotation: { min: 0, max: 0 },
             }
         }
