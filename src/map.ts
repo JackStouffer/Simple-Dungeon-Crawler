@@ -13,6 +13,7 @@ import * as tutorial_002 from "./maps/tutorial_002.json";
 import * as forrest_001 from "./maps/forrest_001.json";
 import * as forrest_001_interior_001 from "./maps/forrest_001_interior_001.json";
 import * as forrest_001_interior_002 from "./maps/forrest_001_interior_002.json";
+import * as cave_001 from "./maps/cave_001.json";
 
 import {
     createEntity,
@@ -42,6 +43,7 @@ const LevelData: { [key: string]: TiledMapOrthogonal } = {
     forrest_001: (forrest_001 as any).default as TiledMapOrthogonal,
     forrest_001_interior_001: (forrest_001_interior_001 as any).default as TiledMapOrthogonal,
     forrest_001_interior_002: (forrest_001_interior_002 as any).default as TiledMapOrthogonal,
+    cave_001: (cave_001 as any).default as TiledMapOrthogonal,
 };
 
 interface SavedLevelDetails {
@@ -69,6 +71,21 @@ export const TileData: { [key: number]: TileDataDetails } = {
         blocksSight: false,
         reflectivity: 0.18
     },
+    7: {
+        name: "dirt",
+        textureKey: "mud_1",
+        blocks: false,
+        blocksSight: false,
+        reflectivity: 0.18
+    },
+    8: {
+        name: "stone",
+        textureKey: "stone_1",
+        blocks: true,
+        blocksSight: true,
+        reflectivity: 0.18,
+        defaultToExplored: false
+    },
     25: {
         name: "grass",
         textureKey: "barrel_3",
@@ -86,6 +103,13 @@ export const TileData: { [key: number]: TileDataDetails } = {
     184: {
         name: "grass",
         textureKey: "grass_2",
+        blocks: false,
+        blocksSight: false,
+        reflectivity: 0.18
+    },
+    185: {
+        name: "dirt",
+        textureKey: "mud_2",
         blocks: false,
         blocksSight: false,
         reflectivity: 0.18
@@ -205,6 +229,13 @@ export const TileData: { [key: number]: TileDataDetails } = {
     543: {
         name: "wood floor",
         textureKey: "sprite549",
+        blocks: false,
+        blocksSight: false,
+        reflectivity: 0.18
+    },
+    548: {
+        name: "bed roll",
+        textureKey: "green_bedroll_right",
         blocks: false,
         blocksSight: false,
         reflectivity: 0.18

@@ -8,7 +8,11 @@ import {
     LoadLevelComponent,
     removeEntity,
     HitPointsComponent,
-    PositionComponent
+    PositionComponent,
+    FlammableComponent,
+    SpeedEffectComponent,
+    HitPointsEffectComponent,
+    WetableComponent
 } from "./entity";
 import { addItem, getItems, useItem } from "./inventory";
 import { showLogMessage } from "./ui";
@@ -118,21 +122,52 @@ export function levelLoadInteract(actor: Entity, interactable: Entity): void {
     }
 }
 
-// TODO: rest point does not remove statues
-export function restPointInteract(entity: Entity): void {
+export function restPointInteract(entity: Entity, interactable: Entity): void {
+    // Heal
     const hpData = entity.getOne(HitPointsComponent);
-    if (hpData !== undefined) {
+    if (hpData !== undefined && hpData.hp < hpData.maxHp) {
         hpData.hp = hpData.maxHp;
         hpData.update();
     }
 
+    // Regen spell casts
     const entitySpellData = entity.getOne(SpellsComponent);
     if (entitySpellData !== undefined) {
         const spells = getKnownSpells(entitySpellData);
         for (const spell of spells) {
-            entitySpellData.knownSpells[spell.id].count = spell.maxCount;
+            if (entitySpellData.knownSpells[spell.id].count < spell.maxCount) {
+                entitySpellData.knownSpells[spell.id].count = spell.maxCount;
+            }
         }
     }
 
+    // TODO, bug: Does not remove particle effects
+    const flammableData = entity.getOne(FlammableComponent);
+    if (flammableData !== undefined) {
+        flammableData.onFire = false;
+        flammableData.turnsLeft = 0;
+        flammableData.update();
+    }
+
+    // TODO, bug: Does not remove particle effects
+    const wetData = entity.getOne(WetableComponent);
+    if (wetData !== undefined) {
+        wetData.wet = false;
+        wetData.turnsLeft = 0;
+        wetData.update();
+    }
+
+    const speedEffectData = entity.getComponents(SpeedEffectComponent);
+    for (const s of speedEffectData.values()) {
+        s.destroy();
+    }
+
+    const hpEffectData = entity.getComponents(HitPointsEffectComponent);
+    for (const h of hpEffectData.values()) {
+        h.destroy();
+    }
+
+    if (globals.Game === null) { throw new Error("Global game object is null"); }
+    removeEntity(globals.Game.ecs, interactable);
     showLogMessage("You are now rested");
 }

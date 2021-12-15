@@ -14,7 +14,6 @@ import {
     StatusEffectType,
     PLAYER_ID
 } from "./constants";
-import { playBoxBreak } from "./audio";
 import {
     createEntity,
     DamageAffinityComponent,
@@ -39,7 +38,6 @@ import {
     StatsComponent,
     StatsEffectComponent,
     TriggerComponent,
-    TypeComponent,
     WetableComponent,
     AreaOfEffectComponent,
     ConfusableAIComponent,
@@ -209,14 +207,8 @@ export class DeathSystem extends System {
      * if there were items in the inventory.
      */
     removeDeath(target: Entity): void {
-        if (globals.Game === null) { throw new Error("Global game object is null"); }
+        if (globals.Game === null) { throw new Error("Global game is null"); }
         if (globals.gameEventEmitter === null) { throw new Error("Global gameEventEmitter object is null"); }
-
-        const particleData = target.getOne(ParticleEmitterComponent);
-        if (particleData !== undefined) {
-            particleData.emitter?.destroy();
-            target.removeComponent(particleData);
-        }
 
         const inventoryData = target.getOne(InventoryComponent);
         const positionData = target.getOne(PositionComponent);
@@ -233,15 +225,6 @@ export class DeathSystem extends System {
             );
             const itemInventory = item.getOne(InventoryComponent);
             itemInventory!.inventory = inventoryData.inventory;
-        }
-
-        // TODO, sound: define these sounds in data on the entity or fighter instance or something
-        const typeData = target.getOne(TypeComponent);
-        if (typeData?.entityType === "crate") {
-            playBoxBreak();
-        }
-        if (typeData?.entityType === "barrel") {
-            playBoxBreak();
         }
 
         removeEntity(this.world, target);

@@ -5,14 +5,20 @@
 _In Development_
 
 * Gameplay
+  * Major level redesigns
   * Leaving a level now saves the level entity state and reloads that state when returning
     * Using a door to return to a level no longer teleports you back to the beginning of the level
   * Lightning bugs now have fear and are weak to fire
   * Added apples as an item which restores a low amount of health
   * Give a better log message when picking up multiple items at once
-  * Allow entities to be defined having multiple of the same item in the map file
-  * Fixed a bug where being alerted by a dead body would cause mages not to attack
+  * Allow entity inventories to be defined with multiple of the same item in the map file
+  * Dogs can now bark to alert their allies
+  * Rest points now heal status aliments
+  * Rest points now disappear after use
+  * Fixed a bug where being alerted by the presence of a dead body would cause mages not to attack
+  * Fixed a bug where area of effect damage on an enemy could let it know where the player is
 * Graphical
+  * Rest points are now marked by particle effects instead of a sprite
   * Added visual indicators for health values a-la the damage indicators
 
 ## Version 13

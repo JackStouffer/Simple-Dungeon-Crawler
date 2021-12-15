@@ -37,6 +37,7 @@ import {
 import { Area, ItemDataDetails, SpellDataDetails } from "./skills";
 import { Vector2D } from "./map";
 import { Rectangle } from "./camera";
+import { playBoxBreak } from "./audio";
 
 export type EntityMap = Map<string, string[]>;
 
@@ -865,16 +866,42 @@ export const ObjectData: { [key: string]: ObjectDataDetails } = {
                     classification: "object"
                 },
                 DisplayNameComponent: {
-                    name: "Bedroll"
+                    name: "Save Point"
                 },
                 GraphicsComponent: {
-                    textureKey: "green_bedroll_right",
+                    textureKey: null,
                     sprite: null,
                     zIndex: 5
                 },
                 InteractableTypeComponent: {
                     interactableType: InteractableType.Rest
-                }
+                },
+                ParticleEmitterComponent: {
+                    turnsLeft: Infinity,
+                    particleDefinition: {
+                        particleImages: ["particle_cross_soft"],
+                        particleConfig: {
+                            acceleration: { x: 0, y: 0 },
+                            addAtBack: false,
+                            alpha: { start: 1, end: 1 },
+                            blendMode: "normal",
+                            color: { start: "#ec26ff", end: "#2638ff" },
+                            emitterLifetime: -1,
+                            frequency: 0.06,
+                            lifetime: { min: 0.2, max: 0.3 },
+                            maxParticles: 200,
+                            maxSpeed: 0,
+                            noRotation: false,
+                            pos: { x: 8, y: 8 },
+                            rotationSpeed: { min: 50, max: 50 },
+                            scale: { start: .3, end: .3, minimumScaleMultiplier: 1 },
+                            spawnCircle: { x: 0, y: 0, r: 10 },
+                            spawnType: "circle",
+                            speed: { start: 30, end: 20, minimumSpeedMultiplier: 1 },
+                            startRotation: { min: 270, max: 270 }
+                        }
+                    }
+                },
             }
         }
     },
@@ -2490,6 +2517,21 @@ export function createEntity(
 
 export function removeEntity(ecs: World, entity: Entity) {
     if (globals.Game === null) { throw new Error("Global game is null"); }
+
+    const particleData = entity.getOne(ParticleEmitterComponent);
+    if (particleData !== undefined) {
+        particleData.emitter?.destroy();
+        entity.removeComponent(particleData);
+    }
+
+    // TODO, sound: define these sounds in data on the entity or fighter instance or something
+    const typeData = entity.getOne(TypeComponent);
+    if (typeData?.entityType === "crate") {
+        playBoxBreak();
+    }
+    if (typeData?.entityType === "barrel") {
+        playBoxBreak();
+    }
 
     const graphicData = entity.getOne(GraphicsComponent);
     if (graphicData !== undefined && graphicData.sprite !== null) {

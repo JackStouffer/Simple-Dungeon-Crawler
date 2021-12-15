@@ -930,7 +930,7 @@ export class InteractCommand implements Command {
                     levelLoadInteract(entity, target);
                     break;
                 case InteractableType.Rest:
-                    restPointInteract(entity);
+                    restPointInteract(entity, target);
                     break;
                 default:
                     assertUnreachable(interactableData.interactableType);
