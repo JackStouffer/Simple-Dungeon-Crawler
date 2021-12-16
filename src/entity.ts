@@ -79,24 +79,17 @@ export class PositionComponent extends Component {
 }
 
 export class TypeComponent extends Component {
+    displayName: Nullable<string>;
     entityType: string;
     race: Nullable<string>;
     classification: Nullable<string>;
 
     static typeName = "TypeComponent";
     static properties = {
+        displayName: "player",
         entityType: "player",
         race: "human",
         classification: "player"
-    }
-}
-
-export class DisplayNameComponent extends Component {
-    name: string;
-
-    static typeName = "DisplayNameComponent";
-    static properties = {
-        name: "player"
     }
 }
 
@@ -606,10 +599,8 @@ export const ObjectData: { [key: string]: ObjectDataDetails } = {
         staticallyKnownComponents: {
             tags: ["blocks", "blocksSight"],
             c: {
-                DisplayNameComponent: {
-                    name: "Door"
-                },
                 TypeComponent: {
+                    displayName: "Door",
                     entityType: "door",
                     race: null,
                     classification: "object"
@@ -629,10 +620,8 @@ export const ObjectData: { [key: string]: ObjectDataDetails } = {
         staticallyKnownComponents: {
             tags: ["blocks", "drawAfterSeen"],
             c: {
-                DisplayNameComponent: {
-                    name: "Door to new area"
-                },
                 TypeComponent: {
+                    displayName: "Door to new area",
                     entityType: "load_door",
                     race: null,
                     classification: "object"
@@ -652,10 +641,8 @@ export const ObjectData: { [key: string]: ObjectDataDetails } = {
         staticallyKnownComponents: {
             tags: ["blocks", "drawAfterSeen"],
             c: {
-                DisplayNameComponent: {
-                    name: "Stairs"
-                },
                 TypeComponent: {
+                    displayName: "Stairs",
                     entityType: "stairs",
                     race: null,
                     classification: "object"
@@ -676,10 +663,8 @@ export const ObjectData: { [key: string]: ObjectDataDetails } = {
         staticallyKnownComponents: {
             tags: ["blocks", "drawAfterSeen"],
             c: {
-                DisplayNameComponent: {
-                    name: "Chest"
-                },
                 TypeComponent: {
+                    displayName: "Chest",
                     entityType: "chest",
                     race: null,
                     classification: "object"
@@ -710,12 +695,10 @@ export const ObjectData: { [key: string]: ObjectDataDetails } = {
             tags: ["blocks", "moveable"],
             c: {
                 TypeComponent: {
+                    displayName: "Wooden Crate",
                     entityType: "crate",
                     race: null,
                     classification: "object"
-                },
-                DisplayNameComponent: {
-                    name: "Wooden Crate"
                 },
                 GraphicsComponent: {
                     textureKey: "wood_steel_crate",
@@ -749,12 +732,10 @@ export const ObjectData: { [key: string]: ObjectDataDetails } = {
             tags: ["blocks", "moveable"],
             c: {
                 TypeComponent: {
+                    displayName: "Wooden Barrel",
                     entityType: "barrel",
                     race: null,
                     classification: "object"
-                },
-                DisplayNameComponent: {
-                    name: "Wooden Barrel"
                 },
                 GraphicsComponent: {
                     textureKey: "barrel_3",
@@ -786,12 +767,10 @@ export const ObjectData: { [key: string]: ObjectDataDetails } = {
         staticallyKnownComponents: {
             c: {
                 TypeComponent: {
+                    displayName: "Dead Body",
                     entityType: "dead_body",
                     race: null,
                     classification: "object"
-                },
-                DisplayNameComponent: {
-                    name: "Dead Body"
                 },
                 GraphicsComponent: {
                     textureKey: "skull_bone",
@@ -806,12 +785,10 @@ export const ObjectData: { [key: string]: ObjectDataDetails } = {
             tags: ["blocks"],
             c: {
                 TypeComponent: {
+                    displayName: "Small Lantern",
                     entityType: "lantern",
                     race: null,
                     classification: "object"
-                },
-                DisplayNameComponent: {
-                    name: "Small Lantern"
                 },
                 GraphicsComponent: {
                     textureKey: "iron_lantern_lit",
@@ -830,12 +807,10 @@ export const ObjectData: { [key: string]: ObjectDataDetails } = {
         staticallyKnownComponents: {
             c: {
                 TypeComponent: {
+                    displayName: "Small Campfire",
                     entityType: "campfire",
                     race: null,
                     classification: "object"
-                },
-                DisplayNameComponent: {
-                    name: "Small Campfire"
                 },
                 GraphicsComponent: {
                     textureKey: "campfire_1_lit_1",
@@ -861,12 +836,10 @@ export const ObjectData: { [key: string]: ObjectDataDetails } = {
         staticallyKnownComponents: {
             c: {
                 TypeComponent: {
+                    displayName: "Save Point",
                     entityType: "rest_point",
                     race: null,
                     classification: "object"
-                },
-                DisplayNameComponent: {
-                    name: "Save Point"
                 },
                 GraphicsComponent: {
                     textureKey: null,
@@ -909,12 +882,10 @@ export const ObjectData: { [key: string]: ObjectDataDetails } = {
         staticallyKnownComponents: {
             c: {
                 TypeComponent: {
+                    displayName: "Fire",
                     entityType: "fire_effect",
                     race: null,
                     classification: "object"
-                },
-                DisplayNameComponent: {
-                    name: "Fire"
                 },
                 GraphicsComponent: {
                     textureKey: null,
@@ -970,12 +941,10 @@ export const ObjectData: { [key: string]: ObjectDataDetails } = {
             tags: ["blocks", "blocksSight"],
             c: {
                 TypeComponent: {
+                    displayName: "Ice Wall",
                     entityType: "ice_wall",
                     race: null,
                     classification: "object"
-                },
-                DisplayNameComponent: {
-                    name: "Ice Wall"
                 },
                 GraphicsComponent: {
                     textureKey: "ice_wall",
@@ -1004,12 +973,10 @@ export const ObjectData: { [key: string]: ObjectDataDetails } = {
             tags: ["moveable"],
             c: {
                 TypeComponent: {
+                    displayName: "Dropped Item",
                     entityType: "dropped_item",
                     race: null,
                     classification: "object"
-                },
-                DisplayNameComponent: {
-                    name: "Dropped Item"
                 },
                 GraphicsComponent: {
                     textureKey: "yellow_and_green_bottle",
@@ -1027,12 +994,10 @@ export const ObjectData: { [key: string]: ObjectDataDetails } = {
             tags: ["blocks", "blocksSight", "drawAfterSeen"],
             c: {
                 TypeComponent: {
+                    displayName: "Magicka Shrine",
                     entityType: "magic_shrine",
                     race: null,
                     classification: "object"
-                },
-                DisplayNameComponent: {
-                    name: "Magicka Shrine"
                 },
                 GraphicsComponent: {
                     textureKey: "mage_statue_bottom",
@@ -1049,6 +1014,7 @@ export const ObjectData: { [key: string]: ObjectDataDetails } = {
         staticallyKnownComponents: {
             c: {
                 TypeComponent: {
+                    displayName: null,
                     entityType: "event_trigger",
                     race: null,
                     classification: "trigger"
@@ -1065,12 +1031,10 @@ export const ObjectData: { [key: string]: ObjectDataDetails } = {
             tags: ["environmentTile", "waterTile"],
             c: {
                 TypeComponent: {
+                    displayName: "Water",
                     entityType: "shallow_water",
                     race: null,
                     classification: "object"
-                },
-                DisplayNameComponent: {
-                    name: "Water"
                 },
                 GraphicsComponent: {
                     textureKey: "water_1",
@@ -1094,12 +1058,10 @@ export const ObjectData: { [key: string]: ObjectDataDetails } = {
             tags: ["environmentTile", "waterTile"],
             c: {
                 TypeComponent: {
+                    displayName: "Puddle",
                     entityType: "puddle",
                     race: null,
                     classification: "object"
-                },
-                DisplayNameComponent: {
-                    name: "Puddle"
                 },
                 GraphicsComponent: {
                     textureKey: "water_1",
@@ -1126,12 +1088,10 @@ export const ObjectData: { [key: string]: ObjectDataDetails } = {
             tags: ["environmentTile", "waterTile"],
             c: {
                 TypeComponent: {
+                    displayName: "Deep Water",
                     entityType: "water",
                     race: null,
                     classification: "object"
-                },
-                DisplayNameComponent: {
-                    name: "Deep Water"
                 },
                 GraphicsComponent: {
                     textureKey: "deep_water",
@@ -1154,12 +1114,10 @@ export const ObjectData: { [key: string]: ObjectDataDetails } = {
         staticallyKnownComponents: {
             c: {
                 TypeComponent: {
+                    displayName: "Steam",
                     entityType: "steam",
                     race: null,
                     classification: "object"
-                },
-                DisplayNameComponent: {
-                    name: "Steam"
                 },
                 GraphicsComponent: {
                     textureKey: "sprite4691",
@@ -1184,12 +1142,10 @@ export const ObjectData: { [key: string]: ObjectDataDetails } = {
             tags: ["environmentTile"],
             c: {
                 TypeComponent: {
+                    displayName: "Mud",
                     entityType: "mud",
                     race: null,
                     classification: "object"
-                },
-                DisplayNameComponent: {
-                    name: "Mud"
                 },
                 GraphicsComponent: {
                     textureKey: "mud_1",
@@ -1212,12 +1168,10 @@ export const ObjectData: { [key: string]: ObjectDataDetails } = {
         staticallyKnownComponents: {
             c: {
                 TypeComponent: {
+                    displayName: "Rune",
                     entityType: "fireball_rune",
                     race: null,
                     classification: "object"
-                },
-                DisplayNameComponent: {
-                    name: "Rune"
                 },
                 GraphicsComponent: {
                     textureKey: "red_rune",
@@ -1235,12 +1189,10 @@ export const ObjectData: { [key: string]: ObjectDataDetails } = {
         staticallyKnownComponents: {
             c: {
                 TypeComponent: {
+                    displayName: "Tall Grass",
                     entityType: "tall_grass",
                     race: null,
                     classification: "object"
-                },
-                DisplayNameComponent: {
-                    name: "Tall Grass"
                 },
                 GraphicsComponent: {
                     textureKey: "tall_grass_2",
@@ -1269,12 +1221,10 @@ export const ObjectData: { [key: string]: ObjectDataDetails } = {
             tags: ["blocksSight"],
             c: {
                 TypeComponent: {
+                    displayName: "Thick Bush",
                     entityType: "thick_underbrush",
                     race: null,
                     classification: "object"
-                },
-                DisplayNameComponent: {
-                    name: "Underbrush"
                 },
                 GraphicsComponent: {
                     textureKey: "shrub_1",
@@ -1309,12 +1259,10 @@ export const ObjectData: { [key: string]: ObjectDataDetails } = {
             tags: ["blocks", "input", "sentient", "moveable"],
             c: {
                 TypeComponent: {
+                    displayName: "The Player",
                     entityType: "player",
                     race: "human",
                     classification: "player"
-                },
-                DisplayNameComponent: {
-                    name: "The Player"
                 },
                 GraphicsComponent: {
                     textureKey: "player",
@@ -1401,12 +1349,10 @@ export const ObjectData: { [key: string]: ObjectDataDetails } = {
             tags: ["blocks", "sentient", "moveable"],
             c: {
                 TypeComponent: {
+                    displayName: "Goblin",
                     entityType: "goblin",
                     race: "goblin",
                     classification: "goblin"
-                },
-                DisplayNameComponent: {
-                    name: "Goblin"
                 },
                 GraphicsComponent: {
                     textureKey: "orc_body_1",
@@ -1496,12 +1442,10 @@ export const ObjectData: { [key: string]: ObjectDataDetails } = {
             tags: ["blocks", "sentient", "moveable"],
             c: {
                 TypeComponent: {
+                    displayName: "Goblin Brute",
                     entityType: "goblin_brute",
                     race: "goblin",
                     classification: "goblin"
-                },
-                DisplayNameComponent: {
-                    name: "Goblin Brute"
                 },
                 GraphicsComponent: {
                     textureKey: "orc_body_1",
@@ -1579,12 +1523,10 @@ export const ObjectData: { [key: string]: ObjectDataDetails } = {
             tags: ["blocks", "sentient", "moveable"],
             c: {
                 TypeComponent: {
+                    displayName: "Rat",
                     entityType: "rat",
                     race: "rat",
                     classification: "rat"
-                },
-                DisplayNameComponent: {
-                    name: "Rat"
                 },
                 GraphicsComponent: {
                     textureKey: "rat",
@@ -1665,12 +1607,10 @@ export const ObjectData: { [key: string]: ObjectDataDetails } = {
             tags: ["blocks", "sentient", "moveable", "aquatic"],
             c: {
                 TypeComponent: {
+                    displayName: "Eel",
                     entityType: "eel",
                     race: "eel",
                     classification: "eel"
-                },
-                DisplayNameComponent: {
-                    name: "Eel"
                 },
                 GraphicsComponent: {
                     textureKey: "eel_1",
@@ -1743,12 +1683,10 @@ export const ObjectData: { [key: string]: ObjectDataDetails } = {
             tags: ["blocks", "sentient", "moveable"],
             c: {
                 TypeComponent: {
+                    displayName: "Lightning Bug",
                     entityType: "lightning_bug",
                     race: "bug",
                     classification: "bug"
-                },
-                DisplayNameComponent: {
-                    name: "Lightning Bug"
                 },
                 GraphicsComponent: {
                     textureKey: "lightning_bug",
@@ -1853,12 +1791,10 @@ export const ObjectData: { [key: string]: ObjectDataDetails } = {
             tags: ["blocks", "sentient", "moveable"],
             c: {
                 TypeComponent: {
+                    displayName: "Bandit",
                     entityType: "bandit",
                     race: "human",
                     classification: "bandit"
-                },
-                DisplayNameComponent: {
-                    name: "Bandit"
                 },
                 GraphicsComponent: {
                     textureKey: "bandit_1",
@@ -1957,12 +1893,10 @@ export const ObjectData: { [key: string]: ObjectDataDetails } = {
             tags: ["blocks", "sentient", "moveable"],
             c: {
                 TypeComponent: {
+                    displayName: "Bandit Mage",
                     entityType: "bandit_mage",
                     race: "human",
                     classification: "bandit"
-                },
-                DisplayNameComponent: {
-                    name: "Bandit Mage"
                 },
                 GraphicsComponent: {
                     textureKey: "blue_mage_1",
@@ -2060,12 +1994,10 @@ export const ObjectData: { [key: string]: ObjectDataDetails } = {
             tags: ["blocks", "sentient", "moveable"],
             c: {
                 TypeComponent: {
+                    displayName: "Bandit White Mage",
                     entityType: "bandit_white_mage",
                     race: "human",
                     classification: "bandit"
-                },
-                DisplayNameComponent: {
-                    name: "Bandit White Mage"
                 },
                 GraphicsComponent: {
                     textureKey: "red_mage_1",
@@ -2152,12 +2084,10 @@ export const ObjectData: { [key: string]: ObjectDataDetails } = {
             tags: ["blocks", "sentient", "moveable"],
             c: {
                 TypeComponent: {
+                    displayName: "Dog",
                     entityType: "dog",
                     race: "dog",
                     classification: "dog"
-                },
-                DisplayNameComponent: {
-                    name: "Dog"
                 },
                 GraphicsComponent: {
                     textureKey: "dog",

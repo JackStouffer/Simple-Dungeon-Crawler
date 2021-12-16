@@ -11,7 +11,6 @@ import {
 import input from "./input";
 import { PlayerState, KeyCommand } from "./input-handler";
 import {
-    DisplayNameComponent,
     EntityMap,
     FlammableComponent,
     FreezableComponent,
@@ -20,6 +19,7 @@ import {
     LevelComponent,
     PlannerAIComponent,
     TriggerComponent,
+    TypeComponent,
     WetableComponent
 } from "./entity";
 import { InventoryItemDetails } from "./inventory";
@@ -211,18 +211,22 @@ export class StatusBar {
                         target = sorted[sorted.length - 1];
                     }
 
-                    const targetNameData = target.getOne(DisplayNameComponent);
+                    const targetTypeData = target.getOne(TypeComponent);
                     const targetHPData = getEffectiveHitPointData(target);
                     const targetAIData = target.getOne(PlannerAIComponent);
 
-                    if (targetNameData !== undefined &&
+                    if (targetTypeData !== undefined &&
+                        targetTypeData.displayName !== null &&
                         targetAIData !== undefined &&
                         targetHPData !== null) {
-                        this.targetText.text = `A ${targetNameData.name} (${targetHPData.hp}/${targetHPData.maxHp}) (${targetAIData.knowsTargetPosition})`;
-                    } else if (targetNameData !== undefined && targetHPData !== null) {
-                        this.targetText.text = `A ${targetNameData.name} (${targetHPData.hp}/${targetHPData.maxHp})`;
-                    } else if (targetNameData !== undefined) {
-                        this.targetText.text = `A ${targetNameData.name}`;
+                        this.targetText.text = `A ${targetTypeData.displayName} (${targetHPData.hp}/${targetHPData.maxHp}) (${targetAIData.knowsTargetPosition})`;
+                    } else if (targetTypeData !== undefined &&
+                        targetTypeData.displayName !== null &&
+                        targetHPData !== null) {
+                        this.targetText.text = `A ${targetTypeData.displayName} (${targetHPData.hp}/${targetHPData.maxHp})`;
+                    } else if (targetTypeData !== undefined &&
+                        targetTypeData.displayName !== null) {
+                        this.targetText.text = `A ${targetTypeData.displayName}`;
                     }
                 }
             }

@@ -4,12 +4,12 @@ import { VisibilityCallback } from "../rot/fov/fov";
 import globals from "../globals";
 import {
     ConfusableAIComponent,
-    DisplayNameComponent,
     FearAIComponent,
     LevelComponent,
     LoseTargetAIComponent,
     PlannerAIComponent,
-    PositionComponent
+    PositionComponent,
+    TypeComponent
 } from "../entity";
 import { showLogMessage } from "../ui";
 import { createPassableSightCallback } from "./commands";
@@ -44,9 +44,9 @@ export class LoseTargetSystem extends System {
                         loseTrackData.turnsWithTargetOutOfSight = 0;
                         aiState.update();
 
-                        const displayName = e.getOne(DisplayNameComponent);
-                        if (displayName !== undefined) {
-                            showLogMessage(`${displayName.name} lost track of you`);
+                        const typeData = e.getOne(TypeComponent);
+                        if (typeData !== undefined) {
+                            showLogMessage(`${typeData.displayName} lost track of you`);
                         }
                     }
 
@@ -183,11 +183,11 @@ export class ConfusableAISystem extends System {
                 if (confusedState.turnsLeft === 0) {
                     confusedState.confused = false;
 
-                    const displayName = entity.getOne(DisplayNameComponent);
+                    const typeData = entity.getOne(TypeComponent);
                     if (entity.id === PLAYER_ID) {
                         showLogMessage("You are no longer confused");
-                    } else if (displayName !== undefined) {
-                        showLogMessage(`${displayName.name} is no longer confused`);
+                    } else if (typeData !== undefined) {
+                        showLogMessage(`${typeData.displayName} is no longer confused`);
                     }
                 }
 

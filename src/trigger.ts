@@ -3,7 +3,6 @@ import { Entity, World } from "ape-ecs";
 import globals from "./globals";
 import { DamageType, PLAYER_ID } from "./constants";
 import {
-    DisplayNameComponent,
     EntityMap,
     FlammableComponent,
     PositionComponent,
@@ -130,9 +129,9 @@ export function steamTrigger(
     if (actor.id === PLAYER_ID) {
         showLogMessage("You take damage from the steam");
     } else {
-        const d = actor.getOne(DisplayNameComponent);
-        if (d !== undefined) {
-            showLogMessage(`${d.name} is hurt by the steam`);
+        const typeData = actor.getOne(TypeComponent);
+        if (typeData !== undefined) {
+            showLogMessage(`${typeData.displayName} is hurt by the steam`);
         }
     }
 

@@ -42,7 +42,7 @@ import {
     AreaOfEffectComponent,
     ConfusableAIComponent,
     ParticleEmitterComponent,
-    DisplayNameComponent
+    TypeComponent,
 } from "./entity";
 import { SpellData, Area } from "./skills";
 import { getEntitiesAtLocation, Vector2D } from "./map";
@@ -131,10 +131,10 @@ export class DeathSystem extends System {
             graphicData.update();
         }
 
-        const displayNameData = target.getOne(DisplayNameComponent);
-        if (displayNameData !== undefined) {
-            displayNameData.name = `Dead ${displayNameData.name}`;
-            displayNameData.update();
+        const typeData = target.getOne(TypeComponent);
+        if (typeData !== undefined) {
+            typeData.name = `Dead ${typeData.displayName}`;
+            typeData.update();
         }
 
         // Update the surrounding AI's fear and target data

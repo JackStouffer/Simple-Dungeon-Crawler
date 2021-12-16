@@ -17,7 +17,6 @@ import { showLogMessage } from "./ui";
 import { DamageType, ItemType, PLAYER_ID, SpellType, StatusEffectType, TriggerType } from "./constants";
 import {
     createEntity,
-    DisplayNameComponent,
     EntityMap,
     FlammableComponent,
     FreezableComponent,
@@ -125,7 +124,7 @@ function castHeal(
     user: Entity
 ): boolean {
     if (item.value === null) { throw new Error("Item does not have a healing value"); }
-    const displayName = user.getOne(DisplayNameComponent)!;
+    const typeData = user.getOne(TypeComponent)!;
 
     const hpData = getEffectiveHitPointData(user);
     if (hpData === null) { throw new Error(`Trying to heal entity ${user.id} without any hp data`); }
@@ -134,7 +133,7 @@ function castHeal(
         if (user.id === "player") {
             showLogMessage("You are already at full health.");
         } else {
-            showLogMessage(`${displayName.name} tries and fails to take a health potion`);
+            showLogMessage(`${typeData.displayName} tries and fails to take a health potion`);
         }
 
         return false;
@@ -144,7 +143,7 @@ function castHeal(
     if (user.id === "player") {
         showLogMessage(`You are healed for ${item.value} hp.`);
     } else {
-        showLogMessage(`${displayName.name} is healed for ${item.value} hp.`);
+        showLogMessage(`${typeData.displayName} is healed for ${item.value} hp.`);
     }
     return true;
 }
@@ -165,10 +164,10 @@ function castHealOther(
         return false;
     }
 
-    const targetName = targetedEntity.getOne(DisplayNameComponent)!;
+    const typeData = targetedEntity.getOne(TypeComponent)!;
     const targetHPData = targetedEntity.getOne(HitPointsComponent);
     if (targetHPData === undefined) {
-        showLogMessage(`${targetName.name} isn't healable`);
+        showLogMessage(`${typeData.displayName} isn't healable`);
         return false;
     }
 
@@ -182,7 +181,7 @@ function castHealOther(
  * types of entities
  */
 export function setOnFire(target: Entity, damage?: number, turns?: number): boolean {
-    const displayName = target.getOne(DisplayNameComponent);
+    const typeData = target.getOne(TypeComponent)!;
     const flammableData = target.getOne(FlammableComponent);
     const wetData = target.getOne(WetableComponent);
     const frozenData = target.getOne(FreezableComponent);
@@ -192,9 +191,9 @@ export function setOnFire(target: Entity, damage?: number, turns?: number): bool
         if (target.id === PLAYER_ID) {
             // TODO, sound: spell not working sound
             showLogMessage("You were not set on fire because you're immune");
-        } else if (displayName !== undefined && target.tags.has("sentient")) {
+        } else if (typeData.displayName !== null && target.tags.has("sentient")) {
             // TODO, sound: spell not working sound
-            showLogMessage(`${displayName.name} was not set on fire because it is immune`);
+            showLogMessage(`${typeData.displayName} was not set on fire because it is immune`);
         }
         return false;
     }
@@ -208,9 +207,9 @@ export function setOnFire(target: Entity, damage?: number, turns?: number): bool
         if (target.id === PLAYER_ID) {
             // TODO, sound: spell not working sound
             showLogMessage("You were not set on fire because you were wet");
-        } else if (displayName !== undefined) {
+        } else if (typeData.displayName !== null) {
             // TODO, sound: spell not working sound
-            showLogMessage(`${displayName.name} was not set on fire because it was wet`);
+            showLogMessage(`${typeData.displayName} was not set on fire because it was wet`);
         }
 
         return false;
@@ -232,9 +231,9 @@ export function setOnFire(target: Entity, damage?: number, turns?: number): bool
         if (target.id === PLAYER_ID) {
             // TODO, sound: ice shattering sound
             showLogMessage("You were not set on fire because you were frozen");
-        } else if (displayName !== undefined) {
+        } else if (typeData.displayName !== null) {
             // TODO, sound: ice shattering sound
-            showLogMessage(`${displayName.name} was not set on fire because it was frozen`);
+            showLogMessage(`${typeData.displayName} was not set on fire because it was frozen`);
         }
 
         return false;
@@ -440,7 +439,7 @@ export function setStunned(target: Entity, turns?: number): boolean {
  * fire instead.
  */
 export function setFrozen(target: Entity, turns: number): boolean {
-    const name = target.getOne(DisplayNameComponent);
+    const typeData = target.getOne(TypeComponent)!;
     const triggerData = target.getOne(TriggerComponent);
 
     // Put the fire out if on fire
@@ -454,9 +453,9 @@ export function setFrozen(target: Entity, turns: number): boolean {
         if (target.id === PLAYER_ID) {
             // TODO, sound: Dousing sound effect
             showLogMessage("Instead of being frozen, the fire was extinguished");
-        } else if (name !== undefined) {
+        } else if (typeData.displayName !== null) {
             // TODO, sound: Dousing sound effect
-            showLogMessage(`Instead of ${name.name} being frozen, it is no longer on fire`);
+            showLogMessage(`Instead of ${typeData.displayName} being frozen, it is no longer on fire`);
         }
 
         if (triggerData !== undefined && triggerData.currentTriggerType === TriggerType.Fire) {
@@ -583,10 +582,10 @@ export function castDamageSpell(
         return false;
     }
 
-    const targetName = targetedEntity.getOne(DisplayNameComponent);
+    const targetTypeData = targetedEntity.getOne(TypeComponent);
     const targetHPData = targetedEntity.getOne(HitPointsComponent);
-    if (targetHPData === undefined && targetName !== undefined) {
-        showLogMessage(`${targetName.name} isn't attack-able`);
+    if (targetHPData === undefined && targetTypeData?.displayName !== null) {
+        showLogMessage(`${targetTypeData?.displayName} isn't attack-able`);
         return false;
     }
 
@@ -724,18 +723,18 @@ export function castConfuse(
         return false;
     }
 
-    const displayName = entity.getOne(DisplayNameComponent);
-    if (displayName === undefined) { throw new Error("entity does not have a display name"); }
+    const typeData = entity.getOne(TypeComponent);
+    if (typeData === undefined) { throw new Error("entity does not have a TypeComponent"); }
 
     const confusedState = entity.getOne(ConfusableAIComponent);
     if (confusedState === undefined) {
-        showLogMessage(`${displayName.name} is immune to confusion`);
+        showLogMessage(`${typeData.displayName} is immune to confusion`);
         return false;
     }
 
     confusedState.confused = true;
     confusedState.turnsLeft = item.value;
-    showLogMessage(`${displayName.name} is now confused`);
+    showLogMessage(`${typeData.displayName} is now confused`);
 
     return true;
 }
@@ -800,13 +799,10 @@ export function castSlow(
     }
 
     const speedData = entity.getOne(SpeedComponent);
-    const displayName = entity.getOne(DisplayNameComponent);
-    if (displayName === undefined) {
-        throw new Error(`${entity.id} is missing a display name`);
-    }
+    const typeData = entity.getOne(TypeComponent)!;
 
     if (speedData === undefined) {
-        showLogMessage(`${displayName.name} isn't slow-able`);
+        showLogMessage(`${typeData.displayName} isn't slow-able`);
         return false;
     }
 
@@ -814,12 +810,12 @@ export function castSlow(
     // TODO implement filter/map for Iterators
     for (const e of speedEffects) {
         if (e.name === "Slow") {
-            showLogMessage(`${displayName.name} is already slowed`);
+            showLogMessage(`${typeData.displayName} is already slowed`);
             return false;
         }
     }
 
-    showLogMessage(`Spell hits and slows ${displayName.name}`);
+    showLogMessage(`Spell hits and slows ${typeData.displayName}`);
 
     entity.addComponent({
         type: "SpeedEffectComponent",
@@ -1037,21 +1033,21 @@ export function castSilence(
         return false;
     }
 
-    const targetName = targetedEntity.getOne(DisplayNameComponent)!;
+    const targetTypeData = targetedEntity.getOne(TypeComponent)!;
     const targetSpellData = targetedEntity.getOne(SpellsComponent);
     const targetSilenceableData = targetedEntity.getOne(SilenceableComponent);
     if (targetSilenceableData === undefined && targetedEntity.tags.has("sentient")) {
-        showLogMessage(`${targetName.name} is immune to silence effects`);
+        showLogMessage(`${targetTypeData.displayName} is immune to silence effects`);
         return false;
     } else if (targetSpellData === undefined && targetedEntity.tags.has("sentient")) {
-        showLogMessage(`${targetName.name} cannot be silenced because it doesn't know any spells`);
+        showLogMessage(`${targetTypeData.displayName} cannot be silenced because it doesn't know any spells`);
         return false;
     } else if (targetSilenceableData === undefined || targetSpellData === undefined) {
-        showLogMessage(`${targetName.name} cannot be silenced`);
+        showLogMessage(`${targetTypeData.displayName} cannot be silenced`);
         return false;
     }
 
-    showLogMessage(`${targetName.name} is silenced`);
+    showLogMessage(`${targetTypeData.displayName} is silenced`);
     targetSilenceableData.silenced = true;
     targetSilenceableData.turnsLeft = item.value;
     targetSilenceableData.update();
@@ -1106,10 +1102,10 @@ export function castFreeze(
         return false;
     }
 
-    const targetName = targetedEntity.getOne(DisplayNameComponent)!;
+    const targetTypeData = targetedEntity.getOne(TypeComponent)!;
     const targetFreezableData = targetedEntity.getOne(FreezableComponent);
     if (targetFreezableData === undefined) {
-        showLogMessage(`${targetName.name} cannot be frozen`);
+        showLogMessage(`${targetTypeData.displayName} cannot be frozen`);
         return false;
     }
 

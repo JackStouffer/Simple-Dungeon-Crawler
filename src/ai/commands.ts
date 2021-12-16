@@ -11,7 +11,6 @@ import {
 import { ActionData } from "./actions";
 import { GameMap, isSightBlocked, Vector2D } from "../map";
 import {
-    DisplayNameComponent,
     EntityMap,
     EntityTeamMap,
     FreezableComponent,
@@ -20,6 +19,7 @@ import {
     PositionComponent,
     FearAIComponent,
     ConfusableAIComponent,
+    TypeComponent,
 } from "../entity";
 import { showLogMessage } from "../ui";
 import { Nullable } from "../util";
@@ -120,8 +120,8 @@ export function getPlan(
     aiState: PlannerAIComponent
 ): Nullable<string> {
     const debug = globals.Game?.debugAI === true;
-    const displayName = aiState.entity.getOne(DisplayNameComponent);
-    if (displayName === undefined) { throw new Error(`Entity ${aiState.entity.id} is missing a DisplayNameComponent`); }
+    const typeData = aiState.entity.getOne(TypeComponent);
+    if (typeData === undefined) { throw new Error(`Entity ${aiState.entity.id} is missing a TypeComponent`); }
 
     const worldState = generateWorldState(ecs, entityMap, aiState);
     if (debug) {
@@ -143,7 +143,7 @@ export function getPlan(
 
     if (aiState.previousWorldState.targetPositionKnown === false &&
         worldState.targetPositionKnown === true) {
-        showLogMessage(`${displayName.name} saw you`);
+        showLogMessage(`${typeData.displayName} saw you`);
     }
 
     const actions = Object.keys(aiState.planner.actionList!.reactions);

@@ -17,6 +17,8 @@ _In Development_
   * Rest points now disappear after use
   * Fixed a bug where being alerted by the presence of a dead body would cause mages not to attack
   * Fixed a bug where area of effect damage on an enemy could let it know where the player is
+* Technical
+  * Consolidated entity display strings with the entity type data
 * Graphical
   * Rest points are now marked by particle effects instead of a sprite
   * Added visual indicators for health values a-la the damage indicators

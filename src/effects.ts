@@ -4,7 +4,6 @@ import globals from "./globals";
 import { AreaOfEffectType, DamageType, PLAYER_ID } from "./constants";
 import { showLogMessage } from "./ui";
 import {
-    DisplayNameComponent,
     FlammableComponent,
     FreezableComponent,
     GraphicsComponent,
@@ -153,9 +152,9 @@ export class SilenceSystem extends System {
                 if (entity.id === PLAYER_ID) {
                     showLogMessage("You are no longer silenced");
                 } else {
-                    const displayName = entity.getOne(DisplayNameComponent);
-                    if (displayName !== undefined) {
-                        showLogMessage(`${displayName.name} is no longer silenced`);
+                    const typeInfo = entity.getOne(TypeComponent);
+                    if (typeInfo !== undefined) {
+                        showLogMessage(`${typeInfo.displayName} is no longer silenced`);
                     }
                 }
             }
@@ -187,9 +186,9 @@ export class StunSystem extends System {
                 if (entity.id === PLAYER_ID) {
                     showLogMessage("You are no longer stunned");
                 } else {
-                    const displayName = entity.getOne(DisplayNameComponent);
-                    if (displayName !== undefined) {
-                        showLogMessage(`${displayName.name} is no longer stunned`);
+                    const typeInfo = entity.getOne(TypeComponent);
+                    if (typeInfo !== undefined) {
+                        showLogMessage(`${typeInfo.displayName} is no longer stunned`);
                     }
                 }
             }
@@ -239,10 +238,10 @@ export class FrozenSystem extends System {
                     // TODO, sound: ice cracking sound
                     showLogMessage("You are no longer frozen");
                 } else {
-                    const displayName = entity.getOne(DisplayNameComponent);
-                    if (displayName !== undefined) {
+                    const typeInfo = entity.getOne(TypeComponent);
+                    if (typeInfo !== undefined) {
                         // TODO, sound: ice cracking sound
-                        showLogMessage(`${displayName.name} is no longer frozen`);
+                        showLogMessage(`${typeInfo.displayName} is no longer frozen`);
                     }
                 }
             }
@@ -274,8 +273,8 @@ export class UpdateHitPointsEffectsSystem extends System {
                     entity.removeComponent(effect);
                     effect.destroy();
 
-                    const displayName = entity.getOne(DisplayNameComponent)!;
-                    showLogMessage(`${effect.name} has ended for ${displayName.name}`);
+                    const typeInfo = entity.getOne(TypeComponent)!;
+                    showLogMessage(`${effect.name} has ended for ${typeInfo.displayName}`);
                 } else {
                     effect.update();
                 }
@@ -307,8 +306,8 @@ export class UpdateStatsEffectsSystem extends System {
                     entity.removeComponent(effect);
                     effect.destroy();
 
-                    const displayName = entity.getOne(DisplayNameComponent)!;
-                    showLogMessage(`${effect.name} has ended for ${displayName.name}`);
+                    const typeInfo = entity.getOne(TypeComponent)!;
+                    showLogMessage(`${effect.name} has ended for ${typeInfo.displayName}`);
                 } else {
                     effect.update();
                 }
@@ -341,8 +340,8 @@ export class UpdateSpeedEffectsSystem extends System {
                     effect.destroy();
 
                     if (effect.display) {
-                        const displayName = entity.getOne(DisplayNameComponent)!;
-                        showLogMessage(`${effect.name} has ended for ${displayName.name}`);
+                        const typeInfo = entity.getOne(TypeComponent)!;
+                        showLogMessage(`${effect.name} has ended for ${typeInfo.displayName}`);
                     }
                 } else {
                     effect.update();

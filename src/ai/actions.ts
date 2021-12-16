@@ -12,7 +12,6 @@ import {
     PhysicalAttackCommand
 } from "../commands";
 import {
-    DisplayNameComponent,
     EntityMap,
     FearAIComponent,
     HitPointsComponent,
@@ -22,7 +21,8 @@ import {
     PlannerAIComponent,
     PositionComponent,
     SpeedComponent,
-    SpellsComponent
+    SpellsComponent,
+    TypeComponent
 } from "../entity";
 import {
     tileDistanceBetweenPoints,
@@ -319,15 +319,15 @@ function useHealingItemAction(
     aiState: PlannerAIComponent
 ): Command {
     const inventoryData = aiState.entity.getOne(InventoryComponent);
-    const displayName = aiState.entity.getOne(DisplayNameComponent);
+    const typeData = aiState.entity.getOne(TypeComponent);
     if (inventoryData === undefined) { throw new Error("No inventory on owner for AI for useHealingItemAction"); }
-    if (displayName === undefined) { throw new Error(`Entity ${aiState.entity.id} is missing DisplayNameComponent`); }
+    if (typeData === undefined) { throw new Error(`Entity ${aiState.entity.id} is missing TypeComponent`); }
 
     const item = getItems(inventoryData)
         .filter(i => i.type === ItemType.HealSelf)
         .sort((a, b) => a.value! - b.value!)[0];
 
-    showLogMessage(`${displayName.name} used a ${item.displayName}`);
+    showLogMessage(`${typeData.displayName} used a ${item.displayName}`);
 
     return new UseSkillCommand(
         aiState.entity.id, ItemData[item.id], undefined, undefined, true, useItem
@@ -341,15 +341,15 @@ function useHealingSpellAction(
     aiState: PlannerAIComponent
 ): Command {
     const spells = aiState.entity.getOne(SpellsComponent);
-    const displayName = aiState.entity.getOne(DisplayNameComponent);
+    const typeData = aiState.entity.getOne(TypeComponent);
     if (spells === undefined) { throw new Error("No spells on owner for AI for useHealingSpellAction"); }
-    if (displayName === undefined) { throw new Error(`Entity ${aiState.entity.id} is missing DisplayNameComponent`); }
+    if (typeData === undefined) { throw new Error(`Entity ${aiState.entity.id} is missing TypeComponent`); }
 
     const spell = getKnownSpells(spells)
         .filter(i => i.type === SpellType.HealSelf)
         .sort((a, b) => a.value! - b.value!)[0];
 
-    showLogMessage(`${displayName.name} casted ${spell.displayName}`);
+    showLogMessage(`${typeData!.displayName} casted ${spell.displayName}`);
 
     return new UseSkillCommand(
         aiState.entity.id, SpellData[spell.id], undefined, undefined, true, useSpell
@@ -365,11 +365,11 @@ function healAllyAction(
     // TODO: this should generate a move camera command to the entity being healed
     const pos = aiState.entity.getOne(PositionComponent);
     const spells = aiState.entity.getOne(SpellsComponent);
-    const displayName = aiState.entity.getOne(DisplayNameComponent);
+    const typeData = aiState.entity.getOne(TypeComponent);
     const team = globals.Game?.entityTeams.get(aiState.teamId ?? Infinity);
     if (pos === undefined) { throw new Error("No position on AI for healAllyAction"); }
     if (spells === undefined) { throw new Error("No spells on AI for healAllyAction"); }
-    if (displayName === undefined) { throw new Error(`Entity ${aiState.entity.id} is missing DisplayNameComponent`); }
+    if (typeData === undefined) { throw new Error(`Entity ${aiState.entity.id} is missing TypeComponent`); }
     if (team === undefined) { throw new Error(`Entity ${aiState.entity.id} is missing a team for healAllyAction`); }
 
     const spell = getKnownSpells(spells)
@@ -400,7 +400,7 @@ function healAllyAction(
         throw new Error("Should never get here, there's a bug in goal allyLowHealth");
     }
 
-    showLogMessage(`${displayName.name} casted ${spell.displayName}`);
+    showLogMessage(`${typeData.displayName} casted ${spell.displayName}`);
 
     return new UseSkillCommand(
         aiState.entity.id, SpellData[spell.id], target, undefined, true, useSpell
@@ -428,13 +428,13 @@ function castSpellAction(spellID: string): ActionUpdateFunction {
         }
 
         const spellData = aiState.entity.getOne(SpellsComponent);
-        const displayName = aiState.entity.getOne(DisplayNameComponent);
+        const typeData = aiState.entity.getOne(TypeComponent);
         if (spellData === undefined) { throw new Error(`No spells on ${aiState.entity.id} for castSpellAction`); }
-        if (displayName === undefined) { throw new Error(`Entity ${aiState.entity.id} is missing DisplayNameComponent`); }
+        if (typeData === undefined) { throw new Error(`Entity ${aiState.entity.id} is missing TypeComponent`); }
 
         const spells = getKnownSpells(spellData).map(s => s.id);
         if (spells.indexOf(spellID) === -1) {
-            throw new Error(`${displayName.name} does not know spell ${spellID}`);
+            throw new Error(`${typeData.displayName} does not know spell ${spellID}`);
         }
         const targetPos = target.getOne(PositionComponent);
         if (targetPos === undefined) { throw new Error(`Target entity ${aiState.targetId} is missing PositionComponent`); }

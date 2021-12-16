@@ -22,7 +22,6 @@ import {
     createEntity,
     PositionComponent,
     TypeComponent,
-    DisplayNameComponent,
     GraphicsComponent,
     LightingComponent,
     InventoryComponent,
@@ -686,7 +685,6 @@ export class SimpleDungeonCrawler {
         );
         this.ecs.registerComponent(PositionComponent, 100);
         this.ecs.registerComponent(TypeComponent, 100);
-        this.ecs.registerComponent(DisplayNameComponent, 100);
         this.ecs.registerComponent(GraphicsComponent, 100);
         this.ecs.registerComponent(ChestComponent, 10);
         this.ecs.registerComponent(LightingComponent, 20);
