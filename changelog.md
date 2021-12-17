@@ -20,6 +20,7 @@ _In Development_
 * Technical
   * Consolidated entity display strings with the entity type data
 * Graphical
+  * Mousing over interactable entities now causes them to glow
   * Rest points are now marked by particle effects instead of a sprite
   * Added visual indicators for health values a-la the damage indicators
 

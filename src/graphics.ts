@@ -8,6 +8,7 @@ import {
     ChestComponent,
     GraphicsComponent,
     InputHandlingComponent,
+    InteractableTypeComponent,
     InventoryComponent,
     ParticleEmitterComponent,
     PositionComponent,
@@ -141,10 +142,30 @@ export class UpdateChestsSystem extends System {
             const inventory = entity.getOne(InventoryComponent)!;
             if (inventory.inventory.size === 0) {
                 graphics.sprite.texture = globals.Game!.textureAtlas[chestData.openTextureKey];
+                const c = entity.getOne(InteractableTypeComponent);
+                if (c !== undefined) { entity.removeComponent(c); }
             } else {
                 graphics.sprite.texture = globals.Game!.textureAtlas[chestData.closedTextureKey];
             }
         }
+    }
+}
+
+export function setUpParticleComponentEmitter(entity: Entity) {
+    const particleData = entity.getOne(ParticleEmitterComponent);
+    if (particleData === undefined) { return; }
+
+    if (particleData.emitter === null) {
+        const graphicsData = entity.getOne(GraphicsComponent)!;
+        particleData.emitter = new particles.Emitter(
+            graphicsData.sprite!,
+            particleData.particleDefinition.particleImages.map(
+                e => globals.Game!.textureAtlas[e]
+            ),
+            particleData.particleDefinition.particleConfig
+        );
+        particleData.emitter.emit = true;
+        particleData.update();
     }
 }
 
@@ -174,26 +195,20 @@ export class DrawParticlesSystem extends System {
             const change = this.changes[i];
             const entity = this.world.getEntity(change.entity);
             if (entity === undefined) { continue; }
-            const particleData = entity.getOne(ParticleEmitterComponent);
-            if (particleData === undefined) { continue; }
 
             switch (change.op) {
                 case "add":
-                    if (particleData.emitter === null) {
-                        const graphicsData = entity.getOne(GraphicsComponent)!;
-                        particleData.emitter = new particles.Emitter(
-                            graphicsData.sprite!,
-                            particleData.particleDefinition.particleImages.map(
-                                e => globals.Game!.textureAtlas[e]
-                            ),
-                            particleData.particleDefinition.particleConfig
-                        );
-                        particleData.emitter.emit = true;
-                        particleData.update();
-                    }
+                    setUpParticleComponentEmitter(entity);
                     break;
                 case "destroy":
-                case "change":
+                    break;
+                case "change": {
+                    const particleData = entity.getOne(ParticleEmitterComponent);
+                    if (particleData === undefined) { continue; }
+                    particleData.emitter?.destroy();
+                    setUpParticleComponentEmitter(entity);
+                    break;
+                }
                 case "addRef":
                 case "deleteRef":
                     break;
@@ -344,6 +359,7 @@ export class DrawPlayerSystem extends System {
     private query: Query;
     private pathFilter: GlowFilter;
     private targetFilter: GlowFilter;
+    private interactableFilter: GlowFilter;
     private perviousPath: PIXI.Sprite[];
 
     init() {
@@ -360,6 +376,11 @@ export class DrawPlayerSystem extends System {
             color: 0xFF0000,
             innerStrength: 2,
             outerStrength: 0
+        });
+        this.interactableFilter = new GlowFilter({
+            color: 0xFFFFFF,
+            innerStrength: 0,
+            outerStrength: 2.5
         });
         this.perviousPath = [];
     }
@@ -415,48 +436,64 @@ export class DrawPlayerSystem extends System {
                         return;
                     }
 
-                    // quick distance check to cut down the number of
-                    // AStar calcs
-                    const max = speedData.maxTilesPerMove * 2;
-                    if (tileDistanceBetweenPoints(pos.tilePosition, mousePosition) < max) {
-                        const path = getPlayerMovementPath(
-                            this.world,
-                            globals.Game!.map,
-                            globals.Game!.entityMap,
-                            pos.tilePosition,
-                            mousePosition,
-                            speedData.maxTilesPerMove
-                        );
-                        if (path.length === 0) { return; }
-
-                        outer: for (let j = 0; j < path.length; j++) {
-                            const step = path[j];
-
-                            // If there's an entity tile like water or mud, we want
-                            // to put the reticle on that instead of the tile beneath it
-                            const entities = getEntitiesAtLocation(
+                    // Show a filter around an interactable
+                    const entities = getEntitiesAtLocation(
+                        this.world, globals.Game!.entityMap, mousePosition
+                    ).filter((e: Entity) => e.has(InteractableTypeComponent));
+                    if (entities.length > 0) {
+                        const e = entities[0];
+                        const graphicsData = e.getOne(GraphicsComponent);
+                        if (graphicsData !== undefined && graphicsData.sprite !== null) {
+                            this.perviousPath.push(graphicsData.sprite);
+                            graphicsData.sprite.filters = [this.interactableFilter];
+                        }
+                    // Or show the movement path
+                    } else {
+                        // quick distance check to cut down the number of
+                        // AStar calcs
+                        const max = speedData.maxTilesPerMove * 2;
+                        if (tileDistanceBetweenPoints(pos.tilePosition, mousePosition) < max) {
+                            const path = getPlayerMovementPath(
                                 this.world,
-                                globals.Game.entityMap,
-                                step
+                                globals.Game!.map,
+                                globals.Game!.entityMap,
+                                pos.tilePosition,
+                                mousePosition,
+                                speedData.maxTilesPerMove
                             );
-                            for (let i = 0; i < entities.length; i++) {
-                                if (entities[i].tags.has("environmentTile")) {
-                                    const graphics = entities[i].getOne(GraphicsComponent);
-                                    if (graphics !== undefined && graphics.sprite !== null) {
-                                        graphics.sprite.filters = [this.pathFilter];
-                                        this.perviousPath.push(graphics.sprite);
-                                        continue outer;
+
+                            if (path.length !== 0) {
+                                outer: for (let j = 0; j < path.length; j++) {
+                                    const step = path[j];
+
+                                    // If there's an entity tile like water or mud, we want
+                                    // to put the reticle on that instead of the tile beneath it
+                                    const entities = getEntitiesAtLocation(
+                                        this.world,
+                                        globals.Game.entityMap,
+                                        step
+                                    );
+                                    for (let i = 0; i < entities.length; i++) {
+                                        if (entities[i].tags.has("environmentTile")) {
+                                            const graphics = entities[i].getOne(GraphicsComponent);
+                                            if (graphics !== undefined &&
+                                                graphics.sprite !== null) {
+                                                graphics.sprite.filters = [this.pathFilter];
+                                                this.perviousPath.push(graphics.sprite);
+                                                continue outer;
+                                            }
+                                        }
                                     }
+
+                                    const z = getHighestZIndexWithTile(globals.Game.map, step);
+                                    const sprite = globals.Game
+                                        .map
+                                        .data[z][step.y][step.x]!
+                                        .sprite;
+                                    this.perviousPath.push(sprite);
+                                    sprite.filters = [this.pathFilter];
                                 }
                             }
-
-                            const z = getHighestZIndexWithTile(globals.Game.map, step);
-                            const sprite = globals.Game
-                                .map
-                                .data[z][step.y][step.x]!
-                                .sprite;
-                            this.perviousPath.push(sprite);
-                            sprite.filters = [this.pathFilter];
                         }
                     }
                 } else if (inputStateData.state === PlayerState.Target &&

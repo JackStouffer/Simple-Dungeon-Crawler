@@ -38,6 +38,7 @@ import { Area, ItemDataDetails, SpellDataDetails } from "./skills";
 import { Vector2D } from "./map";
 import { Rectangle } from "./camera";
 import { playBoxBreak } from "./audio";
+import { setUpParticleComponentEmitter } from "./graphics";
 
 export type EntityMap = Map<string, string[]>;
 
@@ -834,6 +835,7 @@ export const ObjectData: { [key: string]: ObjectDataDetails } = {
     },
     "rest_point": {
         staticallyKnownComponents: {
+            tags: ["blocks"],
             c: {
                 TypeComponent: {
                     displayName: "Save Point",
@@ -2425,10 +2427,9 @@ export function createEntity(
     }
 
     if (tilePosition !== undefined && entity.has(PositionComponent) === false) {
-        const worldPosition = globals.Game.gameCamera.tilePositionToWorld(tilePosition);
         entity.addComponent({
             type: "PositionComponent",
-            worldPosition,
+            worldPosition: globals.Game.gameCamera.tilePositionToWorld(tilePosition),
             tilePosition
         });
     }
@@ -2441,6 +2442,8 @@ export function createEntity(
         graphics.sprite = new PIXI.Sprite(textures[graphics.textureKey]);
         globals.Game.pixiApp.stage.addChild(graphics.sprite);
     }
+
+    setUpParticleComponentEmitter(entity);
 
     return entity;
 }

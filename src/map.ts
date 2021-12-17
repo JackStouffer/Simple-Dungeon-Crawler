@@ -1228,6 +1228,11 @@ function customJSONSerializer(key: string, value: any) {
             dataType: "Set",
             value: Array.from(value.values())
         };
+    } else if (value === Infinity) {
+        return {
+            dataType: "Number",
+            value: "Infinity"
+        };
     } else {
         return value;
     }
@@ -1240,6 +1245,9 @@ function customJSONDeserializer(key: string, value: any) {
         }
         if (value.dataType === "Set") {
             return new Set(value.value);
+        }
+        if (value.dataType === "Number" && value.value === "Infinity") {
+            return Infinity;
         }
     }
     return value;
@@ -1708,6 +1716,9 @@ export function saveLevelState(
             const config = entity.getObject();
             if ("GraphicsComponent" in config.c) {
                 config.c.GraphicsComponent.sprite = null;
+            }
+            if ("ParticleEmitterComponent" in config.c) {
+                config.c.ParticleEmitterComponent.emitter = null;
             }
             entities.push(JSON.stringify(config, customJSONSerializer));
         }
