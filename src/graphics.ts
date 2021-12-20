@@ -362,11 +362,24 @@ export function getTargetedArea(
 // object which allocates the UI elements
 export class DrawPlayerSystem extends System {
     query: Query;
-    pathFilter: GlowFilter;
-    targetFilter: GlowFilter;
-    interactableFilter: GlowFilter;
     perviousPath: PIXI.Sprite[];
     directionSprite: Nullable<PIXI.Sprite> = null;
+
+    static pathFilter: GlowFilter = new GlowFilter({
+        color: 0xFBFF00,
+        innerStrength: 2,
+        outerStrength: 0
+    });
+    static targetFilter: GlowFilter = new GlowFilter({
+        color: 0xFF0000,
+        innerStrength: 2,
+        outerStrength: 0
+    });
+    static interactableFilter: GlowFilter = new GlowFilter({
+        color: 0xFFFFFF,
+        innerStrength: 0,
+        outerStrength: 2.5
+    });
     static dirSpriteMap: { [key: number]: string } = {
         0: "arrow_down",
         1: "arrow_down_left",
@@ -383,21 +396,6 @@ export class DrawPlayerSystem extends System {
             .createQuery()
             .fromAll(PositionComponent, SpeedComponent, GraphicsComponent, "input")
             .persist();
-        this.pathFilter = new GlowFilter({
-            color: 0xFBFF00,
-            innerStrength: 2,
-            outerStrength: 0
-        });
-        this.targetFilter = new GlowFilter({
-            color: 0xFF0000,
-            innerStrength: 2,
-            outerStrength: 0
-        });
-        this.interactableFilter = new GlowFilter({
-            color: 0xFFFFFF,
-            innerStrength: 0,
-            outerStrength: 2.5
-        });
         this.perviousPath = [];
     }
 
@@ -463,7 +461,7 @@ export class DrawPlayerSystem extends System {
                         const graphicsData = e.getOne(GraphicsComponent);
                         if (graphicsData !== undefined && graphicsData.sprite !== null) {
                             this.perviousPath.push(graphicsData.sprite);
-                            graphicsData.sprite.filters = [this.interactableFilter];
+                            graphicsData.sprite.filters = [DrawPlayerSystem.interactableFilter];
                         }
                     // Or show the movement path
                     } else {
@@ -496,7 +494,7 @@ export class DrawPlayerSystem extends System {
                                             const graphics = entities[i].getOne(GraphicsComponent);
                                             if (graphics !== undefined &&
                                                 graphics.sprite !== null) {
-                                                graphics.sprite.filters = [this.pathFilter];
+                                                graphics.sprite.filters = [DrawPlayerSystem.pathFilter];
                                                 this.perviousPath.push(graphics.sprite);
                                                 continue outer;
                                             }
@@ -509,7 +507,7 @@ export class DrawPlayerSystem extends System {
                                         .data[z][step.y][step.x]!
                                         .sprite;
                                     this.perviousPath.push(sprite);
-                                    sprite.filters = [this.pathFilter];
+                                    sprite.filters = [DrawPlayerSystem.pathFilter];
                                 }
                             }
                         }
@@ -545,7 +543,7 @@ export class DrawPlayerSystem extends System {
                                 if (entities[i].tags.has("environmentTile")) {
                                     const graphics = entities[i].getOne(GraphicsComponent);
                                     if (graphics !== undefined && graphics.sprite !== null) {
-                                        graphics.sprite.filters = [this.targetFilter];
+                                        graphics.sprite.filters = [DrawPlayerSystem.targetFilter];
                                         this.perviousPath.push(graphics.sprite);
                                         continue outer;
                                     }
@@ -571,7 +569,7 @@ export class DrawPlayerSystem extends System {
                                 .data[z][targetArea[i].y][targetArea[i].x]!
                                 .sprite;
                             this.perviousPath.push(sprite);
-                            sprite.filters = [this.targetFilter];
+                            sprite.filters = [DrawPlayerSystem.targetFilter];
                         }
                     }
                 // Show the directional arrow next to the targeted entity based on the

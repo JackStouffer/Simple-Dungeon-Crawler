@@ -51,7 +51,7 @@
             "asyncArrow": "ignore"
         }],
         "max-len": ["error", {
-            "code": 100,
+            "code": 105,
             "ignoreStrings": true,
             "ignoreComments": true,
             "ignoreTemplateLiterals": true
