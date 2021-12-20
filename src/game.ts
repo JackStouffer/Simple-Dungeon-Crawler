@@ -292,7 +292,10 @@ const GameplayState: GameState = {
         if (input.wasPressed("Escape") && inputHandlerState.state === PlayerState.Combat) {
             game.setState(game.pauseMenuState);
             return;
-        } else if (input.wasPressed("Escape") && inputHandlerState.state === PlayerState.Target) {
+        } else if (input.wasPressed("Escape") &&
+            (inputHandlerState.state === PlayerState.Target ||
+                inputHandlerState.state === PlayerState.TargetDirection)
+        ) {
             inputHandlerState.state = PlayerState.Combat;
             inputHandlerState.itemForTarget = null;
             inputHandlerState.spellForTarget = null;
@@ -302,8 +305,10 @@ const GameplayState: GameState = {
         }
 
         if (game.currentActor === PLAYER_ID && game.commandQueue.length === 0) {
-            const command = playerInput(game.ecs, game.map, game.entityMap, player);
-            game.commandQueue.push(...command);
+            const commands = playerInput(game.ecs, game.map, game.entityMap, player);
+            if (commands.length > 0) {
+                game.commandQueue.push(...commands);
+            }
         }
     },
 
@@ -416,6 +421,7 @@ const InventoryMenuState: GameState = {
                         ItemData[item.id],
                         undefined,
                         undefined,
+                        undefined,
                         true,
                         useItem
                     ));
@@ -476,6 +482,9 @@ const SpellMenuState: GameState = {
             return;
         }
 
+        // With the chosen spell from the menu, either set the spell
+        // data for the input handler so it can be targeted, or create
+        // the command for the command queue right away
         const spell = game.spellSelectionMenu.handleInput(
             getKnownSpells(playerSpells)
         );
@@ -501,10 +510,11 @@ const SpellMenuState: GameState = {
                 case SpellType.HealSelf:
                 case SpellType.Passive:
                 case SpellType.WildDamage:
-                case SpellType.Push:
+                case SpellType.AreaOfEffect:
                     game.commandQueue.push(new UseSkillCommand(
                         PLAYER_ID,
                         SpellData[spell.id],
+                        undefined,
                         undefined,
                         undefined,
                         true,
@@ -512,6 +522,7 @@ const SpellMenuState: GameState = {
                     ));
                     game.setState(game.gameplayState);
                     break;
+                case SpellType.Push:
                 case SpellType.DamageOther:
                 case SpellType.HealOther:
                     inputHandlerState.spellForTarget = spell;

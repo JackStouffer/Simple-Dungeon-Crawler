@@ -12,6 +12,7 @@ import {
     InventoryComponent,
     ParticleEmitterComponent,
     PositionComponent,
+    SpeedComponent,
 } from "./entity";
 import input from "./input";
 import { tileDistanceBetweenPoints, getEntitiesAtLocation, getHighestZIndexWithTile, Vector2D, isVisibleAndLit } from "./map";
@@ -19,8 +20,9 @@ import { PlayerState } from "./input-handler";
 import { getPlayerMovementPath } from "./commands";
 import { getEffectiveSpeedData } from "./fighter";
 import { Area } from "./skills";
-import { Nullable, randomIntFromInterval } from "./util";
+import { clampAngleToDIR, Nullable, randomIntFromInterval } from "./util";
 import { TILE_SIZE } from "./constants";
+import { DIRS } from "./rot";
 
 /**
  * Draw all entities with a GraphicsComponent and a PositionComponent,
@@ -355,17 +357,31 @@ export function getTargetedArea(
     return ret;
 }
 
+// TODO, cleanup: A lot of this should actually be considered UI
+// code, and therefore be moved to the ui file and have a dedicated
+// object which allocates the UI elements
 export class DrawPlayerSystem extends System {
-    private query: Query;
-    private pathFilter: GlowFilter;
-    private targetFilter: GlowFilter;
-    private interactableFilter: GlowFilter;
-    private perviousPath: PIXI.Sprite[];
+    query: Query;
+    pathFilter: GlowFilter;
+    targetFilter: GlowFilter;
+    interactableFilter: GlowFilter;
+    perviousPath: PIXI.Sprite[];
+    directionSprite: Nullable<PIXI.Sprite> = null;
+    static dirSpriteMap: { [key: number]: string } = {
+        0: "arrow_down",
+        1: "arrow_down_left",
+        2: "arrow_left",
+        3: "arrow_up_left",
+        4: "arrow_up",
+        5: "arrow_up_right",
+        6: "arrow_right",
+        7: "arrow_down_right"
+    };
 
     init() {
         this.query = this
             .createQuery()
-            .fromAll(PositionComponent, InventoryComponent, "input")
+            .fromAll(PositionComponent, SpeedComponent, GraphicsComponent, "input")
             .persist();
         this.pathFilter = new GlowFilter({
             color: 0xFBFF00,
@@ -417,12 +433,14 @@ export class DrawPlayerSystem extends System {
                 // Remove effects from last path draw
                 for (let i = 0; i < this.perviousPath.length; i++) {
                     const step = this.perviousPath[i];
-
                     if (step.texture === null) {
                         continue;
                     }
 
                     step.filters = [];
+                }
+                if (this.directionSprite !== null) {
+                    this.directionSprite.visible = false;
                 }
 
                 if (inputStateData.state === PlayerState.Combat &&
@@ -555,6 +573,45 @@ export class DrawPlayerSystem extends System {
                             this.perviousPath.push(sprite);
                             sprite.filters = [this.targetFilter];
                         }
+                    }
+                // Show the directional arrow next to the targeted entity based on the
+                // mouse position
+                } else if (inputStateData.state === PlayerState.TargetDirection &&
+                    inputStateData.targetForDirection !== null &&
+                    globals.Game.currentActor === entity.id &&
+                    globals.Game.commandQueue.length === 0 &&
+                    globals.Game.isGameplayPaused === false
+                ) {
+                    const mousePosition = input.getMousePosition();
+
+                    if (mousePosition !== null) {
+                        if (this.directionSprite === null) {
+                            this.directionSprite = new PIXI.Sprite(globals.Game.textureAtlas["arrow_right"]);
+                            this.directionSprite.zIndex = 10;
+                            globals.Game!.pixiApp.stage.addChild(this.directionSprite);
+                        }
+
+                        this.directionSprite.visible = true;
+                        this.directionSprite.scale.set(
+                            globals.Game.gameCamera.zoom,
+                            globals.Game.gameCamera.zoom
+                        );
+                        const mouseAngle = inputStateData.targetForDirection.direction(
+                            mousePosition
+                        );
+                        const dir = clampAngleToDIR(mouseAngle);
+                        this.directionSprite.texture = globals.Game.textureAtlas[
+                            DrawPlayerSystem.dirSpriteMap[dir]
+                        ];
+                        const arrowTilePos = new Vector2D(
+                            inputStateData.targetForDirection.x + DIRS[8][dir][0],
+                            inputStateData.targetForDirection.y + DIRS[8][dir][1],
+                        );
+                        const screenPos = globals.Game.gameCamera.tilePositionToScreen(
+                            arrowTilePos
+                        );
+                        this.directionSprite.x = screenPos.x;
+                        this.directionSprite.y = screenPos.y;
                     }
                 }
             } else {

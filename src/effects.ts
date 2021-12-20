@@ -383,6 +383,7 @@ export class AreaOfEffectSystem extends System {
                 data,
                 position.tilePosition,
                 0,
+                undefined,
                 false
             ));
         }

@@ -634,9 +634,12 @@ export class PushBackCommand implements Command {
             globals.Game!.entityMap,
             destination
         );
+        // If the entity hits something while being pushed, then they should
+        // take damage in proportion to the amount of tiles that they would
+        // have moved if they weren't blocked
         if (blocks === true) {
             const tilesLeft = this.numTiles - this.tilesMoved;
-            const damage = (this.numTiles * 3) + (tilesLeft * 2);
+            const damage = tilesLeft * 4;
             takeDamage(ecs, globals.Game!.entityMap, entity, damage, false, DamageType.Physical);
             if (Math.random() > 0.3) {
                 setStunned(entity, 3);
@@ -988,7 +991,7 @@ export class OpenSpellsCommand implements Command {
     }
 }
 
-type SkillCallback = (e: Entity, id: string) => void;
+export type SkillCallback = (e: Entity, id: string) => void;
 
 /**
  * Create a command function to call a skill function at the specified
@@ -1001,6 +1004,7 @@ export class UseSkillCommand implements Command {
     shouldUseTurn: boolean = true;
     entityId: string;
     rotation: number | undefined;
+    direction: number | undefined;
     details: SpellDataDetails | ItemDataDetails;
     target: Vector2D | undefined;
     particleEmitter: Nullable<particles.Emitter> = null;
@@ -1013,12 +1017,14 @@ export class UseSkillCommand implements Command {
         details: SpellDataDetails | ItemDataDetails,
         target?: Vector2D,
         rotation?: number,
+        direction?: number,
         shouldUseTurn?: boolean,
         cb?: SkillCallback
     ) {
         this.entityId = entityId;
         this.target = target;
         this.rotation = rotation;
+        this.direction = direction;
         this.details = details;
         this.shouldUseTurn = shouldUseTurn ?? true;
         this.skillCallback = cb;
@@ -1074,7 +1080,8 @@ export class UseSkillCommand implements Command {
             globals.Game!.map,
             globals.Game!.entityMap,
             this.target,
-            this.rotation
+            this.rotation,
+            this.direction
         );
 
         if (this.didUseTurn) {

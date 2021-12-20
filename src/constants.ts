@@ -62,7 +62,8 @@ export enum SpellType {
     Passive,
     HealSelf,
     HealOther,
-    Push
+    Push,
+    AreaOfEffect
 }
 
 export enum StatusEffectType {

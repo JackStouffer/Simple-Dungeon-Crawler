@@ -392,9 +392,14 @@ export class ConfusableAIComponent extends Component {
 export class InputHandlingComponent extends Component {
     state: PlayerState;
     reticleRotation: 0 | 90 | 180 | 270;
+    /** keyboard bindings */
     keyCommands: KeyCommand[];
+    /** item details to use once the player selects a target/target location */
     itemForTarget: Nullable<ItemDataDetails>;
+    /** item details to use once the player selects a target/target location */
     spellForTarget: Nullable<SpellDataDetails>;
+    /** store the target the player chooses here so they can then choose a direction for directed spells */
+    targetForDirection: Nullable<Vector2D>;
 
     static typeName = "InputHandlingComponent";
     static properties = {

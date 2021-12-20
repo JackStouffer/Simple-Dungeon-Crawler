@@ -8,10 +8,11 @@ import {
     GoToLocationCommand,
     UseSkillCommand,
     InteractCommand,
-    PhysicalAttackCommand
+    PhysicalAttackCommand,
+    SkillCallback
 } from "./commands";
 import { tileDistanceBetweenPoints, getEntitiesAtLocation, GameMap, Vector2D } from "./map";
-import { Nullable } from "./util";
+import { clampAngleToOppositeDIR, Nullable } from "./util";
 import {
     EntityMap,
     HitPointsComponent,
@@ -21,9 +22,10 @@ import {
     PositionComponent,
     SpeedComponent
 } from "./entity";
-import { ItemData, SpellData } from "./skills";
+import { ItemData, ItemDataDetails, SpellData, SpellDataDetails } from "./skills";
 import { useItem } from "./inventory";
 import { useSpell } from "./fighter";
+import { SpellType } from "./constants";
 
 export interface KeyCommand {
     code: string;
@@ -36,7 +38,8 @@ export interface KeyCommand {
 
 export enum PlayerState {
     Combat,
-    Target
+    Target,
+    TargetDirection
 }
 
 /**
@@ -93,6 +96,16 @@ export function mouseTarget(
     return res[0] ?? null;
 }
 
+/**
+ * Called every frame. Generates commands for the command queue given
+ * the input handling state component of the player.
+ *
+ * @param ecs {World} The current ECS world
+ * @param map {GameMap} The current game map
+ * @param entityMap {EntityMap} Map of positions to entities at the position
+ * @param player {Entity} The player entity
+ * @returns {Command[]}
+ */
 export function playerInput(
     ecs: World,
     map: GameMap,
@@ -193,31 +206,84 @@ export function playerInput(
             inputState.itemForTarget?.range ??
             Infinity;
 
+        // TODO, gameplay: We judge the number of tiles the player can move
+        // by number, not by distance. Should we have the same logic here?
+        // Probably.
         if (tileDistanceBetweenPoints(mousePosition, entityPos) <= range) {
+            let useCallback: SkillCallback | undefined = undefined;
+            let data: ItemDataDetails | SpellDataDetails | undefined = undefined;
             let command: Nullable<Command> = null;
             if (inputState.itemForTarget !== null) {
-                command = new UseSkillCommand(
-                    player.id,
-                    ItemData[inputState.itemForTarget.id],
-                    mousePosition,
-                    inputState.reticleRotation,
-                    true,
-                    useItem
-                );
+                data = ItemData[inputState.itemForTarget.id];
+                useCallback = useItem;
             } else if (inputState.spellForTarget !== null) {
+                data = SpellData[inputState.spellForTarget.id];
+                useCallback = useSpell;
+            }
+
+            if (data !== undefined && data.type === SpellType.Push) {
+                inputState.state = PlayerState.TargetDirection;
+                inputState.targetForDirection = mousePosition;
+                inputState.update();
+            } else if (data !== undefined && useCallback !== undefined) {
                 command = new UseSkillCommand(
                     player.id,
-                    SpellData[inputState.spellForTarget.id],
+                    data,
                     mousePosition,
                     inputState.reticleRotation,
+                    undefined,
                     true,
-                    useSpell
+                    useCallback
                 );
+
+                inputState.state = PlayerState.Combat;
+                inputState.itemForTarget = null;
+                inputState.spellForTarget = null;
+                inputState.targetForDirection = null;
+                inputState.update();
+                if (command !== null) { return [command]; }
+            }
+        }
+    } else if (inputState.state === PlayerState.TargetDirection) {
+        const mousePosition = input.getLeftMouseDown();
+        if (mousePosition !== null && inputState.targetForDirection !== null) {
+            // Divide a circle into eight equal sections. Then, we draw an immaginary
+            // line between the mouse position and the target to determine the direction
+            // that the spell should go in.
+            //
+            // E.g. Mouse is clicked to the left of the target, spell is going to the right
+            const mouseAngle = inputState.targetForDirection.direction(mousePosition);
+            const direction = clampAngleToOppositeDIR(mouseAngle);
+            let command: Nullable<Command> = null;
+
+            if (direction !== null) {
+                if (inputState.itemForTarget !== null) {
+                    command = new UseSkillCommand(
+                        player.id,
+                        ItemData[inputState.itemForTarget.id],
+                        inputState.targetForDirection,
+                        inputState.reticleRotation,
+                        direction,
+                        true,
+                        useItem
+                    );
+                } else if (inputState.spellForTarget !== null) {
+                    command = new UseSkillCommand(
+                        player.id,
+                        SpellData[inputState.spellForTarget.id],
+                        inputState.targetForDirection,
+                        inputState.reticleRotation,
+                        direction,
+                        true,
+                        useSpell
+                    );
+                }
             }
 
             inputState.state = PlayerState.Combat;
             inputState.itemForTarget = null;
             inputState.spellForTarget = null;
+            inputState.targetForDirection = null;
             inputState.update();
             if (command !== null) { return [command]; }
         }

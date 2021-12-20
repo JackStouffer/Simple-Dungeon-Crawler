@@ -6,6 +6,7 @@ _In Development_
 
 * Gameplay
   * Major level redesigns
+  * Added a new spell, "push", which throws enemies across the map in a specified direction
   * Leaving a level now saves the level entity state and reloads that state when returning
     * Using a door to return to a level no longer teleports you back to the beginning of the level
   * Lightning bugs now have fear and are weak to fire

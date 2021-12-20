@@ -111,7 +111,8 @@ export type SkillFunction = (
     map?: GameMap,
     entityMap?: EntityMap,
     target?: Vector2D,
-    rotation?: number
+    rotation?: number,
+    direction?: number
 ) => boolean;
 
 /**
@@ -1077,11 +1078,46 @@ export function castExhale(
         );
         if (entity !== null) {
             if (entity.tags.has("moveable")) {
-                globals.Game!.commandQueue.push(new PushBackCommand(entity.id, i, 3, 1));
+                globals.Game!.commandQueue.push(new PushBackCommand(entity.id, i, item.value, 1));
             }
         }
     }
 
+    return true;
+}
+
+export function castPush(
+    item: ItemDataDetails | SpellDataDetails,
+    user: Entity,
+    ecs: World,
+    map: GameMap,
+    entityMap: EntityMap,
+    target?: Vector2D,
+    rotation?: number,
+    direction?: number
+): boolean {
+    if (item.value === null) { throw new Error("Item has missing data"); }
+    if (target === undefined) { throw new Error("Push requires a target"); }
+    if (direction === undefined) { throw new Error("Push requires a direction"); }
+
+    const targetedEntity = mouseTarget(ecs, map, entityMap, target);
+    if (targetedEntity === null) {
+        showLogMessage("Canceled casting");
+        return false;
+    }
+
+    if (!targetedEntity.tags.has("moveable")) {
+        const typeData = targetedEntity.getOne(TypeComponent);
+        showLogMessage(`${typeData?.displayName} cannot be pushed. Canceled casting`);
+        return false;
+    }
+
+    const targetPos = targetedEntity.getOne(PositionComponent);
+    if (targetPos === undefined) { throw new Error("can't call castPush on a target without a position"); }
+
+    globals.Game!.commandQueue.push(
+        new PushBackCommand(targetedEntity.id, direction, item.value, 1)
+    );
     return true;
 }
 
@@ -1559,7 +1595,7 @@ export const SpellData: { [key: string]: SpellDataDetails } = {
         id: "wild_lightning_bolt",
         displayName: "Wild Lightning Bolt",
         description: "Summons a lightning bolt that's beyond your control and attacks a random target within 10 spaces. Deals lightning damage",
-        baseCastCount: 10,
+        baseCastCount: 1,
         value: 30,
         type: SpellType.WildDamage,
         damageType: DamageType.Electric,
@@ -1664,7 +1700,7 @@ export const SpellData: { [key: string]: SpellDataDetails } = {
         description: "[DEV] Lightning AOE",
         baseCastCount: 1,
         value: 40,
-        type: SpellType.DamageOther,
+        type: SpellType.AreaOfEffect,
         damageType: DamageType.Electric,
         range: 10,
         useFunc: castAreaOfEffect,
@@ -2071,6 +2107,7 @@ export const SpellData: { [key: string]: SpellDataDetails } = {
         baseCastCount: 10,
         value: 3,
         type: SpellType.DamageOther,
+        range: 15,
         useFunc: castSilence,
         effect: "particles",
         particles: {
@@ -2101,14 +2138,48 @@ export const SpellData: { [key: string]: SpellDataDetails } = {
     "exhale": {
         id: "exhale",
         displayName: "Exhale",
-        description: "Send out a burst of air from your body in all directions, pushing away anything that's too close and stunning enemies. Enemies which slam into objects take physical damage.",
-        baseCastCount: 10,
+        description: "Send out a burst of air from your body in all directions, pushing away anything that's within range and stunning enemies for a short time. Pushed enemies which hit objects, walls, or other enemies take physical damage. Anything hit by the pushed object also takes physical damage.",
+        baseCastCount: 2,
         value: 4,
-        type: SpellType.Push,
+        type: SpellType.AreaOfEffect,
         useFunc: castExhale,
         effect: "particles",
         particles: {
             particleLocation: "self",
+            particleImages: ["particle_cloud"],
+            particleConfig: {
+                acceleration: { x: 0, y: 0 },
+                addAtBack: true,
+                alpha: { start: 0.74, end: 0 },
+                blendMode: "normal",
+                color: { start: "#ffffff", end: "#eb8b58" },
+                emitterLifetime: 0.2,
+                frequency: 0.001,
+                lifetime: { min: 0.4, max: 0.7 },
+                maxParticles: 100,
+                maxSpeed: 0,
+                noRotation: false,
+                pos: { x: 8, y: 8 },
+                rotationSpeed: { min: 0, max: 200 },
+                scale: { start: 1, end: 1.2, minimumScaleMultiplier: 1 },
+                spawnType: "point",
+                speed: { start: 200, end: 50, minimumSpeedMultiplier: 1 },
+                startRotation: { min: 0, max: 360 }
+            }
+        }
+    },
+    "push": {
+        id: "push",
+        displayName: "Push",
+        description: "Create a directed gust of wind to throw objects or enemies and stun them for a short time. Pushed enemies which hit objects, walls, or other enemies take physical damage. Anything hit by the pushed object also takes physical damage.",
+        baseCastCount: 3,
+        value: 8,
+        type: SpellType.Push,
+        range: 15,
+        useFunc: castPush,
+        effect: "particles",
+        particles: {
+            particleLocation: "target",
             particleImages: ["particle_cloud"],
             particleConfig: {
                 acceleration: { x: 0, y: 0 },

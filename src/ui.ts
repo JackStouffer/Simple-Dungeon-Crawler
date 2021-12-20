@@ -611,6 +611,9 @@ export class SpellSelectionMenu {
                 case SpellType.HealOther:
                     info.text = `health: ${spell.value}`;
                     break;
+                case SpellType.AreaOfEffect:
+                    info.text = `radius: ${spell.value}`;
+                    break;
                 case SpellType.Push:
                     info.text = `tiles: ${spell.value}`;
                     break;

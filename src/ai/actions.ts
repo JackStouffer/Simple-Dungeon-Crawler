@@ -330,7 +330,13 @@ function useHealingItemAction(
     showLogMessage(`${typeData.displayName} used a ${item.displayName}`);
 
     return new UseSkillCommand(
-        aiState.entity.id, ItemData[item.id], undefined, undefined, true, useItem
+        aiState.entity.id,
+        ItemData[item.id],
+        undefined,
+        undefined,
+        undefined,
+        true,
+        useItem
     );
 }
 
@@ -352,7 +358,13 @@ function useHealingSpellAction(
     showLogMessage(`${typeData!.displayName} casted ${spell.displayName}`);
 
     return new UseSkillCommand(
-        aiState.entity.id, SpellData[spell.id], undefined, undefined, true, useSpell
+        aiState.entity.id,
+        SpellData[spell.id],
+        undefined,
+        undefined,
+        undefined,
+        true,
+        useSpell
     );
 }
 
@@ -403,7 +415,13 @@ function healAllyAction(
     showLogMessage(`${typeData.displayName} casted ${spell.displayName}`);
 
     return new UseSkillCommand(
-        aiState.entity.id, SpellData[spell.id], target, undefined, true, useSpell
+        aiState.entity.id,
+        SpellData[spell.id],
+        target,
+        undefined,
+        undefined,
+        true,
+        useSpell
     );
 }
 
@@ -443,6 +461,7 @@ function castSpellAction(spellID: string): ActionUpdateFunction {
             aiState.entity.id,
             SpellData[spellID],
             targetPos.tilePosition,
+            undefined,
             undefined,
             true,
             useSpell
