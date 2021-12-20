@@ -472,6 +472,7 @@ interface SpellMenuRow {
     bg: PIXI.Sprite;
     name: PIXI.Text;
     info: PIXI.Text;
+    range: PIXI.Text;
     count: PIXI.Text;
 }
 
@@ -569,9 +570,9 @@ export class SpellSelectionMenu {
         this.descriptionText.visible = true;
         this.descriptionBackground.visible = true;
 
-        const info = spells[this.currentSelection];
-        if (info !== undefined) {
-            this.descriptionText.text = info.description;
+        const spellData = spells[this.currentSelection];
+        if (spellData !== undefined) {
+            this.descriptionText.text = spellData.description;
         }
 
         // TODO, SPEED: these objects are allocated every time the menu is opened
@@ -623,6 +624,16 @@ export class SpellSelectionMenu {
                     assertUnreachable(spell.type);
             }
 
+            const range = new PIXI.Text("", this.unselectedStyle);
+            range.visible = false;
+            if (spell.range !== undefined) {
+                range.x = this.viewport.width * 0.7;
+                range.y = y;
+                range.zIndex = 22;
+                range.visible = true;
+                range.text = `range: ${spell.range} tiles`;
+            }
+
             const count = new PIXI.Text(`Count: ${spell.count}/${spell.maxCount}`, this.unselectedStyle);
             count.x = this.viewport.width * 0.85;
             count.y = y;
@@ -633,11 +644,13 @@ export class SpellSelectionMenu {
                 bg,
                 name,
                 info,
+                range,
                 count
             });
             this.currentStage.addChild(bg);
             this.currentStage.addChild(name);
             this.currentStage.addChild(info);
+            this.currentStage.addChild(range);
             this.currentStage.addChild(count);
         }
     }
@@ -653,6 +666,7 @@ export class SpellSelectionMenu {
             this.currentStage.removeChild(m.bg);
             this.currentStage.removeChild(m.name);
             this.currentStage.removeChild(m.info);
+            this.currentStage.removeChild(m.range);
             this.currentStage.removeChild(m.count);
         }
         this.menuItems = [];
@@ -686,11 +700,13 @@ export class SpellSelectionMenu {
                 m.bg.visible = true;
                 m.name.style = this.selectedStyle;
                 m.info.style = this.selectedStyle;
+                m.range.style = this.selectedStyle;
                 m.count.style = this.selectedStyle;
             } else {
                 m.bg.visible = false;
                 m.name.style = this.unselectedStyle;
                 m.info.style = this.unselectedStyle;
+                m.range.style = this.unselectedStyle;
                 m.count.style = this.unselectedStyle;
             }
         }

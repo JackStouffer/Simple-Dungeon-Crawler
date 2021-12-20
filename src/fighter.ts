@@ -739,6 +739,7 @@ export interface KnownSpellDetails {
     damageType?: DamageType;
     statusEffect?: StatusEffectType;
     areaOfEffect?: Area;
+    range?: number;
 }
 
 export function getKnownSpells(data: SpellsComponent): KnownSpellDetails[] {
@@ -753,7 +754,8 @@ export function getKnownSpells(data: SpellsComponent): KnownSpellDetails[] {
             value: SpellData[k].value,
             damageType: SpellData[k].damageType,
             statusEffect: SpellData[k].statusEffect,
-            areaOfEffect: SpellData[k].areaOfEffect
+            areaOfEffect: SpellData[k].areaOfEffect,
+            range: SpellData[k].range
         };
     });
 }
