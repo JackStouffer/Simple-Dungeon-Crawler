@@ -1732,6 +1732,10 @@ export function saveLevelState(
     });
 }
 
+export function clearSavedLevelState() {
+    levelEntityStateMap.clear();
+}
+
 /**
  * Return all the objects at a given spot on the map
  */

@@ -76,7 +76,8 @@ import {
     loadTiledMap,
     resetTilePathCosts,
     ShadowBox,
-    Vector2D
+    Vector2D,
+    clearSavedLevelState
 } from "./map";
 import {
     KeyBindingMenu,
@@ -639,7 +640,7 @@ export class SimpleDungeonCrawler {
 
         this.openingText = new PIXI.Text(
             "This is an experiment to test a bunch of gameplay ideas I have. \nIt doesn't represent a finished product, but I hope you'll enjoy it anyway!\n\n\nPress [enter] to start",
-            { fontFamily : "monospace", fontSize: 14, fill : 0xFFFFFF, align : "center" }
+            { fontFamily : "serif", fontSize: 16, fill : 0xFFFFFF, align : "center" }
         );
         this.openingText.x = (this.pixiApp.screen.width / 2) - (this.openingText.width / 2);
         this.openingText.y = 200;
@@ -649,7 +650,7 @@ export class SimpleDungeonCrawler {
 
         this.losingText = new PIXI.Text(
             "You have died\n\n\nPress [enter] to restart",
-            { fontFamily : "monospace", fontSize: 14, fill : 0xFFFFFF, align : "center" }
+            { fontFamily : "serif", fontSize: 16, fill : 0xFFFFFF, align : "center" }
         );
         this.losingText.x = (this.pixiApp.screen.width / 2) - (this.losingText.width / 2);
         this.losingText.y = 200;
@@ -659,7 +660,7 @@ export class SimpleDungeonCrawler {
 
         this.winningText = new PIXI.Text(
             "You won!\n\n\nPress [enter] to restart the game",
-            { fontFamily : "monospace", fontSize: 14, fill : 0xFFFFFF, align : "center" }
+            { fontFamily : "serif", fontSize: 16, fill : 0xFFFFFF, align : "center" }
         );
         this.winningText.x = (this.pixiApp.screen.width / 2) - (this.winningText.width / 2);
         this.winningText.y = 200;
@@ -669,7 +670,7 @@ export class SimpleDungeonCrawler {
 
         this.loadingText = new PIXI.Text(
             "Loading",
-            { fontFamily : "monospace", fontSize: 14, fill : 0xFFFFFF, align : "center" }
+            { fontFamily : "serif", fontSize: 16, fill : 0xFFFFFF, align : "center" }
         );
         this.loadingText.x = (this.pixiApp.screen.width / 2) - (this.loadingText.width / 2);
         this.loadingText.y = 200;
@@ -808,6 +809,8 @@ export class SimpleDungeonCrawler {
 
     reset(): void {
         if (globals.document === null) { throw new Error("Global document cannot be null"); }
+
+        clearSavedLevelState();
 
         this.scheduler.clear();
         this.ecs.entities.forEach((e) => {

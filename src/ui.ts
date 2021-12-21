@@ -1,5 +1,6 @@
 import { Entity, World } from "ape-ecs";
 import * as PIXI from "pixi.js";
+import { OutlineFilter } from "pixi-filters";
 
 import globals from "./globals";
 import {
@@ -929,17 +930,16 @@ export class KeyBindingMenu {
 }
 
 class Button {
-    readonly viewport: PIXI.Rectangle;
-    readonly currentStage: PIXI.Container;
-    readonly zIndex: number;
-    readonly background: PIXI.Graphics;
-    readonly backgroundX: number;
-    readonly backgroundY: number;
+    viewport: PIXI.Rectangle;
+    currentStage: PIXI.Container;
+    zIndex: number;
+    background: PIXI.Graphics;
+    backgroundX: number;
+    backgroundY: number;
     backgroundWidth: number;
     backgroundHeight: number;
     backgroundColor: number;
-    backgroundBorderColor: number;
-    readonly buttonText: PIXI.Text;
+    buttonText: PIXI.Text;
     buttonTextColor: number;
 
     onMouseEnter: Nullable<(button: Button) => void> = null;
@@ -951,6 +951,8 @@ class Button {
     visible: boolean = true;
     mouseIsOver: boolean = false;
     mouseIsDown: boolean = false;
+
+    static textStyle = { fontFamily: "serif", fontSize: 16, fill: 0xFFFFFF };
 
     constructor(
         viewport: PIXI.Rectangle,
@@ -969,12 +971,11 @@ class Button {
         this.backgroundY = y;
         this.backgroundWidth = width;
         this.backgroundHeight = height;
-        this.backgroundColor = 0x000000;
-        this.backgroundBorderColor = 0xFFFFFF;
+        this.backgroundColor = 0x0078e7;
         this.zIndex = zIndex;
 
         this.buttonTextColor = 0xFFFFFF;
-        this.buttonText = new PIXI.Text(text, { fontFamily: "monospace", fontSize: 14, fill: 0xFFFFFF });
+        this.buttonText = new PIXI.Text(text, Button.textStyle);
         this.buttonText.x = x + ((width / 2) - (this.buttonText.width / 2));
         this.buttonText.y = y + ((height / 2) - (this.buttonText.height / 2));
         this.buttonText.zIndex = zIndex + 2;
@@ -995,7 +996,6 @@ class Button {
      */
     redraw(): void {
         this.background.clear();
-        this.background.lineStyle(2, this.backgroundBorderColor, 1, 1);
         this.background.beginFill(this.backgroundColor);
         this.background.drawRect(0, 0, this.backgroundWidth, this.backgroundHeight);
         this.background.endFill();
@@ -1050,14 +1050,14 @@ class Button {
 }
 
 function defaultMouseEnter(button: Button) {
-    button.backgroundColor = 0xE3E3E3;
-    button.buttonTextColor = 0x000000;
+    button.backgroundColor = 0x005db5;
+    button.buttonTextColor = 0xFFFFFF;
     button.redraw();
     globals.Game!.canvas!.style.cursor = "pointer";
 }
 
 function defaultMouseExit(button: Button) {
-    button.backgroundColor = 0x000000;
+    button.backgroundColor = 0x0078e7;
     button.buttonTextColor = 0xFFFFFF;
     button.redraw();
     globals.Game!.canvas!.style.cursor = "default";
@@ -1071,7 +1071,7 @@ function defaultMouseDown() {
 export class ConfirmationModal {
     readonly viewport: PIXI.Rectangle;
     readonly currentStage: PIXI.Container;
-    readonly background: PIXI.Graphics;
+    readonly background: PIXI.TilingSprite;
     readonly descriptionBackground: PIXI.Graphics;
     readonly titleText: PIXI.Text;
     readonly bodyText: PIXI.Text;
@@ -1079,7 +1079,22 @@ export class ConfirmationModal {
 
     onConfirmation: Nullable<(modal: ConfirmationModal) => void>;
 
-    constructor(viewport: PIXI.Rectangle, stage: PIXI.Container, title: string, body: string) {
+    static titleStyle = { fontFamily: "Luminari, fantasy", fontSize: 32, fill: 0x633418, align: "center" };
+    static bodyTextStyle = {
+        fontFamily: "serif",
+        fontSize: 18,
+        fill: 0x633418,
+        align: "center",
+        wordWrap: true,
+    };
+
+    constructor(
+        viewport: PIXI.Rectangle,
+        stage: PIXI.Container,
+        textures: PIXI.ITextureDictionary,
+        title: string,
+        body: string
+    ) {
         this.viewport = viewport;
         this.currentStage = stage;
 
@@ -1087,30 +1102,28 @@ export class ConfirmationModal {
         const backgroundHeight = viewport.height / 2;
         const backgroundX = backgroundWidth - (backgroundWidth / 2);
         const backgroundY = backgroundHeight - (backgroundHeight / 2);
-
-        const backgroundLineWidth = 4;
+        const backgroundLineWidth = 10;
         const backgroundZIndex = 20;
-        this.background = new PIXI.Graphics();
-        this.background.lineStyle(backgroundLineWidth, 0x999999, 1, 1);
-        this.background.beginFill(0x000000);
-        this.background.drawRect(
-            backgroundX,
-            backgroundY,
-            backgroundWidth,
-            backgroundHeight
-        );
-        this.background.endFill();
+
+        this.background = new PIXI.TilingSprite(textures["parchment_bg"]);
+        this.background.width = backgroundWidth;
+        this.background.height = backgroundHeight;
+        this.background.x = backgroundX;
+        this.background.y = backgroundY;
         this.background.zIndex = backgroundZIndex;
         this.background.visible = true;
+        this.background.filters = [
+            new OutlineFilter(backgroundLineWidth, 0x631721)
+        ];
 
-        this.titleText = new PIXI.Text(title, { fontFamily: "monospace", fontSize: 24, fill: 0xFFFFFF, align: "center" });
+        this.titleText = new PIXI.Text(title, ConfirmationModal.titleStyle);
         this.titleText.x = (viewport.width / 2) - (this.titleText.width / 2);
         this.titleText.y = backgroundY + 10;
         this.titleText.zIndex = 21;
         this.titleText.visible = true;
 
-        const buttonWidth = 50;
-        const buttonHeight = 30;
+        const buttonWidth = 80;
+        const buttonHeight = 45;
         this.button = new Button(
             viewport,
             stage,
@@ -1122,14 +1135,8 @@ export class ConfirmationModal {
             backgroundZIndex
         );
 
-        this.bodyText = new PIXI.Text(body, {
-            fontFamily: "monospace",
-            fontSize: 14,
-            fill: 0xFFFFFF,
-            align: "center",
-            wordWrap: true,
-            wordWrapWidth: backgroundWidth * 0.90
-        });
+        this.bodyText = new PIXI.Text(body, ConfirmationModal.bodyTextStyle);
+        this.bodyText.style.wordWrapWidth = backgroundWidth * 0.90;
         this.bodyText.x = (viewport.width / 2) - (this.bodyText.width / 2);
         this.bodyText.y = (viewport.height / 2) - (this.bodyText.height / 2);
         this.bodyText.zIndex = 21;
@@ -1170,6 +1177,7 @@ export function showConfirmationDialogBox(text: string): void {
     const modal = new ConfirmationModal(
         globals.Game!.pixiApp.screen,
         globals.Game!.pixiApp.stage,
+        globals.Game!.textureAtlas,
         "Tutorial",
         text
     );
