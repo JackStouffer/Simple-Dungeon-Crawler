@@ -768,13 +768,7 @@ export class SimpleDungeonCrawler {
         globals.gameEventEmitter.on("tutorial.environmentInteractivity", explainEnvironmentInteractivity);
         globals.gameEventEmitter.on("tutorial.enemySurrounding", explainEnemySurrounding);
 
-        this.keyBindingMenu = new KeyBindingMenu(this.pixiApp.screen, this.pixiApp.stage);
-        this.inventoryMenu = new InventoryMenu(this.pixiApp.screen, this.pixiApp.stage);
-        this.spellSelectionMenu = new SpellSelectionMenu(this.pixiApp.screen, this.pixiApp.stage);
         this.statusBar = new StatusBar(this.pixiApp.screen, this.pixiApp.stage);
-        this.confirmationModal = null;
-        this.logMessages = [];
-
         this.gameCamera = new Camera({
             x: this.pixiApp.screen.x,
             y: this.pixiApp.screen.y,
@@ -789,6 +783,16 @@ export class SimpleDungeonCrawler {
             .add("bin/images/sprites.json")
             .load((loader, resources) => {
                 parent.textureAtlas = resources["bin/images/sprites.json"]!.textures!;
+
+                this.keyBindingMenu = new KeyBindingMenu(this.pixiApp.screen, this.pixiApp.stage);
+                this.inventoryMenu = new InventoryMenu(
+                    this.pixiApp.screen, this.pixiApp.stage, this.textureAtlas
+                );
+                this.spellSelectionMenu = new SpellSelectionMenu(
+                    this.pixiApp.screen, this.pixiApp.stage
+                );
+                this.confirmationModal = null;
+                this.logMessages = [];
 
                 parent
                     .startGameplay()

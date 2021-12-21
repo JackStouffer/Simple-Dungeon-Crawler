@@ -3,6 +3,7 @@ import * as PIXI from "pixi.js";
 
 import globals from "./globals";
 import {
+    ItemType,
     LEVEL_UP_BASE,
     LEVEL_UP_FACTOR,
     PLAYER_ID,
@@ -279,8 +280,9 @@ export function showLogMessage(text: string): void {
 }
 
 interface InventoryMenuRow {
-    bg: PIXI.Sprite;
+    bg: PIXI.Graphics;
     name: PIXI.Text;
+    info: PIXI.Text;
     count: PIXI.Text;
 }
 
@@ -291,70 +293,70 @@ export class InventoryMenu {
     readonly viewport: PIXI.Rectangle;
     readonly currentStage: PIXI.Container;
 
-    readonly background: PIXI.Graphics;
+    readonly background: PIXI.TilingSprite;
     readonly descriptionBackground: PIXI.Graphics;
     readonly titleText: PIXI.Text;
     readonly descriptionText: PIXI.Text;
 
     menuItems: InventoryMenuRow[];
 
-    readonly unselectedStyle = { fontFamily : "monospace", fontSize: 14, fill : 0xFFFFFF };
-    readonly selectedStyle = { fontFamily : "monospace", fontSize: 14, fill : 0x0 };
+    static unselectedStyle = { fontFamily : "serif", fontSize: 16, fill : 0x633418 };
+    static selectedStyle = { fontFamily : "serif", fontSize: 16, fill : 0xFFFFFF };
+    static descriptionStyle = {
+        fontFamily: "serif",
+        fontSize: 16,
+        fill: 0xFFFFFF,
+        wordWrap: true
+    };
+    static titleStyle = { fontFamily : "Luminari, serif", fontSize: 28, fill : 0x633418, align : "center" };
 
-    constructor(viewport: PIXI.Rectangle, stage: PIXI.Container) {
+    static descriptionBackgroundColor = 0x631721;
+    static descriptionBorderColor = 0x635917;
+    static selectionBackgroundColor = 0x631721;
+
+    constructor(viewport: PIXI.Rectangle, stage: PIXI.Container, textures: PIXI.ITextureDictionary) {
         this.currentSelection = 0;
         this.viewport = viewport;
         this.currentStage = stage;
 
-        const backgroundLineWidth = 4;
-        this.background = new PIXI.Graphics();
-        this.background.lineStyle(backgroundLineWidth, 0x999999, 1, 1);
-        this.background.beginFill(0x000000);
-        this.background.drawRect(
-            0,
-            0,
-            viewport.width - (backgroundLineWidth * 2),
-            viewport.height - (backgroundLineWidth * 2)
-        );
-        this.background.endFill();
-        this.background.x = backgroundLineWidth;
-        this.background.y = backgroundLineWidth;
+        this.background = new PIXI.TilingSprite(textures["parchment_bg"]);
+        this.background.width = viewport.width;
+        this.background.height = viewport.height;
+        this.background.x = 0;
+        this.background.y = 0;
         this.background.zIndex = 20;
         this.background.visible = false;
 
-        this.titleText = new PIXI.Text("Inventory", { fontFamily : "monospace", fontSize: 24, fill : 0xFFFFFF, align : "center" });
+        this.titleText = new PIXI.Text("Inventory", InventoryMenu.titleStyle);
         this.titleText.x = (viewport.width / 2) - (this.titleText.width / 2);
-        this.titleText.y = 5 + backgroundLineWidth;
+        this.titleText.y = 5;
         this.titleText.zIndex = 21;
         this.titleText.visible = false;
 
         const descriptionLineWidth = 4;
         const descriptionBoxHeight = 96;
-        const descriptionBoxTop = viewport.height
-            - descriptionBoxHeight
-            - (backgroundLineWidth * 2);
+        const descriptionBoxTop = viewport.height - descriptionBoxHeight;
         this.descriptionBackground = new PIXI.Graphics();
-        this.descriptionBackground.lineStyle(descriptionLineWidth, 0xFFFFFF, 1, 1);
-        this.descriptionBackground.beginFill(0x000000);
+        this.descriptionBackground.lineStyle(
+            descriptionLineWidth,
+            InventoryMenu.descriptionBorderColor,
+            1,
+            1
+        );
+        this.descriptionBackground.beginFill(InventoryMenu.descriptionBackgroundColor);
         this.descriptionBackground.drawRect(
             0,
             0,
-            viewport.width - (descriptionLineWidth * 2) - (backgroundLineWidth * 2),
+            viewport.width - (descriptionLineWidth * 2),
             descriptionBoxHeight
         );
         this.descriptionBackground.endFill();
-        this.descriptionBackground.x = descriptionLineWidth + backgroundLineWidth;
+        this.descriptionBackground.x = descriptionLineWidth;
         this.descriptionBackground.y = descriptionBoxTop;
         this.descriptionBackground.zIndex = 22;
         this.descriptionBackground.visible = false;
 
-        this.descriptionText = new PIXI.Text("", {
-            fontFamily: "monospace",
-            fontSize: 14,
-            fill: 0xFFFFFF,
-            wordWrap: true,
-            wordWrapWidth: this.descriptionBackground.width * 0.95
-        });
+        this.descriptionText = new PIXI.Text("", InventoryMenu.descriptionStyle);
         this.descriptionText.x = 20;
         this.descriptionText.y = descriptionBoxTop + 15;
         this.descriptionText.zIndex = 23;
@@ -376,6 +378,8 @@ export class InventoryMenu {
         this.descriptionText.visible = true;
         this.descriptionBackground.visible = true;
 
+        this.descriptionText.style.wordWrapWidth = this.descriptionBackground.width * 0.95;
+
         const info = inventoryItems[this.currentSelection];
         if (info !== undefined) {
             this.descriptionText.text = info.description;
@@ -383,23 +387,51 @@ export class InventoryMenu {
 
         for (let i = 0; i < inventoryItems.length; i++) {
             const item = inventoryItems[i];
-            const y = 20 * (i + 3);
+            const y = 25 * (i + 3);
 
-            const bg = new PIXI.Sprite(PIXI.Texture.WHITE);
-            bg.width = this.viewport.width * 0.98;
-            bg.height = 20;
-            bg.x = this.viewport.width * 0.01;
-            bg.y = y - 3;
+            const bg = new PIXI.Graphics();
+            bg.beginFill(InventoryMenu.selectionBackgroundColor);
+            bg.drawRect(
+                this.viewport.width * 0.01,
+                y - 3,
+                this.viewport.width * 0.98,
+                25
+            );
             bg.zIndex = 21;
             bg.visible = false;
 
-            const name = new PIXI.Text(`${item.displayName}`, this.unselectedStyle);
+            const name = new PIXI.Text(`${item.displayName}`, InventoryMenu.unselectedStyle);
             name.x = this.viewport.width * 0.02;
             name.y = y;
             name.zIndex = 22;
             name.visible = true;
 
-            const count = new PIXI.Text(`Count: ${item.count}`, this.unselectedStyle);
+            const info = new PIXI.Text("", InventoryMenu.unselectedStyle);
+            info.x = this.viewport.width * 0.65;
+            info.y = y;
+            info.zIndex = 22;
+            info.visible = true;
+
+            switch (item.type) {
+                case ItemType.DamageScroll:
+                case ItemType.WildDamageScroll:
+                    info.text = `dmg: ${item.value}`;
+                    break;
+                case ItemType.HasteSelf:
+                case ItemType.SlowOther:
+                case ItemType.ConfuseScroll:
+                    info.text = `turns: ${item.value}`;
+                    break;
+                case ItemType.HealSelf:
+                    info.text = `health: ${item.value}`;
+                    break;
+                case ItemType.ClairvoyanceScroll:
+                    break;
+                default:
+                    assertUnreachable(item.type);
+            }
+
+            const count = new PIXI.Text(`Count: ${item.count}`, InventoryMenu.unselectedStyle);
             count.x = this.viewport.width * 0.85;
             count.y = y;
             count.zIndex = 22;
@@ -408,10 +440,12 @@ export class InventoryMenu {
             this.menuItems.push({
                 bg,
                 name,
+                info,
                 count
             });
             this.currentStage.addChild(bg);
             this.currentStage.addChild(name);
+            this.currentStage.addChild(info);
             this.currentStage.addChild(count);
         }
     }
@@ -426,6 +460,7 @@ export class InventoryMenu {
             const m = this.menuItems[i];
             this.currentStage.removeChild(m.bg);
             this.currentStage.removeChild(m.name);
+            this.currentStage.removeChild(m.info);
             this.currentStage.removeChild(m.count);
         }
         this.menuItems = [];
@@ -455,12 +490,14 @@ export class InventoryMenu {
             const m = this.menuItems[i];
             if (i === this.currentSelection) {
                 m.bg.visible = true;
-                m.name.style = this.selectedStyle;
-                m.count.style = this.selectedStyle;
+                m.name.style = InventoryMenu.selectedStyle;
+                m.info.style = InventoryMenu.selectedStyle;
+                m.count.style = InventoryMenu.selectedStyle;
             } else {
                 m.bg.visible = false;
-                m.name.style = this.unselectedStyle;
-                m.count.style = this.unselectedStyle;
+                m.name.style = InventoryMenu.unselectedStyle;
+                m.info.style = InventoryMenu.unselectedStyle;
+                m.count.style = InventoryMenu.unselectedStyle;
             }
         }
 
@@ -1028,6 +1065,7 @@ function defaultMouseExit(button: Button) {
 
 function defaultMouseDown() {
     playUIClick();
+    globals.Game!.canvas!.style.cursor = "default";
 }
 
 export class ConfirmationModal {
@@ -1102,6 +1140,7 @@ export class ConfirmationModal {
             if (this.onConfirmation !== null) {
                 this.onConfirmation(this);
             }
+            globals.Game!.canvas!.style.cursor = "default";
         };
 
         this.currentStage.addChild(this.background);
