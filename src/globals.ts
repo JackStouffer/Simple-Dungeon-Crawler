@@ -13,6 +13,7 @@ interface MyWindow extends Window {
     togglePathfindingDebug?: () => void;
     toggleAIDebug?: () => void;
     toggleAIDialogDebug?: () => void;
+    toggleTutorials?: () => void;
     startGameLoop?: () => void;
     stopGameLoop?: () => void;
     loopOnce?: () => void;

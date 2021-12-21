@@ -567,6 +567,7 @@ export class SimpleDungeonCrawler {
     debugPathfinding: boolean;
     debugAI: boolean;
     debugAIDialog: boolean;
+    showTutorials: boolean;
 
     lastTimestamp: DOMHighResTimeStamp;
     deltaTime: DOMHighResTimeStamp;
@@ -615,6 +616,7 @@ export class SimpleDungeonCrawler {
         this.debugPathfinding = false;
         this.debugAI = false;
         this.debugAIDialog = false;
+        this.showTutorials = true;
 
         this.pixiApp = new PIXI.Application({ width: 1216, height: 640 });
 
