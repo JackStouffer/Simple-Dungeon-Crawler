@@ -780,6 +780,98 @@
                  "width":0,
                  "x":1750.57063149886,
                  "y":781.131118437738
+                }, 
+                {
+                 "height":0,
+                 "id":76,
+                 "name":"Camera Tutorial",
+                 "point":true,
+                 "properties":[
+                        {
+                         "name":"event",
+                         "type":"string",
+                         "value":"tutorial.camera"
+                        }, 
+                        {
+                         "name":"objectType",
+                         "type":"string",
+                         "value":"event_trigger"
+                        }],
+                 "rotation":0,
+                 "type":"object",
+                 "visible":true,
+                 "width":0,
+                 "x":951.934480472746,
+                 "y":1226.53035767023
+                }, 
+                {
+                 "height":0,
+                 "id":77,
+                 "name":"Camera Tutorial",
+                 "point":true,
+                 "properties":[
+                        {
+                         "name":"event",
+                         "type":"string",
+                         "value":"tutorial.camera"
+                        }, 
+                        {
+                         "name":"objectType",
+                         "type":"string",
+                         "value":"event_trigger"
+                        }],
+                 "rotation":0,
+                 "type":"object",
+                 "visible":true,
+                 "width":0,
+                 "x":968.800841775523,
+                 "y":1226.77129041403
+                }, 
+                {
+                 "height":0,
+                 "id":78,
+                 "name":"Camera Tutorial",
+                 "point":true,
+                 "properties":[
+                        {
+                         "name":"event",
+                         "type":"string",
+                         "value":"tutorial.camera"
+                        }, 
+                        {
+                         "name":"objectType",
+                         "type":"string",
+                         "value":"event_trigger"
+                        }],
+                 "rotation":0,
+                 "type":"object",
+                 "visible":true,
+                 "width":0,
+                 "x":983.449680472746,
+                 "y":1226.305611251
+                }, 
+                {
+                 "height":0,
+                 "id":79,
+                 "name":"Camera Tutorial",
+                 "point":true,
+                 "properties":[
+                        {
+                         "name":"event",
+                         "type":"string",
+                         "value":"tutorial.camera"
+                        }, 
+                        {
+                         "name":"objectType",
+                         "type":"string",
+                         "value":"event_trigger"
+                        }],
+                 "rotation":0,
+                 "type":"object",
+                 "visible":true,
+                 "width":0,
+                 "x":999.713038798814,
+                 "y":1225.30922315784
                 }],
          "opacity":1,
          "type":"objectgroup",
@@ -1022,7 +1114,7 @@
          "y":0
         }],
  "nextlayerid":11,
- "nextobjectid":74,
+ "nextobjectid":82,
  "orientation":"orthogonal",
  "renderorder":"right-down",
  "tiledversion":"1.7.2",

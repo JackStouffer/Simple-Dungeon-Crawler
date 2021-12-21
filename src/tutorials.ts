@@ -17,7 +17,7 @@ const hasMessageBeenShown = {
 
 export function explainCamera() {
     if (!hasMessageBeenShown.cameraMovement) {
-        showConfirmationDialogBox("Move the camera around by using WASD.");
+        showConfirmationDialogBox("Observing your enemy and environment from afar and planning your attack is key to survival. Move the camera around by using WASD. Pass a turn by pressing X.");
         hasMessageBeenShown.cameraMovement = true;
     }
 }
@@ -59,7 +59,7 @@ export function explainSpellShrine() {
 
 export function explainEnvironmentInteractivity() {
     if (!hasMessageBeenShown.environment) {
-        showConfirmationDialogBox("Spells can interact with the environment in different ways. Observing your enemy and environment from afar and planning your attack is key to survival");
+        showConfirmationDialogBox("Spells can interact with the environment in different ways");
         hasMessageBeenShown.environment = true;
     }
 }
