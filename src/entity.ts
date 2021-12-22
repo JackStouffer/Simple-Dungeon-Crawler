@@ -1362,7 +1362,7 @@ export const ObjectData: { [key: string]: ObjectDataDetails } = {
                     classification: "goblin"
                 },
                 GraphicsComponent: {
-                    textureKey: "orc_body_1",
+                    textureKey: "goblin_2",
                     sprite: null,
                     zIndex: 5
                 },
@@ -1417,51 +1417,55 @@ export const ObjectData: { [key: string]: ObjectDataDetails } = {
             }
         }
     },
-    "goblin_brute": {
+    "goblin_mage": {
         addInventory: true,
         addPlannerAI: true,
         addDialogMemory: true,
-        nonAlertSightRange: 7,
-        alertSightRange: 7,
-        desiredDistanceToTarget: 1,
+        nonAlertSightRange: 6,
+        alertSightRange: 8,
+        lowHealthThreshold: 0.5,
+        desiredDistanceToTarget: 5,
+        spells: [
+            ["lightning_bolt", 3]
+        ],
         actions: [
-            "guard",
+            "wander",
             "chase",
+            "standby",
+            "reposition",
             "useHealingItem",
+            "useHealingSpell",
             "goToEnemy",
             "goToSafePosition",
+            "runAway",
             "meleeAttack",
             "douseFireOnSelf",
             "alertAllies",
             "confusedWander"
         ],
-        inventoryPool: [
-            {
-                itemID: "health_potion_weak",
-                probability: 0.25
-            },
-            {
-                itemID: "health_potion",
-                probability: 0.1
-            }
-        ],
+        inventoryPool: [],
         staticallyKnownComponents: {
             tags: ["blocks", "sentient", "moveable"],
             c: {
                 TypeComponent: {
-                    displayName: "Goblin Brute",
-                    entityType: "goblin_brute",
+                    displayName: "Goblin Mage",
+                    entityType: "goblin_mage",
                     race: "goblin",
                     classification: "goblin"
                 },
                 GraphicsComponent: {
-                    textureKey: "orc_body_1",
+                    textureKey: "goblin_1",
                     sprite: null,
                     zIndex: 5
                 },
                 LoseTargetAIComponent: {
                     turnsWithTargetOutOfSight: 0,
                     loseTrackAfterNTurns: 6
+                },
+                FearAIComponent: {
+                    fear: 0,
+                    isAfraidThreshold: 10,
+                    isCowering: false
                 },
                 ConfusableAIComponent: {
                     confused: false,
@@ -1472,21 +1476,21 @@ export const ObjectData: { [key: string]: ObjectDataDetails } = {
                     maxTilesPerMove: 5
                 },
                 HitPointsComponent: {
-                    hp: 100,
-                    maxHp: 100,
+                    hp: 30,
+                    maxHp: 30,
                     onDeath: DeathType.Default
                 },
                 StatsComponent: {
-                    strength: 7,
-                    defense: 4,
+                    strength: 2,
+                    defense: 1,
                     criticalChance: 0.05,
                     criticalDamageMultiplier: 1.5,
                     ailmentSusceptibility: 0.1
                 },
                 LevelComponent: {
-                    level: 10,
+                    level: 5,
                     experience: 0,
-                    experienceGiven: 500
+                    experienceGiven: 10
                 },
                 DamageAffinityComponent: normalTypeDamageValues,
                 FlammableComponent: {
@@ -1501,6 +1505,10 @@ export const ObjectData: { [key: string]: ObjectDataDetails } = {
                 },
                 WetableComponent: {
                     wet: false,
+                    turnsLeft: 0
+                },
+                SilenceableComponent: {
+                    silenced: false,
                     turnsLeft: 0
                 },
                 StunnableComponent: {
@@ -1890,12 +1898,7 @@ export const ObjectData: { [key: string]: ObjectDataDetails } = {
             "alertAllies",
             "confusedWander"
         ],
-        inventoryPool: [
-            {
-                itemID: "health_potion_weak",
-                probability: 0.25
-            }
-        ],
+        inventoryPool: [],
         staticallyKnownComponents: {
             tags: ["blocks", "sentient", "moveable"],
             c: {

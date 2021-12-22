@@ -56,49 +56,49 @@ export class StatusBar {
         this.background.zIndex = 20;
         this.background.visible = false;
 
-        this.healthText = new PIXI.Text("", { fontFamily : "monospace", fontSize: 14, fill : 0xFFFFFF });
+        this.healthText = new PIXI.Text("", { fontFamily : "serif", fontSize: 16, fill : 0xFFFFFF });
         this.healthText.x = 20;
         this.healthText.y = top + 15;
         this.healthText.zIndex = 21;
         this.healthText.visible = false;
 
-        this.strengthText = new PIXI.Text("", { fontFamily : "monospace", fontSize: 14, fill : 0xFFFFFF });
+        this.strengthText = new PIXI.Text("", { fontFamily : "serif", fontSize: 16, fill : 0xFFFFFF });
         this.strengthText.x = 200;
         this.strengthText.y = top + 15;
         this.strengthText.zIndex = 21;
         this.strengthText.visible = false;
 
-        this.defenseText = new PIXI.Text("", { fontFamily : "monospace", fontSize: 14, fill : 0xFFFFFF });
+        this.defenseText = new PIXI.Text("", { fontFamily : "serif", fontSize: 16, fill : 0xFFFFFF });
         this.defenseText.x = 350;
         this.defenseText.y = top + 15;
         this.defenseText.zIndex = 21;
         this.defenseText.visible = false;
 
-        this.experienceText = new PIXI.Text("", { fontFamily : "monospace", fontSize: 14, fill : 0xFFFFFF });
+        this.experienceText = new PIXI.Text("", { fontFamily : "serif", fontSize: 16, fill : 0xFFFFFF });
         this.experienceText.x = 500;
         this.experienceText.y = top + 15;
         this.experienceText.zIndex = 21;
         this.experienceText.visible = false;
 
-        this.stateText = new PIXI.Text("", { fontFamily : "monospace", fontSize: 14, fill : 0xFFFFFF });
+        this.stateText = new PIXI.Text("", { fontFamily : "serif", fontSize: 16, fill : 0xFFFFFF });
         this.stateText.x = 20;
         this.stateText.y = top + 45;
         this.stateText.zIndex = 21;
         this.stateText.visible = false;
 
-        this.statusText = new PIXI.Text("", { fontFamily : "monospace", fontSize: 14, fill : 0xFFFFFF });
+        this.statusText = new PIXI.Text("", { fontFamily : "serif", fontSize: 16, fill : 0xFFFFFF });
         this.statusText.x = 200;
         this.statusText.y = top + 45;
         this.statusText.zIndex = 21;
         this.statusText.visible = false;
 
-        this.targetText = new PIXI.Text("", { fontFamily : "monospace", fontSize: 14, fill : 0xFFFFFF });
+        this.targetText = new PIXI.Text("", { fontFamily : "serif", fontSize: 16, fill : 0xFFFFFF });
         this.targetText.x = 350;
         this.targetText.y = top + 45;
         this.targetText.zIndex = 21;
         this.targetText.visible = false;
 
-        this.debugPathfindingText = new PIXI.Text("", { fontFamily : "monospace", fontSize: 14, fill : 0xFFFFFF });
+        this.debugPathfindingText = new PIXI.Text("", { fontFamily : "serif", fontSize: 16, fill : 0xFFFFFF });
         this.debugPathfindingText.x = 650;
         this.debugPathfindingText.y = top + 45;
         this.debugPathfindingText.zIndex = 21;

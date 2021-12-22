@@ -65,21 +65,21 @@ interface TileDataDetails {
 
 export const TileData: { [key: number]: TileDataDetails } = {
     6: {
-        name: "grass",
+        name: "Grass",
         textureKey: "grass_1",
         blocks: false,
         blocksSight: false,
         reflectivity: 0.18
     },
     7: {
-        name: "dirt",
+        name: "Dirt",
         textureKey: "mud_1",
         blocks: false,
         blocksSight: false,
         reflectivity: 0.18
     },
     8: {
-        name: "stone",
+        name: "Stone",
         textureKey: "stone_1",
         blocks: true,
         blocksSight: true,
@@ -87,7 +87,7 @@ export const TileData: { [key: number]: TileDataDetails } = {
         defaultToExplored: false
     },
     25: {
-        name: "grass",
+        name: "Grass",
         textureKey: "barrel_3",
         blocks: false,
         blocksSight: false,
@@ -101,35 +101,35 @@ export const TileData: { [key: number]: TileDataDetails } = {
         reflectivity: 0.18
     },
     184: {
-        name: "grass",
+        name: "Grass",
         textureKey: "grass_2",
         blocks: false,
         blocksSight: false,
         reflectivity: 0.18
     },
     185: {
-        name: "dirt",
+        name: "Dirt",
         textureKey: "mud_2",
         blocks: false,
         blocksSight: false,
         reflectivity: 0.18
     },
     186: {
-        name: "stone",
+        name: "Stone",
         textureKey: "stone_2",
         blocks: false,
         blocksSight: false,
         reflectivity: 0.18
     },
     188: {
-        name: "stone",
+        name: "Stone",
         textureKey: "sprite191",
         blocks: false,
         blocksSight: false,
         reflectivity: 0.18
     },
     194: {
-        name: "bed",
+        name: "Bed",
         textureKey: "red_bed_1_front",
         blocks: true,
         blocksSight: false,
