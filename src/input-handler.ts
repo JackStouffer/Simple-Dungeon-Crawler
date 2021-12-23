@@ -152,7 +152,7 @@ export function playerInput(
                     mouseDownPosition
                 );
 
-                if (target !== null && target !== inputState.entity) {
+                if (target !== null && target !== inputState.entity && target.tags.has("attackable")) {
                     const hpData = target.getOne(HitPointsComponent);
                     const interactableData = target.getOne(InteractableTypeComponent);
 

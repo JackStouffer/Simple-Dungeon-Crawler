@@ -709,7 +709,7 @@ export const ObjectData: { [key: string]: ObjectDataDetails } = {
     "crate": {
         addInventory: true,
         staticallyKnownComponents: {
-            tags: ["blocks", "moveable"],
+            tags: ["blocks", "moveable", "attackable"],
             c: {
                 TypeComponent: {
                     displayName: "Wooden Crate",
@@ -746,7 +746,7 @@ export const ObjectData: { [key: string]: ObjectDataDetails } = {
     "barrel": {
         addInventory: true,
         staticallyKnownComponents: {
-            tags: ["blocks", "moveable"],
+            tags: ["blocks", "moveable", "attackable"],
             c: {
                 TypeComponent: {
                     displayName: "Oil Barrel",
@@ -956,7 +956,7 @@ export const ObjectData: { [key: string]: ObjectDataDetails } = {
     },
     "ice_wall": {
         staticallyKnownComponents: {
-            tags: ["blocks", "blocksSight"],
+            tags: ["blocks", "blocksSight", "attackable"],
             c: {
                 TypeComponent: {
                     displayName: "Ice Wall",
@@ -1277,7 +1277,7 @@ export const ObjectData: { [key: string]: ObjectDataDetails } = {
     },
     "thick_underbrush": {
         staticallyKnownComponents: {
-            tags: ["blocksSight"],
+            tags: ["blocksSight", "attackable"],
             c: {
                 TypeComponent: {
                     displayName: "Thick Bush",
@@ -1315,7 +1315,7 @@ export const ObjectData: { [key: string]: ObjectDataDetails } = {
         ],
         staticallyKnownComponents: {
             id: "player",
-            tags: ["blocks", "input", "sentient", "moveable"],
+            tags: ["blocks", "input", "sentient", "moveable", "attackable"],
             c: {
                 TypeComponent: {
                     displayName: "The Player",
@@ -1409,7 +1409,7 @@ export const ObjectData: { [key: string]: ObjectDataDetails } = {
             }
         ],
         staticallyKnownComponents: {
-            tags: ["blocks", "sentient", "moveable"],
+            tags: ["blocks", "sentient", "moveable", "attackable"],
             c: {
                 TypeComponent: {
                     displayName: "Goblin",
@@ -1505,7 +1505,7 @@ export const ObjectData: { [key: string]: ObjectDataDetails } = {
         ],
         inventoryPool: [],
         staticallyKnownComponents: {
-            tags: ["blocks", "sentient", "moveable"],
+            tags: ["blocks", "sentient", "moveable", "attackable"],
             c: {
                 TypeComponent: {
                     displayName: "Goblin Mage",
@@ -1599,7 +1599,7 @@ export const ObjectData: { [key: string]: ObjectDataDetails } = {
             "confusedWander"
         ],
         staticallyKnownComponents: {
-            tags: ["blocks", "sentient", "moveable"],
+            tags: ["blocks", "sentient", "moveable", "attackable"],
             c: {
                 TypeComponent: {
                     displayName: "Rat",
@@ -1687,7 +1687,7 @@ export const ObjectData: { [key: string]: ObjectDataDetails } = {
             "confusedWander"
         ],
         staticallyKnownComponents: {
-            tags: ["blocks", "sentient", "moveable", "aquatic"],
+            tags: ["blocks", "sentient", "moveable", "aquatic", "attackable"],
             c: {
                 TypeComponent: {
                     displayName: "Eel",
@@ -1763,7 +1763,7 @@ export const ObjectData: { [key: string]: ObjectDataDetails } = {
             "confusedWander"
         ],
         staticallyKnownComponents: {
-            tags: ["blocks", "sentient", "moveable"],
+            tags: ["blocks", "sentient", "moveable", "attackable"],
             c: {
                 TypeComponent: {
                     displayName: "Lightning Bug",
@@ -1875,7 +1875,7 @@ export const ObjectData: { [key: string]: ObjectDataDetails } = {
             }
         ],
         staticallyKnownComponents: {
-            tags: ["blocks", "sentient", "moveable"],
+            tags: ["blocks", "sentient", "moveable", "attackable"],
             c: {
                 TypeComponent: {
                     displayName: "Bandit",
@@ -1976,7 +1976,7 @@ export const ObjectData: { [key: string]: ObjectDataDetails } = {
         ],
         inventoryPool: [],
         staticallyKnownComponents: {
-            tags: ["blocks", "sentient", "moveable"],
+            tags: ["blocks", "sentient", "moveable", "attackable"],
             c: {
                 TypeComponent: {
                     displayName: "Bandit Mage",
@@ -2081,7 +2081,7 @@ export const ObjectData: { [key: string]: ObjectDataDetails } = {
             "confusedWander"
         ],
         staticallyKnownComponents: {
-            tags: ["blocks", "sentient", "moveable"],
+            tags: ["blocks", "sentient", "moveable", "attackable"],
             c: {
                 TypeComponent: {
                     displayName: "Bandit White Mage",
@@ -2175,7 +2175,7 @@ export const ObjectData: { [key: string]: ObjectDataDetails } = {
             "alertAllies"
         ],
         staticallyKnownComponents: {
-            tags: ["blocks", "sentient", "moveable"],
+            tags: ["blocks", "sentient", "moveable", "attackable"],
             c: {
                 TypeComponent: {
                     displayName: "Dog",

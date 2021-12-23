@@ -415,10 +415,10 @@ export class NoOpCommand implements Command {
  * Based on the circumstances, ice has different effects, so return true if the trigger
  * was an ice trigger.
  *
- * @param ecs {World}
- * @param entityMap {EntityMap}
- * @param trigger {Entity}
- * @param activator {Entity}
+ * @param ecs {World} The world of the entity
+ * @param entityMap {EntityMap} The current entity map
+ * @param trigger {Entity} The entity which might be a trigger
+ * @param activator {Entity} The entity which might be activating a trigger
  * @returns {boolean} Was the trigger an ice trigger
  */
 function checkAndActivateTrigger(

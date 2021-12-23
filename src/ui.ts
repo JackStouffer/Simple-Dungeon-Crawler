@@ -19,7 +19,9 @@ import {
     HitPointsComponent,
     InputHandlingComponent,
     LevelComponent,
+    OilCoveredComponent,
     PlannerAIComponent,
+    StunnableComponent,
     TriggerComponent,
     TypeComponent,
     WetableComponent
@@ -146,6 +148,8 @@ export class StatusBar {
         const flammableData = player.getOne(FlammableComponent);
         const frozenData = player.getOne(FreezableComponent);
         const wetData = player.getOne(WetableComponent);
+        const stunnableData = player.getOne(StunnableComponent);
+        const oilData = player.getOne(OilCoveredComponent);
 
         if (hpData === null ||
             statData === null ||
@@ -172,6 +176,10 @@ export class StatusBar {
             status = "Frozen";
         } else if (wetData !== undefined && wetData.wet) {
             status = "Wet";
+        } else if (stunnableData !== undefined && stunnableData.stunned) {
+            status = "Stunned";
+        } else if (oilData !== undefined && oilData.oilCovered) {
+            status = "Oil Covered";
         }
         this.statusText.text = `Status: ${status}`;
 
