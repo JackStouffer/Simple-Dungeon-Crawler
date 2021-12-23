@@ -49,7 +49,7 @@ export function giveAllSpells(): void {
     if (spellData === undefined) { throw new Error("Global player cannot learn spells"); }
 
     for (const key in SpellData) {
-        addSpellById(player, key, 10, 10);
+        addSpellById(player, key, SpellData[key].baseCastCount, SpellData[key].baseCastCount);
     }
 }
 

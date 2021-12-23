@@ -61,6 +61,7 @@ export enum SpellType {
     DamageOther,
     WildDamage,
     Effect,
+    EffectOther,
     Passive,
     HealSelf,
     HealOther,

@@ -527,6 +527,7 @@ const SpellMenuState: GameState = {
                     break;
                 case SpellType.Push:
                 case SpellType.DamageOther:
+                case SpellType.EffectOther:
                 case SpellType.HealOther:
                     inputHandlerState.spellForTarget = spell;
                     inputHandlerState.state = PlayerState.Target;
@@ -797,7 +798,7 @@ export class SimpleDungeonCrawler {
                     this.pixiApp.screen, this.pixiApp.stage, this.textureAtlas
                 );
                 this.spellSelectionMenu = new SpellSelectionMenu(
-                    this.pixiApp.screen, this.pixiApp.stage
+                    this.pixiApp.screen, this.pixiApp.stage, this.textureAtlas
                 );
                 this.confirmationModal = null;
                 this.logMessages = [];

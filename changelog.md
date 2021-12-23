@@ -20,11 +20,13 @@ _In Development_
   * Dogs can now bark to alert their allies
   * Rest points now heal status aliments
   * Rest points now disappear after use
+  * Grass can no longer be physically attack
   * Fixed a bug where being alerted by the presence of a dead body would cause mages not to attack
   * Fixed a bug where area of effect damage on an enemy could let it know where the player is
   * Fixed bugs relating to particle effects of statuses disappearing before the status ends
 * Technical
   * Consolidated entity display strings with the entity type data
+  * Added entity tag to control which entities can and cannot be physically attacked
 * Graphical
   * Mousing over interactable entities now causes them to glow
   * Rest points are now marked by particle effects instead of a sprite

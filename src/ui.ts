@@ -515,7 +515,7 @@ export class InventoryMenu {
 }
 
 interface SpellMenuRow {
-    bg: PIXI.Sprite;
+    bg: PIXI.Graphics;
     name: PIXI.Text;
     info: PIXI.Text;
     range: PIXI.Text;
@@ -529,38 +529,41 @@ export class SpellSelectionMenu {
     readonly viewport: PIXI.Rectangle;
     readonly currentStage: PIXI.Container;
 
-    private readonly background: PIXI.Graphics;
+    private readonly background: PIXI.TilingSprite;
     private readonly descriptionBackground: PIXI.Graphics;
     private readonly titleText: PIXI.Text;
     private readonly descriptionText: PIXI.Text;
 
     private menuItems: SpellMenuRow[];
 
-    private readonly unselectedStyle = { fontFamily : "monospace", fontSize: 14, fill : 0xFFFFFF };
-    private readonly selectedStyle = { fontFamily : "monospace", fontSize: 14, fill : 0x0 };
+    static unselectedStyle = { fontFamily : "serif", fontSize: 16, fill : 0x633418 };
+    static selectedStyle = { fontFamily : "serif", fontSize: 16, fill : 0xFFFFFF };
+    static descriptionStyle = {
+        fontFamily: "serif",
+        fontSize: 16,
+        fill: 0xFFFFFF,
+        wordWrap: true
+    };
+    static titleStyle = { fontFamily : "Luminari, serif", fontSize: 28, fill : 0x633418, align : "center" };
 
-    constructor(viewport: PIXI.Rectangle, stage: PIXI.Container) {
+    static descriptionBackgroundColor = 0x631721;
+    static descriptionBorderColor = 0x635917;
+    static selectionBackgroundColor = 0x631721;
+
+    constructor(viewport: PIXI.Rectangle, stage: PIXI.Container, textures: PIXI.ITextureDictionary) {
         this.currentSelection = 0;
         this.viewport = viewport;
         this.currentStage = stage;
 
-        const backgroundLineWidth = 4;
-        this.background = new PIXI.Graphics();
-        this.background.lineStyle(backgroundLineWidth, 0x999999, 1, 1);
-        this.background.beginFill(0x000000);
-        this.background.drawRect(
-            0,
-            0,
-            viewport.width - (backgroundLineWidth * 2),
-            viewport.height - (backgroundLineWidth * 2)
-        );
-        this.background.endFill();
-        this.background.x = backgroundLineWidth;
-        this.background.y = backgroundLineWidth;
+        this.background = new PIXI.TilingSprite(textures["parchment_bg"]);
+        this.background.width = viewport.width;
+        this.background.height = viewport.height;
+        this.background.x = 0;
+        this.background.y = 0;
         this.background.zIndex = 20;
         this.background.visible = false;
 
-        this.titleText = new PIXI.Text("Spells", { fontFamily : "monospace", fontSize: 24, fill : 0xFFFFFF, align : "center" });
+        this.titleText = new PIXI.Text("Spells", InventoryMenu.titleStyle);
         this.titleText.x = (viewport.width / 2) - (this.titleText.width / 2);
         this.titleText.y = 15;
         this.titleText.zIndex = 21;
@@ -568,31 +571,28 @@ export class SpellSelectionMenu {
 
         const descriptionLineWidth = 4;
         const descriptionBoxHeight = 96;
-        const descriptionBoxTop = viewport.height
-            - descriptionBoxHeight
-            - (backgroundLineWidth * 2);
+        const descriptionBoxTop = viewport.height - descriptionBoxHeight;
         this.descriptionBackground = new PIXI.Graphics();
-        this.descriptionBackground.lineStyle(descriptionLineWidth, 0xFFFFFF, 1, 1);
-        this.descriptionBackground.beginFill(0x000000);
+        this.descriptionBackground.lineStyle(
+            descriptionLineWidth,
+            SpellSelectionMenu.descriptionBorderColor,
+            1,
+            1
+        );
+        this.descriptionBackground.beginFill(SpellSelectionMenu.descriptionBackgroundColor);
         this.descriptionBackground.drawRect(
             0,
             0,
-            viewport.width - (descriptionLineWidth * 2) - (backgroundLineWidth * 2),
+            viewport.width - (descriptionLineWidth * 2),
             descriptionBoxHeight
         );
         this.descriptionBackground.endFill();
-        this.descriptionBackground.x = descriptionLineWidth + backgroundLineWidth;
+        this.descriptionBackground.x = descriptionLineWidth;
         this.descriptionBackground.y = descriptionBoxTop;
         this.descriptionBackground.zIndex = 22;
         this.descriptionBackground.visible = false;
 
-        this.descriptionText = new PIXI.Text("", {
-            fontFamily: "monospace",
-            fontSize: 14,
-            fill: 0xFFFFFF,
-            wordWrap: true,
-            wordWrapWidth: this.descriptionBackground.width * 0.95
-        });
+        this.descriptionText = new PIXI.Text("", SpellSelectionMenu.descriptionStyle);
         this.descriptionText.x = 20;
         this.descriptionText.y = descriptionBoxTop + 15;
         this.descriptionText.zIndex = 23;
@@ -616,6 +616,8 @@ export class SpellSelectionMenu {
         this.descriptionText.visible = true;
         this.descriptionBackground.visible = true;
 
+        this.descriptionText.style.wordWrapWidth = this.descriptionBackground.width * 0.95;
+
         const spellData = spells[this.currentSelection];
         if (spellData !== undefined) {
             this.descriptionText.text = spellData.description;
@@ -626,21 +628,24 @@ export class SpellSelectionMenu {
             const spell = spells[i];
             const y = 20 * (i + 3);
 
-            const bg = new PIXI.Sprite(PIXI.Texture.WHITE);
-            bg.width = this.viewport.width * 0.98;
-            bg.height = 20;
-            bg.x = this.viewport.width * 0.01;
-            bg.y = y - 3;
+            const bg = new PIXI.Graphics();
+            bg.beginFill(InventoryMenu.selectionBackgroundColor);
+            bg.drawRect(
+                this.viewport.width * 0.01,
+                y - 3,
+                this.viewport.width * 0.98,
+                25
+            );
             bg.zIndex = 21;
             bg.visible = false;
 
-            const name = new PIXI.Text(`${spell.displayName}`, this.unselectedStyle);
+            const name = new PIXI.Text(`${spell.displayName}`, SpellSelectionMenu.unselectedStyle);
             name.x = this.viewport.width * 0.02;
             name.y = y;
             name.zIndex = 22;
             name.visible = true;
 
-            const info = new PIXI.Text("", this.unselectedStyle);
+            const info = new PIXI.Text("", SpellSelectionMenu.unselectedStyle);
             info.x = this.viewport.width * 0.55;
             info.y = y;
             info.zIndex = 22;
@@ -652,6 +657,7 @@ export class SpellSelectionMenu {
                     info.text = `dmg: ${spell.value}`;
                     break;
                 case SpellType.Effect:
+                case SpellType.EffectOther:
                     info.text = `turns: ${spell.value}`;
                     break;
                 case SpellType.HealSelf:
@@ -670,7 +676,7 @@ export class SpellSelectionMenu {
                     assertUnreachable(spell.type);
             }
 
-            const range = new PIXI.Text("", this.unselectedStyle);
+            const range = new PIXI.Text("", SpellSelectionMenu.unselectedStyle);
             range.visible = false;
             if (spell.range !== undefined) {
                 range.x = this.viewport.width * 0.7;
@@ -680,7 +686,7 @@ export class SpellSelectionMenu {
                 range.text = `range: ${spell.range} tiles`;
             }
 
-            const count = new PIXI.Text(`Count: ${spell.count}/${spell.maxCount}`, this.unselectedStyle);
+            const count = new PIXI.Text(`Count: ${spell.count}/${spell.maxCount}`, SpellSelectionMenu.unselectedStyle);
             count.x = this.viewport.width * 0.85;
             count.y = y;
             count.zIndex = 22;
@@ -744,16 +750,16 @@ export class SpellSelectionMenu {
             const m = this.menuItems[i];
             if (i === this.currentSelection) {
                 m.bg.visible = true;
-                m.name.style = this.selectedStyle;
-                m.info.style = this.selectedStyle;
-                m.range.style = this.selectedStyle;
-                m.count.style = this.selectedStyle;
+                m.name.style = SpellSelectionMenu.selectedStyle;
+                m.info.style = SpellSelectionMenu.selectedStyle;
+                m.range.style = SpellSelectionMenu.selectedStyle;
+                m.count.style = SpellSelectionMenu.selectedStyle;
             } else {
                 m.bg.visible = false;
-                m.name.style = this.unselectedStyle;
-                m.info.style = this.unselectedStyle;
-                m.range.style = this.unselectedStyle;
-                m.count.style = this.unselectedStyle;
+                m.name.style = SpellSelectionMenu.unselectedStyle;
+                m.info.style = SpellSelectionMenu.unselectedStyle;
+                m.range.style = SpellSelectionMenu.unselectedStyle;
+                m.count.style = SpellSelectionMenu.unselectedStyle;
             }
         }
 
