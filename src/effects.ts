@@ -18,7 +18,8 @@ import {
     TriggerComponent,
     TypeComponent,
     WetableComponent,
-    AreaOfEffectComponent
+    AreaOfEffectComponent,
+    OilCoveredComponent
 } from "./entity";
 import { takeDamage } from "./fighter";
 import { setOnFire, SpellData } from "./skills";
@@ -123,6 +124,15 @@ export class WetSystem extends System {
             } else if (effect.wet && effect.turnsLeft <= 0) {
                 effect.wet = false;
                 effect.update();
+
+                if (entity.id === PLAYER_ID) {
+                    showLogMessage("You are no longer wet");
+                } else {
+                    const typeInfo = entity.getOne(TypeComponent);
+                    if (typeInfo !== undefined) {
+                        showLogMessage(`${typeInfo.displayName} is no longer wet`);
+                    }
+                }
             }
         }
     }
@@ -242,6 +252,40 @@ export class FrozenSystem extends System {
                     if (typeInfo !== undefined) {
                         // TODO, sound: ice cracking sound
                         showLogMessage(`${typeInfo.displayName} is no longer frozen`);
+                    }
+                }
+            }
+        }
+    }
+}
+
+export class OilCoveredSystem extends System {
+    private mainQuery: Query;
+
+    init() {
+        this.mainQuery = this
+            .createQuery()
+            .fromAll(OilCoveredComponent)
+            .persist();
+    }
+
+    update() {
+        const entities = this.mainQuery.execute();
+        for (const entity of entities) {
+            const effect = entity.getOne(OilCoveredComponent)!;
+            if (effect.oilCovered && effect.turnsLeft > 0) {
+                effect.turnsLeft--;
+                effect.update();
+            } else if (effect.oilCovered && effect.turnsLeft <= 0) {
+                effect.oilCovered = false;
+                effect.update();
+
+                if (entity.id === PLAYER_ID) {
+                    showLogMessage("You are no longer covered in oil");
+                } else {
+                    const typeInfo = entity.getOne(TypeComponent);
+                    if (typeInfo !== undefined) {
+                        showLogMessage(`${typeInfo.displayName} is no longer covered in oil`);
                     }
                 }
             }

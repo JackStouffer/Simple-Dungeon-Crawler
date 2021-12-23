@@ -13,7 +13,8 @@ const hasMessageBeenShown = {
     environment: false,
     enemySurrounding: false,
     attackPlanning: false,
-    wetStatus: false
+    wetStatus: false,
+    oiledStatus: false
 };
 
 export function explainCamera() {
@@ -75,6 +76,13 @@ export function explainEnemySurrounding() {
 export function explainWetStatus() {
     if (!hasMessageBeenShown.wetStatus && globals.Game!.showTutorials) {
         showConfirmationDialogBox("You are now wet. Electric attacks will do more damage, but you are immune to fire damage for one hit. You will dry off after several turns.");
+        hasMessageBeenShown.wetStatus = true;
+    }
+}
+
+export function explainOiledStatus() {
+    if (!hasMessageBeenShown.oiledStatus && globals.Game!.showTutorials) {
+        showConfirmationDialogBox("Things covered in oil are weak to fire damage for one fire attack. The oil will dry off after several turns.");
         hasMessageBeenShown.wetStatus = true;
     }
 }

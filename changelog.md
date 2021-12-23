@@ -7,6 +7,10 @@ _In Development_
 * Gameplay
   * Major level redesigns
   * Added a new spell, "push", which throws enemies across the map in a specified direction
+  * Barrels are now "Oil Barrels"
+    * They explode if caught on fire
+    * They cover an area with oil if broken
+  * Added an "Oil Covered" status which makes the entity weak to fire damage
   * Leaving a level now saves the level entity state and reloads that state when returning
     * Using a door to return to a level no longer teleports you back to the beginning of the level
   * Lightning bugs now have fear and are weak to fire
@@ -18,6 +22,7 @@ _In Development_
   * Rest points now disappear after use
   * Fixed a bug where being alerted by the presence of a dead body would cause mages not to attack
   * Fixed a bug where area of effect damage on an enemy could let it know where the player is
+  * Fixed bugs relating to particle effects of statuses disappearing before the status ends
 * Technical
   * Consolidated entity display strings with the entity type data
 * Graphical

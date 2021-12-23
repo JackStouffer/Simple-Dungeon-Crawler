@@ -36,7 +36,9 @@ export enum Affinity {
 
 export enum DeathType {
     Default,
-    RemoveFromWorld
+    RemoveFromWorld,
+    /** Unique death type to handle barrels exploding or dumping their oil */
+    OilBarrel
 }
 
 export enum LightingType {
@@ -88,7 +90,8 @@ export enum TriggerType {
     Mud,
     Steam,
     Ice,
-    Explosion
+    CauseExplosion,
+    Oil
 }
 
 export enum AreaOfEffectType {

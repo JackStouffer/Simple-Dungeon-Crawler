@@ -34,14 +34,16 @@ import {
     TypeComponent,
     WetableComponent,
     ConfusableAIComponent,
-    FearAIComponent
+    FearAIComponent,
+    OilCoveredComponent,
+    ParticleEmitterComponent,
 } from "./entity";
 import { randomIntFromInterval, Nullable, assertUnreachable } from "./util";
 import { mouseTarget } from "./input-handler";
 import { getEffectiveHitPointData, getEffectiveStatData, heal, takeDamage } from "./fighter";
-import { getCirclePositions, getTargetedArea } from "./graphics";
+import { getCirclePositions, getTargetedArea, removeExistingParticleEffects } from "./graphics";
 import { PushBackCommand } from "./commands";
-import { explainWetStatus } from "./tutorials";
+import { explainOiledStatus, explainWetStatus } from "./tutorials";
 
 export interface Area {
     type: "rectangle" | "circle" | "ring";
@@ -180,6 +182,7 @@ function castHealOther(
  * Set an entity on fire an deal with all of the interactions
  * between different statuses, and the behavior with different
  * types of entities
+ * @returns {boolean} Was set on fire. False if entity was already on fire or can't be set on fire
  */
 export function setOnFire(target: Entity, damage?: number, turns?: number): boolean {
     const typeData = target.getOne(TypeComponent)!;
@@ -204,6 +207,7 @@ export function setOnFire(target: Entity, damage?: number, turns?: number): bool
         wetData.wet = false;
         wetData.turnsLeft = 0;
         wetData.update();
+        removeExistingParticleEffects(target);
 
         if (target.id === PLAYER_ID) {
             // TODO, sound: spell not working sound
@@ -219,6 +223,7 @@ export function setOnFire(target: Entity, damage?: number, turns?: number): bool
     // You can't be set on fire if you're frozen
     if (frozenData !== undefined && frozenData.frozen) {
         if (wetData !== undefined) {
+            // TODO, BUG: Use setWet here
             wetData.wet = true;
             wetData.turnsLeft = frozenData.turnsLeft;
             wetData.update();
@@ -254,70 +259,88 @@ export function setOnFire(target: Entity, damage?: number, turns?: number): bool
         });
     }
 
-    // Being on fire adds a lot of fear
-    const fearData = target.getOne(FearAIComponent);
-    if (fearData !== undefined && !flammableData.onFire) {
-        fearData.fear += 7;
-        fearData.update();
-    }
-
-    // Inanimate objects should burn until they
-    // are consumed
+    // Keep generating more turns even if the target is already on fire.
+    // If the entity keeps stepping in fire we want the turns to keep being
+    // set at the random level
     if (target.tags.has("sentient")) {
-        flammableData.turnsLeft = turns ?? randomIntFromInterval(3, 6);
+        turns = turns ?? randomIntFromInterval(3, 6);
     } else {
-        flammableData.turnsLeft = 1000;
+        // Inanimate objects should burn until they
+        // are consumed
+        turns = 1000;
     }
 
-    const hpData = target.getOne(HitPointsComponent);
-    if (damage !== undefined) {
-        flammableData.fireDamage = damage;
-    } else if (hpData !== undefined) {
-        flammableData.fireDamage = Math.max(
-            1,
-            Math.round(hpData.maxHp * 0.0625)
-        );
-    } else {
-        flammableData.fireDamage = 3;
-    }
+    if (flammableData.onFire === false) {
+        flammableData.onFire = true;
+        flammableData.turnsLeft = turns;
+        flammableData.update();
 
-    flammableData.onFire = true;
-    flammableData.update();
+        // Being on fire adds a lot of fear
+        const fearData = target.getOne(FearAIComponent);
+        if (fearData !== undefined && !flammableData.onFire) {
+            fearData.fear += 7;
+            fearData.update();
+        }
 
-    // Add the particle emitter
-    const graphicsData = target.getOne(GraphicsComponent);
-    if (graphicsData !== undefined) {
-        target.addComponent({
-            type: "ParticleEmitterComponent",
-            emitter: null,
-            turnsLeft: flammableData.turnsLeft,
-            particleDefinition: {
-                particleImages: ["particle_cloud", "particle_fire"],
-                particleConfig: {
-                    acceleration: { x: 0, y: 0 },
-                    addAtBack: false,
-                    alpha: { start: 0.62, end: 0 },
-                    blendMode: "normal",
-                    color: { start: "#fff191", end: "#ff622c" },
-                    emitterLifetime: -1,
-                    frequency: 0.001,
-                    lifetime: { min: 0.05, max: 0.1 },
-                    maxParticles: 500,
-                    maxSpeed: 0,
-                    noRotation: false,
-                    pos: { x: 8, y: 8 },
-                    rotationSpeed: { min: 50, max: 50 },
-                    scale: { start: .2, end: 1, minimumScaleMultiplier: 1 },
-                    spawnCircle: { x: 0, y: 0, r: 10 },
-                    spawnType: "circle",
-                    speed: { start: 230, end: 150, minimumSpeedMultiplier: 1 },
-                    startRotation: { min: 265, max: 275 }
+        const hpData = target.getOne(HitPointsComponent);
+        if (damage !== undefined) {
+            flammableData.fireDamage = damage;
+        } else if (hpData !== undefined) {
+            flammableData.fireDamage = Math.max(
+                1,
+                Math.round(hpData.maxHp * 0.0625)
+            );
+        } else {
+            flammableData.fireDamage = 3;
+        }
+
+        // Add the particle emitter
+        const graphicsData = target.getOne(GraphicsComponent);
+        if (graphicsData !== undefined) {
+            removeExistingParticleEffects(target);
+            target.addComponent({
+                type: "ParticleEmitterComponent",
+                emitter: null,
+                turnsLeft: flammableData.turnsLeft,
+                particleDefinition: {
+                    particleImages: ["particle_cloud", "particle_fire"],
+                    particleConfig: {
+                        acceleration: { x: 0, y: 0 },
+                        addAtBack: false,
+                        alpha: { start: 0.62, end: 0 },
+                        blendMode: "normal",
+                        color: { start: "#fff191", end: "#ff622c" },
+                        emitterLifetime: -1,
+                        frequency: 0.001,
+                        lifetime: { min: 0.05, max: 0.1 },
+                        maxParticles: 500,
+                        maxSpeed: 0,
+                        noRotation: false,
+                        pos: { x: 8, y: 8 },
+                        rotationSpeed: { min: 50, max: 50 },
+                        scale: { start: .2, end: 1, minimumScaleMultiplier: 1 },
+                        spawnCircle: { x: 0, y: 0, r: 10 },
+                        spawnType: "circle",
+                        speed: { start: 230, end: 150, minimumSpeedMultiplier: 1 },
+                        startRotation: { min: 265, max: 275 }
+                    }
                 }
-            }
-        });
+            });
+        }
+
+        return true;
+    } else if (flammableData.onFire === true && flammableData.turnsLeft < turns) {
+        flammableData.turnsLeft = turns;
+        flammableData.update();
+
+        const particleData = target.getOne(ParticleEmitterComponent);
+        if (particleData !== undefined) {
+            particleData.turnsLeft = turns;
+            particleData.update();
+        }
     }
 
-    return true;
+    return false;
 }
 
 export function setWet(target: Entity, turns?: number): boolean {
@@ -328,11 +351,12 @@ export function setWet(target: Entity, turns?: number): boolean {
         flammableData.turnsLeft = 0;
         flammableData.fireDamage = 0;
         flammableData.update();
+        removeExistingParticleEffects(target);
     }
 
     if (turns === undefined) { turns = 10; }
     const wetData = target.getOne(WetableComponent);
-    if (wetData !== undefined && (wetData.wet === false || wetData.turnsLeft < turns)) {
+    if (wetData !== undefined && wetData.wet === false) {
         wetData.wet = true;
         wetData.turnsLeft = turns;
         wetData.update();
@@ -340,6 +364,7 @@ export function setWet(target: Entity, turns?: number): boolean {
         // Add the particle emitter
         const graphicsData = target.getOne(GraphicsComponent);
         if (graphicsData !== undefined) {
+            removeExistingParticleEffects(target);
             target.addComponent({
                 type: "ParticleEmitterComponent",
                 emitter: null,
@@ -375,6 +400,15 @@ export function setWet(target: Entity, turns?: number): boolean {
         }
 
         return true;
+    } else if (wetData !== undefined && wetData.turnsLeft < turns) {
+        wetData.turnsLeft = turns;
+        wetData.update();
+
+        const particleData = target.getOne(ParticleEmitterComponent);
+        if (particleData !== undefined) {
+            particleData.turnsLeft = turns;
+            particleData.update();
+        }
     }
 
     return false;
@@ -392,6 +426,13 @@ export function setStunned(target: Entity, turns?: number): boolean {
     if (stunnableData.stunned && stunnableData.turnsLeft < turns) {
         stunnableData.turnsLeft = turns ?? 0;
         stunnableData.update();
+
+        const particleData = target.getOne(ParticleEmitterComponent);
+        if (particleData !== undefined) {
+            particleData.turnsLeft = stunnableData.turnsLeft;
+            particleData.update();
+        }
+
         return true;
     }
 
@@ -402,6 +443,7 @@ export function setStunned(target: Entity, turns?: number): boolean {
     // Add the particle emitter
     const graphicsData = target.getOne(GraphicsComponent);
     if (graphicsData !== undefined) {
+        removeExistingParticleEffects(target);
         target.addComponent({
             type: "ParticleEmitterComponent",
             emitter: null,
@@ -490,6 +532,99 @@ export function setFrozen(target: Entity, turns: number): boolean {
             graphics.sprite.texture = globals.Game!.textureAtlas[graphics.textureKey];
         }
 
+        return true;
+    }
+
+    return false;
+}
+
+/**
+ * Mark an entity as covered in oil, dealing with all of the interactions
+ * between the different statuses.
+ */
+export function setOilCovered(target: Entity, turns?: number): boolean {
+    if (turns === undefined) { turns = 10; }
+    const oilData = target.getOne(OilCoveredComponent);
+    const typeData = target.getOne(TypeComponent)!;
+    const wetData = target.getOne(WetableComponent);
+    const frozenData = target.getOne(FreezableComponent);
+
+    if (oilData === undefined) {
+        if (target.id === PLAYER_ID) {
+            showLogMessage("You were not covered in oil because you're immune");
+        } else if (typeData.displayName !== null && target.tags.has("sentient")) {
+            showLogMessage(`${typeData.displayName} was not set on fire because it is immune`);
+        }
+        return false;
+    }
+
+    // You can't be covered in oil you're wet
+    if (wetData !== undefined && wetData.wet) {
+        if (target.id === PLAYER_ID) {
+            showLogMessage("You were not covered in oil because you were wet");
+        } else if (typeData.displayName !== null) {
+            showLogMessage(`${typeData.displayName} was not covered in oil because it is wet`);
+        }
+        return false;
+    }
+
+    // You can't be covered in oil you're frozen
+    if (frozenData !== undefined && frozenData.frozen) {
+        if (target.id === PLAYER_ID) {
+            showLogMessage("You were not covered in oil because you were frozen");
+        } else if (typeData.displayName !== null) {
+            showLogMessage(`${typeData.displayName} was not covered in oil because it is frozen`);
+        }
+        return false;
+    }
+
+    if (oilData.oilCovered === false || oilData.turnsLeft < turns) {
+        oilData.oilCovered = true;
+        oilData.turnsLeft = turns;
+        oilData.update();
+
+        // Add the particle emitter
+        const graphicsData = target.getOne(GraphicsComponent);
+        if (graphicsData !== undefined) {
+            removeExistingParticleEffects(target);
+            target.addComponent({
+                type: "ParticleEmitterComponent",
+                emitter: null,
+                turnsLeft: oilData.turnsLeft,
+                particleDefinition: {
+                    particleImages: ["particle_cloud"],
+                    particleConfig: {
+                        acceleration: { x: 0, y: 0 },
+                        addAtBack: false,
+                        alpha: { start: 1, end: 0.8 },
+                        blendMode: "normal",
+                        color: { start: "#C66527", end: "#CB942A" },
+                        emitterLifetime: -1,
+                        frequency: 0.004,
+                        lifetime: { min: 0.2, max: 0.25 },
+                        maxParticles: 4,
+                        maxSpeed: 0,
+                        noRotation: false,
+                        pos: { x: 8, y: 8 },
+                        rotationSpeed: { min: 50, max: 50 },
+                        scale: { start: .18, end: .18, minimumScaleMultiplier: 1 },
+                        spawnCircle: { x: 0, y: -2, r: 10 },
+                        spawnType: "circle",
+                        speed: { start: 5, end: 10, minimumSpeedMultiplier: 1 },
+                        startRotation: { min: 90, max: 90 }
+                    }
+                }
+            });
+        }
+
+        if (target.id === PLAYER_ID) {
+            showLogMessage("You're covered in oil");
+        } else if (typeData.displayName !== null) {
+            showLogMessage(`${typeData.displayName} is covered in oil`);
+        }
+
+        explainOiledStatus();
+        // TODO, sound: Oil covered sound
         return true;
     }
 

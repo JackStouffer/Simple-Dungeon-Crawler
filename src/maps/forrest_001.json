@@ -138,7 +138,7 @@
                 {
                  "height":0,
                  "id":4,
-                 "name":"Barrel",
+                 "name":"Crate",
                  "point":true,
                  "properties":[
                         {
@@ -149,7 +149,7 @@
                         {
                          "name":"objectType",
                          "type":"string",
-                         "value":"barrel"
+                         "value":"crate"
                         }],
                  "rotation":0,
                  "type":"object",
@@ -674,7 +674,7 @@
                 {
                  "height":0,
                  "id":66,
-                 "name":"Barrel",
+                 "name":"Crate",
                  "point":true,
                  "properties":[
                         {
@@ -685,7 +685,7 @@
                         {
                          "name":"objectType",
                          "type":"string",
-                         "value":"barrel"
+                         "value":"crate"
                         }],
                  "rotation":0,
                  "type":"object",

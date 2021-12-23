@@ -59,7 +59,8 @@ import {
     EntityTeamMap,
     DialogMemoryComponent,
     AreaOfEffectComponent,
-    ParticleEmitterComponent
+    ParticleEmitterComponent,
+    OilCoveredComponent
 } from "./entity";
 import {
     Command,
@@ -112,7 +113,8 @@ import {
     SilenceSystem,
     StunSystem,
     FrozenSystem,
-    AreaOfEffectSystem
+    AreaOfEffectSystem,
+    OilCoveredSystem
 } from "./effects";
 import { generateAICommands } from "./ai/commands";
 import { ItemData, SpellData } from "./skills";
@@ -697,37 +699,38 @@ export class SimpleDungeonCrawler {
             "environmentTile",
             "waterTile"
         );
-        this.ecs.registerComponent(PositionComponent, 100);
-        this.ecs.registerComponent(TypeComponent, 100);
-        this.ecs.registerComponent(GraphicsComponent, 100);
+        this.ecs.registerComponent(PositionComponent, 200);
+        this.ecs.registerComponent(TypeComponent, 200);
+        this.ecs.registerComponent(GraphicsComponent, 200);
         this.ecs.registerComponent(ChestComponent, 10);
         this.ecs.registerComponent(LightingComponent, 20);
         this.ecs.registerComponent(InventoryComponent, 20);
-        this.ecs.registerComponent(HitPointsComponent, 50);
-        this.ecs.registerComponent(HitPointsEffectComponent, 50);
-        this.ecs.registerComponent(SpeedComponent, 50);
-        this.ecs.registerComponent(SpeedEffectComponent, 50);
-        this.ecs.registerComponent(StatsComponent, 50);
-        this.ecs.registerComponent(StatsEffectComponent, 50);
+        this.ecs.registerComponent(HitPointsComponent, 200);
+        this.ecs.registerComponent(HitPointsEffectComponent, 20);
+        this.ecs.registerComponent(SpeedComponent, 20);
+        this.ecs.registerComponent(SpeedEffectComponent, 20);
+        this.ecs.registerComponent(StatsComponent, 20);
+        this.ecs.registerComponent(StatsEffectComponent, 20);
         this.ecs.registerComponent(LevelComponent, 20);
-        this.ecs.registerComponent(DamageAffinityComponent, 50);
+        this.ecs.registerComponent(DamageAffinityComponent, 20);
         this.ecs.registerComponent(SpellsComponent, 20);
         this.ecs.registerComponent(PlannerAIComponent, 20);
         this.ecs.registerComponent(DialogMemoryComponent, 20);
         this.ecs.registerComponent(LoseTargetAIComponent, 20);
         this.ecs.registerComponent(FearAIComponent, 20);
-        this.ecs.registerComponent(FallbackAIComponent, 50);
-        this.ecs.registerComponent(PatrolAIComponent, 50);
-        this.ecs.registerComponent(PatrolPathComponent, 50);
-        this.ecs.registerComponent(ConfusableAIComponent, 50);
+        this.ecs.registerComponent(FallbackAIComponent, 20);
+        this.ecs.registerComponent(PatrolAIComponent, 20);
+        this.ecs.registerComponent(PatrolPathComponent, 20);
+        this.ecs.registerComponent(ConfusableAIComponent, 20);
         this.ecs.registerComponent(InputHandlingComponent, 1);
-        this.ecs.registerComponent(FreezableComponent, 50);
-        this.ecs.registerComponent(FlammableComponent, 50);
-        this.ecs.registerComponent(WetableComponent, 50);
-        this.ecs.registerComponent(SilenceableComponent, 50);
-        this.ecs.registerComponent(StunnableComponent, 50);
-        this.ecs.registerComponent(TriggerComponent, 50);
-        this.ecs.registerComponent(InteractableTypeComponent, 50);
+        this.ecs.registerComponent(FreezableComponent, 20);
+        this.ecs.registerComponent(FlammableComponent, 20);
+        this.ecs.registerComponent(WetableComponent, 20);
+        this.ecs.registerComponent(OilCoveredComponent, 20);
+        this.ecs.registerComponent(SilenceableComponent, 20);
+        this.ecs.registerComponent(StunnableComponent, 20);
+        this.ecs.registerComponent(TriggerComponent, 20);
+        this.ecs.registerComponent(InteractableTypeComponent, 20);
         this.ecs.registerComponent(LoadLevelComponent, 10);
         this.ecs.registerComponent(RemoveAfterNTurnsComponent, 10);
         this.ecs.registerComponent(AreaOfEffectComponent, 10);
@@ -756,6 +759,7 @@ export class SimpleDungeonCrawler {
         this.ecs.registerSystem("postOneTurnCycle", SilenceSystem);
         this.ecs.registerSystem("postOneTurnCycle", StunSystem);
         this.ecs.registerSystem("postOneTurnCycle", FrozenSystem);
+        this.ecs.registerSystem("postOneTurnCycle", OilCoveredSystem);
         this.ecs.registerSystem("postOneTurnCycle", ConfusableAISystem);
         this.ecs.registerSystem("postOneTurnCycle", AreaOfEffectSystem);
         this.ecs.registerSystem("postOneTurnCycle", UpdateParticlesSystem);

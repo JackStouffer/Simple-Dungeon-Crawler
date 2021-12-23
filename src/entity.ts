@@ -470,6 +470,17 @@ export class StunnableComponent extends Component {
     }
 }
 
+export class OilCoveredComponent extends Component {
+    oilCovered: boolean;
+    turnsLeft: number;
+
+    static typeName = "OilCoveredComponent";
+    static properties = {
+        stunned: false,
+        turnsLeft: 0
+    }
+}
+
 export class TriggerComponent extends Component {
     currentTriggerType: TriggerType;
     initialTriggerType: TriggerType;
@@ -738,7 +749,7 @@ export const ObjectData: { [key: string]: ObjectDataDetails } = {
             tags: ["blocks", "moveable"],
             c: {
                 TypeComponent: {
-                    displayName: "Wooden Barrel",
+                    displayName: "Oil Barrel",
                     entityType: "barrel",
                     race: null,
                     classification: "object"
@@ -751,7 +762,7 @@ export const ObjectData: { [key: string]: ObjectDataDetails } = {
                 HitPointsComponent: {
                     hp: 5,
                     maxHp: 5,
-                    onDeath: DeathType.RemoveFromWorld,
+                    onDeath: DeathType.OilBarrel,
                 },
                 DamageAffinityComponent: {
                     [DamageType.Physical]: Affinity.normal,
@@ -1171,6 +1182,43 @@ export const ObjectData: { [key: string]: ObjectDataDetails } = {
             }
         }
     },
+    "oil_slick": {
+        staticallyKnownComponents: {
+            tags: ["environmentTile"],
+            c: {
+                TypeComponent: {
+                    displayName: "Oil Slick",
+                    entityType: "oil_slick",
+                    race: null,
+                    classification: "object"
+                },
+                GraphicsComponent: {
+                    textureKey: "brown_goo_middle",
+                    sprite: null,
+                    zIndex: 3
+                },
+                HitPointsComponent: {
+                    hp: 10,
+                    maxHp: 10,
+                    onDeath: DeathType.RemoveFromWorld
+                },
+                TriggerComponent: {
+                    currentTriggerType: TriggerType.Oil,
+                    initialTriggerType: TriggerType.Oil
+                },
+                FlammableComponent: {
+                    onFire: false,
+                    fireDamage: 0,
+                    turnsLeft: 0
+                },
+                FreezableComponent: {
+                    frozen: false,
+                    turnsLeft: 0,
+                    textureKey: "frozen_water"
+                }
+            }
+        }
+    },
     "fireball_rune": {
         staticallyKnownComponents: {
             c: {
@@ -1186,8 +1234,8 @@ export const ObjectData: { [key: string]: ObjectDataDetails } = {
                     zIndex: 5
                 },
                 TriggerComponent: {
-                    currentTriggerType: TriggerType.Explosion,
-                    initialTriggerType: TriggerType.Explosion
+                    currentTriggerType: TriggerType.CauseExplosion,
+                    initialTriggerType: TriggerType.CauseExplosion
                 }
             }
         }
@@ -1213,6 +1261,10 @@ export const ObjectData: { [key: string]: ObjectDataDetails } = {
                 },
                 WetableComponent: {
                     wet: false,
+                    turnsLeft: 0
+                },
+                OilCoveredComponent: {
+                    oilCovered: false,
                     turnsLeft: 0
                 },
                 HitPointsComponent: {
@@ -1324,6 +1376,10 @@ export const ObjectData: { [key: string]: ObjectDataDetails } = {
                 SilenceableComponent: {
                     silenced: false,
                     turnsLeft: 0
+                },
+                OilCoveredComponent: {
+                    oilCovered: false,
+                    turnsLeft: 0
                 }
             }
         }
@@ -1412,6 +1468,10 @@ export const ObjectData: { [key: string]: ObjectDataDetails } = {
                 },
                 StunnableComponent: {
                     stunned: false,
+                    turnsLeft: 0
+                },
+                OilCoveredComponent: {
+                    oilCovered: false,
                     turnsLeft: 0
                 }
             }
@@ -1514,6 +1574,10 @@ export const ObjectData: { [key: string]: ObjectDataDetails } = {
                 StunnableComponent: {
                     stunned: false,
                     turnsLeft: 0
+                },
+                OilCoveredComponent: {
+                    oilCovered: false,
+                    turnsLeft: 0
                 }
             }
         }
@@ -1599,6 +1663,10 @@ export const ObjectData: { [key: string]: ObjectDataDetails } = {
                 },
                 StunnableComponent: {
                     stunned: false,
+                    turnsLeft: 0
+                },
+                OilCoveredComponent: {
+                    oilCovered: false,
                     turnsLeft: 0
                 }
             }
@@ -1772,6 +1840,10 @@ export const ObjectData: { [key: string]: ObjectDataDetails } = {
                         type: "circle",
                         radius: 3
                     }
+                },
+                OilCoveredComponent: {
+                    oilCovered: false,
+                    turnsLeft: 0
                 }
             }
         }
@@ -1867,6 +1939,10 @@ export const ObjectData: { [key: string]: ObjectDataDetails } = {
                 },
                 StunnableComponent: {
                     stunned: false,
+                    turnsLeft: 0
+                },
+                OilCoveredComponent: {
+                    oilCovered: false,
                     turnsLeft: 0
                 }
             }
@@ -1969,6 +2045,10 @@ export const ObjectData: { [key: string]: ObjectDataDetails } = {
                 StunnableComponent: {
                     stunned: false,
                     turnsLeft: 0
+                },
+                OilCoveredComponent: {
+                    oilCovered: false,
+                    turnsLeft: 0
                 }
             }
         }
@@ -2070,6 +2150,10 @@ export const ObjectData: { [key: string]: ObjectDataDetails } = {
                 StunnableComponent: {
                     stunned: false,
                     turnsLeft: 0
+                },
+                OilCoveredComponent: {
+                    oilCovered: false,
+                    turnsLeft: 0
                 }
             }
         }
@@ -2150,6 +2234,10 @@ export const ObjectData: { [key: string]: ObjectDataDetails } = {
                 },
                 StunnableComponent: {
                     stunned: false,
+                    turnsLeft: 0
+                },
+                OilCoveredComponent: {
+                    oilCovered: false,
                     turnsLeft: 0
                 }
             }

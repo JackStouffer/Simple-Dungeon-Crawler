@@ -765,3 +765,15 @@ export function createSpeechBubbleTexture(x: number, y: number, text: string) {
 
     return graphics;
 }
+
+export function removeExistingParticleEffects(entity: Entity): void {
+    if (entity.has(ParticleEmitterComponent)) {
+        const particleDatas = entity.getComponents(ParticleEmitterComponent);
+        for (const particleData of particleDatas) {
+            // Set existing particle effects to zero turns so they're destroyed
+            // properly
+            particleData.turnsLeft = 0;
+            particleData.update();
+        }
+    }
+}

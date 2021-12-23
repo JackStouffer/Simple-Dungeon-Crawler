@@ -43,7 +43,7 @@ import {
 import { attack, getEffectiveDamageAffinity, getEffectiveSpeedData, takeDamage } from "./fighter";
 import { deepWaterTrigger, eventTrigger, explosionTrapTrigger, fireTrigger, mudTrigger, shallowWaterTrigger, steamTrigger } from "./trigger";
 import { giveItemsInteract, giveSpellsInteract, doorInteract, levelLoadInteract, restPointInteract } from "./interactable";
-import { setOnFire, setStunned, SpellDataDetails, ItemDataDetails } from "./skills";
+import { setOnFire, setStunned, SpellDataDetails, ItemDataDetails, setOilCovered } from "./skills";
 import { DIRS } from "./rot";
 import { createLightningTexture, createSpeechBubbleTexture } from "./graphics";
 import { Transition, Tween } from "./tween";
@@ -258,12 +258,17 @@ export function generateWeightCallback(
                                 weight += 20;
                             }
                             break;
-                        } case TriggerType.Event:
+                        }
+                        case TriggerType.Event:
                             break;
                         case TriggerType.Ice:
                             weight += 7;
                             break;
-                        case TriggerType.Explosion:
+                        // Don't add any weight here because we're assuming that the enemies can't
+                        // see the runes the player puts down.
+                        case TriggerType.CauseExplosion:
+                            break;
+                        case TriggerType.Oil:
                             break;
                         default:
                             assertUnreachable(trigger.currentTriggerType);
@@ -404,6 +409,64 @@ export class NoOpCommand implements Command {
 }
 
 /**
+ * Given a entity which might be a trigger and the entity which may activate said trigger,
+ * check the trigger data and run the trigger code on the entity.
+ *
+ * Based on the circumstances, ice has different effects, so return true if the trigger
+ * was an ice trigger.
+ *
+ * @param ecs {World}
+ * @param entityMap {EntityMap}
+ * @param trigger {Entity}
+ * @param activator {Entity}
+ * @returns {boolean} Was the trigger an ice trigger
+ */
+function checkAndActivateTrigger(
+    ecs: World,
+    entityMap: EntityMap,
+    trigger: Entity,
+    activator: Entity
+): boolean {
+    let wasIce = false;
+    const triggerData = trigger.getOne(TriggerComponent);
+    if (triggerData !== undefined) {
+        switch (triggerData.currentTriggerType) {
+            case TriggerType.Event:
+                eventTrigger(activator, trigger);
+                break;
+            case TriggerType.Fire:
+                fireTrigger(ecs, entityMap, activator, trigger);
+                break;
+            case TriggerType.ShallowWater:
+                shallowWaterTrigger(activator);
+                break;
+            case TriggerType.DeepWater:
+                deepWaterTrigger(activator);
+                break;
+            case TriggerType.Mud:
+                mudTrigger(activator);
+                break;
+            case TriggerType.Steam:
+                steamTrigger(ecs, entityMap, activator, trigger);
+                break;
+            case TriggerType.Ice:
+                wasIce = true;
+                break;
+            case TriggerType.CauseExplosion:
+                explosionTrapTrigger(ecs, globals.Game!.entityMap, activator, trigger);
+                break;
+            case TriggerType.Oil:
+                setOilCovered(activator, 10);
+                break;
+            default:
+                assertUnreachable(triggerData.currentTriggerType);
+        }
+    }
+
+    return wasIce;
+}
+
+/**
  * Move the game object to a specific point on the map
  */
 export class GoToLocationCommand implements Command {
@@ -497,7 +560,6 @@ export class GoToLocationCommand implements Command {
             );
             for (let i = 0; i < entities.length; i++) {
                 const e = entities[i];
-                const triggerData = e.getOne(TriggerComponent);
                 const flammableData = e.getOne(FlammableComponent);
 
                 // If we're walking over a flammable entity and we're
@@ -515,46 +577,18 @@ export class GoToLocationCommand implements Command {
                     );
                 }
 
-                // Check to see if the current tile is a trigger
-                // and activate it
-                if (triggerData !== undefined) {
-                    switch (triggerData.currentTriggerType) {
-                        case TriggerType.Event:
-                            eventTrigger(entity, e);
-                            break;
-                        case TriggerType.Fire:
-                            fireTrigger(ecs, globals.Game!.entityMap, entity, e);
-                            break;
-                        case TriggerType.ShallowWater:
-                            shallowWaterTrigger(entity);
-                            break;
-                        case TriggerType.DeepWater:
-                            deepWaterTrigger(entity);
-                            break;
-                        case TriggerType.Mud:
-                            mudTrigger(entity);
-                            break;
-                        case TriggerType.Steam:
-                            steamTrigger(ecs, globals.Game!.entityMap, entity, e);
-                            break;
-                        case TriggerType.Ice: {
-                            globals.Game!.commandQueue.push(
-                                new GoToLocationCommand(
-                                    this.entityId,
-                                    [new Vector2D(
-                                        pos.tilePosition.x + dir.x, pos.tilePosition.y + dir.y
-                                    )]
-                                )
-                            );
-                            this.done = true;
-                            return;
-                        }
-                        case TriggerType.Explosion:
-                            explosionTrapTrigger(ecs, globals.Game!.entityMap, entity, e);
-                            break;
-                        default:
-                            assertUnreachable(triggerData.currentTriggerType);
-                    }
+                const wasIce = checkAndActivateTrigger(ecs, globals.Game!.entityMap, e, entity);
+                if (wasIce) {
+                    globals.Game!.commandQueue.push(
+                        new GoToLocationCommand(
+                            entity.id,
+                            [new Vector2D(
+                                pos.tilePosition.x + dir.x, pos.tilePosition.y + dir.y
+                            )]
+                        )
+                    );
+                    this.done = true;
+                    return;
                 }
             }
 
@@ -703,7 +737,6 @@ export class PushBackCommand implements Command {
             );
             for (let i = 0; i < entities.length; i++) {
                 const e = entities[i];
-                const triggerData = e.getOne(TriggerComponent);
                 const flammableData = e.getOne(FlammableComponent);
 
                 // If we're walking over a flammable entity and we're
@@ -721,36 +754,9 @@ export class PushBackCommand implements Command {
                     );
                 }
 
-                // Check to see if the current tile is a trigger
-                // and activate it
-                if (triggerData !== undefined) {
-                    switch (triggerData.currentTriggerType) {
-                        case TriggerType.Event:
-                            eventTrigger(entity, e);
-                            break;
-                        case TriggerType.Fire:
-                            fireTrigger(ecs, globals.Game!.entityMap, entity, e);
-                            break;
-                        case TriggerType.ShallowWater:
-                            shallowWaterTrigger(entity);
-                            break;
-                        case TriggerType.DeepWater:
-                            deepWaterTrigger(entity);
-                            break;
-                        case TriggerType.Mud:
-                            mudTrigger(entity);
-                            break;
-                        case TriggerType.Steam:
-                            steamTrigger(ecs, globals.Game!.entityMap, entity, e);
-                            break;
-                        case TriggerType.Ice:
-                            this.numTiles++;
-                            break;
-                        case TriggerType.Explosion:
-                            break;
-                        default:
-                            assertUnreachable(triggerData.currentTriggerType);
-                    }
+                const wasIce = checkAndActivateTrigger(ecs, globals.Game!.entityMap, e, entity);
+                if (wasIce) {
+                    this.numTiles++;
                 }
             }
         }

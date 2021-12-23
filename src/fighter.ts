@@ -43,13 +43,15 @@ import {
     ConfusableAIComponent,
     ParticleEmitterComponent,
     TypeComponent,
+    OilCoveredComponent,
 } from "./entity";
-import { SpellData, Area } from "./skills";
-import { getEntitiesAtLocation, Vector2D } from "./map";
+import { SpellData, Area, setOilCovered } from "./skills";
+import { getEntitiesAtLocation, isBlocked, Vector2D } from "./map";
 import { showLogMessage } from "./ui";
 import { assertUnreachable, Nullable, randomIntFromInterval } from "./util";
 import { createPassableSightCallback } from "./ai/commands";
-import { IndicatorStyle, ShowDamageIndicatorCommand } from "./commands";
+import { IndicatorStyle, ShowDamageIndicatorCommand, UseSkillCommand } from "./commands";
+import { getCirclePositions, removeExistingParticleEffects } from "./graphics";
 
 /**
  * Find all entities with HitPointsComponents and when hp is <= 0,
@@ -230,6 +232,55 @@ export class DeathSystem extends System {
         removeEntity(this.world, target);
     }
 
+    /**
+     * If the entity is on fire, explode. Otherwise, spawn oil at the location.
+     */
+    oilBarrelDeath(entity: Entity): void {
+        if (globals.Game === null) { throw new Error("Global game is null"); }
+
+        const positionData = entity.getOne(PositionComponent);
+        const flammableData = entity.getOne(FlammableComponent);
+        if (positionData === undefined || flammableData === undefined) {
+            throw new Error(`Entity ${entity.id} is missing data in oilBarrelDeath`);
+        }
+
+        if (flammableData.onFire) {
+            globals.Game.commandQueue.push(new UseSkillCommand(
+                entity.id,
+                SpellData["fireball_targeted"],
+                positionData.tilePosition,
+                0,
+                undefined,
+                false,
+                (e: Entity) => { removeEntity(this.world, e); }
+            ));
+        } else {
+            const tilePositions = getCirclePositions(
+                4, positionData.tilePosition.x, positionData.tilePosition.y
+            );
+
+            for (const tile of tilePositions) {
+                const { blocks, entity } = isBlocked(
+                    this.world, globals.Game.map, globals.Game.entityMap, tile
+                );
+                if (blocks !== true || (blocks === true && entity !== null)) {
+                    createEntity(this.world, globals.Game.textureAtlas, "oil_slick", tile);
+
+                    const entities = getEntitiesAtLocation(
+                        globals.Game.ecs,
+                        globals.Game.entityMap,
+                        tile
+                    );
+                    for (const entity of entities) {
+                        setOilCovered(entity, 10);
+                    }
+                }
+            }
+
+            removeEntity(this.world, entity);
+        }
+    }
+
     update() {
         const entities = this.mainQuery.execute();
         for (const entity of entities) {
@@ -243,6 +294,9 @@ export class DeathSystem extends System {
                         break;
                     case DeathType.RemoveFromWorld:
                         this.removeDeath(entity);
+                        break;
+                    case DeathType.OilBarrel:
+                        this.oilBarrelDeath(entity);
                         break;
                     default:
                         assertUnreachable(hpData.onDeath);
@@ -497,6 +551,7 @@ export function getEffectiveDamageAffinity(entity: Entity) {
     const affinity = entity.getOne(DamageAffinityComponent);
     const wetData = entity.getOne(WetableComponent);
     const frozenData = entity.getOne(FreezableComponent);
+    const oilData = entity.getOne(OilCoveredComponent);
     if (affinity === undefined) { return null; }
     if (wetData === undefined && frozenData === undefined) { return affinity; }
 
@@ -519,6 +574,13 @@ export function getEffectiveDamageAffinity(entity: Entity) {
         newAffinity[DamageType.Physical] !== Affinity.nullified
     ) {
         newAffinity[DamageType.Physical] = Affinity.weak;
+    }
+
+    if (oilData !== undefined &&
+        oilData.oilCovered &&
+        newAffinity[DamageType.Fire] !== Affinity.nullified
+    ) {
+        newAffinity[DamageType.Fire] = Affinity.weak;
     }
 
     return newAffinity;
@@ -615,6 +677,15 @@ export function takeDamage(
             calculatedDamage,
             style
         ));
+    }
+
+    // Remove the oil from a entity if it was damaged with fire
+    const oilData = target.getOne(OilCoveredComponent);
+    if (oilData !== undefined && oilData.oilCovered === true) {
+        oilData.oilCovered = false;
+        oilData.turnsLeft = 0;
+        oilData.update();
+        removeExistingParticleEffects(target);
     }
 
     // TODO, sound: play hit/crit/death sound here
