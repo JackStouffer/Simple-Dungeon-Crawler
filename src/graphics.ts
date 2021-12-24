@@ -731,11 +731,17 @@ export function createLightningTexture(
  */
 export function createSpeechBubbleTexture(x: number, y: number, text: string) {
     const graphics = new PIXI.Graphics();
-    const padding = 20;
+    let padding = 25;
     graphics.zIndex = 10;
     graphics.zIndex = 10;
 
-    const speech = new PIXI.Text(text, { fontFamily: "monospace", fontSize: 12, fill: 0x00000 });
+    const speech = new PIXI.Text(text, { fontFamily: "serif", fontSize: 16, fill: 0x00000 });
+    // TODO, cleanup: This is a hardcode-ed special case
+    if (text === "!?") {
+        speech.style.fontSize = 24;
+        padding = 30;
+    }
+
     const rectWidth = speech.width + padding;
     const rectHeight = speech.height + padding;
     const halfTileSize = ((TILE_SIZE * globals.Game!.gameCamera.zoom) / 2);

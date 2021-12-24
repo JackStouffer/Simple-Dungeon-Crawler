@@ -37,12 +37,25 @@ import { ItemType, SpellType } from "../constants";
 import { Nullable } from "../util";
 import { Entity, World } from "ape-ecs";
 import { getItems, useItem } from "../inventory";
-import { getEffectiveStatData, getKnownSpells, useSpell } from "../fighter";
+import { getEffectiveSpeedData, getEffectiveStatData, getKnownSpells, useSpell } from "../fighter";
 import { ItemData, SpellData } from "../skills";
 import { getPotentiallyDangerousPositions } from "./goals";
 import { PassableCallback, WeightCallback } from "../rot/path/path";
 import globals from "../globals";
 import { rectangleContains } from "../camera";
+
+type ActionUpdateFunction = (
+    ecs: World,
+    map: GameMap,
+    entityMap: EntityMap,
+    ai: PlannerAIComponent
+) => Command;
+
+type WeightCalculationFunction = (
+    ecs: World,
+    entityMap: EntityMap,
+    aiState: PlannerAIComponent
+) => number;
 
 /**
  * Calculate a path from a game object to the give x and y
@@ -266,7 +279,14 @@ function chaseWeight(ecs: World, entityMap: EntityMap, aiState: PlannerAICompone
 
     const targetPosData = target.getOne(PositionComponent);
     if (posData === undefined || targetPosData === undefined) { throw new Error("no position data for ai"); }
-    return tileDistanceBetweenPoints(posData.tilePosition, targetPosData.tilePosition);
+    const distance = tileDistanceBetweenPoints(posData.tilePosition, targetPosData.tilePosition);
+
+    const speedData = getEffectiveSpeedData(ecs, entityMap, aiState.entity);
+    if (speedData !== null) {
+        return distance / speedData.maxTilesPerMove;
+    } else {
+        return distance / 3;
+    }
 }
 
 /**
@@ -461,7 +481,7 @@ function castSpellAction(spellID: string): ActionUpdateFunction {
             aiState.entity.id,
             SpellData[spellID],
             targetPos.tilePosition,
-            undefined,
+            0,
             undefined,
             true,
             useSpell
@@ -475,7 +495,7 @@ function castSpellAction(spellID: string): ActionUpdateFunction {
  * will have the lowest weight. Therefore, the AI will choose the most
  * effective attack
  */
-function castSpellWeight(spellID: string) {
+function castSpellWeight(spellID: string): WeightCalculationFunction {
     return function (ecs: World, entityMap: EntityMap, aiState: PlannerAIComponent): number {
         const target = ecs.getEntity(aiState.targetId);
         if (target === undefined) {
@@ -616,6 +636,10 @@ function goToSafePositionAction(
     return new GoToLocationCommand(aiState.entity.id, path);
 }
 
+/**
+ * Find the nearest tile which is a lest N distance away from the
+ * specified target in the AI state data
+ */
 function repositionAction(
     ecs: World,
     map: GameMap,
@@ -783,18 +807,89 @@ function confusedWander(
     );
 }
 
-type ActionUpdateFunction = (
+/**
+ * This logic is basically special cased for the web spell at the moment
+ *
+ * @param spellID {string} The spell to check
+ * @returns {WeightCalculationFunction}
+ */
+function webAreaDenialWeight(ecs: World, entityMap: EntityMap, aiState: PlannerAIComponent): number {
+    function isPostionWebbed(pos: Vector2D): boolean {
+        let targetWebbed = false;
+        for (const entity of getEntitiesAtLocation(ecs, entityMap, pos)) {
+            const typeData = entity.getOne(TypeComponent);
+            if (typeData !== undefined && typeData.entityType === "webbed_floor") {
+                targetWebbed = true;
+                break;
+            }
+        }
+        return targetWebbed;
+    }
+
+    // Check if your current tile or the tile that the target is occupying is
+    // webbed.
+    // If no, web the target first, then your own tile
+    const target = ecs.getEntity(aiState.targetId);
+    if (target === undefined) { return 100; }
+
+    const targetPositionData = target.getOne(PositionComponent);
+    if (targetPositionData === undefined) { throw new Error(`${target.id} is missing position data`); }
+    if (!isPostionWebbed(targetPositionData.tilePosition)) {
+        return 1;
+    }
+
+    const positionData = aiState.entity.getOne(PositionComponent);
+    if (positionData === undefined) { throw new Error(`${aiState.entity.id} is missing position data`); }
+    if (!isPostionWebbed(positionData.tilePosition)) {
+        return 1;
+    }
+
+    return 100;
+}
+
+function webAreaDenial(
     ecs: World,
     map: GameMap,
     entityMap: EntityMap,
-    ai: PlannerAIComponent
-) => Command;
+    aiState: PlannerAIComponent
+): Command {
+    const spellData = aiState.entity.getOne(SpellsComponent);
+    const typeData = aiState.entity.getOne(TypeComponent);
+    if (spellData === undefined) { throw new Error(`No spells on ${aiState.entity.id} for webAreaDenial`); }
+    if (typeData === undefined) { throw new Error(`Entity ${aiState.entity.id} is missing TypeComponent`); }
+
+    const spells = getKnownSpells(spellData).map(s => s.id);
+    if (spells.indexOf("web") === -1) {
+        throw new Error(`${typeData.displayName} does not know spell web`);
+    }
+
+    const target = ecs.getEntity(aiState.targetId);
+    if (target === undefined) {
+        if (globals.Game?.debugAI === true) {
+            // eslint-disable-next-line no-console
+            console.log(`webAreaDenial for ${aiState.entity.id} has a non-existent target ${aiState.targetId}`);
+        }
+        return new NoOpCommand(true);
+    }
+    const targetPos = target.getOne(PositionComponent);
+    if (targetPos === undefined) { throw new Error(`Target entity ${aiState.targetId} is missing PositionComponent`); }
+
+    return new UseSkillCommand(
+        aiState.entity.id,
+        SpellData["web"],
+        targetPos.tilePosition,
+        0,
+        undefined,
+        true,
+        useSpell
+    );
+}
 
 interface Action {
     preconditions: { [key: string]: boolean },
     postconditions: { [key: string]: boolean }
     updateFunction: ActionUpdateFunction,
-    weight: (ecs: World, entityMap: EntityMap, aiState: PlannerAIComponent) => number
+    weight: WeightCalculationFunction
 }
 
 /**
@@ -958,6 +1053,20 @@ export const ActionData: { [key: string]: Action } = {
         postconditions: { confused: false },
         updateFunction: confusedWander,
         weight: () => 1
+    },
+    // We can get the planner to web the areas by having the weight of
+    // gotoenemy take into account the movement speed after webbing SOMEHOW
+    "webAreaDenial": {
+        preconditions: {
+            hasCastsFor_web: true,
+            targetInLineOfSight: true,
+            targetKilled: false,
+            afraid: false,
+            confused: false
+        },
+        postconditions: { targetKilled: true },
+        updateFunction: webAreaDenial,
+        weight: webAreaDenialWeight
     }
 };
 
@@ -971,9 +1080,10 @@ for (const key in SpellData) {
         ActionData[action] = {
             preconditions: {
                 [goal]: true,
-                silenced: false,
                 targetInLineOfSight: true,
                 targetKilled: false,
+                silenced: false,
+                afraid: false,
                 confused: false
             },
             postconditions: { targetKilled: true },
@@ -983,9 +1093,9 @@ for (const key in SpellData) {
     } else if (data.type === SpellType.HealSelf) {
         ActionData[action] = {
             preconditions: {
+                [goal]: true,
                 lowHealth: true,
                 silenced: false,
-                [goal]: true,
                 confused: false
             },
             postconditions: { lowHealth: false },
@@ -995,9 +1105,10 @@ for (const key in SpellData) {
     } else if (data.type === SpellType.HealOther) {
         ActionData[action] = {
             preconditions: {
-                allyLowHealth: true,
                 [goal]: true,
+                allyLowHealth: true,
                 silenced: false,
+                afraid: false,
                 confused: false
             },
             postconditions: { allyLowHealth: false },

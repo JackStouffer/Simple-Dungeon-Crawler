@@ -122,29 +122,6 @@
                 }, 
                 {
                  "height":0,
-                 "id":43,
-                 "name":"Eel",
-                 "point":true,
-                 "properties":[
-                        {
-                         "name":"inventory",
-                         "type":"string",
-                         "value":""
-                        }, 
-                        {
-                         "name":"objectType",
-                         "type":"string",
-                         "value":"eel"
-                        }],
-                 "rotation":0,
-                 "type":"object",
-                 "visible":true,
-                 "width":0,
-                 "x":320.517457560922,
-                 "y":133.103462821661
-                }, 
-                {
-                 "height":0,
                  "id":55,
                  "name":"Goblin",
                  "point":true,
@@ -224,6 +201,11 @@
                          "name":"objectType",
                          "type":"string",
                          "value":"eel"
+                        }, 
+                        {
+                         "name":"teamId",
+                         "type":"int",
+                         "value":3
                         }],
                  "rotation":0,
                  "type":"object",
@@ -231,29 +213,6 @@
                  "width":0,
                  "x":337.627721012883,
                  "y":262.74036935965
-                }, 
-                {
-                 "height":0,
-                 "id":98,
-                 "name":"Eel",
-                 "point":true,
-                 "properties":[
-                        {
-                         "name":"inventory",
-                         "type":"string",
-                         "value":""
-                        }, 
-                        {
-                         "name":"objectType",
-                         "type":"string",
-                         "value":"eel"
-                        }],
-                 "rotation":0,
-                 "type":"object",
-                 "visible":true,
-                 "width":0,
-                 "x":330.646696706226,
-                 "y":180.871993399759
                 }, 
                 {
                  "height":0,
@@ -601,6 +560,62 @@
                  "width":0,
                  "x":1349.55535067298,
                  "y":232.143775860821
+                }, 
+                {
+                 "height":0,
+                 "id":124,
+                 "name":"Eel",
+                 "point":true,
+                 "properties":[
+                        {
+                         "name":"inventory",
+                         "type":"string",
+                         "value":""
+                        }, 
+                        {
+                         "name":"objectType",
+                         "type":"string",
+                         "value":"eel"
+                        }, 
+                        {
+                         "name":"teamId",
+                         "type":"int",
+                         "value":3
+                        }],
+                 "rotation":0,
+                 "type":"object",
+                 "visible":true,
+                 "width":0,
+                 "x":348.539756981454,
+                 "y":203.581325943296
+                }, 
+                {
+                 "height":0,
+                 "id":125,
+                 "name":"Eel",
+                 "point":true,
+                 "properties":[
+                        {
+                         "name":"inventory",
+                         "type":"string",
+                         "value":""
+                        }, 
+                        {
+                         "name":"objectType",
+                         "type":"string",
+                         "value":"eel"
+                        }, 
+                        {
+                         "name":"teamId",
+                         "type":"int",
+                         "value":3
+                        }],
+                 "rotation":0,
+                 "type":"object",
+                 "visible":true,
+                 "width":0,
+                 "x":331.485823918141,
+                 "y":142.293753997016
                 }],
          "opacity":1,
          "type":"objectgroup",
@@ -670,12 +685,12 @@
                 }],
          "opacity":1,
          "type":"objectgroup",
-         "visible":true,
+         "visible":false,
          "x":0,
          "y":0
         }],
  "nextlayerid":12,
- "nextobjectid":124,
+ "nextobjectid":126,
  "orientation":"orthogonal",
  "renderorder":"right-down",
  "tiledversion":"1.7.2",

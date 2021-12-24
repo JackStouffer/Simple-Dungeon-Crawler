@@ -20,6 +20,7 @@ import {
     FearAIComponent,
     ConfusableAIComponent,
     TypeComponent,
+    DialogComponent,
 } from "../entity";
 import { showLogMessage } from "../ui";
 import { Nullable } from "../util";
@@ -320,32 +321,35 @@ export function generateAICommands(
         commands.push(new MoveCameraCommand(map, globals.Game!.gameCamera, ai));
     }
 
-    const query = buildDialogQuery(ecs, map, entityMap, entityTeams, ai, aiState);
-    const debugDialog = globals.Game?.debugAIDialog === true;
+    const dialogState = ai.getOne(DialogComponent);
+    if (dialogState !== undefined) {
+        const query = buildDialogQuery(ecs, map, entityMap, entityTeams, ai, aiState, dialogState);
+        const debugDialog = globals.Game?.debugAIDialog === true;
 
-    if (debugDialog) {
-        // eslint-disable-next-line no-console
-        console.groupCollapsed(aiState.entity.id + " dialog");
-        // eslint-disable-next-line no-console
-        console.log("query", query);
-    }
-
-    const dialogDefinition = queryDialogTable(query);
-
-    if (dialogDefinition !== null) {
-        commands.push(sayDialogDefinition(ai, dialogDefinition));
-
-        const allyResponse = queryAlliesForResponses(
-            ecs, map, entityMap, entityTeams, aiState, dialogDefinition
-        );
-        if (allyResponse !== null) {
-            commands.push(sayDialogDefinition(allyResponse.teamMate, allyResponse.response));
+        if (debugDialog) {
+            // eslint-disable-next-line no-console
+            console.groupCollapsed(aiState.entity.id + " dialog");
+            // eslint-disable-next-line no-console
+            console.log("query", query);
         }
-    }
 
-    if (debugDialog) {
-        // eslint-disable-next-line no-console
-        console.groupEnd();
+        const dialogDefinition = queryDialogTable(query);
+
+        if (dialogDefinition !== null) {
+            commands.push(sayDialogDefinition(ai, dialogDefinition));
+
+            const allyResponse = queryAlliesForResponses(
+                ecs, map, entityMap, entityTeams, aiState, dialogDefinition
+            );
+            if (allyResponse !== null) {
+                commands.push(sayDialogDefinition(allyResponse.teamMate, allyResponse.response));
+            }
+        }
+
+        if (debugDialog) {
+            // eslint-disable-next-line no-console
+            console.groupEnd();
+        }
     }
 
     commands.push(plannerAIGenerateCommand(ecs, aiState, map, entityMap));

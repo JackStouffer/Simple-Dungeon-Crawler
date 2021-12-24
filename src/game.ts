@@ -57,7 +57,7 @@ import {
     StunnableComponent,
     removeEntity,
     EntityTeamMap,
-    DialogMemoryComponent,
+    DialogComponent,
     AreaOfEffectComponent,
     ParticleEmitterComponent,
     OilCoveredComponent
@@ -529,6 +529,7 @@ const SpellMenuState: GameState = {
                 case SpellType.DamageOther:
                 case SpellType.EffectOther:
                 case SpellType.HealOther:
+                case SpellType.AreaDenial:
                     inputHandlerState.spellForTarget = spell;
                     inputHandlerState.state = PlayerState.Target;
                     inputHandlerState.update();
@@ -699,7 +700,9 @@ export class SimpleDungeonCrawler {
             "aquatic",
             "environmentTile",
             "waterTile",
-            "attackable"
+            "attackable",
+            "flying",
+            "walksQuicklyOnWebs"
         );
         this.ecs.registerComponent(PositionComponent, 200);
         this.ecs.registerComponent(TypeComponent, 200);
@@ -717,7 +720,7 @@ export class SimpleDungeonCrawler {
         this.ecs.registerComponent(DamageAffinityComponent, 20);
         this.ecs.registerComponent(SpellsComponent, 20);
         this.ecs.registerComponent(PlannerAIComponent, 20);
-        this.ecs.registerComponent(DialogMemoryComponent, 20);
+        this.ecs.registerComponent(DialogComponent, 20);
         this.ecs.registerComponent(LoseTargetAIComponent, 20);
         this.ecs.registerComponent(FearAIComponent, 20);
         this.ecs.registerComponent(FallbackAIComponent, 20);

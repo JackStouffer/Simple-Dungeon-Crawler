@@ -66,7 +66,8 @@ export enum SpellType {
     HealSelf,
     HealOther,
     Push,
-    AreaOfEffect
+    AreaOfEffect,
+    AreaDenial
 }
 
 export enum StatusEffectType {
@@ -89,6 +90,7 @@ export enum TriggerType {
     ShallowWater,
     DeepWater,
     Mud,
+    Web,
     Steam,
     Ice,
     CauseExplosion,

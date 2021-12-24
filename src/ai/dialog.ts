@@ -2,7 +2,7 @@ import { Entity, World } from "ape-ecs";
 import { RNG } from "../rot";
 
 import globals from "../globals";
-import { DialogMemoryComponent, EntityMap, EntityTeamMap, HitPointsComponent, LoseTargetAIComponent, PlannerAIComponent, TypeComponent } from "../entity";
+import { DialogComponent, EntityMap, EntityTeamMap, HitPointsComponent, LoseTargetAIComponent, PlannerAIComponent, TypeComponent } from "../entity";
 import { GameMap } from "../map";
 import {
     resolveHasHealingItem,
@@ -23,6 +23,7 @@ import { Nullable } from "../util";
 import * as BanditDialogJSON from "../dialog/bandit.json";
 import * as GoblinDialogJSON from "../dialog/goblin.json";
 import * as DogDialogJSON from "../dialog/dog.json";
+import * as NonVocalizingDialogJSON from "../dialog/non_vocalizing.json";
 
 // TODO: Add line for when ally is killed
 // TODO: add logic where some lines can only be said once in a whole team
@@ -48,18 +49,19 @@ interface DialogData {
     rules: DialogDefinition[];
 }
 interface DialogQuery {
-    classification: string;
+    dialogId: string;
     [key: string]: number | string | boolean;
 }
 
-export const dialogByClassification: {
+export const dialogGroup: {
     [key: string]: DialogData
 } = {
     "bandit": (BanditDialogJSON as any).default as DialogData,
     "goblin": (GoblinDialogJSON as any).default as DialogData,
-    "dog": (DogDialogJSON as any).default as DialogData
+    "dog": (DogDialogJSON as any).default as DialogData,
+    "non_vocalizing": (NonVocalizingDialogJSON as any).default as DialogData,
 };
-Object.freeze(dialogByClassification);
+Object.freeze(dialogGroup);
 
 /**
  * Given a AI and the current state of the game world, generate a list of facts
@@ -80,12 +82,13 @@ export function buildDialogQuery(
     entityMap: EntityMap,
     entityTeams: EntityTeamMap,
     ai: Entity,
-    aiState: PlannerAIComponent
+    aiState: PlannerAIComponent,
+    dialogState: DialogComponent
 ): DialogQuery {
     const typeInfo = ai.getOne(TypeComponent);
     const query: DialogQuery = {
         "race": typeInfo?.race ?? "generic",
-        "classification": typeInfo?.classification ?? "generic"
+        "dialogId": dialogState.dialogId
     };
 
     const team = entityTeams.get(aiState.teamId ?? Infinity);
@@ -116,7 +119,7 @@ export function buildDialogQuery(
         query["health_percentage"] = Math.floor((hpData.hp / hpData.maxHp) * 100);
     }
 
-    const dialogMemoryData = ai.getOne(DialogMemoryComponent);
+    const dialogMemoryData = ai.getOne(DialogComponent);
     if (dialogMemoryData !== undefined) {
         for (const iterator of dialogMemoryData.memory.entries()) {
             query[iterator[0]] = iterator[1];
@@ -169,7 +172,7 @@ export function queryDialogTable(
     const matches: DialogDefinition[] = [];
     const debugDialog = globals.Game?.debugAIDialog === true;
 
-    const dialogData = dialogByClassification[query["classification"]];
+    const dialogData = dialogGroup[query.dialogId];
     if (dialogData === undefined) {
         return null;
     }
@@ -314,7 +317,7 @@ export function sayDialogDefinition(
     }
 
     // Update the dialog memory
-    const dialogMemoryData = ai.getOne(DialogMemoryComponent);
+    const dialogMemoryData = ai.getOne(DialogComponent);
     if (dialogMemoryData !== undefined) {
         for (const key in dialog.dialogMemoryChange) {
             dialogMemoryData.memory.set(key, dialog.dialogMemoryChange[key]);
@@ -362,12 +365,21 @@ export function queryAlliesForResponses(
 
             if (teamMate !== undefined) {
                 const teamMateAIState = teamMate.getOne(PlannerAIComponent);
-                if (teamMateAIState === undefined) {
-                    throw new Error(`team mate ${eId} is missing a PlannerAIComponent`);
+                const teamMateDialogState = teamMate.getOne(DialogComponent);
+                if (teamMateAIState === undefined || teamMateDialogState === undefined) {
+                    throw new Error(`team mate ${eId} is missing a PlannerAIComponent or DialogComponent`);
                 }
 
                 const response = queryDialogTable(
-                    buildDialogQuery(ecs, map, entityMap, entityTeams, teamMate, teamMateAIState),
+                    buildDialogQuery(
+                        ecs,
+                        map,
+                        entityMap,
+                        entityTeams,
+                        teamMate,
+                        teamMateAIState,
+                        teamMateDialogState
+                    ),
                     dialog.name
                 );
                 if (response !== null) {

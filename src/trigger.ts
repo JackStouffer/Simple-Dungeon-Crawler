@@ -88,6 +88,31 @@ export function mudTrigger(actor: Entity): void {
     }
 }
 
+export function webTrigger(entity: Entity): void {
+    const speedData = entity.getOne(SpeedComponent);
+    if (speedData !== undefined && entity.tags.has("walksQuicklyOnWebs")) {
+        entity.addComponent({
+            type: "SpeedEffectComponent",
+            name: "mud",
+            stat: "maxTilesPerMove",
+            modifierType: "multiply",
+            turnsLeft: 1,
+            value: 2.5,
+            display: false
+        });
+    } else if (speedData !== undefined && !entity.tags.has("flying")) {
+        entity.addComponent({
+            type: "SpeedEffectComponent",
+            name: "mud",
+            stat: "maxTilesPerMove",
+            modifierType: "multiply",
+            turnsLeft: 1,
+            value: 0.1,
+            display: false
+        });
+    }
+}
+
 export function shallowWaterTrigger(actor: Entity): void {
     setWet(actor, 10);
     const wetData = actor.getOne(WetableComponent);

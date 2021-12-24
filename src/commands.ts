@@ -41,7 +41,7 @@ import {
     TriggerComponent
 } from "./entity";
 import { attack, getEffectiveDamageAffinity, getEffectiveSpeedData, takeDamage } from "./fighter";
-import { deepWaterTrigger, eventTrigger, explosionTrapTrigger, fireTrigger, mudTrigger, shallowWaterTrigger, steamTrigger } from "./trigger";
+import { deepWaterTrigger, eventTrigger, explosionTrapTrigger, fireTrigger, mudTrigger, shallowWaterTrigger, steamTrigger, webTrigger } from "./trigger";
 import { giveItemsInteract, giveSpellsInteract, doorInteract, levelLoadInteract, restPointInteract } from "./interactable";
 import { setOnFire, setStunned, SpellDataDetails, ItemDataDetails, setOilCovered } from "./skills";
 import { DIRS } from "./rot";
@@ -270,6 +270,12 @@ export function generateWeightCallback(
                             break;
                         case TriggerType.Oil:
                             break;
+                        case TriggerType.Web: {
+                            if (!entity.tags.has("walksQuicklyOnWebs")) {
+                                weight += 7;
+                            }
+                            break;
+                        }
                         default:
                             assertUnreachable(trigger.currentTriggerType);
                     }
@@ -457,6 +463,9 @@ function checkAndActivateTrigger(
                 break;
             case TriggerType.Oil:
                 setOilCovered(activator, 10);
+                break;
+            case TriggerType.Web:
+                webTrigger(activator);
                 break;
             default:
                 assertUnreachable(triggerData.currentTriggerType);

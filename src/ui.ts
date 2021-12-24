@@ -671,6 +671,7 @@ export class SpellSelectionMenu {
                     info.text = `tiles: ${spell.value}`;
                     break;
                 case SpellType.Passive:
+                case SpellType.AreaDenial:
                     break;
                 default:
                     assertUnreachable(spell.type);

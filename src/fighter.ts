@@ -89,26 +89,27 @@ export class DeathSystem extends System {
 
                 const fearData = e.getOne(FearAIComponent);
                 const levelData = e.getOne(LevelComponent);
-                if (fearData === undefined || levelData === undefined) { continue; }
+                if (fearData !== undefined && levelData !== undefined) {
+                    const fearBasis = targetLevelData.level - levelData.level;
+                    const fearVariance = Math.round(fearBasis * 0.5);
+                    const addedFear = Math.max(randomIntFromInterval(
+                        fearBasis - fearVariance, fearBasis + fearVariance
+                    ), 1);
 
-                const fearBasis = targetLevelData.level - levelData.level;
-                const fearVariance = Math.round(fearBasis * 0.5);
-                const addedFear = Math.max(randomIntFromInterval(
-                    fearBasis - fearVariance, fearBasis + fearVariance
-                ), 1);
+                    if (globals.Game?.debugAI === true) {
+                        // eslint-disable-next-line no-console
+                        console.log(`${e.id} saw ${target.id} die. Adding ${addedFear} fear`);
+                    }
 
-                if (globals.Game?.debugAI === true) {
-                    // eslint-disable-next-line no-console
-                    console.log(`${e.id} saw ${target.id} die. Adding ${addedFear} fear`);
+                    fearData.fear += addedFear;
+                    fearData.update();
                 }
 
-                fearData.fear += addedFear;
-                fearData.update();
-
                 const aiState = e.getOne(PlannerAIComponent);
-                if (aiState === undefined) { return; }
-                aiState.knowsTargetPosition = true;
-                aiState.update();
+                if (aiState !== undefined) {
+                    aiState.knowsTargetPosition = true;
+                    aiState.update();
+                }
             }
         };
     }
@@ -404,11 +405,11 @@ export function calculateStatModifier<T>(modifier: StatModifier, stats: T) {
     switch (modifier.modifierType) {
         case "add":
             // @ts-expect-error
-            copiedStats[modifier.stat] += modifier.value;
+            copiedStats[modifier.stat] = Math.round(copiedStats[modifier.stat] + modifier.value);
             break;
         case "multiply":
             // @ts-expect-error
-            copiedStats[modifier.stat] *= modifier.value;
+            copiedStats[modifier.stat] = Math.round(copiedStats[modifier.stat] * modifier.value);
             break;
         default:
             throw new Error(`Bad StatisticEffect type ${modifier.modifierType}`);

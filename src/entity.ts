@@ -14,11 +14,12 @@ import {
     LightingType,
     InteractableType,
     TriggerType,
-    AreaOfEffectType
+    AreaOfEffectType,
+    SpellType
 } from "./constants";
 import { Nullable, randomIntFromInterval } from "./util";
 import { KeyCommand, PlayerState } from "./input-handler";
-import { dialogByClassification } from "./ai/dialog";
+import { dialogGroup } from "./ai/dialog";
 import { Planner, PlannerWorldState } from "./ai/planner";
 import { createPlanner } from "./ai/commands";
 import {
@@ -34,7 +35,7 @@ import {
     zoomInCamera,
     zoomOutCamera
 } from "./commands";
-import { Area, ItemDataDetails, SpellDataDetails } from "./skills";
+import { Area, ItemDataDetails, SpellData, SpellDataDetails } from "./skills";
 import { Vector2D } from "./map";
 import { Rectangle } from "./camera";
 import { playBoxBreak } from "./audio";
@@ -83,14 +84,12 @@ export class TypeComponent extends Component {
     displayName: Nullable<string>;
     entityType: string;
     race: Nullable<string>;
-    classification: Nullable<string>;
 
     static typeName = "TypeComponent";
     static properties = {
         displayName: "player",
         entityType: "player",
         race: "human",
-        classification: "player"
     }
 }
 
@@ -527,11 +526,13 @@ export class RemoveAfterNTurnsComponent extends Component {
     };
 }
 
-export class DialogMemoryComponent extends Component {
+export class DialogComponent extends Component {
+    dialogId: string;
     memory: Map<string, string | number | boolean>;
 
-    static typeName = "DialogMemoryComponent";
+    static typeName = "DialogComponent";
     static properties = {
+        dialogId: "",
         memory: new Map()
     }
 }
@@ -589,7 +590,8 @@ interface ObjectDataDetails {
     addInventory?: boolean;
     addInput?: boolean;
     addPlannerAI?: boolean;
-    addDialogMemory?: boolean;
+    addDialog?: boolean;
+    dialogId?: string;
     desiredDistanceToTarget?: number;
     nonAlertSightRange?: number;
     alertSightRange?: number;
@@ -607,7 +609,6 @@ export const ObjectData: { [key: string]: ObjectDataDetails } = {
                 TypeComponent: {
                     entityType: "node",
                     race: null,
-                    classification: null
                 }
             }
         }
@@ -620,7 +621,6 @@ export const ObjectData: { [key: string]: ObjectDataDetails } = {
                     displayName: "Door",
                     entityType: "door",
                     race: null,
-                    classification: "object"
                 },
                 GraphicsComponent: {
                     textureKey: "door_1_closed",
@@ -640,8 +640,7 @@ export const ObjectData: { [key: string]: ObjectDataDetails } = {
                 TypeComponent: {
                     displayName: "Door to new area",
                     entityType: "load_door",
-                    race: null,
-                    classification: "object"
+                    race: null
                 },
                 GraphicsComponent: {
                     textureKey: "door_1_closed",
@@ -661,8 +660,7 @@ export const ObjectData: { [key: string]: ObjectDataDetails } = {
                 TypeComponent: {
                     displayName: "Stairs",
                     entityType: "stairs",
-                    race: null,
-                    classification: "object"
+                    race: null
                 },
                 GraphicsComponent: {
                     textureKey: "stone_stairs_right",
@@ -683,8 +681,7 @@ export const ObjectData: { [key: string]: ObjectDataDetails } = {
                 TypeComponent: {
                     displayName: "Chest",
                     entityType: "chest",
-                    race: null,
-                    classification: "object"
+                    race: null
                 },
                 GraphicsComponent: {
                     textureKey: "chest_1_closed",
@@ -714,8 +711,7 @@ export const ObjectData: { [key: string]: ObjectDataDetails } = {
                 TypeComponent: {
                     displayName: "Wooden Crate",
                     entityType: "crate",
-                    race: null,
-                    classification: "object"
+                    race: null
                 },
                 GraphicsComponent: {
                     textureKey: "wood_steel_crate",
@@ -751,8 +747,7 @@ export const ObjectData: { [key: string]: ObjectDataDetails } = {
                 TypeComponent: {
                     displayName: "Oil Barrel",
                     entityType: "barrel",
-                    race: null,
-                    classification: "object"
+                    race: null
                 },
                 GraphicsComponent: {
                     textureKey: "barrel_3",
@@ -786,8 +781,7 @@ export const ObjectData: { [key: string]: ObjectDataDetails } = {
                 TypeComponent: {
                     displayName: "Dead Body",
                     entityType: "dead_body",
-                    race: null,
-                    classification: "object"
+                    race: null
                 },
                 GraphicsComponent: {
                     textureKey: "skull_bone",
@@ -804,8 +798,7 @@ export const ObjectData: { [key: string]: ObjectDataDetails } = {
                 TypeComponent: {
                     displayName: "Small Lantern",
                     entityType: "lantern",
-                    race: null,
-                    classification: "object"
+                    race: null
                 },
                 GraphicsComponent: {
                     textureKey: "iron_lantern_lit",
@@ -826,8 +819,7 @@ export const ObjectData: { [key: string]: ObjectDataDetails } = {
                 TypeComponent: {
                     displayName: "Small Campfire",
                     entityType: "campfire",
-                    race: null,
-                    classification: "object"
+                    race: null
                 },
                 GraphicsComponent: {
                     textureKey: "campfire_1_lit_1",
@@ -856,8 +848,7 @@ export const ObjectData: { [key: string]: ObjectDataDetails } = {
                 TypeComponent: {
                     displayName: "Save Point",
                     entityType: "rest_point",
-                    race: null,
-                    classification: "object"
+                    race: null
                 },
                 GraphicsComponent: {
                     textureKey: null,
@@ -902,8 +893,7 @@ export const ObjectData: { [key: string]: ObjectDataDetails } = {
                 TypeComponent: {
                     displayName: "Fire",
                     entityType: "fire_effect",
-                    race: null,
-                    classification: "object"
+                    race: null
                 },
                 GraphicsComponent: {
                     textureKey: null,
@@ -961,8 +951,7 @@ export const ObjectData: { [key: string]: ObjectDataDetails } = {
                 TypeComponent: {
                     displayName: "Ice Wall",
                     entityType: "ice_wall",
-                    race: null,
-                    classification: "object"
+                    race: null
                 },
                 GraphicsComponent: {
                     textureKey: "ice_wall",
@@ -993,8 +982,7 @@ export const ObjectData: { [key: string]: ObjectDataDetails } = {
                 TypeComponent: {
                     displayName: "Dropped Item",
                     entityType: "dropped_item",
-                    race: null,
-                    classification: "object"
+                    race: null
                 },
                 GraphicsComponent: {
                     textureKey: "yellow_and_green_bottle",
@@ -1014,8 +1002,7 @@ export const ObjectData: { [key: string]: ObjectDataDetails } = {
                 TypeComponent: {
                     displayName: "Magicka Shrine",
                     entityType: "magic_shrine",
-                    race: null,
-                    classification: "object"
+                    race: null
                 },
                 GraphicsComponent: {
                     textureKey: "mage_statue_bottom",
@@ -1034,8 +1021,7 @@ export const ObjectData: { [key: string]: ObjectDataDetails } = {
                 TypeComponent: {
                     displayName: null,
                     entityType: "event_trigger",
-                    race: null,
-                    classification: "trigger"
+                    race: null
                 },
                 TriggerComponent: {
                     currentTriggerType: TriggerType.Event,
@@ -1051,8 +1037,7 @@ export const ObjectData: { [key: string]: ObjectDataDetails } = {
                 TypeComponent: {
                     displayName: "Water",
                     entityType: "shallow_water",
-                    race: null,
-                    classification: "object"
+                    race: null
                 },
                 GraphicsComponent: {
                     textureKey: "water_1",
@@ -1078,8 +1063,7 @@ export const ObjectData: { [key: string]: ObjectDataDetails } = {
                 TypeComponent: {
                     displayName: "Puddle",
                     entityType: "puddle",
-                    race: null,
-                    classification: "object"
+                    race: null
                 },
                 GraphicsComponent: {
                     textureKey: "water_1",
@@ -1108,8 +1092,7 @@ export const ObjectData: { [key: string]: ObjectDataDetails } = {
                 TypeComponent: {
                     displayName: "Deep Water",
                     entityType: "water",
-                    race: null,
-                    classification: "object"
+                    race: null
                 },
                 GraphicsComponent: {
                     textureKey: "deep_water",
@@ -1134,8 +1117,7 @@ export const ObjectData: { [key: string]: ObjectDataDetails } = {
                 TypeComponent: {
                     displayName: "Steam",
                     entityType: "steam",
-                    race: null,
-                    classification: "object"
+                    race: null
                 },
                 GraphicsComponent: {
                     textureKey: "sprite4691",
@@ -1162,8 +1144,7 @@ export const ObjectData: { [key: string]: ObjectDataDetails } = {
                 TypeComponent: {
                     displayName: "Mud",
                     entityType: "mud",
-                    race: null,
-                    classification: "object"
+                    race: null
                 },
                 GraphicsComponent: {
                     textureKey: "mud_1",
@@ -1189,8 +1170,7 @@ export const ObjectData: { [key: string]: ObjectDataDetails } = {
                 TypeComponent: {
                     displayName: "Oil Slick",
                     entityType: "oil_slick",
-                    race: null,
-                    classification: "object"
+                    race: null
                 },
                 GraphicsComponent: {
                     textureKey: "brown_goo_middle",
@@ -1225,8 +1205,7 @@ export const ObjectData: { [key: string]: ObjectDataDetails } = {
                 TypeComponent: {
                     displayName: "Rune",
                     entityType: "fireball_rune",
-                    race: null,
-                    classification: "object"
+                    race: null
                 },
                 GraphicsComponent: {
                     textureKey: "red_rune",
@@ -1240,14 +1219,43 @@ export const ObjectData: { [key: string]: ObjectDataDetails } = {
             }
         }
     },
+    "webbed_floor": {
+        staticallyKnownComponents: {
+            c: {
+                TypeComponent: {
+                    displayName: "Web",
+                    entityType: "webbed_floor",
+                    race: null
+                },
+                GraphicsComponent: {
+                    textureKey: "web",
+                    sprite: null,
+                    zIndex: 5
+                },
+                HitPointsComponent: {
+                    hp: 3,
+                    maxHp: 3,
+                    onDeath: DeathType.RemoveFromWorld
+                },
+                FlammableComponent: {
+                    onFire: false,
+                    fireDamage: 0,
+                    turnsLeft: 0
+                },
+                TriggerComponent: {
+                    currentTriggerType: TriggerType.Web,
+                    initialTriggerType: TriggerType.Web
+                }
+            }
+        }
+    },
     "tall_grass": {
         staticallyKnownComponents: {
             c: {
                 TypeComponent: {
                     displayName: "Tall Grass",
                     entityType: "tall_grass",
-                    race: null,
-                    classification: "object"
+                    race: null
                 },
                 GraphicsComponent: {
                     textureKey: "tall_grass_2",
@@ -1282,8 +1290,7 @@ export const ObjectData: { [key: string]: ObjectDataDetails } = {
                 TypeComponent: {
                     displayName: "Thick Bush",
                     entityType: "thick_underbrush",
-                    race: null,
-                    classification: "object"
+                    race: null
                 },
                 GraphicsComponent: {
                     textureKey: "shrub_1",
@@ -1320,8 +1327,7 @@ export const ObjectData: { [key: string]: ObjectDataDetails } = {
                 TypeComponent: {
                     displayName: "The Player",
                     entityType: "player",
-                    race: "human",
-                    classification: "player"
+                    race: "human"
                 },
                 GraphicsComponent: {
                     textureKey: "player",
@@ -1387,7 +1393,8 @@ export const ObjectData: { [key: string]: ObjectDataDetails } = {
     "goblin": {
         addInventory: true,
         addPlannerAI: true,
-        addDialogMemory: true,
+        addDialog: true,
+        dialogId: "goblin",
         nonAlertSightRange: 6,
         alertSightRange: 8,
         lowHealthThreshold: 0.5,
@@ -1414,8 +1421,7 @@ export const ObjectData: { [key: string]: ObjectDataDetails } = {
                 TypeComponent: {
                     displayName: "Goblin",
                     entityType: "goblin",
-                    race: "goblin",
-                    classification: "goblin"
+                    race: "goblin"
                 },
                 GraphicsComponent: {
                     textureKey: "goblin_2",
@@ -1480,7 +1486,8 @@ export const ObjectData: { [key: string]: ObjectDataDetails } = {
     "goblin_mage": {
         addInventory: true,
         addPlannerAI: true,
-        addDialogMemory: true,
+        addDialog: true,
+        dialogId: "goblin",
         nonAlertSightRange: 6,
         alertSightRange: 8,
         lowHealthThreshold: 0.5,
@@ -1510,8 +1517,7 @@ export const ObjectData: { [key: string]: ObjectDataDetails } = {
                 TypeComponent: {
                     displayName: "Goblin Mage",
                     entityType: "goblin_mage",
-                    race: "goblin",
-                    classification: "goblin"
+                    race: "goblin"
                 },
                 GraphicsComponent: {
                     textureKey: "goblin_1",
@@ -1586,6 +1592,8 @@ export const ObjectData: { [key: string]: ObjectDataDetails } = {
         addPlannerAI: true,
         nonAlertSightRange: 5,
         alertSightRange: 6,
+        addDialog: true,
+        dialogId: "non_vocalizing",
         lowHealthThreshold: 0.5,
         desiredDistanceToTarget: 1,
         actions: [
@@ -1596,6 +1604,7 @@ export const ObjectData: { [key: string]: ObjectDataDetails } = {
             "goToSafePosition",
             "runAway",
             "douseFireOnSelf",
+            "alertAllies",
             "confusedWander"
         ],
         staticallyKnownComponents: {
@@ -1604,8 +1613,7 @@ export const ObjectData: { [key: string]: ObjectDataDetails } = {
                 TypeComponent: {
                     displayName: "Rat",
                     entityType: "rat",
-                    race: "rat",
-                    classification: "rat"
+                    race: "rat"
                 },
                 GraphicsComponent: {
                     textureKey: "rat",
@@ -1676,6 +1684,8 @@ export const ObjectData: { [key: string]: ObjectDataDetails } = {
         addPlannerAI: true,
         nonAlertSightRange: 6,
         alertSightRange: 7,
+        addDialog: true,
+        dialogId: "non_vocalizing",
         lowHealthThreshold: 0.5,
         desiredDistanceToTarget: 1,
         actions: [
@@ -1684,6 +1694,7 @@ export const ObjectData: { [key: string]: ObjectDataDetails } = {
             "goToEnemy",
             "goToSafePosition",
             "meleeAttack",
+            "alertAllies",
             "confusedWander"
         ],
         staticallyKnownComponents: {
@@ -1692,8 +1703,7 @@ export const ObjectData: { [key: string]: ObjectDataDetails } = {
                 TypeComponent: {
                     displayName: "Eel",
                     entityType: "eel",
-                    race: "eel",
-                    classification: "eel"
+                    race: "eel"
                 },
                 GraphicsComponent: {
                     textureKey: "eel_1",
@@ -1751,6 +1761,8 @@ export const ObjectData: { [key: string]: ObjectDataDetails } = {
         addPlannerAI: true,
         nonAlertSightRange: 5,
         alertSightRange: 6,
+        addDialog: true,
+        dialogId: "non_vocalizing",
         lowHealthThreshold: 0.5,
         desiredDistanceToTarget: 1,
         actions: [
@@ -1760,16 +1772,16 @@ export const ObjectData: { [key: string]: ObjectDataDetails } = {
             "meleeAttack",
             "goToSafePosition",
             "runAway",
+            "alertAllies",
             "confusedWander"
         ],
         staticallyKnownComponents: {
-            tags: ["blocks", "sentient", "moveable", "attackable"],
+            tags: ["blocks", "sentient", "moveable", "attackable", "flying"],
             c: {
                 TypeComponent: {
                     displayName: "Lightning Bug",
                     entityType: "lightning_bug",
-                    race: "bug",
-                    classification: "bug"
+                    race: "bug"
                 },
                 GraphicsComponent: {
                     textureKey: "lightning_bug",
@@ -1851,7 +1863,8 @@ export const ObjectData: { [key: string]: ObjectDataDetails } = {
     "bandit": {
         addInventory: true,
         addPlannerAI: true,
-        addDialogMemory: true,
+        addDialog: true,
+        dialogId: "bandit",
         nonAlertSightRange: 6,
         alertSightRange: 8,
         lowHealthThreshold: 0.5,
@@ -1880,8 +1893,7 @@ export const ObjectData: { [key: string]: ObjectDataDetails } = {
                 TypeComponent: {
                     displayName: "Bandit",
                     entityType: "bandit",
-                    race: "human",
-                    classification: "bandit"
+                    race: "human"
                 },
                 GraphicsComponent: {
                     textureKey: "bandit_1",
@@ -1951,7 +1963,8 @@ export const ObjectData: { [key: string]: ObjectDataDetails } = {
     "bandit_mage": {
         addInventory: true,
         addPlannerAI: true,
-        addDialogMemory: true,
+        addDialog: true,
+        dialogId: "bandit",
         nonAlertSightRange: 6,
         alertSightRange: 8,
         lowHealthThreshold: 0.5,
@@ -1981,8 +1994,7 @@ export const ObjectData: { [key: string]: ObjectDataDetails } = {
                 TypeComponent: {
                     displayName: "Bandit Mage",
                     entityType: "bandit_mage",
-                    race: "human",
-                    classification: "bandit"
+                    race: "human"
                 },
                 GraphicsComponent: {
                     textureKey: "blue_mage_1",
@@ -2056,7 +2068,8 @@ export const ObjectData: { [key: string]: ObjectDataDetails } = {
     "bandit_white_mage": {
         addInventory: true,
         addPlannerAI: true,
-        addDialogMemory: true,
+        addDialog: true,
+        dialogId: "bandit",
         nonAlertSightRange: 6,
         alertSightRange: 8,
         lowHealthThreshold: 0.4,
@@ -2086,8 +2099,7 @@ export const ObjectData: { [key: string]: ObjectDataDetails } = {
                 TypeComponent: {
                     displayName: "Bandit White Mage",
                     entityType: "bandit_white_mage",
-                    race: "human",
-                    classification: "bandit"
+                    race: "human"
                 },
                 GraphicsComponent: {
                     textureKey: "red_mage_1",
@@ -2160,7 +2172,8 @@ export const ObjectData: { [key: string]: ObjectDataDetails } = {
     },
     "dog": {
         addPlannerAI: true,
-        addDialogMemory: true,
+        addDialog: true,
+        dialogId: "dog",
         nonAlertSightRange: 5,
         alertSightRange: 8,
         lowHealthThreshold: 0.5,
@@ -2180,8 +2193,7 @@ export const ObjectData: { [key: string]: ObjectDataDetails } = {
                 TypeComponent: {
                     displayName: "Dog",
                     entityType: "dog",
-                    race: "dog",
-                    classification: "dog"
+                    race: "dog"
                 },
                 GraphicsComponent: {
                     textureKey: "dog",
@@ -2242,6 +2254,104 @@ export const ObjectData: { [key: string]: ObjectDataDetails } = {
                 }
             }
         }
+    },
+    "spider": {
+        addPlannerAI: true,
+        addDialog: true,
+        dialogId: "non_vocalizing",
+        nonAlertSightRange: 5,
+        alertSightRange: 8,
+        lowHealthThreshold: 0.5,
+        desiredDistanceToTarget: 1,
+        spells: [
+            ["web", 1]
+        ],
+        actions: [
+            "wander",
+            "chase",
+            "standby",
+            "goToEnemy",
+            "goToSafePosition",
+            "runAway",
+            "meleeAttack",
+            "confusedWander",
+            "webAreaDenial",
+            "alertAllies"
+        ],
+        staticallyKnownComponents: {
+            tags: ["blocks", "sentient", "moveable", "attackable", "walksQuicklyOnWebs"],
+            c: {
+                TypeComponent: {
+                    displayName: "Spider",
+                    entityType: "spider",
+                    race: "bug"
+                },
+                GraphicsComponent: {
+                    textureKey: "black_spider",
+                    sprite: null,
+                    zIndex: 5
+                },
+                LoseTargetAIComponent: {
+                    turnsWithTargetOutOfSight: 0,
+                    loseTrackAfterNTurns: 6
+                },
+                ConfusableAIComponent: {
+                    confused: false,
+                    turnsLeft: 0
+                },
+                SpeedComponent: {
+                    speed: BASE_SPEED,
+                    maxTilesPerMove: 3
+                },
+                HitPointsComponent: {
+                    hp: 5,
+                    maxHp: 5,
+                    onDeath: DeathType.Default
+                },
+                StatsComponent: {
+                    strength: 5,
+                    defense: 1,
+                    criticalChance: 0.05,
+                    criticalDamageMultiplier: 1.5,
+                    ailmentSusceptibility: 0.1
+                },
+                LevelComponent: {
+                    level: 3,
+                    experience: 0,
+                    experienceGiven: 10
+                },
+                DamageAffinityComponent: {
+                    [DamageType.Physical]: Affinity.normal,
+                    [DamageType.Fire]: Affinity.weak,
+                    [DamageType.Electric]: Affinity.normal,
+                    [DamageType.Water]: Affinity.normal,
+                    [DamageType.Nature]: Affinity.strong,
+                    [DamageType.Ice]: Affinity.normal
+                },
+                FlammableComponent: {
+                    onFire: false,
+                    fireDamage: 0,
+                    turnsLeft: 0
+                },
+                FreezableComponent: {
+                    frozen: false,
+                    turnsLeft: 0,
+                    textureKey: "ice_wall"
+                },
+                WetableComponent: {
+                    wet: false,
+                    turnsLeft: 0
+                },
+                StunnableComponent: {
+                    stunned: false,
+                    turnsLeft: 0
+                },
+                OilCoveredComponent: {
+                    oilCovered: false,
+                    turnsLeft: 0
+                }
+            }
+        }
     }
 };
 
@@ -2250,8 +2360,18 @@ for (const objectID in ObjectData) {
     const data = ObjectData[objectID];
     if (data.spells !== undefined && data.actions !== undefined) {
         for (let i = 0; i < data.spells.length; i++) {
-            const spell = data.spells[i];
-            data.actions.push(`castSpell_${spell[0]}`);
+            const spell = data.spells[i][0];
+            const spellData = SpellData[spell];
+            switch (spellData.type) {
+                case SpellType.DamageOther:
+                case SpellType.EffectOther:
+                case SpellType.HealOther:
+                case SpellType.WildDamage:
+                case SpellType.AreaOfEffect:
+                    data.actions.push(`castSpell_${spell}`);
+                    break;
+                default: break;
+            }
         }
     }
 }
@@ -2452,20 +2572,19 @@ export function createEntity(
             entity.addComponent({ type: "InventoryComponent", inventory });
         }
 
-        if (data?.addDialogMemory === true && entity.has(DialogMemoryComponent) === false) {
+        if (data?.addDialog === true && entity.has(DialogComponent) === false) {
+            if (data?.dialogId === undefined) { throw new Error(`entity type ${type} is missing dialogId`); }
+
             const memory: Map<string, boolean> = new Map();
 
-            const typeData = entity.getOne(TypeComponent);
-            if (typeData !== undefined && typeData.classification !== null) {
-                const dialogDefinitions = dialogByClassification[typeData.classification];
-                if (dialogDefinitions !== undefined) {
-                    for (const def of dialogDefinitions.rules) {
-                        memory.set(`said_${def.name}`, false);
-                    }
+            const dialogDefinitions = dialogGroup[data.dialogId];
+            if (dialogDefinitions !== undefined) {
+                for (const def of dialogDefinitions.rules) {
+                    memory.set(`said_${def.name}`, false);
                 }
             }
 
-            entity.addComponent({ type: "DialogMemoryComponent", memory });
+            entity.addComponent({ type: "DialogComponent", memory, dialogId: data.dialogId });
         }
 
         if (data?.addInput === true && entity.has(InputHandlingComponent) === false) {

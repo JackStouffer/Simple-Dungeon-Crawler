@@ -378,8 +378,8 @@ export class UpdateSpeedEffectsSystem extends System {
         for (const entity of speedEffects) {
             const effects = entity.getComponents(SpeedEffectComponent);
             for (const effect of effects) {
-                effect.turnsLeft--;
-                if (effect.turnsLeft === 0) {
+                --effect.turnsLeft;
+                if (effect.turnsLeft <= 0) {
                     entity.removeComponent(effect);
                     effect.destroy();
 

@@ -1232,8 +1232,8 @@ export function castPush(
     direction?: number
 ): boolean {
     if (item.value === null) { throw new Error("Item has missing data"); }
-    if (target === undefined) { throw new Error("Push requires a target"); }
-    if (direction === undefined) { throw new Error("Push requires a direction"); }
+    if (target === undefined) { throw new Error("castPush requires a target"); }
+    if (direction === undefined) { throw new Error("castPush requires a direction"); }
 
     const targetedEntity = mouseTarget(ecs, map, entityMap, target);
     if (targetedEntity === null) {
@@ -1315,8 +1315,8 @@ function castFireballRune(
     if (globals.Game === null) { throw new Error("Global game object is null"); }
 
     const { blocks, entity } = isBlocked(ecs, map, entityMap, target);
-
     if (blocks === true && entity === null) {
+        showLogMessage("Canceled casting");
         return false;
     }
 
@@ -1371,6 +1371,35 @@ function castAreaOfEffect(
         }
     }
 
+    return true;
+}
+
+function castWeb(
+    skillData: ItemDataDetails | SpellDataDetails,
+    user: Entity,
+    ecs: World,
+    map: GameMap,
+    entityMap: EntityMap,
+    target: Vector2D,
+    rotation?: number
+): boolean {
+    if (globals.Game === null) { throw new Error("Global game object is null"); }
+    if (skillData.areaOfEffect === undefined) { throw new Error("areaOfEffect cannot be null for castWeb"); }
+    if (rotation === undefined) { throw new Error("castWeb requires a rotation"); }
+
+    const { blocks, entity } = isBlocked(ecs, map, entityMap, target);
+    if (blocks === true && entity === null) {
+        showLogMessage("Canceled casting");
+        return false;
+    }
+
+    const tiles = getTargetedArea(skillData.areaOfEffect, target, rotation);
+    for (const tile of tiles) {
+        const { entity, blocks } = isBlocked(ecs, map, entityMap, tile);
+        if (!blocks || (blocks === true && entity !== null)) {
+            createEntity(ecs, globals.Game.textureAtlas, "webbed_floor", tile);
+        }
+    }
     return true;
 }
 
@@ -2354,11 +2383,25 @@ export const SpellData: { [key: string]: SpellDataDetails } = {
     "fireball_trap": {
         id: "fireball_trap",
         displayName: "Fireball Rune",
-        description: "Places a rune on the ground which creates an explosion when stepped on",
+        description: "Places a rune on the ground which creates an explosion when stepped on. Enemies cannot see the rune.",
         baseCastCount: 1,
         value: 40,
         type: SpellType.DamageOther,
         range: 30,
         useFunc: castFireballRune
+    },
+    "web": {
+        id: "web",
+        displayName: "Web",
+        description: "Lay down webs on the floor to slow movement",
+        baseCastCount: 2,
+        value: 20,
+        type: SpellType.AreaDenial,
+        range: 10,
+        useFunc: castWeb,
+        areaOfEffect: {
+            type: "circle",
+            radius: 3
+        }
     }
 };

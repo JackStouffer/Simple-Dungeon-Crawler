@@ -152,11 +152,11 @@ export function playerInput(
                     mouseDownPosition
                 );
 
-                if (target !== null && target !== inputState.entity && target.tags.has("attackable")) {
+                if (target !== null && target !== inputState.entity) {
                     const hpData = target.getOne(HitPointsComponent);
                     const interactableData = target.getOne(InteractableTypeComponent);
 
-                    if (hpData !== undefined) {
+                    if (hpData !== undefined && target.tags.has("attackable")) {
                         return [new PhysicalAttackCommand(player.id, target.id)];
                     } else if (interactableData !== undefined) {
                         return [new InteractCommand(player.id, target.id)];
